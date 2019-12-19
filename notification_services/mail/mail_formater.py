@@ -112,6 +112,18 @@ moodle_modified_box = Template('''
     </tr>
 ''')
 
+moodle_deleted_box = Template('''
+    <tr>
+        <td style="padding-bottom: 10px; color: #7d878d; font-size: 14px; font-family: 'Segoe UI', 'Calibri', 'Lucida Grande', Arial, sans-serif;">
+            -
+        </td>
+        <td style="padding-bottom: 10px; color: #7d878d; font-size: 16px; font-family: 'Segoe UI', 'Calibri', 'Lucida Grande', Arial, sans-serif;">
+            ${file_name}
+        </td>
+    </tr>
+''')
+
+
 """
 Additionaly Text in the Table?
     <tr>
@@ -166,6 +178,12 @@ def create_full_dualis_diff_mail(changes: CollectionOfChanges) -> (str,
                 inner_content += moodle_modified_box.substitute(
                     file_name=change_file_name
                 )
+            elif change_type == 'delted':
+                inner_content += moodle_deleted_box.substitute(
+                    file_name=change_file_name
+                )
+
+
 
         full_content += moodle_main_box.substitute(
             content=inner_content, course_name=course_name)
