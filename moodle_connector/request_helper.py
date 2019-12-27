@@ -37,6 +37,9 @@ class RequestHelper:
         else:
             data_enc = ''
 
+        print('%swebservice/rest/server.php?wsfunction=%s&moodlewsrestformat=json&wstoken=%s%s'%(
+                self.moodle_path, function, self.token, data_enc))
+
         self.connection.request(
             'GET',
             '%swebservice/rest/server.php?wsfunction=%s&moodlewsrestformat=json&wstoken=%s%s'%(
@@ -90,6 +93,18 @@ class RequestHelper:
             raise RequestRejectedError(
                 'The Moodle System rejected the Request. Details: %s (Errorcode: %s, Stacktrace: %s, Debuginfo: %s, Reproductionlink: %s)'%(
                     error, errorcode, stacktrace, debuginfo, reproductionlink
+                )
+            )
+
+        if ("exception" in response_extracted):
+            exception = response_extracted.get("exception", "")
+            errorcode = response_extracted.get("errorcode", "")
+            message = response_extracted.get("message", "")
+
+
+            raise RequestRejectedError(
+                'The Moodle System rejected the Request. Details: %s (Errorcode: %s, Message: %s)'%(
+                    exception, errorcode, message
                 )
             )
 
