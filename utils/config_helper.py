@@ -6,22 +6,23 @@ class ConfigHelper:
     """
     Handles the saving, formatting and loading of the local configuration.
     """
-    def __init__(self):
+    def __init__(self, storage_path: str):
         self._whole_config = {}
+        self.config_path = os.path.join(storage_path, "config.json")
 
     def is_present(self) -> bool:
-        return os.path.isfile('config.json')
+        return os.path.isfile(self.config_path)
 
     def load(self):
         try:
-            with open('config.json', 'r') as f:
+            with open(self.config_path, 'r') as f:
                 config_raw = f.read()
                 self._whole_config = json.loads(config_raw)
         except IOError:
             raise ValueError('No config found!')
 
     def _save(self):
-        with open('config.json', 'w+') as f:
+        with open(self.config_path, 'w+') as f:
             config_formatted = json.dumps(self._whole_config, indent=4)
             f.write(config_formatted)
 
