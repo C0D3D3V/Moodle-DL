@@ -40,6 +40,10 @@
     - Activate/deactivate/change the settings for receiving notifications via e-mail.
     - It does not affect the rest of the config.
     - It prints all information into the console.
+- `python main.py --path PATH`
+    - Sets the location of the configuration, logs and downloaded files. 
+    - `PATH` must be an existing directory in which you have read and write access.
+    - Default: current working directory
 
 
 ### Notes
