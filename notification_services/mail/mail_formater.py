@@ -3,7 +3,7 @@
 from email.utils import make_msgid
 from string import Template
 
-from utils.collection_of_Changes import CollectionOfChanges
+from utils.state_recorder import CollectionOfChanges
 
 """
 Encapsulates the formatting of the various notification-mails.
@@ -160,7 +160,7 @@ def _finish_with_main_wrapper(content: str, introduction: str) -> (str,
     return (full_content, cids_and_filenames)
 
 
-def create_full_dualis_diff_mail(changes: CollectionOfChanges) -> (str,
+def create_full_moodle_diff_mail(changes: CollectionOfChanges) -> (str,
                                                                    {str: str}):
     full_content = ''
 

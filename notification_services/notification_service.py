@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
 from utils.config_helper import ConfigHelper
-from utils.version_recorder import CollectionOfChanges
+from utils.state_recorder import CollectionOfChanges
 
 
 class NotificationService:
