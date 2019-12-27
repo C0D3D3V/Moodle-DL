@@ -5,13 +5,14 @@ import logging
 import os
 import sys
 import traceback
+import argparse
+
 
 from raven import fetch_git_sha
 from raven.handlers.logging import Client as RavenClient
 
 from utils.config_helper import ConfigHelper
-from moodle_connector.dualis_service import MoodleService
-from moodle_connector.request_helper import MoodleSleepingError
+from moodle_connector.moodle_service import MoodleService
 from notification_services.mail.mail_service import MailService
 
 
@@ -27,8 +28,8 @@ class ReRaiseOnError(logging.StreamHandler):
             raise RuntimeError(record.msg)
 
 
-def run_init():
-    config = ConfigHelper()
+def run_init(storage_path):
+    config = ConfigHelper(storage_path)
 
     if config.is_present():
         do_override_input = input(
@@ -49,33 +50,42 @@ def run_init():
         sentry_dsn = input('Please enter your Sentry DSN:   ')
         config.set_property('sentry_dsn', sentry_dsn)
 
-    moodle = MoodleService(config)
+    moodle = MoodleService(config, storage_path)
     moodle.interactively_acquire_token()
 
     print('Configuration finished and saved!')
 
-    print(
-        '  To set a cron-job for this program on your Unix-System:\n'
-        + '    1. `crontab -e`\n'
-        + '    2. Add `*/15 * * * * cd %s && python3 main.py`\n' % (
-            os.path.dirname(os.path.realpath(__file__)))
-        + '    3. Save and you\'re done!'
-    )
+    if (storage_path == '.'):
+        print(
+            '  To set a cron-job for this program on your Unix-System:\n'
+            + '    1. `crontab -e`\n'
+            + '    2. Add `*/15 * * * * cd %s && python3 %smain.py`\n' % (
+                os.getcwd(), os.path.join(os.path.dirname(os.path.realpath(__file__)),''))
+            + '    3. Save and you\'re done!'
+        )
+    else:
+        print(
+            '  To set a cron-job for this program on your Unix-System:\n'
+            + '    1. `crontab -e`\n'
+            + '    2. Add `*/15 * * * * cd %s && python3 %smain.py --path %s`\n' % (
+                os.getcwd(), os.path.join(os.path.dirname(os.path.realpath(__file__)),''), storage_path)
+            + '    3. Save and you\'re done!'
+        )
 
     print('All set and ready to go!')
 
 
-def run_new_token():
-    config = ConfigHelper()
+def run_new_token(storage_path):
+    config = ConfigHelper(storage_path)
     config.load()  # because we do not want to override the other settings
 
-    MoodleService(config).interactively_acquire_token()
+    MoodleService(config, storage_path).interactively_acquire_token()
 
     print('New Token successfully saved!')
 
 
-def run_change_notification_mail():
-    config = ConfigHelper()
+def run_change_notification_mail(storage_path):
+    config = ConfigHelper(storage_path)
     config.load()
 
     MailService(config).interactively_configure()
@@ -83,9 +93,9 @@ def run_change_notification_mail():
     print('Configuration successfully updated!')
 
 
-def run_main():
+def run_main(storage_path):
     logging.basicConfig(
-        filename='MoodleWatcher.log', level=logging.DEBUG,
+        filename=os.path.join(storage_path, 'MoodleDownloader.log'), level=logging.DEBUG,
         format='%(asctime)s  %(levelname)s  {%(module)s}  %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     )
@@ -101,7 +111,7 @@ def run_main():
 
     try:
         logging.debug('Loading config...')
-        config = ConfigHelper()
+        config = ConfigHelper(storage_path)
         config.load()
     except BaseException as e:
         logging.error('Error while trying to load the Configuration! '
@@ -123,7 +133,7 @@ def run_main():
     mail_service = MailService(config)
 
     try:
-        moodle = MoodleService(config)
+        moodle = MoodleService(config, storage_path)
 
         logging.debug(
             'Checking for changes for the configured Moodle-Account....')
@@ -141,9 +151,6 @@ def run_main():
             logging.info('No changes found for the configured Moodle-Account.')
 
         logging.debug('All done. Exiting...')
-    except MoodleSleepingError:
-        logging.info('Moodle is sleeping, exiting and soon trying again.')
-        sys.exit(-1)
     except BaseException as e:
         error_formatted = traceback.format_exc()
         logging.error(error_formatted, extra={'exception': e})
@@ -159,26 +166,35 @@ def run_main():
 
 
 # --- called at the program invocation: ---------------------
+def dir_path(path):
+    if os.path.isdir(path):
+        return path
+    else:
+        raise argparse.ArgumentTypeError(f"'{path}' is not a valid path. Make sure the directory exists.")
+
 IS_DEBUG = False
 
 if 'pydevd' in sys.modules:
     IS_DEBUG = True
     print('[RUNNING IN DEBUG-MODE!]')
 
-if len(sys.argv) == 2:
-    if sys.argv[1] == '--init':
-        run_init()
-    elif sys.argv[1] == '--new-token':
-        run_new_token()
-    elif sys.argv[1] == '--change-notification-mail':
-        run_change_notification_mail()
-elif len(sys.argv) == 1:
-    # the name of the executed file always gets passed
-    run_main()
+parser = argparse.ArgumentParser(description='Moodle Donwlaoder 2 helps you download all the course files of your Moodle account.')
+group = parser.add_mutually_exclusive_group()
+group.add_argument('--init', action='store_true', help='Guides you trough the configuration of the software, including the activation of mail-notifications and obtainment of a login-token for your Moodle-Account. It does not fetch the current state of your Moodle-Account.')
+group.add_argument('--new-token', action='store_true', help='Overrides the login-token with a newly obtained one. It does not fetch the current state of your Moodle-Account. Use it if at any point in time, for whatever reason, the saved token gets rejected by Moodle. It does not affect the rest of the config.')
+group.add_argument('--change-notification-mail', action='store_true', help='Activate/deactivate/change the settings for receiving notifications via e-mail. It does not affect the rest of the config.')
+parser.add_argument('--path', default='.', type=dir_path, help='Sets the location of the configuration, logs and downloaded files. PATH must be an existing directory in which you have read and write access. (default: current working directory)')
+
+args = parser.parse_args()
+
+storage_path = args.path
+
+if args.init:
+    run_init(storage_path)
+elif args.new_token:
+    run_new_token(storage_path)
+elif args.change_notification_mail:
+    run_change_notification_mail(storage_path)
 else:
-    print(
-        'Unrecognized argument or combination of arguments passed!'
-        + '\n  Possible arguments: None, `--init`, `--new-token`, '
-        + '`--change-notification-mail`'
-    )
-    sys.exit(-1)
+    run_main(storage_path)
+
