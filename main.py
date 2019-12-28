@@ -137,16 +137,21 @@ def run_main(storage_path):
 
         logging.debug(
             'Checking for changes for the configured Moodle-Account....')
-        changes = moodle.fetch_state()
+        changed_courses = moodle.fetch_state()
+
         diff_count = 0
 
-        for course_name in changes:
-            diff_count += len(changes[course_name])
+        # TODO Download and Delete changes
+
+        changed_courses = moodle.recorder.changes_to_notify()
+
+        for course in changed_courses:
+            diff_count += len(course.files)
 
         if diff_count > 0:
             logging.info('%s changes found for the configured Moodle-Account.'
                          % (diff_count))
-            mail_service.notify_about_changes_in_moodle(changes)
+            mail_service.notify_about_changes_in_moodle(changed_courses)
         else:
             logging.info('No changes found for the configured Moodle-Account.')
 

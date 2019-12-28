@@ -9,7 +9,7 @@ from utils.config_helper import ConfigHelper
 from moodle_connector import login_helper
 from moodle_connector.request_helper import RequestRejectedError, RequestHelper
 from moodle_connector.results_handler import ResultsHandler
-from utils.state_recorder import StateRecorder, CollectionOfChanges
+from utils.state_recorder import StateRecorder, Changed_Course
 
 
 class MoodleService:
@@ -51,7 +51,7 @@ class MoodleService:
         return moodle_token
 
  
-    def fetch_state(self) -> (CollectionOfChanges):
+    def fetch_state(self) -> ([Changed_Course]):
         """
         Gets the current status of the configured Moodle account and compares it
         with the last known status for changes. It does not change the known state,
@@ -75,8 +75,7 @@ class MoodleService:
             courses = list_handler.fetch_courses(userid)
 
             for i, course in enumerate(courses):
-                course_id = course.get("id")
-                courses[i]["files"] = list_handler.fetch_files(course_id)
+                courses[i].files = list_handler.fetch_files(course.id)
 
         except (RequestRejectedError, ValueError, RuntimeError) as error:
             raise RuntimeError(

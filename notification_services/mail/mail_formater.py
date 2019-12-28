@@ -3,7 +3,7 @@
 from email.utils import make_msgid
 from string import Template
 
-from utils.state_recorder import CollectionOfChanges
+from utils.state_recorder import Changed_Course
 
 """
 Encapsulates the formatting of the various notification-mails.
@@ -160,11 +160,11 @@ def _finish_with_main_wrapper(content: str, introduction: str) -> (str,
     return (full_content, cids_and_filenames)
 
 
-def create_full_moodle_diff_mail(changes: CollectionOfChanges) -> (str,
+def create_full_moodle_diff_mail(changed_courses: [Changed_Course]) -> (str,
                                                                    {str: str}):
     full_content = ''
 
-    for course_name in changes:
+    for course in changed_courses:
         inner_content = ''
         for change in changes[course_name]:
             change_type = change[0]
@@ -184,19 +184,15 @@ def create_full_moodle_diff_mail(changes: CollectionOfChanges) -> (str,
                 )
 
 
-
         full_content += moodle_main_box.substitute(
             content=inner_content, course_name=course_name)
 
-    count = 0
-
-    for course_name in changes:
-        count += len(changes[course_name])
+    count = len(changed_courses)
 
     full_content = _finish_with_main_wrapper(
         full_content,
-        '%s changes found in Modulen festgestellt:' % (count) if count > 1 else
-        'Am folgenden Modul würde Veränderung festgestellt:'
+        'Changes were found in %s courses:' % (count) if count > 1 else
+        'Changes were noted in the following course:'
     )
 
     return full_content

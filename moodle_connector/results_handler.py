@@ -1,4 +1,5 @@
 from moodle_connector.request_helper import RequestHelper
+from utils.state_recorder import Course, File
 
 
 class ResultsHandler:
@@ -19,7 +20,7 @@ class ResultsHandler:
         return result.get("userid", "")
 
 
-    def fetch_courses(self, userid : str) -> [str]:
+    def fetch_courses(self, userid : str) -> [Course]:
 
         data = {
             'userid':  userid
@@ -30,15 +31,14 @@ class ResultsHandler:
 
         results = []
         for course in result:
-            results.append({
-                "id" : course.get("id", ""),
-                "fullname" : course.get("fullname", "")
-                })
-
+            results.append(
+                Course(course.get("id", ""), 
+                    course.get("fullname", ""))
+                )
         return results
 
 
-    def fetch_files(self, course_id: str) -> {str: (str , str)}:
+    def fetch_files(self, course_id: str) -> [File]:
         data = {
             'courseid':  course_id
         }
@@ -67,19 +67,11 @@ class ResultsHandler:
                         content_timemodified = content.get("timemodified", "")
                         content_isexternalfile = content.get("isexternalfile", "")
 
-
-                        files.append({
-                            "section_name" : section_name,
-                            "module_name" : module_name,
-                            "module_modname" : module_modname,
-                            "content_type" : content_type,
-                            "content_filename" : content_filename,
-                            "content_filepath" : content_filepath,
-                            "content_filesize" : content_filesize,
-                            "content_fileurl" : content_fileurl,
-                            "content_timemodified" : content_timemodified,
-                            "content_isexternalfile" : content_isexternalfile
-                        })
+                        files.append(File(section_name,  module_name, 
+                            content_filepath, content_filename, content_fileurl,
+                            content_filesize, content_timemodified, module_modname,
+                            content_type, content_isexternalfile)
+                        )
         return files
 
 

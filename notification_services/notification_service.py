@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
 from utils.config_helper import ConfigHelper
-from utils.state_recorder import CollectionOfChanges
+from utils.state_recorder import Changed_Course
 
 
 class NotificationService:
@@ -22,7 +22,7 @@ class NotificationService:
         pass
 
     @abstractmethod
-    def notify_about_changes_in_results(self, changes: CollectionOfChanges) -> None:
+    def notify_about_changes_in_results(self, changes: [Changed_Course]) -> None:
         """
         Sends out a Notification to inform about detected changes for the
         Moodle-Account. The caller shouldn't care about if the sending was
