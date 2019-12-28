@@ -60,11 +60,11 @@ The result is an array of elements that looks like this:
                 "visibleoncoursepage":1,
                 "modicon":"https:\/\/moodle.uni.de\/m\/theme\/image.php\/boost_campus\/label\/1576236086\/icon",
                 
-                "modname":"label",      // Alternative: "forum", "url", "resource", "quiz"
+                "modname":"label",      // Alternative: "forum", "url", "folder", "resource", "quiz"
 
                 "modplural":"Textfelder",
                 "indent":0,
-                 "contents":[   // if "url" or "resource"
+                 "contents":[   // if "url" or "resource" or "folder"
 	               { 
 	                  "type":"url",
 	                  "filename":"Webseite der Veranstaltung Netzsicherheit 1",
