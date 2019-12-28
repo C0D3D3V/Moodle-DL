@@ -6,7 +6,7 @@ from notification_services.mail.mail_formater import create_full_welcome_mail,\
     create_full_moodle_diff_mail, create_full_error_mail
 from notification_services.mail.mail_shooter import MailShooter
 from notification_services.notification_service import NotificationService
-from utils.state_recorder import Changed_Course
+from utils.state_recorder import Course
 
 
 class MailService(NotificationService):
@@ -93,10 +93,15 @@ class MailService(NotificationService):
                           (error_formatted), extra={'exception': e})
             raise e  # to be properly notified via Sentry
 
-    def notify_about_changes_in_moodle(self, changes: [Changed_Course]) -> None:
+    def notify_about_changes_in_moodle(self, changes: [Course]) -> None:
         mail_content = create_full_moodle_diff_mail(changes)
+
+        diff_count = 0
+        for course in changes:
+            diff_count += len(course.files)
+
         self._send_mail('%s new Changes in the Moodle courses!' %
-                        (changes.diff_count), mail_content)
+                        (diff_count), mail_content)
 
     def notify_about_error(self, error_description: str):
         if not self.config_helper.get_property('mail').get('send_error_msg',

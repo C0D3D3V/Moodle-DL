@@ -9,7 +9,7 @@ from utils.config_helper import ConfigHelper
 from moodle_connector import login_helper
 from moodle_connector.request_helper import RequestRejectedError, RequestHelper
 from moodle_connector.results_handler import ResultsHandler
-from utils.state_recorder import StateRecorder, Changed_Course
+from utils.state_recorder import StateRecorder, Course
 
 
 class MoodleService:
@@ -51,7 +51,7 @@ class MoodleService:
         return moodle_token
 
  
-    def fetch_state(self) -> ([Changed_Course]):
+    def fetch_state(self) -> ([Course]):
         """
         Gets the current status of the configured Moodle account and compares it
         with the last known status for changes. It does not change the known state,
