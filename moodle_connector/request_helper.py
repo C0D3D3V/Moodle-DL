@@ -37,8 +37,8 @@ class RequestHelper:
         else:
             data_enc = ''
 
-        print('%swebservice/rest/server.php?wsfunction=%s&moodlewsrestformat=json&wstoken=%s%s'%(
-                self.moodle_path, function, self.token, data_enc))
+        # print('%swebservice/rest/server.php?wsfunction=%s&moodlewsrestformat=json&wstoken=%s%s'%(
+        #        self.moodle_path, function, self.token, data_enc))
 
         self.connection.request(
             'GET',
