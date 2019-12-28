@@ -78,9 +78,9 @@ class RequestHelper:
         try:
             response_extracted = json.loads(response.read())
         except ValueError as error:
-            raise RuntimeError('An Unexpected Error occurred while trying to parse the json response! Moodle response: %s. Error: %s'% (response.read(), str(error)))
+            raise RuntimeError('An Unexpected Error occurred while trying to parse the json response! Moodle response: %s. Error: %s'% (response.read(), error))
         else:
-            pass 
+            raise
 
         if ("error" in response_extracted):
             error = response_extracted.get("error", "")
