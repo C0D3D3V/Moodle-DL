@@ -1,3 +1,7 @@
+
+This project is still being worked on and is not yet fully operational.
+======
+
 # Moodle-Downlaoder
 
 > Because manually downloading all the course files every few days is just ~~way too easy~~ inefficient.
