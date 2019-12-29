@@ -140,7 +140,7 @@ class StateRecorder:
         data = {'course_id': course_id}
         data.update(file.getMap())
 
-        cursor.execute("""SELECT saved_to FROM files WHERE content_id = ?
+        cursor.execute("""SELECT saved_to FROM files WHERE content_id = :content_id
             AND course_id = :course_id AND section_name = :section_name
             AND content_filepath = :content_filepath
             AND content_filename = :content_filename
@@ -160,7 +160,7 @@ class StateRecorder:
         data = {'course_id': course_id}
         data.update(file.getMap())
 
-        cursor.execute("""SELECT saved_to FROM files WHERE content_id = ?
+        cursor.execute("""SELECT saved_to FROM files WHERE content_id = :content_id
             AND course_id = :course_id AND (section_name != :section_name
             OR content_filepath != :content_filepath
             OR content_filename != :content_filename
