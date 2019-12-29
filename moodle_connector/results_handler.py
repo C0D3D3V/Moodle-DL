@@ -68,11 +68,16 @@ class ResultsHandler:
                         content_isexternalfile = content.get(
                             "isexternalfile", "")
 
-                        files.append(File(content_id, section_name,
-                                          module_name, content_filepath,
-                                          content_filename, content_fileurl,
-                                          content_filesize,
-                                          content_timemodified, module_modname,
-                                          content_type, content_isexternalfile)
+                        files.append(File(content_id=content_id,
+                                          section_name=section_name,
+                                          module_name=module_name,
+                                          content_filepath=content_filepath,
+                                          content_filename=content_filename,
+                                          content_fileurl=content_fileurl,
+                                          content_filesize=content_filesize,
+                                          content_timemodified=content_timemodified,
+                                          module_modname=module_modname,
+                                          content_type=content_type,
+                                          content_isexternalfile=content_isexternalfile)
                                      )
         return files
