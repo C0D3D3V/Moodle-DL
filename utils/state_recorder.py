@@ -66,7 +66,7 @@ class StateRecorder:
             content_isexternalfile text NOT NULL,
             saved_to text NOT NULL,
             time_stamp integer NOT NULL,
-            motified integer DEFAULT 0 NOT NULL,
+            modified integer DEFAULT 0 NOT NULL,
             deleted integer DEFAULT 0 NOT NULL,
             notified integer DEFAULT 0 NOT NULL
             );
@@ -215,7 +215,7 @@ class StateRecorder:
                     content_isexternalfile=file_row['content_isexternalfile'],
                     saved_to=file_row['saved_to'],
                     time_stamp=file_row['time_stamp'],
-                    motified=file_row['motified'],
+                    modified=file_row['modified'],
                     deleted=file_row['deleted']
                 )
 
@@ -236,9 +236,17 @@ class StateRecorder:
             course_id = course.id
 
             for file in course.files:
-                cursor.execute("""UPDATE *
-                        FROM files WHERE notified = 0 AND course_id = ?""",
-                                   (course_id,))
+                cursor.execute("""UPDATE files
+                    SET notified = 1,
+                    WHERE content_id = ? AND course_id = ? AND notified = 0
+                    AND section_name = ? AND content_filepath = ?
+                    AND content_filename = ? AND content_fileurl = ?
+                    AND content_filesize = ? AND time_stamp = ?
+                    """,
+                               (file.content_id, course_id, file.section_name,
+                                file.content_filepath, file.content_filename,
+                                file.content_fileurl, file.content_filesize,
+                                file.time_stamp))
 
         conn.commit()
         conn.close()
