@@ -2,7 +2,7 @@
 This project is still being worked on and is not yet fully operational.
 ======
 
-# Moodle-Downlaoder
+# Moodle-Downloader
 
 > Because manually downloading all the course files every few days is just ~~way too easy~~ inefficient.
 
@@ -30,7 +30,7 @@ This project is still being worked on and is not yet fully operational.
     - Fetches the current state of your Moodle Account, saves it and detects any changes.
     - If configured, it also sends out a mail-notification.
     - It prints the current status into the console 
-	- It writes a more detailed log into `MoodleDownlaoder.log` for debug purpose.
+	- It writes a more detailed log into `MoodleDownloader.log` for debug purpose.
 - `python main.py --init`
     - Guides you trough the configuration of the software, including the activation of mail-notifications and obtainment of a login-token for your Moodle-Account.
 	- It does not fetch the current state of your Moodle-Account.
