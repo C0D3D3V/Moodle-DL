@@ -28,6 +28,44 @@ class File:
         self.modified = modified
         self.deleted = deleted
 
+    def getMap(self) -> {str: str}:
+        return {
+            'content_id': self.content_id,
+            'section_name': self.section_name,
+            'module_name': self.module_name,
+            'content_filepath': self.content_filepath,
+            'content_filename': self.content_filename,
+            'content_fileurl': self.content_fileurl,
+            'content_filesize': self.content_filesize,
+            'content_timemodified': self.content_timemodified,
+            'module_modname': self.module_modname,
+            'content_type': self.content_type,
+            'content_isexternalfile': self.content_isexternalfile,
+            'saved_to': self.saved_to,
+            'time_stamp': self.time_stamp,
+            'modified': self.modified,
+            'deleted': self.deleted,
+        }
+
+    def fromRow(row):
+        return File(
+            content_id=row['content_id'],
+            section_name=row['section_name'],
+            module_name=row['module_name'],
+            content_filepath=row['content_filepath'],
+            content_filename=row['content_filename'],
+            content_fileurl=row['content_fileurl'],
+            content_filesize=row['content_filesize'],
+            content_timemodified=row['content_timemodified'],
+            module_modname=row['module_modname'],
+            content_type=row['content_type'],
+            content_isexternalfile=row['content_isexternalfile'],
+            saved_to=row['saved_to'],
+            time_stamp=row['time_stamp'],
+            modified=row['modified'],
+            deleted=row['deleted']
+        )
+
 
 class Course:
     def __init__(self, id: int, fullname: str, files: [File] = []):
@@ -99,13 +137,16 @@ class StateRecorder:
         # Returns True if the file is already in the Database BUT as
         # a different version
 
+        data = {'course_id': course_id}
+        data.update(file.getMap())
+
         cursor.execute("""SELECT saved_to FROM files WHERE content_id = ?
-            AND course_id = ? AND section_name = ? AND content_filepath = ?
-            AND content_filename = ? AND content_fileurl = ?
-            AND content_filesize = ?""", (
-            file.content_id, course_id, file.section_name,
-            file.content_filepath, file.content_filename,
-            file.content_fileurl, file.content_filesize))
+            AND course_id = :course_id AND section_name = :section_name
+            AND content_filepath = :content_filepath
+            AND content_filename = :content_filename
+            AND content_fileurl = :content_fileurl
+            AND content_filesize = :content_filesize""",
+                       data)
 
         row = cursor.fetchone()
         if row is None:
@@ -116,13 +157,16 @@ class StateRecorder:
         # Returns True if there is a file already in the database with the
         # same id but different content
 
+        data = {'course_id': course_id}
+        data.update(file.getMap())
+
         cursor.execute("""SELECT saved_to FROM files WHERE content_id = ?
-            AND course_id = ? AND (section_name != ? OR content_filepath != ?
-            OR content_filename != ? OR content_fileurl != ?
-            OR content_filesize != ?)""", (
-            file.content_id, course_id, file.section_name,
-            file.content_filepath, file.content_filename, file.content_fileurl,
-            file.content_filesize))
+            AND course_id = :course_id AND (section_name != :section_name
+            OR content_filepath != :content_filepath
+            OR content_filename != :content_filename
+            OR content_fileurl != :content_fileurl
+            OR content_filesize != :content_filesize)""",
+                       data)
 
         row = cursor.fetchone()
         if row is None:
@@ -201,24 +245,7 @@ class StateRecorder:
             course.files = []
 
             for file_row in file_rows:
-                notify_file = File(
-                    content_id=file_row['content_id'],
-                    section_name=file_row['section_name'],
-                    module_name=file_row['module_name'],
-                    content_filepath=file_row['content_filepath'],
-                    content_filename=file_row['content_filename'],
-                    content_fileurl=file_row['content_fileurl'],
-                    content_filesize=file_row['content_filesize'],
-                    content_timemodified=file_row['content_timemodified'],
-                    module_modname=file_row['module_modname'],
-                    content_type=file_row['content_type'],
-                    content_isexternalfile=file_row['content_isexternalfile'],
-                    saved_to=file_row['saved_to'],
-                    time_stamp=file_row['time_stamp'],
-                    modified=file_row['modified'],
-                    deleted=file_row['deleted']
-                )
-
+                notify_file = File.fromRow(file_row)
                 course.files.append(notify_file)
 
             changed_courses.append(course)
@@ -236,26 +263,47 @@ class StateRecorder:
             course_id = course.id
 
             for file in course.files:
+
+                data = {'course_id': course_id}
+                data.update(file.getMap())
+
                 cursor.execute("""UPDATE files
                     SET notified = 1,
-                    WHERE content_id = ? AND course_id = ? AND notified = 0
-                    AND section_name = ? AND content_filepath = ?
-                    AND content_filename = ? AND content_fileurl = ?
-                    AND content_filesize = ? AND time_stamp = ?
-                    """,
-                               (file.content_id, course_id, file.section_name,
-                                file.content_filepath, file.content_filename,
-                                file.content_fileurl, file.content_filesize,
-                                file.time_stamp))
+                    WHERE content_id = :content_id AND course_id = :course_id
+                    AND notified = 0
+                    AND section_name = :section_name
+                    AND content_filepath = :content_filepath
+                    AND content_filename = :content_filename
+                    AND content_fileurl = :content_fileurl
+                    AND content_filesize = :content_filesize
+                    AND time_stamp = :time_stamp
+                    """, data)
 
         conn.commit()
         conn.close()
 
-    def save_file(self, file: File, course_id: int, path: str, deleted=False,
-                  modified=False):
-        # saves that a file was created
-        raise ValueError(
-            'Not jet implemented!'
-        )
+    def save_file(self, file: File, course_id: int, course_fullname: str):
+        # saves a file to index
 
-        # cur.execute("""insert into files(id) values(?)""", ("lol"))
+        conn = sqlite3.connect(self.db_file)
+        cursor = conn.cursor()
+
+        data = {'course_id': course_id, 'course_fullname': course_fullname}
+        data.update(file.getMap())
+
+        cursor.execute("""INSERT INTO files
+                    (course_id, course_fullname, content_id, section_name,
+                    module_name, content_filepath, content_filename,
+                    content_fileurl, content_filesize, content_timemodified,
+                    module_modname, content_type, content_isexternalfile,
+                    saved_to, time_stamp, modified, notified)
+                    VALUES (:course_id, :course_fullname, :content_id,
+                    :section_name, :module_name, :content_filepath,
+                    :content_filename, :content_fileurl, :content_filesize,
+                    :content_timemodified, :module_modname, :content_type,
+                    :content_isexternalfile, :saved_to, :time_stamp,
+                    :modified, :notified)
+                    """, data)
+
+        conn.commit()
+        conn.close()

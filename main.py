@@ -10,6 +10,7 @@ import sentry_sdk
 
 
 from utils.config_helper import ConfigHelper
+from download_service.download_service import DownloadService
 from moodle_connector.moodle_service import MoodleService
 from notification_services.mail.mail_service import MailService
 
@@ -139,7 +140,8 @@ def run_main(storage_path):
 
         diff_count = 0
 
-        # TODO Download and Delete changes
+        downloader = DownloadService(changed_courses, moodle.recorder)
+        downloader.start()
 
         changed_courses = moodle.recorder.changes_to_notify()
 
