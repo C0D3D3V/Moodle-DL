@@ -140,7 +140,7 @@ def run_main(storage_path):
 
         diff_count = 0
 
-        downloader = DownloadService(changed_courses, moodle)
+        downloader = DownloadService(changed_courses, moodle, storage_path)
         downloader.start()
 
         changed_courses = moodle.recorder.changes_to_notify()

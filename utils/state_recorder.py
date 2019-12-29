@@ -9,7 +9,8 @@ class File:
                  content_timemodified: int, module_modname: str,
                  content_type: str, content_isexternalfile: bool,
                  saved_to: str = "", time_stamp: int = 0,
-                 modified: bool = False, deleted: bool = False):
+                 modified: bool = False, deleted: bool = False,
+                 notified: bool = False):
 
         self.content_id = content_id
         self.section_name = section_name
@@ -27,6 +28,7 @@ class File:
         self.time_stamp = time_stamp
         self.modified = modified
         self.deleted = deleted
+        self.notified = notified
 
     def getMap(self) -> {str: str}:
         return {
@@ -40,11 +42,12 @@ class File:
             'content_timemodified': self.content_timemodified,
             'module_modname': self.module_modname,
             'content_type': self.content_type,
-            'content_isexternalfile': self.content_isexternalfile,
+            'content_isexternalfile': 1 if self.content_isexternalfile else 0,
             'saved_to': self.saved_to,
             'time_stamp': self.time_stamp,
-            'modified': self.modified,
-            'deleted': self.deleted,
+            'modified': 1 if self.modified else 0,
+            'deleted': 1 if self.deleted else 0,
+            'notified': 1 if self.notified else 0,
         }
 
     def fromRow(row):
@@ -59,11 +62,12 @@ class File:
             content_timemodified=row['content_timemodified'],
             module_modname=row['module_modname'],
             content_type=row['content_type'],
-            content_isexternalfile=row['content_isexternalfile'],
+            content_isexternalfile=False if row['content_isexternalfile'] == 0 else True,
             saved_to=row['saved_to'],
             time_stamp=row['time_stamp'],
-            modified=row['modified'],
-            deleted=row['deleted']
+            modified=False if row['modified'] == 0 else True,
+            deleted=False if row['deleted'] == 0 else True,
+            notified=False if row['notified'] == 0 else True
         )
 
 
@@ -226,6 +230,7 @@ class StateRecorder:
         changed_courses = []
 
         conn = sqlite3.connect(self.db_file)
+        conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
         cursor.execute("""SELECT course_id, course_fullname
@@ -268,7 +273,7 @@ class StateRecorder:
                 data.update(file.getMap())
 
                 cursor.execute("""UPDATE files
-                    SET notified = 1,
+                    SET notified = 1
                     WHERE content_id = :content_id AND course_id = :course_id
                     AND notified = 0
                     AND section_name = :section_name
