@@ -103,3 +103,5 @@ The result is an array of elements that looks like this:
     //Sections
 ]
 ```
+
+3. Download the files given in the `fileurl` Attributes with the token as an additionaly parameter.
