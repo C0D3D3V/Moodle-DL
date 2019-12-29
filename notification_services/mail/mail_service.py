@@ -25,7 +25,7 @@ class MailService(NotificationService):
             while not config_valid:
                 sender = input('E-Mail-Address of the Sender:   ')
                 server_host = input('Host of the SMTP-Server:   ')
-                server_port = input('Port of the SMTP-Server:   ')
+                server_port = input('Port of the SMTP-Server [STARTTLS, mostly 587]:   ')
                 username = input('Username for the SMTP-Server:   ')
                 password = getpass(
                     'Password for the SMTP-Server [no output]:   ')
