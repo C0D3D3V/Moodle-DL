@@ -6,10 +6,8 @@ import os
 import sys
 import traceback
 import argparse
+import sentry_sdk
 
-
-from raven import fetch_git_sha
-from raven.handlers.logging import Client as RavenClient
 
 from utils.config_helper import ConfigHelper
 from moodle_connector.moodle_service import MoodleService
@@ -21,6 +19,7 @@ class ReRaiseOnError(logging.StreamHandler):
     A logging-handler class which allows the exception-catcher of i.e. PyCharm
     to intervine
     """
+
     def emit(self, record):
         if hasattr(record, 'exception'):
             raise record.exception
@@ -57,19 +56,21 @@ def run_init(storage_path):
 
     if (storage_path == '.'):
         print(
-            '  To set a cron-job for this program on your Unix-System:\n'
-            + '    1. `crontab -e`\n'
-            + '    2. Add `*/15 * * * * cd %s && python3 %smain.py`\n' % (
-                os.getcwd(), os.path.join(os.path.dirname(os.path.realpath(__file__)),''))
-            + '    3. Save and you\'re done!'
+            '  To set a cron-job for this program on your Unix-System:\n' +
+            '    1. `crontab -e`\n' +
+            '    2. Add `*/15 * * * * cd %s && python3 %smain.py`\n' % (
+                os.getcwd(), os.path.join(os.path.dirname(
+                    os.path.realpath(__file__)), '')) +
+            '    3. Save and you\'re done!'
         )
     else:
         print(
-            '  To set a cron-job for this program on your Unix-System:\n'
-            + '    1. `crontab -e`\n'
-            + '    2. Add `*/15 * * * * cd %s && python3 %smain.py --path %s`\n' % (
-                os.getcwd(), os.path.join(os.path.dirname(os.path.realpath(__file__)),''), storage_path)
-            + '    3. Save and you\'re done!'
+            '  To set a cron-job for this program on your Unix-System:\n' +
+            '    1. `crontab -e`\n' +
+            '    2. Add `*/15 * * * * cd %s && python3 %smain.py --path %s`\n' % (
+                os.getcwd(), os.path.join(os.path.dirname(
+                    os.path.realpath(__file__)), ''), storage_path) +
+            '    3. Save and you\'re done!'
         )
 
     print('All set and ready to go!')
@@ -95,7 +96,8 @@ def run_change_notification_mail(storage_path):
 
 def run_main(storage_path):
     logging.basicConfig(
-        filename=os.path.join(storage_path, 'MoodleDownloader.log'), level=logging.DEBUG,
+        filename=os.path.join(storage_path, 'MoodleDownloader.log'),
+        level=logging.DEBUG,
         format='%(asctime)s  %(levelname)s  {%(module)s}  %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     )
@@ -103,8 +105,8 @@ def run_main(storage_path):
     logging.info('--- main started ---------------------')
     if IS_DEBUG:
         logging.info(
-            'Debug-Mode detected. Errors will not be logged but instead'
-            + ' re-risen.')
+            'Debug-Mode detected. Errors will not be logged but instead' +
+            ' re-risen.')
         debug_logger = logging.getLogger()
         debug_logger.setLevel(logging.ERROR)
         debug_logger.addHandler(ReRaiseOnError())
@@ -114,19 +116,15 @@ def run_main(storage_path):
         config = ConfigHelper(storage_path)
         config.load()
     except BaseException as e:
-        logging.error('Error while trying to load the Configuration! '
-                      + 'Exiting...', extra={'exception': e})
+        logging.error('Error while trying to load the Configuration! ' +
+                      'Exiting...', extra={'exception': e})
         sys.exit(-1)
 
-    r_client = None
+    r_client = False
     try:
         sentry_dsn = config.get_property('sentry_dsn')
         if sentry_dsn:
-            r_client = RavenClient(
-                sentry_dsn,
-                auto_log_stacks=True,
-                release=fetch_git_sha(os.path.dirname(__file__))
-            )
+            sentry_sdk.init(sentry_dsn)
     except BaseException:
         pass
 
@@ -152,6 +150,7 @@ def run_main(storage_path):
             logging.info('%s changes found for the configured Moodle-Account.'
                          % (diff_count))
             mail_service.notify_about_changes_in_moodle(changed_courses)
+            moodle.recorder.notified(changed_courses)
         else:
             logging.info('No changes found for the configured Moodle-Account.')
 
@@ -161,7 +160,7 @@ def run_main(storage_path):
         logging.error(error_formatted, extra={'exception': e})
 
         if r_client:
-            r_client.captureException(exec_info=True)
+            sentry_sdk.capture_exception(e)
 
         mail_service.notify_about_error(str(e))
 
@@ -175,7 +174,9 @@ def dir_path(path):
     if os.path.isdir(path):
         return path
     else:
-        raise argparse.ArgumentTypeError(f"'{path}' is not a valid path. Make sure the directory exists.")
+        raise argparse.ArgumentTypeError(
+            f"'{path}' is not a valid path. Make sure the directory exists.")
+
 
 IS_DEBUG = False
 
@@ -183,12 +184,17 @@ if 'pydevd' in sys.modules:
     IS_DEBUG = True
     print('[RUNNING IN DEBUG-MODE!]')
 
-parser = argparse.ArgumentParser(description='Moodle Donwlaoder 2 helps you download all the course files of your Moodle account.')
+parser = argparse.ArgumentParser(
+    description='Moodle Donwlaoder 2 helps you download all the course files of your Moodle account.')
 group = parser.add_mutually_exclusive_group()
-group.add_argument('--init', action='store_true', help='Guides you trough the configuration of the software, including the activation of mail-notifications and obtainment of a login-token for your Moodle-Account. It does not fetch the current state of your Moodle-Account.')
-group.add_argument('--new-token', action='store_true', help='Overrides the login-token with a newly obtained one. It does not fetch the current state of your Moodle-Account. Use it if at any point in time, for whatever reason, the saved token gets rejected by Moodle. It does not affect the rest of the config.')
-group.add_argument('--change-notification-mail', action='store_true', help='Activate/deactivate/change the settings for receiving notifications via e-mail. It does not affect the rest of the config.')
-parser.add_argument('--path', default='.', type=dir_path, help='Sets the location of the configuration, logs and downloaded files. PATH must be an existing directory in which you have read and write access. (default: current working directory)')
+group.add_argument('--init', action='store_true',
+                   help='Guides you trough the configuration of the software, including the activation of mail-notifications and obtainment of a login-token for your Moodle-Account. It does not fetch the current state of your Moodle-Account.')
+group.add_argument('--new-token', action='store_true',
+                   help='Overrides the login-token with a newly obtained one. It does not fetch the current state of your Moodle-Account. Use it if at any point in time, for whatever reason, the saved token gets rejected by Moodle. It does not affect the rest of the config.')
+group.add_argument('--change-notification-mail', action='store_true',
+                   help='Activate/deactivate/change the settings for receiving notifications via e-mail. It does not affect the rest of the config.')
+parser.add_argument('--path', default='.', type=dir_path,
+                    help='Sets the location of the configuration, logs and downloaded files. PATH must be an existing directory in which you have read and write access. (default: current working directory)')
 
 args = parser.parse_args()
 
@@ -202,4 +208,3 @@ elif args.change_notification_mail:
     run_change_notification_mail(storage_path)
 else:
     run_main(storage_path)
-

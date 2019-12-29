@@ -3,8 +3,6 @@ import os
 from getpass import getpass
 from urllib.parse import urlparse
 
-from bs4 import BeautifulSoup
-
 from utils.config_helper import ConfigHelper
 from moodle_connector import login_helper
 from moodle_connector.request_helper import RequestRejectedError, RequestHelper
@@ -13,14 +11,15 @@ from utils.state_recorder import StateRecorder, Course
 
 
 class MoodleService:
-    def __init__(self, config_helper: ConfigHelper, storage_path : str):
+    def __init__(self, config_helper: ConfigHelper, storage_path: str):
         self.config_helper = config_helper
-        self.recorder = StateRecorder(os.path.join(storage_path, 'moodle_state.db'))
-
+        self.recorder = StateRecorder(
+            os.path.join(storage_path, 'moodle_state.db'))
 
     def interactively_acquire_token(self) -> str:
         """
-        Walks the user through executing a login into the Moodle-System to get the Token and saves it.
+        Walks the user through executing a login into the Moodle-System to get
+        the Token and saves it.
         @return: The Token for Moodle.
         """
         print('[The following Credentials are not saved, it is only used temporarily to generate a login token.]')
@@ -37,7 +36,10 @@ class MoodleService:
             moodle_path = os.path.join(os.path.dirname(moodle_uri.path), '')
 
             try:
-                moodle_token = login_helper.obtain_login_token(moodle_username, moodle_password, moodle_domain, moodle_path)
+                moodle_token = login_helper.obtain_login_token(moodle_username,
+                                                               moodle_password,
+                                                               moodle_domain,
+                                                               moodle_path)
             except RequestRejectedError as error:
                 print('Login Failed! (%s) Please try again.' % (error))
             except (ValueError, RuntimeError) as error:
@@ -50,20 +52,18 @@ class MoodleService:
 
         return moodle_token
 
- 
     def fetch_state(self) -> ([Course]):
         """
-        Gets the current status of the configured Moodle account and compares it
-        with the last known status for changes. It does not change the known state,
-        nor does it download the files. 
+        Gets the current status of the configured Moodle account and compares
+        it with the last known status for changes. It does not change the
+        known state, nor does it download the files.
         @return: Tuple with (detected changes)
         """
         logging.debug('Fetching current Moodle State...')
-        
+
         token = self.get_token()
         moodle_domain = self.get_moodle_domain()
         moodle_path = self.get_moodle_path()
-
 
         request_helper = RequestHelper(moodle_domain, moodle_path, token)
         list_handler = ResultsHandler(request_helper)
@@ -86,13 +86,11 @@ class MoodleService:
 
         return changes
 
- 
     def get_token(self) -> str:
         try:
             return self.config_helper.get_property('token')
         except ValueError:
             raise ValueError('Not yet configured!')
-
 
     def get_moodle_domain(self) -> str:
         try:
@@ -105,4 +103,3 @@ class MoodleService:
             return self.config_helper.get_property('moodle_path')
         except ValueError:
             raise ValueError('Not yet configured!')
-

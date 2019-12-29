@@ -6,6 +6,7 @@ class ConfigHelper:
     """
     Handles the saving, formatting and loading of the local configuration.
     """
+
     def __init__(self, storage_path: str):
         self._whole_config = {}
         self.config_path = os.path.join(storage_path, "config.json")
@@ -30,7 +31,7 @@ class ConfigHelper:
         try:
             return self._whole_config[key]
         except KeyError:
-            raise ValueError('The %s-Property is not yet configured!'%(key))
+            raise ValueError('The %s-Property is not yet configured!' % (key))
 
     def set_property(self, key: str, value: any):
         self._whole_config.update({key: value})

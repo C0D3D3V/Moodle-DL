@@ -10,8 +10,8 @@ Encapsulates the formatting of the various notification-mails.
 """
 
 # for the following template strings, viewer discretion is advised.
-# No, I personally don't want to write them with these ugly table layouts and inline styles.
-# But the mail clients leave me no other choice...
+# No, I personally don't want to write them with these ugly table layouts and
+# inline styles. But the mail clients leave me no other choice...
 
 main_wrapper = Template('''
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -160,8 +160,8 @@ def _finish_with_main_wrapper(content: str, introduction: str) -> (str,
     return (full_content, cids_and_filenames)
 
 
-def create_full_moodle_diff_mail(changed_courses: [Changed_Course]) -> (str,
-                                                                   {str: str}):
+def create_full_moodle_diff_mail(changed_courses: [Course]) -> (str,
+                                                                {str: str}):
     full_content = ''
 
     for course in changed_courses:
@@ -170,15 +170,15 @@ def create_full_moodle_diff_mail(changed_courses: [Changed_Course]) -> (str,
 
             if file.modified:
                 inner_content += moodle_modified_box.substitute(
-                    file_name=change_file.saved_to
+                    file_name=file.saved_to
                 )
             elif file.deleted:
                 inner_content += moodle_deleted_box.substitute(
-                    file_name=change_file.saved_to
+                    file_name=file.saved_to
                 )
             else:
                 inner_content += moodle_added_box.substitute(
-                    file_name=change_file.saved_to
+                    file_name=file.saved_to
                 )
 
         full_content += moodle_main_box.substitute(

@@ -6,7 +6,7 @@ class ResultsHandler:
     """
     Fetches and parses the various endpoints in Moodle.
     """
-    
+
     def __init__(self, request_helper: RequestHelper):
         self.request_helper = request_helper
 
@@ -19,32 +19,30 @@ class ResultsHandler:
 
         return result.get("userid", "")
 
-
-    def fetch_courses(self, userid : str) -> [Course]:
+    def fetch_courses(self, userid: str) -> [Course]:
 
         data = {
-            'userid':  userid
+            'userid': userid
         }
 
-        result = self.request_helper.get_REST('core_enrol_get_users_courses', data)
-       
+        result = self.request_helper.get_REST(
+            'core_enrol_get_users_courses', data)
 
         results = []
         for course in result:
             results.append(
-                Course(course.get("id", ""), 
-                    course.get("fullname", ""))
-                )
+                Course(course.get("id", ""),
+                       course.get("fullname", ""))
+            )
         return results
-
 
     def fetch_files(self, course_id: str) -> [File]:
         data = {
-            'courseid':  course_id
+            'courseid': course_id
         }
 
         result = self.request_helper.get_REST('core_course_get_contents', data)
-        
+
         files = []
 
         for section in result:
@@ -57,21 +55,24 @@ class ResultsHandler:
 
                 module_contents = module.get("contents", [])
 
-                if (module_modname == "resource" or module_modname == "folder"):
+                if (module_modname == "resource" or
+                        module_modname == "folder"):
                     for content in module_contents:
+                        content_id = content.get("id", "")
                         content_type = content.get("type", "")
                         content_filename = content.get("filename", "")
                         content_filepath = content.get("filepath", "")
                         content_filesize = content.get("filesize", "")
                         content_fileurl = content.get("fileurl", "")
                         content_timemodified = content.get("timemodified", "")
-                        content_isexternalfile = content.get("isexternalfile", "")
+                        content_isexternalfile = content.get(
+                            "isexternalfile", "")
 
-                        files.append(File(section_name,  module_name, 
-                            content_filepath, content_filename, content_fileurl,
-                            content_filesize, content_timemodified, module_modname,
-                            content_type, content_isexternalfile)
-                        )
+                        files.append(File(content_id, section_name,
+                                          module_name, content_filepath,
+                                          content_filename, content_fileurl,
+                                          content_filesize,
+                                          content_timemodified, module_modname,
+                                          content_type, content_isexternalfile)
+                                     )
         return files
-
-

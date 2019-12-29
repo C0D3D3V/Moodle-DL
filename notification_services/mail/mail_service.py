@@ -43,17 +43,17 @@ class MailService(NotificationService):
                     print('Error while sending the test mail: %s' % (str(e)))
                 else:
                     input(
-                        'Please check if you received the Welcome-Mail.'
-                        + ' If yes, confirm with Return.\nIf not, exit'
-                        + ' this program ([CTRL]+[C]) and try again later.'
+                        'Please check if you received the Welcome-Mail.' +
+                        ' If yes, confirm with Return.\nIf not, exit' +
+                        ' this program ([CTRL]+[C]) and try again later.'
                     )
                     config_valid = True
 
                 raw_send_error_msg = ''
                 while raw_send_error_msg not in ['y', 'n']:
                     raw_send_error_msg = input(
-                        'Do you want to also get error reports sent by mail?'
-                        + ' [y/n]   ')
+                        'Do you want to also get error reports sent by mail?' +
+                        ' [y/n]   ')
                 do_send_error_msg = raw_send_error_msg == 'y'
 
                 mail_cfg = {
