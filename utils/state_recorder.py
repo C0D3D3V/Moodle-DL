@@ -8,7 +8,7 @@ class File:
                  content_fileurl: str, content_filesize: int,
                  content_timemodified: int, module_modname: str,
                  content_type: str, content_isexternalfile: bool,
-                 saved_to: str = "", time_downloaded: int = 0,
+                 saved_to: str = "", time_stamp: int = 0,
                  modified: bool = False, deleted: bool = False):
 
         self.content_id = content_id
@@ -24,7 +24,7 @@ class File:
         self.content_isexternalfile = content_isexternalfile
 
         self.saved_to = saved_to
-        self.time_downloaded = time_downloaded
+        self.time_stamp = time_stamp
         self.modified = modified
         self.deleted = deleted
 
@@ -65,7 +65,7 @@ class StateRecorder:
             content_type text NOT NULL,
             content_isexternalfile text NOT NULL,
             saved_to text NOT NULL,
-            time_downloaded integer NOT NULL,
+            time_stamp integer NOT NULL,
             motified integer DEFAULT 0 NOT NULL,
             deleted integer DEFAULT 0 NOT NULL,
             notified integer DEFAULT 0 NOT NULL
@@ -77,8 +77,14 @@ class StateRecorder:
             ON files (content_id);
             """
 
+            sql_create_index2 = """
+            CREATE INDEX IF NOT EXISTS idx_course_id
+            ON files (course_id);
+            """
+
             c.execute(sql_create_index_table)
             c.execute(sql_create_index)
+            c.execute(sql_create_index2)
 
             conn.commit()
             conn.close()
@@ -208,7 +214,7 @@ class StateRecorder:
                     content_type=file_row['content_type'],
                     content_isexternalfile=file_row['content_isexternalfile'],
                     saved_to=file_row['saved_to'],
-                    time_downloaded=file_row['time_downloaded'],
+                    time_stamp=file_row['time_stamp'],
                     motified=file_row['motified'],
                     deleted=file_row['deleted']
                 )
@@ -222,9 +228,20 @@ class StateRecorder:
 
     def notified(self, courses: [Course]):
         # saves that a notification with the changes where send
-        raise ValueError(
-            'Not jet implemented!'
-        )
+
+        conn = sqlite3.connect(self.db_file)
+        cursor = conn.cursor()
+
+        for course in courses:
+            course_id = course.id
+
+            for file in course.files:
+                cursor.execute("""UPDATE *
+                        FROM files WHERE notified = 0 AND course_id = ?""",
+                                   (course_id,))
+
+        conn.commit()
+        conn.close()
 
     def save_file(self, file: File, course_id: int, path: str, deleted=False,
                   modified=False):
