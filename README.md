@@ -1,5 +1,5 @@
 
-This project is still being worked on and is not yet fully operational.
+The project is still in the early beta phase. Please give me feedback so that I can quickly deliver improvements.
 ======
 
 # Moodle-Downloader
