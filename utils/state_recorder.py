@@ -1,9 +1,10 @@
 import sqlite3
+
 from sqlite3 import Error
 
 
 class File:
-    def __init__(self, content_id: int, section_name: str, module_name: str,
+    def __init__(self, module_id: int, section_name: str, module_name: str,
                  content_filepath: str, content_filename: str,
                  content_fileurl: str, content_filesize: int,
                  content_timemodified: int, module_modname: str,
@@ -12,7 +13,7 @@ class File:
                  modified: bool = False, deleted: bool = False,
                  notified: bool = False):
 
-        self.content_id = content_id
+        self.module_id = module_id
         self.section_name = section_name
         self.module_name = module_name
         self.content_filepath = content_filepath
@@ -32,7 +33,7 @@ class File:
 
     def getMap(self) -> {str: str}:
         return {
-            'content_id': self.content_id,
+            'module_id': self.module_id,
             'section_name': self.section_name,
             'module_name': self.module_name,
             'content_filepath': self.content_filepath,
@@ -52,7 +53,7 @@ class File:
 
     def fromRow(row):
         return File(
-            content_id=row['content_id'],
+            module_id=row['module_id'],
             section_name=row['section_name'],
             module_name=row['module_name'],
             content_filepath=row['content_filepath'],
@@ -62,7 +63,9 @@ class File:
             content_timemodified=row['content_timemodified'],
             module_modname=row['module_modname'],
             content_type=row['content_type'],
-            content_isexternalfile=False if row['content_isexternalfile'] == 0 else True,
+            content_isexternalfile=False if (
+                row['content_isexternalfile'] == 0) else True,
+
             saved_to=row['saved_to'],
             time_stamp=row['time_stamp'],
             modified=False if row['modified'] == 0 else True,
@@ -70,12 +73,49 @@ class File:
             notified=False if row['notified'] == 0 else True
         )
 
+    def __str__(self):
+        message = "File ("
+
+        message += 'module_id: %s' % (self.module_id)
+        message += ', section_name: %s' % (self.section_name)
+        message += ', module_name: %s' % (self.module_name)
+        message += ', content_filepath: %s' % (self.content_filepath)
+        message += ', content_filename: %s' % (self.content_filename)
+        message += ', content_fileurl: %s' % (self.content_fileurl)
+        message += ', content_filesize: %s' % (self.content_filesize)
+        message += ', content_timemodified: %s' % (self.content_timemodified)
+        message += ', module_modname: %s' % (self.module_modname)
+        message += ', content_isexternalfile: %s' % (
+            self.content_isexternalfile)
+
+        message += ', saved_to: %s' % (self.saved_to)
+        message += ', time_stamp: %s' % (self.time_stamp)
+        message += ', modified: %s' % (self.modified)
+        message += ', deleted: %s' % (self.deleted)
+        message += ', notified: %s' % (self.notified)
+
+        message += ")"
+        return message
+
 
 class Course:
     def __init__(self, id: int, fullname: str, files: [File] = []):
         self.id = id
         self.fullname = fullname
         self.files = files
+
+    def __str__(self):
+        message = "Course ("
+
+        message += 'id: %s' % (self.id)
+        message += ', fullname: %s' % (self.fullname)
+        message += ', files: %s' % (len(self.files))
+
+        for i, file in enumerate(self.files):
+            message += ', file[%i]: %s' % (i, file)
+
+        message += ")"
+        return message
 
 
 class StateRecorder:
@@ -95,7 +135,7 @@ class StateRecorder:
             sql_create_index_table = """ CREATE TABLE IF NOT EXISTS files (
             course_id integer NOT NULL,
             course_fullname integer NOT NULL,
-            content_id integer NOT NULL,
+            module_id integer NOT NULL,
             section_name text NOT NULL,
             module_name text NOT NULL,
             content_filepath text NOT NULL,
@@ -115,8 +155,8 @@ class StateRecorder:
             """
 
             sql_create_index = """
-            CREATE INDEX IF NOT EXISTS idx_content_id
-            ON files (content_id);
+            CREATE INDEX IF NOT EXISTS idx_module_id
+            ON files (module_id);
             """
 
             sql_create_index2 = """
@@ -136,94 +176,175 @@ class StateRecorder:
                 'Could not create database! Error: %s' % (error)
             )
 
-    def __does_file_already_exist(self, file: File, course_id: int,
-                                  cursor) -> bool:
-        # Returns True if the file is already in the Database BUT as
-        # a different version
+    def __files_have_same_path(self, file1: File, file2: File) -> bool:
+        # Returns True if the files have the same path attributes
 
-        data = {'course_id': course_id}
-        data.update(file.getMap())
+        if (file1.module_id == file2.module_id and
+            file1.section_name == file2.section_name and
+            file1.content_filepath == file2.content_filepath and
+                file1.content_filename == file2.content_filename):
+            return True
+        return False
 
-        cursor.execute("""SELECT saved_to FROM files WHERE content_id = :content_id
-            AND course_id = :course_id AND section_name = :section_name
-            AND content_filepath = :content_filepath
-            AND content_filename = :content_filename
-            AND content_fileurl = :content_fileurl
-            AND content_filesize = :content_filesize""",
-                       data)
+    def __files_are_diffrent(self, file1: File, file2: File) -> bool:
+        # Returns True if these files differ from each other
 
-        row = cursor.fetchone()
-        if row is None:
-            return False
-        return True
+        # Not sure if this would be a good idea
+        #  or file1.module_name != file2.module_name)
+        if (file1.content_fileurl != file2.content_fileurl or
+            file1.content_filesize != file2.content_filesize or
+                file1.content_timemodified != file2.content_timemodified):
+            return True
+        return False
 
-    def __is_file_modified(self, file: File, course_id: int, cursor) -> bool:
-        # Returns True if there is a file already in the database with the
-        # same id but different content
+    def changes_of_new_version(self, current_courses: [Course]) -> [Course]:
+        # The database should only have one entrence for one file,
+        # no matter if it is deleted or modified, so is it easier
+        # to track changes
 
-        data = {'course_id': course_id}
-        data.update(file.getMap())
-
-        cursor.execute("""SELECT saved_to FROM files WHERE content_id = :content_id
-            AND course_id = :course_id AND (section_name != :section_name
-            OR content_filepath != :content_filepath
-            OR content_filename != :content_filename
-            OR content_fileurl != :content_fileurl
-            OR content_filesize != :content_filesize)""",
-                       data)
-
-        row = cursor.fetchone()
-        if row is None:
-            return False
-        return True
-
-    def changes_of_new_version(self, courses: [Course]) -> [Course]:
+        # all changes are stored inside changed_courses,
+        # as a list of changed courses
         changed_courses = []
 
+        # this is kind of bad code ... maybe someone can fix it
+
+        # we need to check if there are files stored that
+        # are no longer exists on moodle => deleted
+        # And if there are files that are already exsisting
+        # check if they are modified => modified
+
+        # later check for new files
+
+        # first get all stored files (that are not yet deleted)
         conn = sqlite3.connect(self.db_file)
+        conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
+        stored_courses = []
 
-        # Get ids to delete
-        to_delete_ids = []
-        for course in courses:
-            list_of_ids = []
-            course_id = course.id
-            list_of_ids.append(course_id)
-            for file in course.files:
-                list_of_ids.append(file.content_id)
+        cursor.execute("""SELECT course_id, course_fullname
+            FROM files WHERE deleted = 0 GROUP BY course_id;""")
 
-            sql = """SELECT content_id FROM files WHERE deleted = 0
-            AND course_id = ? AND content_id NOT IN ({})""".format(
-                ','.join('?' * (len(list_of_ids) - 1)))
-            result_deleted = cursor.execute(sql, list_of_ids).fetchall()
-            to_delete_ids += [x[0] for x in result_deleted]
+        curse_rows = cursor.fetchall()
 
-        for course in courses:
-            changed_course = Course(course.id, course.fullname)
-            for file in course.files:
-                changed_file = file
+        for course_row in curse_rows:
+            course = Course(course_row['course_id'],
+                            course_row['course_fullname'])
 
-                if (file.content_id in to_delete_ids):
-                    # Detect Deleted Files
-                    changed_file.deleted = True
-                    changed_course.files.append(changed_file)
+            cursor_inner = conn.cursor()
+            cursor_inner.execute("""SELECT *
+                FROM files WHERE deleted = 0 AND course_id = ?;""",
+                                 (course.id,))
 
-                elif (not self.__does_file_already_exist(changed_file,
-                                                         changed_course.id,
-                                                         cursor)):
-                    if (self.__is_file_modified(changed_file,
-                                                changed_course.id, cursor)):
-                        # Detect Modified Files
-                        changed_file.modified = True
-                        changed_course.files.append(changed_file)
-                    else:
-                        # Detect Added Files
-                        changed_course.files.append(changed_file)
+            file_rows = cursor_inner.fetchall()
 
-            if len(changed_course.files) > 0:
-                changed_courses.append(changed_course)
+            course.files = []
+
+            for file_row in file_rows:
+                notify_file = File.fromRow(file_row)
+                course.files.append(notify_file)
+
+            stored_courses.append(course)
 
         conn.close()
+
+        # ##################################
+
+        for stored_course in stored_courses:
+
+            same_course_in_current = None
+
+            for current_course in current_courses:
+                if (current_course.id == stored_course.id):
+                    same_course_in_current = current_course
+                    break
+
+            if (same_course_in_current is None):
+                # stroed_course does not exist anymore!
+
+                # maybe it would be better
+                # to not notify about this changes?
+                for stored_file in stored_course.files:
+                    stored_file.deleted = True
+                    stored_file.notified = False
+                changed_courses.append(stored_course)
+                # skip the next checks!
+                continue
+
+            # there is the same couse in the current set
+            # so try to find removed files, that are still exist in storage
+            # also find modified files
+            changed_course = Course(stored_course.id, stored_course.fullname)
+            for stored_file in stored_course.files:
+                matching_file = None
+
+                for current_file in same_course_in_current.files:
+                    # Try to find a matching file
+                    if(self.__files_have_same_path(current_file, stored_file)):
+                        matching_file = current_file
+                        break
+
+                if matching_file is None:
+                    # No matching file was found --> file was deleted
+                    stored_file.deleted = True
+                    stored_file.notified = False
+                    changed_course.files.append(stored_file)
+                else:
+                    # An matching file was found
+                    # Test for modification
+                    if(self.__files_are_diffrent(matching_file, stored_file)):
+                        # file ist modified
+                        matching_file.modified = True
+                        changed_course.files.append(stored_file)
+
+            if (len(changed_course.files) > 0):
+                changed_courses.append(changed_course)
+
+        # ----------------------------------------------------------
+
+        # check for new files
+        for current_course in current_courses:
+            # check if that file does not exist in stored
+
+            same_course_in_stored = None
+
+            for stored_course in stored_courses:
+                if (stored_course.id == current_course.id):
+                    same_course_in_stored = stored_course
+                    break
+
+            if (same_course_in_stored is None):
+                # current_course is not saved yet
+
+                changed_courses.append(current_course)
+                # skip the next checks!
+                continue
+
+            changed_course = Course(current_course.id, current_course.fullname)
+            for current_file in current_course.files:
+                matching_file = None
+
+                for stored_file in same_course_in_stored.files:
+                    # Try to find a matching file
+                    if(self.__files_have_same_path(current_file, stored_file)):
+                        matching_file = current_file
+                        break
+
+                if matching_file is None:
+                    # current_file is a new file
+                    changed_course.files.append(current_file)
+
+            if (len(changed_course.files) > 0):
+                matched_changed_course = None
+                for ch_course in changed_courses:
+                    if (ch_course.id == changed_course.id and
+                            ch_course.fullname == changed_course.fullname):
+                        matched_changed_course = ch_course
+                        break
+                if(matched_changed_course is None):
+                    changed_courses.append(changed_course)
+                else:
+                    matched_changed_course.files += changed_course.files
+
         return changed_courses
 
     def changes_to_notify(self) -> [Course]:
@@ -234,18 +355,20 @@ class StateRecorder:
         cursor = conn.cursor()
 
         cursor.execute("""SELECT course_id, course_fullname
-            FROM files WHERE notified = 0 GROUP BY course_id""")
+            FROM files WHERE notified = 0 GROUP BY course_id;""")
 
         curse_rows = cursor.fetchall()
 
-        for curs_row in curse_rows:
-            course = Course(curs_row['course_id'], curs_row['course_fullname'])
+        for course_row in curse_rows:
+            course = Course(course_row['course_id'],
+                            course_row['course_fullname'])
 
-            cursor.execute("""SELECT *
-                FROM files WHERE notified = 0 AND course_id = ?""",
-                           (course.id,))
+            cursor_inner = conn.cursor()
+            cursor_inner.execute("""SELECT *
+                FROM files WHERE notified = 0 AND course_id = ?;""",
+                                 (course.id,))
 
-            file_rows = cursor.fetchall()
+            file_rows = cursor_inner.fetchall()
 
             course.files = []
 
@@ -262,8 +385,6 @@ class StateRecorder:
         # saves that a notification with the changes where send
 
         conn = sqlite3.connect(self.db_file)
-        cursor = conn.cursor()
-
         for course in courses:
             course_id = course.id
 
@@ -272,22 +393,31 @@ class StateRecorder:
                 data = {'course_id': course_id}
                 data.update(file.getMap())
 
+                cursor = conn.cursor()
                 cursor.execute("""UPDATE files
                     SET notified = 1
-                    WHERE content_id = :content_id AND course_id = :course_id
+                    WHERE module_id = :module_id AND course_id = :course_id
                     AND notified = 0
                     AND section_name = :section_name
                     AND content_filepath = :content_filepath
                     AND content_filename = :content_filename
                     AND content_fileurl = :content_fileurl
                     AND content_filesize = :content_filesize
-                    AND time_stamp = :time_stamp
+                    AND content_timemodified = :content_timemodified;
                     """, data)
 
         conn.commit()
         conn.close()
 
     def save_file(self, file: File, course_id: int, course_fullname: str):
+        if (file.deleted):
+            self.delete_file(file, course_id, course_fullname)
+        elif (file.modified):
+            self.modifie_file(file, course_id, course_fullname)
+        else:
+            self.new_file(file, course_id, course_fullname)
+
+    def new_file(self, file: File, course_id: int, course_fullname: str):
         # saves a file to index
 
         conn = sqlite3.connect(self.db_file)
@@ -297,18 +427,63 @@ class StateRecorder:
         data.update(file.getMap())
 
         cursor.execute("""INSERT INTO files
-                    (course_id, course_fullname, content_id, section_name,
+                    (course_id, course_fullname, module_id, section_name,
                     module_name, content_filepath, content_filename,
                     content_fileurl, content_filesize, content_timemodified,
                     module_modname, content_type, content_isexternalfile,
-                    saved_to, time_stamp, modified, notified)
-                    VALUES (:course_id, :course_fullname, :content_id,
+                    saved_to, time_stamp, modified, deleted, notified)
+                    VALUES (:course_id, :course_fullname, :module_id,
                     :section_name, :module_name, :content_filepath,
                     :content_filename, :content_fileurl, :content_filesize,
                     :content_timemodified, :module_modname, :content_type,
                     :content_isexternalfile, :saved_to, :time_stamp,
-                    :modified, :notified)
+                    :modified, :deleted, 0);
                     """, data)
+
+        conn.commit()
+        conn.close()
+
+    def delete_file(self, file: File, course_id: int, course_fullname: str):
+        conn = sqlite3.connect(self.db_file)
+
+        data = {'course_id': course_id, 'course_fullname': course_fullname}
+        data.update(file.getMap())
+
+        cursor = conn.cursor()
+        cursor.execute("""UPDATE files
+            SET notified = 0, deleted = 1, time_stamp = :time_stamp
+            WHERE module_id = :module_id AND course_id = :course_id
+            AND course_fullname = :course_fullname
+            AND section_name = :section_name
+            AND content_filepath = :content_filepath
+            AND content_filename = :content_filename
+            AND content_fileurl = :content_fileurl
+            AND content_filesize = :content_filesize
+            AND content_timemodified = :content_timemodified;
+            """, data)
+
+        conn.commit()
+        conn.close()
+
+    def modifie_file(self, file: File, course_id: int, course_fullname: str):
+        conn = sqlite3.connect(self.db_file)
+
+        data = {'course_id': course_id, 'course_fullname': course_fullname}
+        data.update(file.getMap())
+
+        cursor = conn.cursor()
+        cursor.execute("""UPDATE files
+            SET notified = 0, modified = 1, time_stamp = :time_stamp,
+            saved_to = :saved_to, content_fileurl = :content_fileurl,
+            content_filesize = :content_filesize,
+            content_timemodified = :content_timemodified,
+            module_name = :module_name
+            WHERE module_id = :module_id AND course_id = :course_id
+            AND course_fullname = :course_fullname
+            AND section_name = :section_name
+            AND content_filepath = :content_filepath
+            AND content_filename = :content_filename;
+            """, data)
 
         conn.commit()
         conn.close()

@@ -13,6 +13,7 @@ from utils.state_recorder import StateRecorder, Course
 class MoodleService:
     def __init__(self, config_helper: ConfigHelper, storage_path: str):
         self.config_helper = config_helper
+        self.storage_path = storage_path
         self.recorder = StateRecorder(
             os.path.join(storage_path, 'moodle_state.db'))
 
@@ -79,7 +80,8 @@ class MoodleService:
 
         except (RequestRejectedError, ValueError, RuntimeError) as error:
             raise RuntimeError(
-                'Error while communicating with the Moodle System! (%s)' % (error))
+                'Error while communicating with the Moodle System! (%s)' % (
+                    error))
 
         logging.debug('Checking for changes...')
         changes = self.recorder.changes_of_new_version(courses)

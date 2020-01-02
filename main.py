@@ -10,6 +10,7 @@ import sentry_sdk
 
 
 from utils.config_helper import ConfigHelper
+from utils.logger import Log
 from download_service.download_service import DownloadService
 from moodle_connector.moodle_service import MoodleService
 from notification_services.mail.mail_service import MailService
@@ -104,6 +105,7 @@ def run_main(storage_path):
     )
 
     logging.info('--- main started ---------------------')
+    Log.info('Moodle Donwlaoder starting...')
     if IS_DEBUG:
         logging.info(
             'Debug-Mode detected. Errors will not be logged but instead' +
@@ -114,6 +116,7 @@ def run_main(storage_path):
 
     try:
         logging.debug('Loading config...')
+        Log.debug('Loading config...')
         config = ConfigHelper(storage_path)
         config.load()
     except BaseException as e:
@@ -136,12 +139,16 @@ def run_main(storage_path):
 
         logging.debug(
             'Checking for changes for the configured Moodle-Account....')
+        Log.debug('Checking for changes for the configured Moodle-Account...')
         changed_courses = moodle.fetch_state()
 
         diff_count = 0
 
+        logging.debug(
+            'Start downloading changed files...')
+        Log.debug('Start downloading changed files...')
         downloader = DownloadService(changed_courses, moodle, storage_path)
-        downloader.start()
+        downloader.run()
 
         changed_courses = moodle.recorder.changes_to_notify()
 
@@ -151,12 +158,17 @@ def run_main(storage_path):
         if diff_count > 0:
             logging.info('%s changes found for the configured Moodle-Account.'
                          % (diff_count))
+
+            Log.success('%s changes found for the configured Moodle-Account.'
+                        % (diff_count))
             mail_service.notify_about_changes_in_moodle(changed_courses)
             moodle.recorder.notified(changed_courses)
         else:
             logging.info('No changes found for the configured Moodle-Account.')
+            Log.warning('No changes found for the configured Moodle-Account.')
 
         logging.debug('All done. Exiting...')
+        Log.success('All done. Exiting..')
     except BaseException as e:
         error_formatted = traceback.format_exc()
         logging.error(error_formatted, extra={'exception': e})

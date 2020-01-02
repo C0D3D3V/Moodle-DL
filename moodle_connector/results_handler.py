@@ -52,23 +52,24 @@ class ResultsHandler:
             for module in section_modules:
                 module_name = module.get("name", "")
                 module_modname = module.get("modname", "")
+                module_id = int(module.get("id", 0))
 
                 module_contents = module.get("contents", [])
 
                 if (module_modname == "resource" or
                         module_modname == "folder"):
                     for content in module_contents:
-                        content_id = content.get("id", "")
                         content_type = content.get("type", "")
                         content_filename = content.get("filename", "")
                         content_filepath = content.get("filepath", "")
-                        content_filesize = content.get("filesize", "")
+                        content_filesize = int(content.get("filesize", 0))
                         content_fileurl = content.get("fileurl", "")
-                        content_timemodified = content.get("timemodified", "")
-                        content_isexternalfile = content.get(
-                            "isexternalfile", "")
+                        content_timemodified = int(
+                            content.get("timemodified", 0))
+                        content_isexternalfile = bool(content.get(
+                            "isexternalfile", False))
 
-                        files.append(File(content_id=content_id,
+                        files.append(File(module_id=module_id,
                                           section_name=section_name,
                                           module_name=module_name,
                                           content_filepath=content_filepath,
