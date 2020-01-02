@@ -91,10 +91,16 @@ class DownloadService:
                 self.file.saved_to = os.path.join(self.destination,
                                                   self.file.content_filename)
                 # This file has already been downloaded
-                if os.path.exists(self.file.saved_to):
-                    # TODO renmae path
-                    self.success = True
-                    return self.success
+                count = 2
+                while os.path.exists(self.file.saved_to):
+                    filename, file_extension = os.path.splitext(
+                        self.file.content_filename)
+                    new_filename = "{s}_{:02d}{s}".format(
+                        count, filename, file_extension)
+
+                    self.file.saved_to = os.path.join(self.destination,
+                                                      new_filename)
+                    count += 1
 
                 if(not os.path.exists(os.path.dirname(self.file.saved_to))):
                     os.makedirs(os.path.dirname(self.file.saved_to))

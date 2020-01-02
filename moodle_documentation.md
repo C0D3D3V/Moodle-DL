@@ -3,6 +3,7 @@
 ## Important links
 1. [Obtain Token](https://docs.moodle.org/dev/Creating_a_web_service_client)
 2. [Use API Function](https://docs.moodle.org/dev/Web_service_API_functions)
+3. [Reference to the implemented methods](https://github.com/moodle/moodle/blob/f9db5892ec0fb8c1de22d19177879a876ec35d2b/lib/db/services.php)
 
 ## Usage
 
