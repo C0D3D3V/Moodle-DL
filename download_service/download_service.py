@@ -150,12 +150,22 @@ class DownloadService:
             for file in course.files:
                 if(file.deleted is False):
                     self.total_to_download += file.content_filesize
-                    self.queue.put(DownloadService.URLTarget(
-                        file, course, os.path.join(
+
+                    save_destination = os.path.join(
+                        self.storage_path,
+                        self.to_valid_name(course.fullname),
+                        self.to_valid_name(file.section_name),
+                        file.content_filepath.strip('/'))
+                    if (file.module_modname == "assign"):
+                        save_destination = os.path.join(
                             self.storage_path,
                             self.to_valid_name(course.fullname),
                             self.to_valid_name(file.section_name),
-                            file.content_filepath.strip('/')), self.token,
+                            self.to_valid_name(file.module_name),
+                            file.content_filepath.strip('/'))
+
+                    self.queue.put(DownloadService.URLTarget(
+                        file, course, save_destination, self.token,
                         self.url_tries, self.thread_report))
                 else:
                     self.state_recorder.save_file(

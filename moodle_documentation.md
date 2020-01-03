@@ -101,8 +101,20 @@ The result is an array of elements that looks like this:
 	               // contents
 	             ]
             },
+            {  // assign
+               "id":1002989,
+               "url":"https:\/\/moodle.uni.de\/m\/mod\/assign\/view.php?id=1002989",
+               "name":"Dateiabgabe: Aufgabe 3",
+               "instance":20670,
+               "visible":1,
+               "uservisible":true,
+               "visibleoncoursepage":1,
+               "modicon":"https:\/\/moodle.uni.de\/m\/theme\/image.php\/boost_campus\/assign\/1576236086\/icon",
+               "modname":"assign",
+               "modplural":"Aufgaben",
+               "indent":1
+            },...
             // Modules
-
         ]
     },
     //Sections
@@ -113,6 +125,7 @@ The result is an array of elements that looks like this:
 
 4. mod_assign_get_assignments (since version 2.4)
 * Returns the courses and assignments for the users capability  (Basicly the files stored in assignmets (except the submissions))
+* set courseid[0] to a course id to get only one course instead of all enroled ones
 
 ```
 {

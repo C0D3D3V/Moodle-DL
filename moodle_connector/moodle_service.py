@@ -75,8 +75,8 @@ class MoodleService:
             userid = list_handler.fetch_userid()
             courses = list_handler.fetch_courses(userid)
 
-            for i, course in enumerate(courses):
-                courses[i].files = list_handler.fetch_files(course.id)
+            for course in courses:
+                course.files = list_handler.fetch_files(course.id)
 
         except (RequestRejectedError, ValueError, RuntimeError) as error:
             raise RuntimeError(
