@@ -156,7 +156,8 @@ class DownloadService:
                         self.to_valid_name(course.fullname),
                         self.to_valid_name(file.section_name),
                         file.content_filepath.strip('/'))
-                    if (file.module_modname == "assign"):
+                    if (file.module_modname == "assign" or
+                            file.module_modname == "folder"):
                         save_destination = os.path.join(
                             self.storage_path,
                             self.to_valid_name(course.fullname),
