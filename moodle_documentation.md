@@ -4,13 +4,17 @@
 1. [Obtain Token](https://docs.moodle.org/dev/Creating_a_web_service_client)
 2. [Use API Function](https://docs.moodle.org/dev/Web_service_API_functions)
 3. [Reference to the implemented methods](https://github.com/moodle/moodle/blob/f9db5892ec0fb8c1de22d19177879a876ec35d2b/lib/db/services.php)
+  [More reference to the implemented methods](https://github.com/moodle/moodle/blob/6153be6850869cdc3a6ae925dcf6e688ac481333/mod/assign/db/services.php)
+  The source code can be useful to find out which parameters are allowed on the interfaces.
+4. [Moodle Andorid App (Working in Chromium)](https://mobileapp.moodledemo.net/)
+    The Web App can be used to find out how the Andoird App makes the requests
 
 ## Usage
 
-1. core_webservice_get_site_info	
+1. core_webservice_get_site_info (since version 2.1)     
 * get the userid (and all available functions)
 
-2.	core_enrol_get_users_courses	
+2.	core_enrol_get_users_courses (since version 2.0) 	 
 * get list of course ids that a user is enrolled in (if you are allowed to see that)
 
 The result is an array of elements that looks like this:
@@ -35,7 +39,7 @@ The result is an array of elements that looks like this:
 }
 ```
 
-3.	core_course_get_contents		
+3.	core_course_get_contents (since version 2.2)		
 * get course content (modules + web service file urls)	
 
 ```
@@ -106,3 +110,84 @@ The result is an array of elements that looks like this:
 ```
 
 3. Download the files given in the `fileurl` Attributes with the token as an additionaly parameter.
+
+4. mod_assign_get_assignments (since version 2.4)
+* Returns the courses and assignments for the users capability  (Basicly the files stored in assignmets (except the submissions))
+
+```
+{
+   "courses":[
+      {
+         "id":23569,
+         "fullname":"Einf\u00fchrung in die Kryptographie (141022-WiSe19\/20)",
+         "shortname":"Einf\u00fchrung in die Kryptographie (141022-WiSe19\/20)",
+         "timemodified":1569934149,
+         "assignments":[
+            {
+               "id":20711,
+               "cmid":1004737,
+               "course":23569,
+               "name":"\u00dcbung 7 (aktualisiert 29.11.2019, 20 Uhr)",
+               "nosubmissions":0,
+               "submissiondrafts":0,
+               "sendnotifications":0,
+               "sendlatenotifications":0,
+               "sendstudentnotifications":1,
+               "duedate":1575544500,
+               "allowsubmissionsfromdate":1574945100,
+               "grade":100,
+               "timemodified":1575053543,
+               "completionsubmit":1,
+               "cutoffdate":1575544500,
+               "gradingduedate":0,
+               "teamsubmission":1,
+               "requireallteammemberssubmit":0,
+               "teamsubmissiongroupingid":1106,
+               "blindmarking":0,
+               "revealidentities":0,
+               "attemptreopenmethod":"none",
+               "maxattempts":-1,
+               "markingworkflow":1,
+               "markingallocation":0,
+               "requiresubmissionstatement":1,
+               "preventsubmissionnotingroup":1,
+               "submissionstatement":"Diese Arbeit ist meine eigene Leistung. Sofern ich fremde Quellen verwendet habe, sind die Stellen entsprechend gekennzeichnet.",
+               "submissionstatementformat":1,
+               "configs":[
+                  {
+                     "plugin":"file",
+                     "subtype":"assignsubmission",
+                     "name":"enabled",
+                     "value":"1"
+                  },...
+               ],
+               "intro":"<p>Grundlagen von Erweiterungsk\u00f6rpern, Multiplikation und Inversion in GF(2<sup>m<\/sup>) und Addition, Subtraktion und Multiplikation in GF(p<sup>m<\/sup>).<\/p><p><br \/><\/p><p>Update (29.11.2019, 20 Uhr): Aufgabe 1 hinsichtlich Primzahlk\u00f6rper pr\u00e4zisiert.<\/p>",
+               "introformat":1,
+               "introfiles":[
+
+               ],
+               "introattachments":[
+                  {
+                     "filename":"Uebung_7_EK1_WS1920.pdf",
+                     "filepath":"\/",
+                     "filesize":50113,
+                     "fileurl":"https:\/\/moodle.uni.de\/m\/webservice\/pluginfile.php\/1540276\/mod_assign\/introattachment\/0\/Uebung_7_EK1_WS1920.pdf",
+                     "timemodified":1575053454,
+                     "mimetype":"application\/pdf",
+                     "isexternalfile":false
+                  },...
+               ]
+            },...
+         ]
+      },...
+   ],
+   "warnings":[
+      {
+         "item":"module",
+         "itemid":1016464,
+         "warningcode":"1",
+         "message":"No access rights in module context"
+      },...
+   ]
+}
+```
