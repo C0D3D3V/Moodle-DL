@@ -25,7 +25,8 @@ class MailService(NotificationService):
             while not config_valid:
                 sender = input('E-Mail-Address of the Sender:   ')
                 server_host = input('Host of the SMTP-Server:   ')
-                server_port = input('Port of the SMTP-Server [STARTTLS, mostly 587]:   ')
+                server_port = input(
+                    'Port of the SMTP-Server [STARTTLS, mostly 587]:   ')
                 username = input('Username for the SMTP-Server:   ')
                 password = getpass(
                     'Password for the SMTP-Server [no output]:   ')
@@ -73,7 +74,8 @@ class MailService(NotificationService):
             mail_cfg = self.config_helper.get_property('mail')
         except ValueError:
             logging.debug('Mail-Notifications not configured, skipping.')
-            pass  # ignore exception further up
+            return
+            # pass  # ignore exception further up
 
         try:
             logging.debug('Sending Notification via Mail...')
@@ -94,6 +96,12 @@ class MailService(NotificationService):
             raise e  # to be properly notified via Sentry
 
     def notify_about_changes_in_moodle(self, changes: [Course]) -> None:
+        try:
+            self.config_helper.get_property('mail')
+        except ValueError:
+            logging.debug('Mail-Notifications not configured, skipping.')
+            return
+
         mail_content = create_full_moodle_diff_mail(changes)
 
         diff_count = 0
@@ -104,8 +112,13 @@ class MailService(NotificationService):
                         (diff_count), mail_content)
 
     def notify_about_error(self, error_description: str):
-        if not self.config_helper.get_property('mail').get('send_error_msg',
-                                                           True):
+        try:
+            mail_cfg = self.config_helper.get_property('mail')
+        except ValueError:
+            logging.debug('Mail-Notifications not configured, skipping.')
+            return
+
+        if not mail_cfg.get('send_error_msg', True):
             return
 
         mail_content = create_full_error_mail(error_description)
