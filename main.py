@@ -122,6 +122,7 @@ def run_main(storage_path):
     except BaseException as e:
         logging.error('Error while trying to load the Configuration! ' +
                       'Exiting...', extra={'exception': e})
+        Log.error('Error while trying to load the Configuration!')
         sys.exit(-1)
 
     r_client = False
@@ -180,6 +181,11 @@ def run_main(storage_path):
 
         logging.debug('Exception-Handling completed. Exiting...',
                       extra={'exception': e})
+        Log.critical('Exception:\n%s' % (
+            error_formatted))
+        Log.error('The following error occurred during execution: %s' % (
+            str(e)))
+
         sys.exit(-1)
 
 

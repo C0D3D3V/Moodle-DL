@@ -32,7 +32,7 @@ class ResultsHandler:
         for course in result:
             results.append(
                 Course(course.get("id", ""),
-                       course.get("fullname", ""))
+                       course.get("fullname", ""), [])
             )
         return results
 
@@ -76,11 +76,13 @@ class ResultsHandler:
                 module_contents = module.get("contents", [])
 
                 if (module_modname == "resource" or
-                        module_modname == "folder"):
+                        module_modname == "folder" or module_modname == "url"):
                     for content in module_contents:
                         content_type = content.get("type", "")
                         content_filename = content.get("filename", "")
                         content_filepath = content.get("filepath", "")
+                        if content_filepath is None:
+                            content_filepath = '/'
                         content_filesize = int(content.get("filesize", 0))
                         content_fileurl = content.get("fileurl", "")
                         content_timemodified = int(

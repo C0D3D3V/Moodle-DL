@@ -197,25 +197,8 @@ class StateRecorder:
             return True
         return False
 
-    def changes_of_new_version(self, current_courses: [Course]) -> [Course]:
-        # The database should only have one entrence for one file,
-        # no matter if it is deleted or modified, so is it easier
-        # to track changes
-
-        # all changes are stored inside changed_courses,
-        # as a list of changed courses
-        changed_courses = []
-
-        # this is kind of bad code ... maybe someone can fix it
-
-        # we need to check if there are files stored that
-        # are no longer exists on moodle => deleted
-        # And if there are files that are already exsisting
-        # check if they are modified => modified
-
-        # later check for new files
-
-        # first get all stored files (that are not yet deleted)
+    def __get_stored_files(self) -> [Course]:
+        # get all stored files (that are not yet deleted)
         conn = sqlite3.connect(self.db_file)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
@@ -228,7 +211,7 @@ class StateRecorder:
 
         for course_row in curse_rows:
             course = Course(course_row['course_id'],
-                            course_row['course_fullname'])
+                            course_row['course_fullname'], [])
 
             cursor_inner = conn.cursor()
             cursor_inner.execute("""SELECT *
@@ -246,8 +229,12 @@ class StateRecorder:
             stored_courses.append(course)
 
         conn.close()
+        return stored_courses
 
-        # ##################################
+    def __get_modified_files(self, stored_courses: [Course],
+                             current_courses: [Course]) -> [Course]:
+        # retuns courses with modified and deleted files
+        changed_courses = []
 
         for stored_course in stored_courses:
 
@@ -273,7 +260,8 @@ class StateRecorder:
             # there is the same couse in the current set
             # so try to find removed files, that are still exist in storage
             # also find modified files
-            changed_course = Course(stored_course.id, stored_course.fullname)
+            changed_course = Course(
+                stored_course.id, stored_course.fullname, [])
             for stored_file in stored_course.files:
                 matching_file = None
 
@@ -299,8 +287,11 @@ class StateRecorder:
             if (len(changed_course.files) > 0):
                 changed_courses.append(changed_course)
 
-        # ----------------------------------------------------------
+        return changed_courses
 
+    def __get_new_files(self, changed_courses: [Course],
+                        stored_courses: [Course],
+                        current_courses: [Course]) -> [Course]:
         # check for new files
         for current_course in current_courses:
             # check if that file does not exist in stored
@@ -319,7 +310,12 @@ class StateRecorder:
                 # skip the next checks!
                 continue
 
-            changed_course = Course(current_course.id, current_course.fullname)
+            # Does anyone know why it is necessary to give
+            # a course an empty list of files O.o
+            # if I don't do this then a course will be created
+            # with the files of the previous course
+            changed_course = Course(
+                current_course.id, current_course.fullname, [])
             for current_file in current_course.files:
                 matching_file = None
 
@@ -336,14 +332,43 @@ class StateRecorder:
             if (len(changed_course.files) > 0):
                 matched_changed_course = None
                 for ch_course in changed_courses:
-                    if (ch_course.id == changed_course.id and
-                            ch_course.fullname == changed_course.fullname):
+                    if (ch_course.id == changed_course.id):
                         matched_changed_course = ch_course
                         break
                 if(matched_changed_course is None):
                     changed_courses.append(changed_course)
                 else:
                     matched_changed_course.files += changed_course.files
+        return changed_courses
+
+    def changes_of_new_version(self, current_courses: [Course]) -> [Course]:
+        # The database should only have one entrence for one file,
+        # no matter if it is deleted or modified, so is it easier
+        # to track changes
+
+        # all changes are stored inside changed_courses,
+        # as a list of changed courses
+        changed_courses = []
+
+        # this is kind of bad code ... maybe someone can fix it
+
+        # we need to check if there are files stored that
+        # are no longer exists on moodle => deleted
+        # And if there are files that are already exsisting
+        # check if they are modified => modified
+
+        # later check for new files
+
+        # first get all stored files (that are not yet deleted)
+        stored_courses = self.__get_stored_files()
+
+        changed_courses = self.__get_modified_files(
+            stored_courses, current_courses)
+        # ----------------------------------------------------------
+
+        # check for new files
+        changed_courses = self.__get_new_files(
+            changed_courses, stored_courses, current_courses)
 
         return changed_courses
 
@@ -361,7 +386,7 @@ class StateRecorder:
 
         for course_row in curse_rows:
             course = Course(course_row['course_id'],
-                            course_row['course_fullname'])
+                            course_row['course_fullname'], [])
 
             cursor_inner = conn.cursor()
             cursor_inner.execute("""SELECT *

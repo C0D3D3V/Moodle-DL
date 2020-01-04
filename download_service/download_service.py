@@ -4,11 +4,13 @@ import time
 import html
 import urllib
 import threading
+import logging
 
 import urllib.parse as urlparse
 
 from moodle_connector.moodle_service import MoodleService
 from utils.state_recorder import Course, File, StateRecorder
+from utils.logger import Log
 from queue import Queue
 
 
@@ -71,7 +73,9 @@ class DownloadService:
             self.downloaded += block_size
             if(total_size == -1):
                 total_size = self.file.content_filesize
-            percent = int(self.downloaded * 100 / total_size)
+            percent = 100
+            if(total_size != 0):
+                percent = int(self.downloaded * 100 / total_size)
             self.thread_report[self.thread_id]['percentage'] = percent
 
         def add_token_to_url(self, url: str):
@@ -81,6 +85,50 @@ class DownloadService:
             url_parts[4] = urlparse.urlencode(query)
             return urlparse.urlunparse(url_parts)
 
+        def create_shortcut(self):
+            self.file.saved_to = os.path.join(
+                self.destination, self.file.content_filename + ".desktop")
+            if os.name == "nt":
+                self.file.saved_to = os.path.join(
+                    self.destination, self.file.content_filename + ".URL")
+
+            count = 2
+            while os.path.exists(self.file.saved_to):
+                # This file has already been downloaded
+                new_filename = "{s}_{:02d}{s}".format(
+                    self.file.content_filename, count, ".desktop")
+                if os.name == "nt":
+                    new_filename = "{s}_{:02d}{s}".format(
+                        self.file.content_filename, count, ".URL")
+
+                self.file.saved_to = os.path.join(self.destination,
+                                                  new_filename)
+                count += 1
+
+            if(not os.path.exists(os.path.dirname(self.file.saved_to))):
+               os.makedirs(os.path.dirname(self.file.saved_to))
+
+            with open(self.file.saved_to, 'a') as shortcut:
+                if os.name == "nt":
+                    shortcut.write("[InternetShortcut]" + os.linesep)
+                    shortcut.write(
+                        "URL=" + self.file.content_fileurl + os.linesep)
+                else:
+                    shortcut.write("[Desktop Entry]" + os.linesep)
+                    shortcut.write("Encoding=UTF-8" + os.linesep)
+                    shortcut.write(
+                        "Name=" + self.file.content_filename + os.linesep)
+                    shortcut.write("Type=Link" + os.linesep)
+                    shortcut.write(
+                        "URL=" + self.file.content_fileurl + os.linesep)
+                    shortcut.write("Icon=text-html" + os.linesep)
+                    shortcut.write(
+                        "Name[en_US]=" + self.file.content_filename + os.linesep)
+
+            self.file.time_stamp = int(time.time())
+
+            self.success = True
+
         def download(self, thread_id: int):
             self.thread_id = thread_id
             self.downloaded = 0
@@ -88,15 +136,22 @@ class DownloadService:
             self.url_tried = self.url_tried + 1
 
             try:
+                # if it is a url we have to create a shortcut
+                # instead of downloading it
+                if (self.file.module_modname == 'url'):
+                    self.create_shortcut()
+                    return self.success
+
                 self.file.saved_to = os.path.join(self.destination,
                                                   self.file.content_filename)
-                # This file has already been downloaded
+
                 count = 2
                 while os.path.exists(self.file.saved_to):
+                    # This file has already been downloaded
                     filename, file_extension = os.path.splitext(
                         self.file.content_filename)
                     new_filename = "{s}_{:02d}{s}".format(
-                        count, filename, file_extension)
+                        filename, count, file_extension)
 
                     self.file.saved_to = os.path.join(self.destination,
                                                       new_filename)
@@ -182,8 +237,7 @@ class DownloadService:
 
         fininshed_downlaoding = False
 
-        while (not fininshed_downlaoding and self.queue.qsize() > 0 and
-               self.total_to_download > 0):
+        while (not fininshed_downlaoding):
             fininshed_downlaoding = True
             for thread in self.threads:
                 if thread.is_alive():
@@ -199,8 +253,11 @@ class DownloadService:
                     i, self.thread_report[i]['percentage'])
                 threads_total_downloaded += self.thread_report[i]['total']
 
-            percentage = int(threads_total_downloaded *
-                             100 / self.total_to_download)
+            percentage = 100
+            if (self.total_to_download != 0):
+                percentage = int(threads_total_downloaded *
+                                 100 / self.total_to_download)
+
             progressmessage += "Total: %3s%% %12s/%12skb" % (
                 percentage, int(threads_total_downloaded / 1000.0),
                 int(self.total_to_download / 1000.0))
@@ -209,6 +266,14 @@ class DownloadService:
             sys.stdout.flush()
 
         print('')
+
+        if (len(self.report['failure']) > 0):
+            Log.warning(
+                "Error while trying to download files, look at the log for more details.")
+
+        for url_target in self.report['failure']:
+            logging.error('Error while trying to download file: %s! Exception: %s' % (
+                url_target.file.saved_to, url_target.error))
 
         # if self.queue.qsize() > 0:
         #    self.queue.join()
