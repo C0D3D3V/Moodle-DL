@@ -5,7 +5,8 @@ from getpass import getpass
 from urllib.parse import urlparse
 
 from utils.config_helper import ConfigHelper
-from utils.state_recorder import StateRecorder, Course
+from state_recorder.course import Course
+from state_recorder.state_recorder import StateRecorder
 from moodle_connector import login_helper
 from moodle_connector.results_handler import ResultsHandler
 from moodle_connector.request_helper import RequestRejectedError, RequestHelper

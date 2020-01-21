@@ -4,7 +4,8 @@ import urllib
 
 import urllib.parse as urlparse
 
-from utils.state_recorder import Course, File
+from state_recorder.course import Course
+from state_recorder.file import File
 
 
 class URLTarget(object):

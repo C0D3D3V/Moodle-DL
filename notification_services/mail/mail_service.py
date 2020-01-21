@@ -3,7 +3,7 @@ import traceback
 
 from getpass import getpass
 
-from utils.state_recorder import Course
+from state_recorder.course import Course
 from notification_services.mail.mail_shooter import MailShooter
 from notification_services.notification_service import NotificationService
 from notification_services.mail.mail_formater import create_full_welcome_mail,\

@@ -6,7 +6,7 @@ import threading
 from queue import Queue
 
 from utils.logger import Log
-from utils.state_recorder import Course
+from state_recorder.course import Course
 from utils.string_tools import StringTools
 from download_service.url_target import URLTarget
 from download_service.downloader import Downloader

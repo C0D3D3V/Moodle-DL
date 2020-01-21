@@ -2,7 +2,7 @@ import threading
 
 from queue import Queue
 
-from utils.state_recorder import StateRecorder
+from state_recorder.state_recorder import StateRecorder
 
 
 class Downloader(threading.Thread):

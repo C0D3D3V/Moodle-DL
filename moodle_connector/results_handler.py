@@ -1,4 +1,5 @@
-from utils.state_recorder import Course, File
+from state_recorder.file import File
+from state_recorder.course import Course
 from moodle_connector.request_helper import RequestHelper
 
 

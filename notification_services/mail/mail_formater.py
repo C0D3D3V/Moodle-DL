@@ -3,7 +3,7 @@
 from string import Template
 from email.utils import make_msgid
 
-from utils.state_recorder import Course
+from state_recorder.course import Course
 
 """
 Encapsulates the formatting of the various notification-mails.

@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 
-from utils.state_recorder import Course
+from state_recorder.course import Course
 from utils.config_helper import ConfigHelper
 
 
