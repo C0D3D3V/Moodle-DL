@@ -27,6 +27,9 @@ class Downloader(threading.Thread):
         self.state_recorder = state_recorder
 
     def run(self):
+        """
+        Work the queue until it is empty.
+        """
         while self.queue.empty() is False:
             try:
                 # raise condition

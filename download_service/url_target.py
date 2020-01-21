@@ -1,6 +1,6 @@
 import os
-import urllib
 import time
+import urllib
 
 import urllib.parse as urlparse
 
