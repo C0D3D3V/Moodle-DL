@@ -113,7 +113,7 @@ class DownloadService:
         for i in range(self.thread_count):
             thread = Downloader(self.queue, self.report,
                                 self.state_recorder, i,
-                                self.lock)
+                                self.lock, self.url_tries)
             thread.start()
             self.threads.append(thread)
 

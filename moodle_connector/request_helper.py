@@ -119,7 +119,9 @@ class RequestHelper:
         if (response.getcode() != 200):
             raise RuntimeError(
                 'An Unexpected Error happened on side of the Moodle System!' +
-                ' Status-Code: %s' % str(response.getcode()))
+                (' Status-Code: %s' % str(response.getcode())) +
+                ('\nHeader: %s' % (response.getheaders())) +
+                ('\nResponse: %s' % (response.read())))
 
         # Try to parse the json
         try:
@@ -127,7 +129,7 @@ class RequestHelper:
         except ValueError as error:
             raise RuntimeError('An Unexpected Error occurred while trying' +
                                ' to parse the json response! Moodle' +
-                               ' response: %s. Error: %s' % (
+                               ' response: %s.\nError: %s' % (
                                    response.read(), error))
         # Check for known erorrs
         if ("error" in response_extracted):

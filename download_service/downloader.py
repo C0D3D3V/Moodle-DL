@@ -14,7 +14,7 @@ class Downloader(threading.Thread):
     def __init__(self, queue: Queue, report: [],
                  state_recorder: StateRecorder,
                  thread_id: int,
-                 lock: threading.Lock):
+                 lock: threading.Lock, url_tries: int):
         """
         Initiates a downloader thread.
         """
@@ -25,6 +25,7 @@ class Downloader(threading.Thread):
         self.thread_id = thread_id
         self.lock = lock
         self.state_recorder = state_recorder
+        self.url_tries = url_tries
 
     def run(self):
         """
@@ -45,13 +46,13 @@ class Downloader(threading.Thread):
             # attempts is not reached, the url target would
             # be returned to the queue
             if (response is False and
-                    url_target.url_tried < url_target.url_tries):
+                    url_target.url_tried < self.url_tries):
                 self.queue.put(url_target)
 
             # If a download fails but the maximum number of
             # attempts is exhausted, add it to the error report.
             elif (response is False and
-                  url_target.url_tried == url_target.url_tries):
+                  url_target.url_tried == self.url_tries):
                 self.report['failure'].append(url_target)
 
             # If a download was successful, store it in the database.
