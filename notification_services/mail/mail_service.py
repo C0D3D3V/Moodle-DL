@@ -1,16 +1,20 @@
 import logging
 import traceback
+
 from getpass import getpass
 
-from notification_services.mail.mail_formater import create_full_welcome_mail,\
-    create_full_moodle_diff_mail, create_full_error_mail
+from utils.state_recorder import Course
 from notification_services.mail.mail_shooter import MailShooter
 from notification_services.notification_service import NotificationService
-from utils.state_recorder import Course
+from notification_services.mail.mail_formater import create_full_welcome_mail,\
+    create_full_moodle_diff_mail, create_full_error_mail
 
 
 class MailService(NotificationService):
     def interactively_configure(self) -> None:
+        """
+        Guides the user through the configuration of the mail notification.
+        """
         do_mail_input = input(
             'Do you want to activate Notifications via mail [y/n]?   ')
         while not (do_mail_input == 'y' or do_mail_input == 'n'):
@@ -70,6 +74,7 @@ class MailService(NotificationService):
                 self.config_helper.set_property('mail', mail_cfg)
 
     def _is_configured(self) -> bool:
+        # Checks if the sending of emails has been configured.
         try:
             self.config_helper.get_property('mail')
             return True
@@ -78,6 +83,9 @@ class MailService(NotificationService):
             return False
 
     def _send_mail(self, subject, mail_content: (str, {str: str})):
+        """
+        Sends an email
+        """
         if (not self._is_configured()):
             return
 
@@ -102,6 +110,10 @@ class MailService(NotificationService):
             raise e  # to be properly notified via Sentry
 
     def notify_about_changes_in_moodle(self, changes: [Course]) -> None:
+        """
+        Sends out a notification email about the downloaded changes.
+        @param changes: A list of changed courses with changed files.
+        """
         if (not self._is_configured()):
             return
 
@@ -115,6 +127,10 @@ class MailService(NotificationService):
                         (diff_count), mail_content)
 
     def notify_about_error(self, error_description: str):
+        """
+        Sends out an error mail if configured to do so.
+        @param error_description: The error object.
+        """
         if (not self._is_configured()):
             return
 

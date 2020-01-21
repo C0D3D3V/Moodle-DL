@@ -69,7 +69,8 @@ def run_init(storage_path):
         print(
             '  To set a cron-job for this program on your Unix-System:\n' +
             '    1. `crontab -e`\n' +
-            '    2. Add `*/15 * * * * cd %s && python3 %smain.py --path %s`\n' % (
+            '    2. Add `*/15 * * * *' +
+            ' cd %s && python3 %smain.py --path %s`\n' % (
                 os.getcwd(), os.path.join(os.path.dirname(
                     os.path.realpath(__file__)), ''), storage_path) +
             '    3. Save and you\'re done!'
@@ -190,8 +191,7 @@ def run_main(storage_path):
         sys.exit(-1)
 
 
-# --- called at the program invocation: ---------------------
-def dir_path(path):
+def _dir_path(path):
     if os.path.isdir(path):
         return path
     else:
@@ -199,6 +199,7 @@ def dir_path(path):
             f"'{path}' is not a valid path. Make sure the directory exists.")
 
 
+# --- called at the program invocation: -------------------------------------
 IS_DEBUG = False
 
 if 'pydevd' in sys.modules:
@@ -206,16 +207,36 @@ if 'pydevd' in sys.modules:
     print('[RUNNING IN DEBUG-MODE!]')
 
 parser = argparse.ArgumentParser(
-    description='Moodle Donwlaoder 2 helps you download all the course files of your Moodle account.')
+    description=('Moodle Donwlaoder 2 helps you download all the course' +
+                 ' files  of your Moodle account.'))
 group = parser.add_mutually_exclusive_group()
 group.add_argument('--init', action='store_true',
-                   help='Guides you trough the configuration of the software, including the activation of mail-notifications and obtainment of a login-token for your Moodle-Account. It does not fetch the current state of your Moodle-Account.')
+                   help=('Guides you trough the configuration of the' +
+                         ' software, including the activation of' +
+                         ' mail-notifications and obtainment of a' +
+                         ' login-token for your Moodle-Account. It' +
+                         ' does not fetch the current state of your' +
+                         ' Moodle-Account.'))
+
 group.add_argument('--new-token', action='store_true',
-                   help='Overrides the login-token with a newly obtained one. It does not fetch the current state of your Moodle-Account. Use it if at any point in time, for whatever reason, the saved token gets rejected by Moodle. It does not affect the rest of the config.')
+                   help=('Overrides the login-token with a newly obtained' +
+                         ' one. It does not fetch the current state of your' +
+                         ' Moodle-Account. Use it if at any point in time,' +
+                         ' for whatever reason, the saved token gets' +
+                         ' rejected by Moodle. It does not affect the rest' +
+                         ' of the config.'))
+
 group.add_argument('--change-notification-mail', action='store_true',
-                   help='Activate/deactivate/change the settings for receiving notifications via e-mail. It does not affect the rest of the config.')
-parser.add_argument('--path', default='.', type=dir_path,
-                    help='Sets the location of the configuration, logs and downloaded files. PATH must be an existing directory in which you have read and write access. (default: current working directory)')
+                   help=('Activate/deactivate/change the settings for' +
+                         ' receiving notifications via e-mail. It does not' +
+                         ' affect the rest of the config.'))
+
+parser.add_argument('--path', default='.', type=_dir_path,
+                    help=('Sets the location of the configuration,' +
+                          ' logs and downloaded files. PATH must be an' +
+                          ' existing directory in which you have read and' +
+                          ' write access. (default: current working' +
+                          ' directory)'))
 
 args = parser.parse_args()
 
