@@ -6,7 +6,6 @@ from state_recorder.file import File
 from state_recorder.course import Course
 
 
-
 class StateRecorder:
     """
     Saves the state and provides utilities to detect changes in the current
@@ -14,6 +13,11 @@ class StateRecorder:
     """
 
     def __init__(self, db_file: str):
+        """
+        Initiates the database.
+        If no database exists yet, a new one is created.
+        @param db_file: The path to the database
+        """
         self.db_file = db_file
 
         try:
@@ -43,6 +47,7 @@ class StateRecorder:
             );
             """
 
+            # Create two indices for a faster search.
             sql_create_index = """
             CREATE INDEX IF NOT EXISTS idx_module_id
             ON files (module_id);
