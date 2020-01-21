@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 # coding=utf-8
 
-import logging
 import os
 import sys
-import traceback
+import logging
 import argparse
+import traceback
 import sentry_sdk
 
 
-from utils.config_helper import ConfigHelper
 from utils.logger import Log
-from download_service.download_service import DownloadService
+from utils.config_helper import ConfigHelper
 from moodle_connector.moodle_service import MoodleService
+from download_service.download_service import DownloadService
 from notification_services.mail.mail_service import MailService
 
 
@@ -163,6 +163,7 @@ def run_main(storage_path):
             Log.success('%s changes found for the configured Moodle-Account.'
                         % (diff_count))
             mail_service.notify_about_changes_in_moodle(changed_courses)
+            # TODO: notify also via the console
             moodle.recorder.notified(changed_courses)
         else:
             logging.info('No changes found for the configured Moodle-Account.')

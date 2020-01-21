@@ -1,7 +1,7 @@
 # coding=utf-8
 
-from email.utils import make_msgid
 from string import Template
+from email.utils import make_msgid
 
 from utils.state_recorder import Course
 
@@ -14,18 +14,26 @@ Encapsulates the formatting of the various notification-mails.
 # inline styles. But the mail clients leave me no other choice...
 
 main_wrapper = Template('''
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
     <html xmlns="http://www.w3.org/1999/xhtml">
     <head></head>
-    <body style="padding: 17px; background-color: #fefefe; font-family: 'Segoe UI', 'Calibri', 'Lucida Grande', Arial, sans-serif;">
+    <body style="padding: 17px; background-color: #fefefe;
+    font-family: 'Segoe UI', 'Calibri', 'Lucida Grande', Arial,
+    sans-serif;">
         <div style="background-color: #ffffff; border: 1px solid #dfdede;">
-            <table border-spacing="0" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 17px; width: 100%; border-spacing: 0;">
+            <table border-spacing="0" cellspacing="0" cellpadding="0"
+            border="0" style="margin-bottom: 17px; width: 100%;
+            border-spacing: 0;">
                 <tbody><tr>
-                    <td style="vertical-align: middle; width: 400px; padding: 0; margin: 0;">
+                    <td style="vertical-align: middle; width: 400px;
+                    padding: 0; margin: 0;">
                         <img src="cid:${header_cid}" style="height: 70px;"/>
                     </td>
-                    <td style="vertical-align: middle; width: auto; padding: 0; margin: 0;">
-                        <img src="cid:${extender_cid}" style="height: 70px; width: 100%;"/>
+                    <td style="vertical-align: middle; width: auto;
+                    padding: 0; margin: 0;">
+                        <img src="cid:${extender_cid}" style="height: 70px;
+                        width: 100%;"/>
                     </td>
                 </tr></tbody>
             </table>
@@ -41,9 +49,12 @@ main_wrapper = Template('''
 ''')
 
 error_message_box = Template('''
-    <table style="width: 100%; background-color: #ff3860; color: #fff; margin-bottom: 15px;">
+    <table style="width: 100%; background-color: #ff3860; color: #fff;
+    margin-bottom: 15px;">
         <tr>
-            <td style="font-family: 'Segoe UI', 'Calibri', 'Lucida Grande', Arial, sans-serif; padding: 15px; padding-top: 7px; padding-bottom: 7px;">
+            <td style="font-family: 'Segoe UI', 'Calibri', 'Lucida Grande',
+            Arial, sans-serif; padding: 15px; padding-top: 7px;
+            padding-bottom: 7px;">
                     ${details}
             </td>
         </tr>
@@ -51,9 +62,12 @@ error_message_box = Template('''
 ''')
 
 info_message_box = Template('''
-    <table style="width: 100%; background-color: #23d160; color: #fff; margin-bottom: 15px; padding: 10px;">
+    <table style="width: 100%; background-color: #23d160; color: #fff;
+    margin-bottom: 15px; padding: 10px;">
         <tr>
-            <td style="font-family: 'Segoe UI', 'Calibri', 'Lucida Grande', Arial, sans-serif; padding: 15px; padding-top: 7px; padding-bottom: 7px;">
+            <td style="font-family: 'Segoe UI', 'Calibri', 'Lucida Grande',
+            Arial, sans-serif; padding: 15px; padding-top: 7px;
+            padding-bottom: 7px;">
                 <p>
                     ${text}
                 </p>
@@ -63,7 +77,9 @@ info_message_box = Template('''
 ''')
 
 moodle_main_box = Template('''
-    <p style="padding-bottom: 10px; color: #7d878d; font-size: 20px; font-family: 'Segoe UI', 'Calibri', 'Lucida Grande', Arial, sans-serif;">
+    <p style="padding-bottom: 10px; color: #7d878d; font-size: 20px;
+    font-family: 'Segoe UI', 'Calibri', 'Lucida Grande', Arial,
+    sans-serif;">
             ${course_name}
     </p>
     <table style="width: 100%;">
@@ -81,10 +97,16 @@ moodle_main_box = Template('''
 Optional open Moodle Link
             <tr style="height: 50px">
                 <td colspan="2">
-                    <a style="border: 1px solid #e2001a; border-radius: 3px; padding: 3px; padding-left: 5px; padding-right: 7px; color: #e2001a; text-decoration: none !important;"
+                    <a style="border: 1px solid #e2001a;
+                    border-radius: 3px; padding: 3px;
+                    padding-left: 5px; padding-right: 7px;
+                    color: #e2001a; text-decoration: none !important;"
                         target="_blank"
                         href="${moodle_link}">
-                                <span style="text-decoration: none !important; font-family: 'Segoe UI', 'Calibri', 'Lucida Grande', Arial, sans-serif;">Open Moodle »</span>
+                                <span style="text-decoration: none !important;
+                                font-family: 'Segoe UI', 'Calibri',
+                                'Lucida Grande', Arial, sans-serif;">
+                                Open Moodle »</span>
                     </a>
                 </td>
             </tr>
@@ -92,10 +114,14 @@ Optional open Moodle Link
 
 moodle_added_box = Template('''
     <tr>
-        <td style="padding-bottom: 10px; color: #7d878d; font-size: 14px; font-family: 'Segoe UI', 'Calibri', 'Lucida Grande', Arial, sans-serif;">
+        <td style="padding-bottom: 10px; color: #7d878d; font-size: 14px;
+        font-family: 'Segoe UI', 'Calibri', 'Lucida Grande', Arial,
+        sans-serif;">
             +
         </td>
-        <td style="padding-bottom: 10px; color: #7d878d; font-size: 16px; font-family: 'Segoe UI', 'Calibri', 'Lucida Grande', Arial, sans-serif;">
+        <td style="padding-bottom: 10px; color: #7d878d; font-size: 16px;
+        font-family: 'Segoe UI', 'Calibri', 'Lucida Grande', Arial,
+        sans-serif;">
             ${file_name}
         </td>
     </tr>
@@ -103,10 +129,14 @@ moodle_added_box = Template('''
 
 moodle_modified_box = Template('''
     <tr>
-        <td style="padding-bottom: 10px; color: #7d878d; font-size: 14px; font-family: 'Segoe UI', 'Calibri', 'Lucida Grande', Arial, sans-serif;">
+        <td style="padding-bottom: 10px; color: #7d878d; font-size: 14px;
+        font-family: 'Segoe UI', 'Calibri', 'Lucida Grande', Arial,
+        sans-serif;">
             ≠
         </td>
-        <td style="padding-bottom: 10px; color: #7d878d; font-size: 16px; font-family: 'Segoe UI', 'Calibri', 'Lucida Grande', Arial, sans-serif;">
+        <td style="padding-bottom: 10px; color: #7d878d; font-size: 16px;
+        font-family: 'Segoe UI', 'Calibri', 'Lucida Grande', Arial,
+        sans-serif;">
             ${file_name}
         </td>
     </tr>
@@ -114,10 +144,14 @@ moodle_modified_box = Template('''
 
 moodle_deleted_box = Template('''
     <tr>
-        <td style="padding-bottom: 10px; color: #7d878d; font-size: 14px; font-family: 'Segoe UI', 'Calibri', 'Lucida Grande', Arial, sans-serif;">
+        <td style="padding-bottom: 10px; color: #7d878d; font-size: 14px;
+        font-family: 'Segoe UI', 'Calibri', 'Lucida Grande', Arial,
+        sans-serif;">
             -
         </td>
-        <td style="padding-bottom: 10px; color: #7d878d; font-size: 16px; font-family: 'Segoe UI', 'Calibri', 'Lucida Grande', Arial, sans-serif;">
+        <td style="padding-bottom: 10px; color: #7d878d; font-size: 16px;
+        font-family: 'Segoe UI', 'Calibri', 'Lucida Grande', Arial,
+        sans-serif;">
             ${file_name}
         </td>
     </tr>
@@ -144,6 +178,10 @@ Additionaly Text in the Table?
 
 def _finish_with_main_wrapper(content: str, introduction: str) -> (str,
                                                                    {str: str}):
+    """
+    All emails use the main wrapper. This contains the normal html structure
+    @return: A sendable mail object, with the content and the attachments
+    """
     # cids link the attatched media-files to be displayed inline
     header_cid = make_msgid()
     extender_cid = make_msgid()
@@ -162,6 +200,11 @@ def _finish_with_main_wrapper(content: str, introduction: str) -> (str,
 
 def create_full_moodle_diff_mail(changed_courses: [Course]) -> (str,
                                                                 {str: str}):
+    """
+    Creates an email with all changed files. This includes new, modified
+    and deleted files. Files that have changed since the last email.
+    @param changed_courses: A list of all courses with their modified files.
+    """
     full_content = ''
 
     for course in changed_courses:
@@ -196,6 +239,9 @@ def create_full_moodle_diff_mail(changed_courses: [Course]) -> (str,
 
 
 def create_full_welcome_mail() -> (str, {str: str}):
+    """
+    Creates a test email
+    """
     content = info_message_box.substitute(text='Wow, it works! \\o/')
 
     full_content = _finish_with_main_wrapper(content, 'Welcome! Test Test...')
@@ -204,6 +250,9 @@ def create_full_welcome_mail() -> (str, {str: str}):
 
 
 def create_full_error_mail(details) -> (str, {str: str}):
+    """
+    Creates an error message
+    """
     content = error_message_box.substitute(details=details)
 
     full_content = _finish_with_main_wrapper(
