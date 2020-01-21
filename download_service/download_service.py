@@ -48,7 +48,10 @@ class DownloadService:
         # A list of the created threads
         self.threads = []
         # A lock to stabilize thread insecure resources.
+        # writing in DB
         self.lock = threading.Lock()
+        # reading file system
+        self.lock2 = threading.Lock()
 
         # report is used to collect successful and failed downloads
         self.report = {'success': [], 'failure': []}
@@ -83,7 +86,7 @@ class DownloadService:
 
                     self.queue.put(URLTarget(
                         file, course, save_destination, self.token,
-                        self.thread_report))
+                        self.thread_report, self.lock2))
                 else:
                     # Detelted files gets instant deleted
                     # TODO: Delete all files in one go.

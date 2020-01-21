@@ -1,8 +1,11 @@
 import os
 import time
 import urllib
+import traceback
+import threading
 
 import urllib.parse as urlparse
+from pathlib import Path
 
 from state_recorder.course import Course
 from state_recorder.file import File
@@ -14,7 +17,7 @@ class URLTarget(object):
     """
 
     def __init__(self, file: File, course: Course, destination: str,
-                 token: str, thread_report: []):
+                 token: str, thread_report: [], lock: threading.Lock):
         """
         Initiating an url target.
         """
@@ -23,6 +26,7 @@ class URLTarget(object):
         self.course = course
         self.destination = destination
         self.token = token
+        self.lock = lock
 
         # Counts the downlaod attempts
         self.url_tried = 0
@@ -73,10 +77,13 @@ class URLTarget(object):
     def _create_dir(path: str):
         # Creates the folders of a path if they do not exist.
         if(not os.path.exists(os.path.dirname(path))):
-            os.makedirs(os.path.dirname(path))
+            try:
+                # raise condition
+                os.makedirs(os.path.dirname(path))
+            except FileExistsError:
+                pass
 
-    @staticmethod
-    def _rename_if_exists(path: str) -> str:
+    def _rename_if_exists(self, path: str) -> str:
         """
         Rename a file name until no file with the same name exists.
         @param path: The path to the file to be renamed.
@@ -87,17 +94,25 @@ class URLTarget(object):
         content_filename = os.path.basename(path)
         destination = os.path.dirname(path)
 
+        # this is some kind of raise condition
+        # Even though it should hardly ever happen,
+        # it is possible that threads try to create the same file
+        self.lock.acquire()
         while os.path.exists(new_path):
             count += 1
 
             filename, file_extension = os.path.splitext(
                 content_filename)
 
-            new_filename = "{s}_{:02d}{s}".format(
+            new_filename = "%s_%02d%s" % (
                 filename, count, file_extension)
 
             new_path = os.path.join(destination,
                                     new_filename)
+
+        Path(new_path).touch()
+        self.lock.release()
+
         return new_path
 
     def create_shortcut(self):
@@ -112,9 +127,9 @@ class URLTarget(object):
             self.file.saved_to = os.path.join(
                 self.destination, self.file.content_filename + ".URL")
 
+
         self.file.saved_to = self._rename_if_exists(self.file.saved_to)
 
-        self._create_dir(self.file.saved_to)
 
         with open(self.file.saved_to, 'w+') as shortcut:
             if os.name == "nt":
@@ -148,6 +163,7 @@ class URLTarget(object):
 
         try:
 
+            self._create_dir(self.destination)
             # if it is a url we have to create a shortcut
             # instead of downloading it
             if (self.file.module_modname == 'url'):
@@ -159,7 +175,6 @@ class URLTarget(object):
 
             self.file.saved_to = self._rename_if_exists(self.file.saved_to)
 
-            self._create_dir(self.file.saved_to)
 
             urllib.request.urlretrieve(self._add_token_to_url(
                 self.file.content_fileurl),
@@ -171,7 +186,7 @@ class URLTarget(object):
             self.success = True
 
         except Exception as e:
-            self.error = e
+            self.error = traceback.format_exc() + "\nError:" + str(e)
             # Subtract the already downloaded content in case of an error.
             self.thread_report[self.thread_id]['total'] -= self.downloaded
             self.thread_report[self.thread_id]['percentage'] = 100
