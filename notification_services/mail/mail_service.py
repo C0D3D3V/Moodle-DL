@@ -69,13 +69,19 @@ class MailService(NotificationService):
 
                 self.config_helper.set_property('mail', mail_cfg)
 
-    def _send_mail(self, subject, mail_content: (str, {str: str})):
+    def _is_configured(self) -> bool:
         try:
-            mail_cfg = self.config_helper.get_property('mail')
+            self.config_helper.get_property('mail')
+            return True
         except ValueError:
             logging.debug('Mail-Notifications not configured, skipping.')
+            return False
+
+    def _send_mail(self, subject, mail_content: (str, {str: str})):
+        if (not self._is_configured()):
             return
-            # pass  # ignore exception further up
+
+        mail_cfg = self.config_helper.get_property('mail')
 
         try:
             logging.debug('Sending Notification via Mail...')
@@ -96,10 +102,7 @@ class MailService(NotificationService):
             raise e  # to be properly notified via Sentry
 
     def notify_about_changes_in_moodle(self, changes: [Course]) -> None:
-        try:
-            self.config_helper.get_property('mail')
-        except ValueError:
-            logging.debug('Mail-Notifications not configured, skipping.')
+        if (not self._is_configured()):
             return
 
         mail_content = create_full_moodle_diff_mail(changes)
@@ -112,11 +115,10 @@ class MailService(NotificationService):
                         (diff_count), mail_content)
 
     def notify_about_error(self, error_description: str):
-        try:
-            mail_cfg = self.config_helper.get_property('mail')
-        except ValueError:
-            logging.debug('Mail-Notifications not configured, skipping.')
+        if (not self._is_configured()):
             return
+
+        mail_cfg = self.config_helper.get_property('mail')
 
         if not mail_cfg.get('send_error_msg', True):
             return

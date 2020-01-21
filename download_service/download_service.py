@@ -83,7 +83,7 @@ class DownloadService:
 
                     self.queue.put(URLTarget(
                         file, course, save_destination, self.token,
-                        self.url_tries, self.thread_report))
+                        self.thread_report))
                 else:
                     # Detelted files gets instant deleted
                     # TODO: Delete all files in one go.
@@ -178,5 +178,4 @@ class DownloadService:
 
         for url_target in self.report['failure']:
             logging.error('Error while trying to download file:' +
-                          ' %s Exception: %s' % (
-                              url_target.file.saved_to, str(url_target.error)))
+                          ' %s' % (url_target))
