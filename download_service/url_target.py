@@ -127,9 +127,7 @@ class URLTarget(object):
             self.file.saved_to = os.path.join(
                 self.destination, self.file.content_filename + ".URL")
 
-
         self.file.saved_to = self._rename_if_exists(self.file.saved_to)
-
 
         with open(self.file.saved_to, 'w+') as shortcut:
             if os.name == "nt":
@@ -174,7 +172,6 @@ class URLTarget(object):
                                               self.file.content_filename)
 
             self.file.saved_to = self._rename_if_exists(self.file.saved_to)
-
 
             urllib.request.urlretrieve(self._add_token_to_url(
                 self.file.content_fileurl),
