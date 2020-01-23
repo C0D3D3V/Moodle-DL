@@ -14,8 +14,6 @@ class StringTools:
         # Moodle saves the titel of a section in HTML-Format,
         # so we need to unescape the string
 
-        # TODO: Maybe only do html.unescape only
-        #       if there is an '&' in the string...
         name = html.unescape(name)
         # Forward and Backward Slashes are not good for filenames
         name = name.replace(os.path.sep, '|')

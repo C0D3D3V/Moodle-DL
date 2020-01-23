@@ -1,3 +1,5 @@
+import logging
+
 from state_recorder.file import File
 from state_recorder.course import Course
 from moodle_connector.request_helper import RequestHelper
@@ -10,8 +12,16 @@ class ResultsHandler:
 
     def __init__(self, request_helper: RequestHelper):
         self.request_helper = request_helper
+        # oldest suported moodle version
+        self.version = 2011120500
 
-    def fetch_userid(self) -> str:
+    def setVersion(self, version: int):
+        self.version = version
+
+        logging.debug('Detected moodle version: %d' % (version))
+
+
+    def fetch_userid_and_version(self) -> str:
         """
         Ask the Moodle system for the user id.
         @return: the userid
@@ -21,8 +31,18 @@ class ResultsHandler:
         if ("userid" not in result):
             raise RuntimeError(
                 'Error could not receive your user ID!')
+        userid = result.get("userid", "")
 
-        return result.get("userid", "")
+        version = result.get("version", "2011120500")
+
+        try:
+            version = int(version.split(".")[0])
+        except Exception as e:
+            raise RuntimeError(
+                'Error could not parse version string: ' +
+                '"%s" Error: %s' % (version, e))
+
+        return userid, version
 
     def fetch_courses(self, userid: str) -> [Course]:
         """
@@ -54,10 +74,11 @@ class ResultsHandler:
                           should be fetched.
         @return: A List of assignments or None
         """
+        # do this only if version is greater then 2.4
+        # because mod_assign_get_assignments will fail
+        if (self.version < 2012120300):
+            return None
 
-        # TODO: do this only on version 2.4
-        # "release":"3.4.1+ (Build: 20180216)"
-        # in core_webservice_get_site_info
         assign_data = {
             'courseids[0]': course_id
         }

@@ -76,7 +76,9 @@ class MoodleService:
         courses = []
         try:
 
-            userid = results_handler.fetch_userid()
+            userid, version = results_handler.fetch_userid_and_version()
+            results_handler.setVersion(version)
+
             courses = results_handler.fetch_courses(userid)
 
             for course in courses:

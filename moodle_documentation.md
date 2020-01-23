@@ -8,6 +8,7 @@
   The source code can be useful to find out which parameters are allowed on the interfaces.
 4. [Moodle Andorid App (Working in Chromium)](https://mobileapp.moodledemo.net/)
     The Web App can be used to find out how the Andoird App makes the requests
+5. [Moodle Versions](https://docs.moodle.org/dev/Releases)
 
 ## Usage
 
