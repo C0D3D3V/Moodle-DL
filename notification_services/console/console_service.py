@@ -22,13 +22,16 @@ class ConsoleService(NotificationService):
 
             for file in course.files:
                 if file.modified:
-                    print(COLOR_SEQ % YELLOW + '≠\t' + file.saved_to + RESET_SEQ)
+                    print(COLOR_SEQ % YELLOW + '≠\t' +
+                          file.saved_to + RESET_SEQ)
 
                 elif file.deleted:
-                    print(COLOR_SEQ % MAGENTA + '-\t' + file.saved_to + RESET_SEQ)
+                    print(COLOR_SEQ % MAGENTA + '-\t' +
+                          file.saved_to + RESET_SEQ)
 
                 else:
-                    print(COLOR_SEQ % GREEN + '+\t' + file.saved_to + RESET_SEQ)
+                    print(COLOR_SEQ % GREEN + '+\t' +
+                          file.saved_to + RESET_SEQ)
             print("\n\n")
 
     def notify_about_error(self, error_description: str):
