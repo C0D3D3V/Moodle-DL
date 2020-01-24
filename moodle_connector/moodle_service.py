@@ -1,4 +1,5 @@
 import os
+import sys
 import logging
 
 from getpass import getpass
@@ -81,8 +82,15 @@ class MoodleService:
 
             courses = results_handler.fetch_courses(userid)
 
+            index = 0
             for course in courses:
+                index += 1
+                sys.stdout.write(
+                    "\rDownload course information %d/%d" % (index,
+                                                             len(courses)))
+                sys.stdout.flush()
                 course.files = results_handler.fetch_files(course.id)
+            print("")
 
         except (RequestRejectedError, ValueError, RuntimeError) as error:
             raise RuntimeError(

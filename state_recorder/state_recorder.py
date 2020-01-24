@@ -107,12 +107,11 @@ class StateRecorder:
             course = Course(course_row['course_id'],
                             course_row['course_fullname'], [])
 
-            cursor_inner = conn.cursor()
-            cursor_inner.execute("""SELECT *
+            cursor.execute("""SELECT *
                 FROM files WHERE deleted = 0 AND course_id = ?;""",
-                                 (course.id,))
+                           (course.id,))
 
-            file_rows = cursor_inner.fetchall()
+            file_rows = cursor.fetchall()
 
             course.files = []
 
@@ -282,12 +281,11 @@ class StateRecorder:
             course = Course(course_row['course_id'],
                             course_row['course_fullname'], [])
 
-            cursor_inner = conn.cursor()
-            cursor_inner.execute("""SELECT *
+            cursor.execute("""SELECT *
                 FROM files WHERE notified = 0 AND course_id = ?;""",
-                                 (course.id,))
+                           (course.id,))
 
-            file_rows = cursor_inner.fetchall()
+            file_rows = cursor.fetchall()
 
             course.files = []
 
@@ -358,6 +356,32 @@ class StateRecorder:
                     :content_isexternalfile, :saved_to, :time_stamp,
                     :modified, :deleted, 0);
                     """, data)
+
+        conn.commit()
+        conn.close()
+
+    def batch_delete_files(self, courses: [Course]):
+        conn = sqlite3.connect(self.db_file)
+        cursor = conn.cursor()
+
+        for course in courses:
+            for file in course.files:
+                if(file.deleted):
+                    data = {'course_id': course.id,
+                            'course_fullname': course.fullname}
+                    data.update(file.getMap())
+
+                    cursor.execute("""UPDATE files
+                        SET notified = 0, deleted = 1, time_stamp = :time_stamp
+                        WHERE module_id = :module_id AND course_id = :course_id
+                        AND course_fullname = :course_fullname
+                        AND section_name = :section_name
+                        AND content_filepath = :content_filepath
+                        AND content_filename = :content_filename
+                        AND content_fileurl = :content_fileurl
+                        AND content_filesize = :content_filesize
+                        AND content_timemodified = :content_timemodified;
+                        """, data)
 
         conn.commit()
         conn.close()

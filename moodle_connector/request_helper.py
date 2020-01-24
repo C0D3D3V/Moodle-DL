@@ -47,7 +47,7 @@ class RequestHelper:
             self.moodle_path, function, self.token, data_enc)
 
         # uncomment this print to debug requested urls
-        print(url)
+        # print(url)
 
         self.connection.request(
             'GET',

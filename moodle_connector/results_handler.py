@@ -20,7 +20,6 @@ class ResultsHandler:
 
         logging.debug('Detected moodle version: %d' % (version))
 
-
     def fetch_userid_and_version(self) -> str:
         """
         Ask the Moodle system for the user id.

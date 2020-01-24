@@ -76,10 +76,10 @@ class URLTarget(object):
     @staticmethod
     def _create_dir(path: str):
         # Creates the folders of a path if they do not exist.
-        if(not os.path.exists(os.path.dirname(path))):
+        if(not os.path.exists(path)):
             try:
                 # raise condition
-                os.makedirs(os.path.dirname(path))
+                os.makedirs(path)
             except FileExistsError:
                 pass
 
@@ -160,8 +160,8 @@ class URLTarget(object):
         self.thread_report[self.thread_id]['percentage'] = 0
 
         try:
-
             self._create_dir(self.destination)
+
             # if it is a url we have to create a shortcut
             # instead of downloading it
             if (self.file.module_modname == 'url'):
@@ -184,9 +184,14 @@ class URLTarget(object):
 
         except Exception as e:
             self.error = traceback.format_exc() + "\nError:" + str(e)
-            # Subtract the already downloaded content in case of an error.
-            self.thread_report[self.thread_id]['total'] -= self.downloaded
-            self.thread_report[self.thread_id]['percentage'] = 100
+            if (self.downloaded == 0 and
+                # remove touched file
+                    os.path.getsize(self.file.saved_to) == 0):
+                os.remove(self.file.saved_to)
+            else:
+                # Subtract the already downloaded content in case of an error.
+                self.thread_report[self.thread_id]['total'] -= self.downloaded
+                self.thread_report[self.thread_id]['percentage'] = 100
 
         return self.success
 

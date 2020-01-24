@@ -61,6 +61,9 @@ class DownloadService:
         # Collects the total size of the files that needs to be downloaded.
         self.total_to_download = 0
 
+        # delete files, that should be deleted
+        self.state_recorder.batch_delete_files(self.courses)
+
         # Prepopulate queue with any files that were given
         for course in self.courses:
             for file in course.files:
@@ -87,11 +90,6 @@ class DownloadService:
                     self.queue.put(URLTarget(
                         file, course, save_destination, self.token,
                         self.thread_report, self.lock2))
-                else:
-                    # Detelted files gets instant deleted
-                    # TODO: Delete all files in one go.
-                    self.state_recorder.save_file(
-                        file, course.id, course.fullname)
 
     def run(self):
         """
