@@ -85,9 +85,14 @@ class MoodleService:
             index = 0
             for course in courses:
                 index += 1
+                shorted_course_name = (
+                    course.fullname[:15] + '..') if (len(course.fullname) >
+                                                     17) else course.fullname
                 sys.stdout.write(
-                    "\rDownload course information %d/%d" % (index,
-                                                             len(courses)))
+                    '\rDownload course information' +
+                    ' %3d/%3d [%10s]' % (index,
+                                                                      len(courses),
+                                                                      shorted_course_name))
                 sys.stdout.flush()
                 course.files = results_handler.fetch_files(course.id)
             print("")
