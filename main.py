@@ -14,6 +14,7 @@ from utils.config_helper import ConfigHelper
 from moodle_connector.moodle_service import MoodleService
 from download_service.download_service import DownloadService
 from notification_services.mail.mail_service import MailService
+from notification_services.console.console_service import ConsoleService
 
 
 class ReRaiseOnError(logging.StreamHandler):
@@ -135,6 +136,7 @@ def run_main(storage_path):
         pass
 
     mail_service = MailService(config)
+    console_service = ConsoleService(config)
 
     try:
         moodle = MoodleService(config, storage_path)
@@ -152,7 +154,7 @@ def run_main(storage_path):
         downloader = DownloadService(changed_courses, moodle, storage_path)
         downloader.run()
 
-        changed_courses = moodle.recorder.changes_to_notify()
+        changed_courses_to_notify = moodle.recorder.changes_to_notify()
 
         for course in changed_courses:
             diff_count += len(course.files)
@@ -163,12 +165,17 @@ def run_main(storage_path):
 
             Log.success('%s changes found for the configured Moodle-Account.'
                         % (diff_count))
-            mail_service.notify_about_changes_in_moodle(changed_courses)
-            # TODO: notify also via the console
-            moodle.recorder.notified(changed_courses)
+
+            console_service.notify_about_changes_in_moodle(
+                changed_courses)
         else:
             logging.info('No changes found for the configured Moodle-Account.')
             Log.warning('No changes found for the configured Moodle-Account.')
+
+        if (len(changed_courses_to_notify) > 0):
+            mail_service.notify_about_changes_in_moodle(
+                changed_courses_to_notify)
+            moodle.recorder.notified(changed_courses_to_notify)
 
         logging.debug('All done. Exiting...')
         Log.success('All done. Exiting..')

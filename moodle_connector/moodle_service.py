@@ -91,8 +91,8 @@ class MoodleService:
                 sys.stdout.write(
                     '\rDownload course information' +
                     ' %3d/%3d [%10s]' % (index,
-                                                                      len(courses),
-                                                                      shorted_course_name))
+                                         len(courses),
+                                         shorted_course_name))
                 sys.stdout.flush()
                 course.files = results_handler.fetch_files(course.id)
             print("")
