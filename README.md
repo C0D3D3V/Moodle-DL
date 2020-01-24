@@ -54,6 +54,25 @@ Options can be combined with all the actions mentioned above.
     - Default: current working directory
 
 
+**I do not want to download all courses I am enrolled in.**
+
+To avoid downloading all the Moodle courses you are enrolled in, you can add the attribute `dont_download_course_ids` to config.json.
+First you have to find out the id of the course you no longer want to download.
+The id is usually located at the end of the course URL, as with this one: http://moodle.uni.com/course/view.php?id=12122
+
+Then you can open the automatically generated config.json with a text editor. For example, to prevent courses `12122` and `42` from being downloaded, add the attribute as in this example.
+```
+{
+    ...,
+    "moodle_path": "/",
+    "dont_download_course_ids": [42, 12122]
+}
+```
+
+
+
+
+
 ### Notes
 - Use a separate E-Mail - Account for sending out the notifications, as its login data is saved in cleartext.
 - The Login-Information for your Moodle-Account is secure, it isn't saved in any way. Only a Login-Token is saved.

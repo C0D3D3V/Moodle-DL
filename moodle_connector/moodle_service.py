@@ -74,7 +74,10 @@ class MoodleService:
         request_helper = RequestHelper(moodle_domain, moodle_path, token)
         results_handler = ResultsHandler(request_helper)
 
+        dont_download_course_ids = self.get_dont_download_course_ids()
+
         courses = []
+        filtered_courses = []
         try:
 
             userid, version = results_handler.fetch_userid_and_version()
@@ -85,16 +88,32 @@ class MoodleService:
             index = 0
             for course in courses:
                 index += 1
-                shorted_course_name = (
-                    course.fullname[:15] + '..') if (len(course.fullname) >
-                                                     17) else course.fullname
+
+                skip = False
+                if (course.id in dont_download_course_ids):
+                    skip = True
+
+                shorted_course_name = course.fullname
+                if (len(course.fullname) > 17):
+                    shorted_course_name = course.fullname[:15] + '..'
+
+                into = '\rDownload course information'
+                if (skip):
+                    into = '\r    Skip course information'
+
                 sys.stdout.write(
-                    '\rDownload course information' +
-                    ' %3d/%3d [%10s]' % (index,
-                                         len(courses),
-                                         shorted_course_name))
+                    into +
+                    ' %3d/%3d [%17s|%6s]' % (index,
+                                             len(courses),
+                                             shorted_course_name,
+                                             course.id))
                 sys.stdout.flush()
+
+                if (skip):
+                    continue
                 course.files = results_handler.fetch_files(course.id)
+
+                filtered_courses.append(course)
             print("")
 
         except (RequestRejectedError, ValueError, RuntimeError) as error:
@@ -103,7 +122,7 @@ class MoodleService:
                     error))
 
         logging.debug('Checking for changes...')
-        changes = self.recorder.changes_of_new_version(courses)
+        changes = self.recorder.changes_of_new_version(filtered_courses)
 
         return changes
 
@@ -121,6 +140,14 @@ class MoodleService:
             moodle_path = '/'
 
         return moodle_domain, moodle_path
+
+    def get_dont_download_course_ids(self) -> str:
+        # returns a stored list of dont_download_course_ids
+        try:
+            return self.config_helper.get_property(
+                'dont_download_course_ids')
+        except ValueError:
+            return []
 
     def get_token(self) -> str:
         # returns a stored token

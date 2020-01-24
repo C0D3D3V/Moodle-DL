@@ -16,8 +16,11 @@ class ConsoleService(NotificationService):
         COLOR_SEQ = "\033[1;%dm"
 
         BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = range(30, 38)
-        print("\n\n")
+        print("\n")
         for course in changes:
+            if (len(course.files) == 0):
+                continue
+
             print(COLOR_SEQ % BLUE + course.fullname + RESET_SEQ)
 
             for file in course.files:
@@ -32,7 +35,7 @@ class ConsoleService(NotificationService):
                 else:
                     print(COLOR_SEQ % GREEN + '+\t' +
                           file.saved_to + RESET_SEQ)
-            print("\n\n")
+            print("\n")
 
     def notify_about_error(self, error_description: str):
         raise RuntimeError("Not yet implemendet!")
