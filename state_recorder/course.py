@@ -2,8 +2,8 @@ from state_recorder.file import File
 
 
 class Course:
-    def __init__(self, id: int, fullname: str, files: [File] = []):
-        self.id = id
+    def __init__(self, _id: int, fullname: str, files: [File] = []):
+        self.id = _id
         self.fullname = fullname
         self.files = files
 

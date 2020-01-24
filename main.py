@@ -151,6 +151,7 @@ def run_main(storage_path):
         logging.debug(
             'Start downloading changed files...')
         Log.debug('Start downloading changed files...')
+
         downloader = DownloadService(changed_courses, moodle, storage_path)
         downloader.run()
 

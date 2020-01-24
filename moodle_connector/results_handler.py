@@ -60,7 +60,7 @@ class ResultsHandler:
         results = []
         for course in result:
             results.append(
-                Course(course.get("id", ""),
+                Course(course.get("id", 0),
                        course.get("fullname", ""), [])
             )
         return results
@@ -131,7 +131,7 @@ class ResultsHandler:
         for module in section_modules:
             module_name = module.get("name", "")
             module_modname = module.get("modname", "")
-            module_id = int(module.get("id", 0))
+            module_id = module.get("id", 0)
 
             module_contents = module.get("contents", [])
 
@@ -176,12 +176,10 @@ class ResultsHandler:
             content_filepath = content.get("filepath", "/")
             if content_filepath is None:
                 content_filepath = '/'
-            content_filesize = int(content.get("filesize", 0))
+            content_filesize = content.get("filesize", 0)
             content_fileurl = content.get("fileurl", "")
-            content_timemodified = int(
-                content.get("timemodified", 0))
-            content_isexternalfile = bool(content.get(
-                "isexternalfile", False))
+            content_timemodified = content.get("timemodified", 0)
+            content_isexternalfile = content.get("isexternalfile", False)
 
             files.append(File(
                 module_id=module_id,

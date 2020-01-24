@@ -175,7 +175,7 @@ class StateRecorder:
                     if(self.__files_are_diffrent(matching_file, stored_file)):
                         # file ist modified
                         matching_file.modified = True
-                        changed_course.files.append(stored_file)
+                        changed_course.files.append(matching_file)
 
             if (len(changed_course.files) > 0):
                 changed_courses.append(changed_course)

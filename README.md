@@ -1,7 +1,3 @@
-
-The project is still in the early beta phase. Please give me feedback so that I can quickly deliver improvements.
-======
-
 # Moodle-Downloader
 
 > Because manually downloading all the course files every few days is just ~~way too easy~~ inefficient.

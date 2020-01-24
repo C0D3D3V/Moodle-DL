@@ -5,26 +5,48 @@ class File:
                  content_timemodified: int, module_modname: str,
                  content_type: str, content_isexternalfile: bool,
                  saved_to: str = "", time_stamp: int = 0,
-                 modified: bool = False, deleted: bool = False,
-                 notified: bool = False):
+                 modified: int = 0, deleted: int = 0,
+                 notified: int = 0):
 
         self.module_id = module_id
         self.section_name = section_name
         self.module_name = module_name
+
         self.content_filepath = content_filepath
         self.content_filename = content_filename
         self.content_fileurl = content_fileurl
         self.content_filesize = content_filesize
-        self.content_timemodified = content_timemodified
+        self.content_timemodified = int(content_timemodified)
+
         self.module_modname = module_modname
         self.content_type = content_type
-        self.content_isexternalfile = content_isexternalfile
+
+        if(isinstance(content_isexternalfile, bool)):
+            self.content_isexternalfile = content_isexternalfile
+        else:
+            if (content_isexternalfile == 1):
+                self.content_isexternalfile = True
+            else:
+                self.content_isexternalfile = False
 
         self.saved_to = saved_to
+
         self.time_stamp = time_stamp
-        self.modified = modified
-        self.deleted = deleted
-        self.notified = notified
+
+        if (modified == 1):
+            self.modified = True
+        else:
+            self.modified = False
+
+        if (deleted == 1):
+            self.deleted = True
+        else:
+            self.deleted = False
+
+        if (notified == 1):
+            self.notified = True
+        else:
+            self.notified = False
 
     def getMap(self) -> {str: str}:
         return {
@@ -47,6 +69,7 @@ class File:
         }
 
     def fromRow(row):
+
         return File(
             module_id=row['module_id'],
             section_name=row['section_name'],
@@ -58,14 +81,12 @@ class File:
             content_timemodified=row['content_timemodified'],
             module_modname=row['module_modname'],
             content_type=row['content_type'],
-            content_isexternalfile=False if (
-                row['content_isexternalfile'] == 0) else True,
-
+            content_isexternalfile=row['content_isexternalfile'],
             saved_to=row['saved_to'],
             time_stamp=row['time_stamp'],
-            modified=False if row['modified'] == 0 else True,
-            deleted=False if row['deleted'] == 0 else True,
-            notified=False if row['notified'] == 0 else True
+            modified=row['modified'],
+            deleted=row['deleted'],
+            notified=row['notified']
         )
 
     def __str__(self):
