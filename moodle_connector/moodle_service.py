@@ -124,7 +124,27 @@ class MoodleService:
         logging.debug('Checking for changes...')
         changes = self.recorder.changes_of_new_version(filtered_courses)
 
+        # Filter changes
+        changes = self._filter_courses(changes, dont_download_course_ids)
+
         return changes
+
+    @staticmethod
+    def _filter_courses(changes: [Course],
+                        dont_download_course_ids: [int]) -> [Course]:
+        """
+        Filters the changes course list from courses that
+        should not get downloaded
+        @return: filtered changes course list
+        """
+
+        filtered_changes = []
+
+        for change in changes:
+            if(change.id not in dont_download_course_ids):
+                filtered_changes.append(change)
+
+        return filtered_changes
 
     @staticmethod
     def _split_moodle_uri(moodle_uri: str):
