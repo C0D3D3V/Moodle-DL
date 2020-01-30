@@ -1,3 +1,4 @@
+import sys
 import logging
 
 from state_recorder.file import File
@@ -65,47 +66,62 @@ class ResultsHandler:
             )
         return results
 
-    def fetch_assignments(self, course_id: str) -> {}:
+    def fetch_assignments(self) -> {int: {int: []}}:
         """
-        Fetches the Assignments List for a course from the
+        Fetches the Assignments List for all courses from the
         Moodle system
-        @param course_id: The id of the course for which the assignments
-                          should be fetched.
-        @return: A List of assignments or None
+        @return: A Dictonary of all assignments,
+                 idexed by courses, then assignment
         """
         # do this only if version is greater then 2.4
         # because mod_assign_get_assignments will fail
         if (self.version < 2012120300):
-            return None
+            return {}
 
-        assign_data = {
-            'courseids[0]': course_id
-        }
+        # we could add courseids[0],... to the request to download
+        # only the assignments of a special course, but we can also
+        # just request all assignments at once
+
+        sys.stdout.write('\rDownload assignments information')
+        sys.stdout.flush()
 
         assign_result = self.request_helper.get_REST(
-            'mod_assign_get_assignments', assign_data)
+            'mod_assign_get_assignments')
 
         assign_courses = assign_result.get('courses', [])
 
-        # normaly there is only on course with exactly the id
-        # of course_id but who knows...
-        # Choose the correct course from the course list
-        matched_assign_course = None
+        result = {}
         for assign_course in assign_courses:
-            assign_course_id = assign_course.get("id", 0)
-            if(assign_course_id == course_id):
-                matched_assign_course = assign_course
-                break
+            course_id = assign_course.get("id", 0)
+            course_assigns = {}
+            course_assign_objs = assign_course.get('assignments', [])
 
-        return matched_assign_course
+            for course_assign_obj in course_assign_objs:
+                assign_id = course_assign_obj.get("cmid", 0)
+                assign_files = []
+                assign_files += course_assign_obj.get("introfiles", [])
+                assign_files += course_assign_obj.get("introattachments", [])
+
+                # normalize
+                for assign_file in assign_files:
+                    file_type = assign_file.get("type", "")
+                    if (file_type is None or file_type == ""):
+                        assign_file.update({'type': 'assign_file'})
+
+                course_assigns.update({assign_id: assign_files})
+
+            result.update({course_id: course_assigns})
+
+        return result
 
     @staticmethod
-    def _get_files_in_sections(course_sections: [], assignments: []) -> [File]:
+    def _get_files_in_sections(course_sections: [],
+                               assignments: {int: []}) -> [File]:
         """
         Iterates over all sections of a course to find files (or modules).
         @param course_sections: The course object returned by Moodle,
                                 containing the sections of the course.
-        @param assignments: the list of assignments of the course.
+        @param assignments: the dictonary of assignments of the course.
         @return: A list of files of the course.
         """
         files = []
@@ -119,12 +135,13 @@ class ResultsHandler:
 
     @staticmethod
     def _get_files_in_modules(section_name: str,
-                              section_modules: [], assignments: []) -> [File]:
+                              section_modules: [],
+                              assignments: {int: []}) -> [File]:
         """
         Iterates over all modules to find files (or content) in them.
         @param section_name: The name of the section to be iterated over.
         @param section_modules: The modules of the section.
-        @param assignments: the list of assignments of the course.
+        @param assignments: the dictionary of assignments of the course.
         @return: A list of files of the section.
         """
         files = []
@@ -145,9 +162,7 @@ class ResultsHandler:
             elif (module_modname == "assign"):
 
                 # find assign with same module_id
-                assign_files = ResultsHandler._get_assign_files_by_id(
-                    assignments,
-                    module_id)
+                assign_files = assignments.get(module_id, [])
 
                 files += ResultsHandler._handle_files(section_name,
                                                       module_name,
@@ -196,46 +211,13 @@ class ResultsHandler:
             )
         return files
 
-    @staticmethod
-    def _get_assign_files_by_id(assignments: [], module_id: str) -> []:
-        """
-        In the assignment list, look for an assignment with the same ID
-        and return the list of files of this assignment.
-        @param assignments: The list of assignments
-        @param module_id: The id of the searched assignment
-        @return: A list of files
-        """
-        # find assign with same module_id
-        if (assignments is None):
-            return []
-
-        assignments = assignments.get('assignments', [])
-
-        for assignment in assignments:
-            assignment_id = assignment.get('cmid', 0)
-            if (assignment_id == module_id):
-                assignment_files = assignment.get(
-                    'introattachments', [])
-                break
-
-        # update file type information
-        for assignment_file in assignment_files:
-            file_type = assignment_file.get("type", "")
-            if (file_type is None or file_type == ""):
-                assignment_file.update({'type': 'assign_file'})
-
-        return assignment_files
-
-    def fetch_files(self, course_id: str) -> [File]:
+    def fetch_files(self, course_id: str, assignments: {int: []}) -> [File]:
         """
         Queries the Moodle system for all the files that
         are present in a course
         @param course_id: The id of the course for which you want to enquire.
         @return: A list of Files
         """
-
-        # first get the assignments
-        assignments = self.fetch_assignments(course_id)
 
         data = {
             'courseid': course_id

@@ -80,10 +80,15 @@ class MoodleService:
         filtered_courses = []
         try:
 
+            sys.stdout.write('\rDownload account information')
+            sys.stdout.flush()
+
             userid, version = results_handler.fetch_userid_and_version()
             results_handler.setVersion(version)
 
             courses = results_handler.fetch_courses(userid)
+
+            assignments = results_handler.fetch_assignments()
 
             index = 0
             for course in courses:
@@ -111,7 +116,10 @@ class MoodleService:
 
                 if (skip):
                     continue
-                course.files = results_handler.fetch_files(course.id)
+
+                course_assignments = assignments.get(course.id, [])
+                course.files = results_handler.fetch_files(
+                    course.id, course_assignments)
 
                 filtered_courses.append(course)
             print("")
