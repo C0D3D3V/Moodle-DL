@@ -75,6 +75,7 @@ class MoodleService:
         results_handler = ResultsHandler(request_helper)
 
         dont_download_course_ids = self.get_dont_download_course_ids()
+        download_submissions = self.get_download_submissions()
 
         courses = []
         filtered_courses = []
@@ -89,8 +90,10 @@ class MoodleService:
             courses = results_handler.fetch_courses(userid)
 
             assignments = results_handler.fetch_assignments()
-            assignments = results_handler.fetch_submissions(
-                userid, assignments, dont_download_course_ids)
+
+            if(download_submissions):
+                assignments = results_handler.fetch_submissions(
+                    userid, assignments, dont_download_course_ids)
 
             index = 0
             for course in courses:
@@ -170,6 +173,14 @@ class MoodleService:
             moodle_path = '/'
 
         return moodle_domain, moodle_path
+
+    def get_download_submissions(self) -> bool:
+        # returns a stored bool of download_submissions
+        try:
+            return self.config_helper.get_property(
+                'download_submissions')
+        except ValueError:
+            return False
 
     def get_dont_download_course_ids(self) -> str:
         # returns a stored list of dont_download_course_ids
