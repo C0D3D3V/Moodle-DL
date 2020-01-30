@@ -119,13 +119,16 @@ class ResultsHandler:
         return result
 
     def fetch_submissions(self, userid: int,
-                          assignments: {int: {int: {}}}) -> {int: {int: {}}}:
+                          assignments: {int: {int: {}}},
+                          dont_download_course_ids: [int]) -> {int: {int: {}}}:
         """
         Fetches for the assignments list of all courses the additionaly
         submissions. This is kind of waste of resources, beacuse there
         is no api to get all submissions at once
         @param userid: the user id.
         @param assignments: the dictonary of assignments of all courses.
+        @param dont_download_course_ids: ids of courses for that sould
+                                         no submissions be downloaded
         @return: A Dictonary of all assignments,
                  idexed by courses, then assignment
         """
@@ -141,10 +144,14 @@ class ResultsHandler:
 
         # count total assignments for nice console output
         for course_id in assignments:
+            if (course_id in dont_download_course_ids):
+                continue
             for assignment_id in assignments[course_id]:
                 total += 1
 
         for course_id in assignments:
+            if (course_id in dont_download_course_ids):
+                continue
             for assignment_id in assignments[course_id]:
                 counter += 1
                 real_id = assignments[course_id][assignment_id].get('id', 0)
@@ -153,8 +160,10 @@ class ResultsHandler:
                     'assignid': real_id
                 }
 
-                sys.stdout.write(intro + ' %3d/%3d [%6s]' % (counter,
-                                                             total, real_id))
+                sys.stdout.write(intro + ' %3d/%3d [%6s|%6s]' % (counter,
+                                                                 total,
+                                                                 course_id,
+                                                                 real_id))
                 sys.stdout.flush()
 
                 submission = self.request_helper.get_REST(
