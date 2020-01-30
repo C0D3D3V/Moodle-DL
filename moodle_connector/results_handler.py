@@ -1,4 +1,3 @@
-import os
 import sys
 import logging
 
@@ -205,13 +204,9 @@ class ResultsHandler:
 
                 for file in files:
                     file_type = file.get("type", "")
-                    file_path = file.get("filepath", "/")
                     if (file_type is None or file_type == ""):
                         file.update({'type': 'submission_file'})
 
-                    file.update({'filepath':
-                                 os.path.join('/submissions/',
-                                              file_path.strip('/'))})
                     result.append(file)
 
         return result

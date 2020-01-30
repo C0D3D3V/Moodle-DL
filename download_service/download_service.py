@@ -1,3 +1,4 @@
+import os
 import sys
 import time
 import logging
@@ -81,10 +82,15 @@ class DownloadService:
                     # (with the name of the module).
                     if (file.module_modname == "assign" or
                             file.module_modname == "folder"):
+                        file_path = file.content_filepath
+                        if (file.content_type == "submission_file"):
+                            file_path = os.path.join('/submissions/',
+                                                     file_path.strip('/'))
+
                         save_destination = StringTools.path_of_file_in_module(
                             self.storage_path, course.fullname,
                             file.section_name, file.module_name,
-                            file.content_filepath
+                            file_path
                         )
 
                     self.queue.put(URLTarget(
