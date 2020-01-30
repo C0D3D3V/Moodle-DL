@@ -1,3 +1,4 @@
+import os
 import sys
 import logging
 
@@ -66,7 +67,7 @@ class ResultsHandler:
             )
         return results
 
-    def fetch_assignments(self) -> {int: {int: []}}:
+    def fetch_assignments(self) -> {int: {int: {}}}:
         """
         Fetches the Assignments List for all courses from the
         Moodle system
@@ -98,6 +99,7 @@ class ResultsHandler:
 
             for course_assign_obj in course_assign_objs:
                 assign_id = course_assign_obj.get("cmid", 0)
+                assign_rid = course_assign_obj.get("id", 0)
                 assign_files = []
                 assign_files += course_assign_obj.get("introfiles", [])
                 assign_files += course_assign_obj.get("introattachments", [])
@@ -108,15 +110,106 @@ class ResultsHandler:
                     if (file_type is None or file_type == ""):
                         assign_file.update({'type': 'assign_file'})
 
-                course_assigns.update({assign_id: assign_files})
+                course_assigns.update({assign_id: {'id': assign_rid,
+                                                   'files': assign_files}
+                                       })
 
             result.update({course_id: course_assigns})
 
         return result
 
+    def fetch_submissions(self, userid: int,
+                          assignments: {int: {int: {}}}) -> {int: {int: {}}}:
+        """
+        Fetches for the assignments list of all courses the additionaly
+        submissions. This is kind of waste of resources, beacuse there
+        is no api to get all submissions at once
+        @param userid: the user id.
+        @param assignments: the dictonary of assignments of all courses.
+        @return: A Dictonary of all assignments,
+                 idexed by courses, then assignment
+        """
+        # do this only if version is greater then 3.1
+        # because mod_assign_get_submission_status will fail
+        if (self.version < 2016052300):
+            return assignments
+
+        intro = '\rDownload submission information'
+
+        counter = 0
+        total = 0
+
+        # count total assignments for nice console output
+        for course_id in assignments:
+            for assignment_id in assignments[course_id]:
+                total += 1
+
+        for course_id in assignments:
+            for assignment_id in assignments[course_id]:
+                counter += 1
+                real_id = assignments[course_id][assignment_id].get('id', 0)
+                data = {
+                    'userid': userid,
+                    'assignid': real_id
+                }
+
+                sys.stdout.write(intro + ' %3d/%3d [%6s]' % (counter,
+                                                             total, real_id))
+                sys.stdout.flush()
+
+                submission = self.request_helper.get_REST(
+                    'mod_assign_get_submission_status', data)
+
+                submission_files = self._get_files_of_submission(submission)
+                assignments[course_id][assignment_id]['files'] += (
+                    submission_files)
+
+        return assignments
+
+    @staticmethod
+    def _get_files_of_submission(submission: {}) -> []:
+        result = []
+        # get own submissions
+        lastattempt = submission.get('lastattempt', {})
+        l_submission = lastattempt.get('submission', {})
+        l_teamsubmission = lastattempt.get('teamsubmission', {})
+
+        # get teachers feedback
+        feedback = submission.get('feedback', {})
+
+        result += ResultsHandler._get_files_of_pllugins(l_submission)
+        result += ResultsHandler._get_files_of_pllugins(l_teamsubmission)
+        result += ResultsHandler._get_files_of_pllugins(feedback)
+
+        return result
+
+    @staticmethod
+    def _get_files_of_pllugins(obj: {}) -> []:
+        result = []
+        plugins = obj.get('plugins', [])
+
+        for plugin in plugins:
+            fileareas = plugin.get('fileareas', [])
+
+            for filearea in fileareas:
+                files = filearea.get('files', [])
+
+                for file in files:
+                    file_type = file.get("type", "")
+                    file_path = file.get("filepath", "/")
+                    if (file_type is None or file_type == ""):
+                        file.update({'type': 'submission_file'})
+
+                    file.update({'filepath':
+                                 os.path.join('/submissions/',
+                                              file_path.strip('/'))})
+                    result.append(file)
+
+        return result
+
     @staticmethod
     def _get_files_in_sections(course_sections: [],
-                               assignments: {int: []}) -> [File]:
+                               assignments: {int: {}}) -> [File]:
         """
         Iterates over all sections of a course to find files (or modules).
         @param course_sections: The course object returned by Moodle,
@@ -136,7 +229,7 @@ class ResultsHandler:
     @staticmethod
     def _get_files_in_modules(section_name: str,
                               section_modules: [],
-                              assignments: {int: []}) -> [File]:
+                              assignments: {int: {}}) -> [File]:
         """
         Iterates over all modules to find files (or content) in them.
         @param section_name: The name of the section to be iterated over.
@@ -162,7 +255,8 @@ class ResultsHandler:
             elif (module_modname == "assign"):
 
                 # find assign with same module_id
-                assign_files = assignments.get(module_id, [])
+                assign = assignments.get(module_id, {})
+                assign_files = assign.get('files', [])
 
                 files += ResultsHandler._handle_files(section_name,
                                                       module_name,
@@ -211,7 +305,7 @@ class ResultsHandler:
             )
         return files
 
-    def fetch_files(self, course_id: str, assignments: {int: []}) -> [File]:
+    def fetch_files(self, course_id: str, assignments: {int: {}}) -> [File]:
         """
         Queries the Moodle system for all the files that
         are present in a course

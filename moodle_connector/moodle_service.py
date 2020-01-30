@@ -89,6 +89,8 @@ class MoodleService:
             courses = results_handler.fetch_courses(userid)
 
             assignments = results_handler.fetch_assignments()
+            assignments = results_handler.fetch_submissions(
+                userid, assignments)
 
             index = 0
             for course in courses:

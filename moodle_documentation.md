@@ -209,6 +209,7 @@ The result is an array of elements that looks like this:
 5. mod_assign_get_submission_status (since version 3.1)
 User can submit files and the teacher can also submit feedback files. 
 To get these call the function with this parameter `assignid` and `userid`
+get_submissions would be nice to use, because it allows multiple assignments, but it doesn't work
 
 ```
 { 
