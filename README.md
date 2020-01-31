@@ -70,10 +70,6 @@ Then you can open the automatically generated config.json with a text editor. Fo
 
 Moodle does not provide an interface to download information from all submissions of a course at once. Therefore it can be slow to monitor changes of submissions. For this reason the option to download submissions and feedback files is optional.
 
-For me it takes about 10 seconds for 30 assignments to download all information of the submissions.
-
-__Warning!__ If this option is deactivated after activation, the submission entries of the database are set to `Deleted`. This means that the downloader forgets the files and if this option is activated again, all files will be downloaded again. 
-
 To download submissions and feedback files you have to set the variable `download_submissions` to `true` in the configuration, as in the following example:
 ```
 {

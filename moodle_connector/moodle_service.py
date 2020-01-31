@@ -138,24 +138,36 @@ class MoodleService:
         changes = self.recorder.changes_of_new_version(filtered_courses)
 
         # Filter changes
-        changes = self._filter_courses(changes, dont_download_course_ids)
+        changes = self._filter_courses(changes, dont_download_course_ids,
+                                       download_submissions)
 
         return changes
 
     @staticmethod
     def _filter_courses(changes: [Course],
-                        dont_download_course_ids: [int]) -> [Course]:
+                        dont_download_course_ids: [int],
+                        download_submissions: bool) -> [Course]:
         """
         Filters the changes course list from courses that
         should not get downloaded
+        @param dont_download_course_ids: list of course ids
+                                         that should not be downloaded
+        @param download_submissions: boolean if submissions
+                                    should be downloaded
         @return: filtered changes course list
         """
 
         filtered_changes = []
 
-        for change in changes:
-            if(change.id not in dont_download_course_ids):
-                filtered_changes.append(change)
+        for course in changes:
+            if(course.id not in dont_download_course_ids):
+                filtered_changes.append(course)
+            if (not download_submissions):
+                course_files = []
+                for file in course.files:
+                    if (file.content_type != "submission_file"):
+                        course_files.append(file)
+                course.files = course_files
 
         return filtered_changes
 
