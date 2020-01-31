@@ -160,14 +160,16 @@ class MoodleService:
         filtered_changes = []
 
         for course in changes:
-            if(course.id not in dont_download_course_ids):
-                filtered_changes.append(course)
             if (not download_submissions):
                 course_files = []
                 for file in course.files:
                     if (file.content_type != "submission_file"):
                         course_files.append(file)
                 course.files = course_files
+
+            if(course.id not in dont_download_course_ids and
+                    len(course.files) > 0):
+                filtered_changes.append(course)
 
         return filtered_changes
 
