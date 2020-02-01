@@ -70,7 +70,7 @@ Then you can open the automatically generated config.json with a text editor. Fo
 
 Moodle does not provide an interface to download information from all submissions of a course at once. Therefore it can be slow to monitor changes of submissions. For this reason the option to download submissions and feedback files is optional.
 
-To download submissions and feedback files you have to set the variable `download_submissions` to `true` in the configuration, as in the following example:
+To download submissions and feedback files you have to set the attribute `download_submissions` to `true` in the configuration (config.json), as in the following example:
 ```
 {
     ...,

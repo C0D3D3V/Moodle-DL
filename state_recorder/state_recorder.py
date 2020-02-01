@@ -380,7 +380,8 @@ class StateRecorder:
                         AND content_filename = :content_filename
                         AND content_fileurl = :content_fileurl
                         AND content_filesize = :content_filesize
-                        AND content_timemodified = :content_timemodified;
+                        AND content_timemodified = :content_timemodified
+                        AND deleted = 0;
                         """, data)
 
         conn.commit()
@@ -402,7 +403,8 @@ class StateRecorder:
             AND content_filename = :content_filename
             AND content_fileurl = :content_fileurl
             AND content_filesize = :content_filesize
-            AND content_timemodified = :content_timemodified;
+            AND content_timemodified = :content_timemodified
+            AND deleted = 0;
             """, data)
 
         conn.commit()
@@ -425,7 +427,8 @@ class StateRecorder:
             AND course_fullname = :course_fullname
             AND section_name = :section_name
             AND content_filepath = :content_filepath
-            AND content_filename = :content_filename;
+            AND content_filename = :content_filename
+            AND deleted = 0;
             """, data)
 
         conn.commit()
