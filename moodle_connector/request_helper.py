@@ -25,15 +25,16 @@ class RequestHelper:
             # 'Cookie': 'cookie1=' + cookie1,
             'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64)' +
             ' AppleWebKit/537.36 (KHTML, like Gecko)' +
-            ' Chrome/78.0.3904.108 Safari/537.36'
+            ' Chrome/78.0.3904.108 Safari/537.36',
+            'Content-Type': 'application/x-www-form-urlencoded'
             # copied straight out of Chrome
         }
 
-    def get_REST(self, function: str, data: {str: str} = None) -> object:
+    def post_REST(self, function: str, data: {str: str} = None) -> object:
         """
-        Sends a GET request to the REST endpoint of the Moodle system
+        Sends a POST request to the REST endpoint of the Moodle system
         @param function: The Web service function to be called.
-        @param data: The optional data is added to the GET URL as arguments.
+        @param data: The optional data is added to the POST body.
         @return: The Json response returned by the Moodle system, already
         checked for errors.
         """
@@ -41,17 +42,19 @@ class RequestHelper:
         if (self.token is None):
             raise ValueError('The required Token is not set!')
 
-        data_enc = self._encode_data(data)
+        data_urlencoded = self._get_POST_DATA(function, self.token, data)
+        url = self._get_REST_POST_URL(self.moodle_path, function)
 
-        url = self._get_REST_URL(
-            self.moodle_path, function, self.token, data_enc)
-
-        # uncomment this print to debug requested urls
+        # uncomment this print to debug requested post-urls
         # print(url)
 
+        # uncomment this print to debug posted data
+        # print(data_urlencoded)
+
         self.connection.request(
-            'GET',
+            'POST',
             url,
+            body=data_urlencoded,
             headers=self.stdHeader
         )
 
@@ -59,48 +62,52 @@ class RequestHelper:
         return self._initial_parse(response)
 
     @staticmethod
-    def _encode_data(data: {str: str}) -> str:
+    def _get_REST_POST_URL(moodle_path: str, function: str) -> str:
         """
-        URL-encodes a dictionary with a prefix &
-        @param data: The data to encode
-        @return: The encoded data string
-        """
-        data_enc = ''
-        if (data is not None):
-            data_enc = "&%s" % (urllib.parse.urlencode(data))
-
-        return data_enc
-
-    @staticmethod
-    def _get_REST_URL(moodle_path: str, function: str,
-                      token: str, data_enc: str) -> str:
-        """
-        Generates an url for a REST request
+        Generates an url for a REST-POST request
         @params: The necessary parameters for a REST URL
         @return: A formatted url
         """
-        url = (('%swebservice/rest/server.php?' % (moodle_path)) +
-               ('wsfunction=%s&' % (function)) +
-               ('moodlewsrestformat=json&wstoken=%s%s' % (
-                token, data_enc)))
+        url = (('%swebservice/rest/server.php?moodlewsrestformat=json&' % (
+            moodle_path)) + ('wsfunction=%s' % (function)))
 
         return url
 
+    @staticmethod
+    def _get_POST_DATA(function: str, token: str,
+                       data_obj: str) -> str:
+        """
+        Generates the data for a REST-POST request
+        @params: The necessary parameters for a REST URL
+        @return: A url-encoded data string
+        """
+        data = {'moodlewssettingfilter': 'true',
+                'moodlewssettingfileurl': 'true'
+                }
+
+        if data_obj is not None:
+            data.update(data_obj)
+
+        data.update({'wsfunction': function,
+                     'wstoken': token})
+
+        return urllib.parse.urlencode(data)
+
     def get_login(self, data: {str: str}) -> object:
         """
-        Sends a GET request to the login endpoint of the Moodle system to
+        Sends a POST request to the login endpoint of the Moodle system to
         obtain a token in Json format.
-        @param data: The data is inserted into the GET-URL as arguments. This
+        @param data: The data is inserted into the Post-Body as arguments. This
         should contain the logon data.
         @return: The json response returned by the Moodle System, already
         checked for errors.
         """
 
         self.connection.request(
-            'GET',
-            '%slogin/token.php?%s' % (
-                self.moodle_path, urllib.parse.urlencode(data)
-            ),
+            'POST',
+            '%slogin/token.php' % (
+                self.moodle_path),
+            body=urllib.parse.urlencode(data),
             headers=self.stdHeader
         )
 

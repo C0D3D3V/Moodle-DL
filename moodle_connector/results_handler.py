@@ -26,7 +26,7 @@ class ResultsHandler:
         Ask the Moodle system for the user id.
         @return: the userid
         """
-        result = self.request_helper.get_REST('core_webservice_get_site_info')
+        result = self.request_helper.post_REST('core_webservice_get_site_info')
 
         if ("userid" not in result):
             raise RuntimeError(
@@ -55,7 +55,7 @@ class ResultsHandler:
             'userid': userid
         }
 
-        result = self.request_helper.get_REST(
+        result = self.request_helper.post_REST(
             'core_enrol_get_users_courses', data)
 
         results = []
@@ -85,7 +85,7 @@ class ResultsHandler:
         sys.stdout.write('\rDownload assignments information')
         sys.stdout.flush()
 
-        assign_result = self.request_helper.get_REST(
+        assign_result = self.request_helper.post_REST(
             'mod_assign_get_assignments')
 
         assign_courses = assign_result.get('courses', [])
@@ -165,7 +165,7 @@ class ResultsHandler:
                                                                  real_id))
                 sys.stdout.flush()
 
-                submission = self.request_helper.get_REST(
+                submission = self.request_helper.post_REST(
                     'mod_assign_get_submission_status', data)
 
                 submission_files = self._get_files_of_submission(submission)
@@ -320,7 +320,7 @@ class ResultsHandler:
         data = {
             'courseid': course_id
         }
-        course_sections = self.request_helper.get_REST(
+        course_sections = self.request_helper.post_REST(
             'core_course_get_contents', data)
 
         files = self._get_files_in_sections(course_sections, assignments)
