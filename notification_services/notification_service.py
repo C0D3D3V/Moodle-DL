@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
 from state_recorder.course import Course
-from utils.config_helper import ConfigHelper
+from config_service.config_helper import ConfigHelper
 
 
 class NotificationService:

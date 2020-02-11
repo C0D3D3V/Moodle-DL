@@ -5,7 +5,7 @@ import logging
 from getpass import getpass
 from urllib.parse import urlparse
 
-from utils.config_helper import ConfigHelper
+from config_service.config_helper import ConfigHelper
 from state_recorder.course import Course
 from state_recorder.state_recorder import StateRecorder
 from moodle_connector import login_helper

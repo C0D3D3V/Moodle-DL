@@ -10,7 +10,7 @@ import sentry_sdk
 
 
 from utils.logger import Log
-from utils.config_helper import ConfigHelper
+from config_service.config_helper import ConfigHelper
 from moodle_connector.moodle_service import MoodleService
 from download_service.download_service import DownloadService
 from notification_services.mail.mail_service import MailService
