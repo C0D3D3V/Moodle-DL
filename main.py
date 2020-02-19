@@ -11,6 +11,7 @@ import sentry_sdk
 
 from utils.logger import Log
 from config_service.config_helper import ConfigHelper
+from config_service.config_service import ConfigService
 from moodle_connector.moodle_service import MoodleService
 from download_service.download_service import DownloadService
 from notification_services.mail.mail_service import MailService
@@ -78,6 +79,15 @@ def run_init(storage_path):
         )
 
     print('All set and ready to go!')
+
+
+def run_configure(storage_path):
+    config = ConfigHelper(storage_path)
+    config.load()  # because we do not want to override the other settings
+
+    ConfigService(config, storage_path).interactively_acquire_config()
+
+    print('Configuration successfully updated!')
 
 
 def run_new_token(storage_path):
@@ -226,6 +236,13 @@ group.add_argument('--init', action='store_true',
                          ' does not fetch the current state of your' +
                          ' Moodle-Account.'))
 
+group.add_argument('--config', action='store_true',
+                   help=('Guides the user through the additional' +
+                         ' configuration of the software. This' +
+                         ' includes the selection of the courses to' +
+                         ' be downloaded and various configuration' +
+                         ' options for these courses.'))
+
 group.add_argument('--new-token', action='store_true',
                    help=('Overrides the login-token with a newly obtained' +
                          ' one. It does not fetch the current state of your' +
@@ -252,6 +269,8 @@ storage_path = args.path
 
 if args.init:
     run_init(storage_path)
+elif args.config:
+    run_configure(storage_path)
 elif args.new_token:
     run_new_token(storage_path)
 elif args.change_notification_mail:

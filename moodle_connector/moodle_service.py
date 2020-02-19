@@ -184,7 +184,7 @@ class MoodleService:
         moodle_path = moodle_uri.path
         if not moodle_path.endswith('/'):
             moodle_path = moodle_path + "/"
-            
+
         if(moodle_path == ''):
             moodle_path = '/'
 
