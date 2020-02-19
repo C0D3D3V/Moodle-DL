@@ -181,8 +181,10 @@ class MoodleService:
         """
 
         moodle_domain = moodle_uri.netloc
-        moodle_path = os.path.join(os.path.dirname(moodle_uri.path), '')
-
+        moodle_path = moodle_uri.path
+        if not moodle_path.endswith('/'):
+            moodle_path = moodle_path + "/"
+            
         if(moodle_path == ''):
             moodle_path = '/'
 
