@@ -1,1 +1,2 @@
 sentry_sdk>=0.13.5
+inquirer>=2.6.3
