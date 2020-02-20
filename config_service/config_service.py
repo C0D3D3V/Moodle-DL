@@ -20,6 +20,7 @@ class ConfigService:
         moodle_domain = self.get_moodle_domain()
         moodle_path = self.get_moodle_path()
         dont_download_course_ids = self.get_dont_download_course_ids()
+        download_submissions = self.get_download_submissions()
 
         request_helper = RequestHelper(moodle_domain, moodle_path, token)
         results_handler = ResultsHandler(request_helper)
@@ -65,6 +66,27 @@ class ConfigService:
             self.config_helper.set_property('dont_download_course_ids',
                                             dont_download_course_ids)
 
+            print('Submissions are files that you or a teacher have uploaded' +
+                  ' to your assignments.')
+
+            raw_download_submissions = '-'
+            question_extension = '[y/N]'
+            if (download_submissions):
+                question_extension = '[Y/n]'
+
+            while raw_download_submissions not in ['y', 'n', '']:
+                raw_download_submissions = input(
+                    'Do you want to download submissions of your' +
+                    ' assignments? ' + question_extension).lower()
+
+            if (raw_download_submissions != ''):
+                download_submissions = False
+                if raw_download_submissions == 'y':
+                    download_submissions = True
+
+            self.config_helper.set_property('download_submissions',
+                                            download_submissions)
+
         except (RequestRejectedError, ValueError, RuntimeError) as error:
             raise RuntimeError(
                 'Error while communicating with the Moodle System! (%s)' % (
@@ -90,6 +112,13 @@ class ConfigService:
             return self.config_helper.get_property('moodle_path')
         except ValueError:
             raise ValueError('Not yet configured!')
+
+    def get_download_submissions(self) -> str:
+        # returns a stored boolean if submissions should be downloaded
+        try:
+            return self.config_helper.get_property('download_submissions')
+        except ValueError:
+            return False
 
     def get_dont_download_course_ids(self) -> str:
         # returns a stored list of ids that should not be downloaded
