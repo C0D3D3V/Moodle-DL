@@ -36,9 +36,11 @@ def run_init(storage_path):
 
     if config.is_present():
         do_override_input = input(
-            'Do you want to override the existing config [y/n]?   ')
-        while not (do_override_input == 'y' or do_override_input == 'n'):
-            do_override_input = input('Unrecognized input. Try again:   ')
+            'Do you want to override the existing' +
+            ' config [y/n]?   ').lower()
+        while do_override_input not in ['y', 'n']:
+            do_override_input = input('Unrecognized input.' +
+                                      ' Try again:   ').lower()
 
         if do_override_input == 'n':
             sys.exit(0)
@@ -48,7 +50,8 @@ def run_init(storage_path):
     raw_do_sentry = ''
     while raw_do_sentry not in ['y', 'n']:
         raw_do_sentry = input(
-            'Do you want to configure Error Reporting via Sentry? [y/n]')
+            'Do you want to configure Error Reporting via' +
+            ' Sentry? [y/n]').lower()
     if raw_do_sentry == 'y':
         sentry_dsn = input('Please enter your Sentry DSN:   ')
         config.set_property('sentry_dsn', sentry_dsn)
@@ -77,6 +80,15 @@ def run_init(storage_path):
                     os.path.realpath(__file__)), ''), storage_path) +
             '    3. Save and you\'re done!'
         )
+
+    raw_do_config = ''
+    while raw_do_config not in ['y', 'n']:
+        raw_do_config = input(
+            'Do you want to make additional configurations now?' +
+            ' You can always do the additional configuration later' +
+            ' with the --config option. [y/n]').lower()
+    if raw_do_config == 'y':
+        run_configure(storage_path)
 
     print('All set and ready to go!')
 
@@ -237,7 +249,7 @@ group.add_argument('--init', action='store_true',
                          ' Moodle-Account.'))
 
 group.add_argument('--config', action='store_true',
-                   help=('Guides the user through the additional' +
+                   help=('Guides you through the additional' +
                          ' configuration of the software. This' +
                          ' includes the selection of the courses to' +
                          ' be downloaded and various configuration' +

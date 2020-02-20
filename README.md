@@ -29,7 +29,11 @@
 	- It writes a more detailed log into `MoodleDownloader.log` for debug purpose.
 - `python main.py --init`
     - Guides you trough the configuration of the software, including the activation of mail-notifications and obtainment of a login-token for your Moodle-Account.
+    - After the necessary configuration, further additional configurations can be made. 
 	- It does not fetch the current state of your Moodle-Account.
+- `python main.py --config`
+    - Guides you through the additional configuration of the software. This includes the selection of the courses to be downloaded and various configuration options for these courses.
+    - It does not fetch the current state of your Moodle-Account.
 - `python main.py --new-token`
     - Overrides the login-token with a newly obtained one.
     - It does not fetch the current state of your Moodle-Account.
@@ -48,36 +52,6 @@ Options can be combined with all the actions mentioned above.
     - Sets the location of the configuration, logs and downloaded files. 
     - `PATH` must be an existing directory in which you have read and write access.
     - Default: current working directory
-
-
-**I do not want to download all courses I am enrolled in.**
-
-To avoid downloading all the Moodle courses you are enrolled in, you can add the attribute `dont_download_course_ids` to config.json.
-First you have to find out the id of the course you no longer want to download.
-The id is usually located at the end of the course URL, as with this one: http://moodle.uni.com/course/view.php?id=12122
-
-Then you can open the automatically generated config.json with a text editor. For example, to prevent courses `12122` and `42` from being downloaded, add the attribute as in this example.
-```
-{
-    ...,
-    "moodle_path": "/",
-    "dont_download_course_ids": [42, 12122]
-}
-```
-
-
-**I also want to download the submissions and the feedback files.**
-
-Moodle does not provide an interface to download information from all submissions of a course at once. Therefore it can be slow to monitor changes of submissions. For this reason the option to download submissions and feedback files is optional.
-
-To download submissions and feedback files you have to set the attribute `download_submissions` to `true` in the configuration (config.json), as in the following example:
-```
-{
-    ...,
-    "moodle_path": "/",
-    "download_submissions": true
-}
-```
 
 
 

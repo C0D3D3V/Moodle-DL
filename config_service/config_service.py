@@ -33,6 +33,10 @@ class ConfigService:
 
             courses = results_handler.fetch_courses(userid)
 
+            print('To avoid downloading all the Moodle courses you are' +
+                  ' enrolled  in, you can select which ones you want' +
+                  ' to download here. ')
+
             index = 0
             choices = []
             defaults = []
@@ -67,7 +71,10 @@ class ConfigService:
                                             dont_download_course_ids)
 
             print('Submissions are files that you or a teacher have uploaded' +
-                  ' to your assignments.')
+                  ' to your assignments. Moodle does not provide an' +
+                  ' interface for downloading information from all' +
+                  ' submissions to a course at once. Therefore, it' +
+                  ' may be slow to monitor changes to submissions.')
 
             raw_download_submissions = '-'
             question_extension = '[y/N]'
