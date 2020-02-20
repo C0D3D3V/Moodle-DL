@@ -51,7 +51,7 @@ def run_init(storage_path):
     while raw_do_sentry not in ['y', 'n']:
         raw_do_sentry = input(
             'Do you want to configure Error Reporting via' +
-            ' Sentry? [y/n]').lower()
+            ' Sentry? [y/n]   ').lower()
     if raw_do_sentry == 'y':
         sentry_dsn = input('Please enter your Sentry DSN:   ')
         config.set_property('sentry_dsn', sentry_dsn)
@@ -81,15 +81,17 @@ def run_init(storage_path):
             '    3. Save and you\'re done!'
         )
 
+    print('')
     raw_do_config = ''
     while raw_do_config not in ['y', 'n']:
         raw_do_config = input(
             'Do you want to make additional configurations now?' +
             ' You can always do the additional configuration later' +
-            ' with the --config option. [y/n]').lower()
+            ' with the --config option. [y/n]   ').lower()
     if raw_do_config == 'y':
         run_configure(storage_path)
 
+    print('')
     print('All set and ready to go!')
 
 
