@@ -34,7 +34,7 @@ class ConfigService:
             courses = results_handler.fetch_courses(userid)
 
             print('To avoid downloading all the Moodle courses you are' +
-                  ' enrolled  in, you can select which ones you want' +
+                  ' enrolled in, you can select which ones you want' +
                   ' to download here. ')
 
             index = 0
