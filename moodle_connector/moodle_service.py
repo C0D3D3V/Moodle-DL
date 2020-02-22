@@ -102,7 +102,9 @@ class MoodleService:
                 index += 1
 
                 skip = False
-                if (not RequestHelper._should_download_course(course.id)):
+                if (not RequestHelper._should_download_course(
+                    course.id, download_course_ids,
+                        dont_download_course_ids)):
                     skip = True
 
                 shorted_course_name = course.fullname
@@ -146,7 +148,6 @@ class MoodleService:
 
         return changes
 
-
     @staticmethod
     def _filter_courses(changes: [Course],
                         download_course_ids: [int],
@@ -174,7 +175,9 @@ class MoodleService:
                         course_files.append(file)
                 course.files = course_files
 
-            if(RequestHelper._should_download_course(course.id) and
+            if(RequestHelper._should_download_course(
+                course.id, download_course_ids,
+                                                     dont_download_course_ids) and
                     len(course.files) > 0):
                 filtered_changes.append(course)
 

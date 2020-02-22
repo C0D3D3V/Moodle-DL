@@ -146,13 +146,17 @@ class ResultsHandler:
 
         # count total assignments for nice console output
         for course_id in assignments:
-            if (not self._should_download_course(course_id)):
+            if (not self._should_download_course(
+                course_id, download_course_ids,
+                    dont_download_course_ids)):
                 continue
             for assignment_id in assignments[course_id]:
                 total += 1
 
         for course_id in assignments:
-            if (not self._should_download_course(course_id)):
+            if (not self._should_download_course(
+                course_id, download_course_ids,
+                dont_download_course_ids)):
                 continue
             for assignment_id in assignments[course_id]:
                 counter += 1
@@ -176,7 +180,6 @@ class ResultsHandler:
                     submission_files)
 
         return assignments
-
 
     @staticmethod
     def _should_download_course(course_id: int, download_course_ids: [int],
