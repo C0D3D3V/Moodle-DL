@@ -87,6 +87,8 @@ class ConfigService:
         self.config_helper.set_property('download_course_ids',
                                         download_course_ids)
 
+        self.config_helper.remove_property('dont_download_course_ids')
+
     def _select_should_download_submissions(self):
         """
         Asks the user if submissions should be downloaded
