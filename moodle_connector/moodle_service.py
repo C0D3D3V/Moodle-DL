@@ -102,7 +102,7 @@ class MoodleService:
                 index += 1
 
                 skip = False
-                if (not RequestHelper._should_download_course(
+                if (not ResultsHandler._should_download_course(
                     course.id, download_course_ids,
                         dont_download_course_ids)):
                     skip = True
@@ -175,9 +175,9 @@ class MoodleService:
                         course_files.append(file)
                 course.files = course_files
 
-            if(RequestHelper._should_download_course(
+            if(ResultsHandler._should_download_course(
                 course.id, download_course_ids,
-                                                     dont_download_course_ids) and
+                dont_download_course_ids) and
                     len(course.files) > 0):
                 filtered_changes.append(course)
 
