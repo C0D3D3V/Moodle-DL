@@ -102,7 +102,7 @@ class MoodleService:
                 index += 1
 
                 skip = False
-                if (not self._should_download_course(course.id)):
+                if (not RequestHelper._should_download_course(course.id)):
                     skip = True
 
                 shorted_course_name = course.fullname
@@ -146,17 +146,6 @@ class MoodleService:
 
         return changes
 
-    @staticmethod
-    def _should_download_course(course_id: int, download_course_ids: [int],
-                                dont_download_course_ids: [int]) -> bool:
-        """
-        Checks if a course is in Whitelist and not in Blacklist
-        """
-        inBlacklist = (course_id in dont_download_course_ids)
-        inWhitelist = (course_id in download_course_ids or
-                       len(download_course_ids) == 0)
-
-        return (inWhitelist and not inBlacklist)
 
     @staticmethod
     def _filter_courses(changes: [Course],
@@ -185,7 +174,7 @@ class MoodleService:
                         course_files.append(file)
                 course.files = course_files
 
-            if(MoodleService._should_download_course(course.id) and
+            if(RequestHelper._should_download_course(course.id) and
                     len(course.files) > 0):
                 filtered_changes.append(course)
 

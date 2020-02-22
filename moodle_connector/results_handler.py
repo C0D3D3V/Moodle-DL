@@ -3,7 +3,6 @@ import logging
 
 from state_recorder.file import File
 from state_recorder.course import Course
-from moodle_connector.moodle_service import MoodleService
 from moodle_connector.request_helper import RequestHelper
 
 
@@ -147,13 +146,13 @@ class ResultsHandler:
 
         # count total assignments for nice console output
         for course_id in assignments:
-            if (not MoodleService._should_download_course(course_id)):
+            if (not self._should_download_course(course_id)):
                 continue
             for assignment_id in assignments[course_id]:
                 total += 1
 
         for course_id in assignments:
-            if (not MoodleService._should_download_course(course_id)):
+            if (not self._should_download_course(course_id)):
                 continue
             for assignment_id in assignments[course_id]:
                 counter += 1
@@ -178,6 +177,18 @@ class ResultsHandler:
 
         return assignments
 
+
+    @staticmethod
+    def _should_download_course(course_id: int, download_course_ids: [int],
+                                dont_download_course_ids: [int]) -> bool:
+        """
+        Checks if a course is in Whitelist and not in Blacklist
+        """
+        inBlacklist = (course_id in dont_download_course_ids)
+        inWhitelist = (course_id in download_course_ids or
+                       len(download_course_ids) == 0)
+
+        return (inWhitelist and not inBlacklist)
 
     @staticmethod
     def _get_files_of_submission(submission: {}) -> []:
