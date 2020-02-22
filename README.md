@@ -20,7 +20,7 @@
 3. `pip3 install -r requirements.txt`
 4. run `python3 main.py --init`
 
-### I'm sorry, I've added a new dependency in the last commits which does not support Windows. This only affects the configuration with the --config command. This will be changed before the next release, so that Windows will be fully supported again.
+
 ### Usage
 - `python main.py`
     - Fetches the current state of your Moodle Account, saves it and detects any changes.

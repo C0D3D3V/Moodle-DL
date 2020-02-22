@@ -1,4 +1,4 @@
-import inquirer
+import cutie
 
 from state_recorder.course import Course
 from config_service.config_helper import ConfigHelper
@@ -54,35 +54,26 @@ class ConfigService:
               ' to download here. ')
         print('')
 
-        index = 0
         choices = []
         defaults = []
-        for course in courses:
-            index += 1
+        for i, course in enumerate(courses):
             choices.append(('%5i\t%s' %
-                            (course.id, course.fullname), course))
+                            (course.id, course.fullname)))
 
             if (ResultsHandler._should_download_course(
                     course.id, download_course_ids, dont_download_course_ids)):
-                defaults.append(course)
+                defaults.append(i)
 
-        questions = [
-            inquirer.Checkbox('courses_to_download',
-                              message='Which of the courses should be' +
-                              ' downloaded?',
-                              choices=choices,
-                              default=defaults),
-        ]
-
-        answers = inquirer.prompt(questions)
-
-        if (answers is None):
-            raise RuntimeError(
-                'Error: Cancelled by user!')
+        print('Which of the courses should be downloaded?')
+        print('[You can select with space bar or enter key.' +
+              ' All other keys confirm the selection.]')
+        print('')
+        selected_courses = cutie.select_multiple(
+            options=choices, ticked_indices=defaults)
 
         download_course_ids = []
-        for course in courses:
-            if course in answers['courses_to_download']:
+        for i, course in enumerate(courses):
+            if i in selected_courses:
                 download_course_ids.append(course.id)
 
         self.config_helper.set_property('download_course_ids',
