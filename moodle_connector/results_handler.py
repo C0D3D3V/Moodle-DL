@@ -3,6 +3,7 @@ import logging
 
 from state_recorder.file import File
 from state_recorder.course import Course
+from moodle_connector.moodle_service import MoodleService
 from moodle_connector.request_helper import RequestHelper
 
 
@@ -119,6 +120,7 @@ class ResultsHandler:
 
     def fetch_submissions(self, userid: int,
                           assignments: {int: {int: {}}},
+                          download_course_ids: [int],
                           dont_download_course_ids: [int]) -> {int: {int: {}}}:
         """
         Fetches for the assignments list of all courses the additionaly
@@ -126,8 +128,10 @@ class ResultsHandler:
         is no api to get all submissions at once
         @param userid: the user id.
         @param assignments: the dictonary of assignments of all courses.
+        @param download_course_ids: ids of courses for that sould
+                                    be downloaded
         @param dont_download_course_ids: ids of courses for that sould
-                                         no submissions be downloaded
+                                         not be downloaded
         @return: A Dictonary of all assignments,
                  idexed by courses, then assignment
         """
@@ -143,13 +147,13 @@ class ResultsHandler:
 
         # count total assignments for nice console output
         for course_id in assignments:
-            if (course_id in dont_download_course_ids):
+            if (not MoodleService._should_download_course(course_id)):
                 continue
             for assignment_id in assignments[course_id]:
                 total += 1
 
         for course_id in assignments:
-            if (course_id in dont_download_course_ids):
+            if (not MoodleService._should_download_course(course_id)):
                 continue
             for assignment_id in assignments[course_id]:
                 counter += 1
@@ -173,6 +177,7 @@ class ResultsHandler:
                     submission_files)
 
         return assignments
+
 
     @staticmethod
     def _get_files_of_submission(submission: {}) -> []:

@@ -1,5 +1,6 @@
 import inquirer
 
+from state_recorder.course import Course
 from config_service.config_helper import ConfigHelper
 from moodle_connector.results_handler import ResultsHandler
 from moodle_connector.request_helper import RequestRejectedError, RequestHelper
@@ -19,8 +20,6 @@ class ConfigService:
         token = self.get_token()
         moodle_domain = self.get_moodle_domain()
         moodle_path = self.get_moodle_path()
-        dont_download_course_ids = self.get_dont_download_course_ids()
-        download_submissions = self.get_download_submissions()
 
         request_helper = RequestHelper(moodle_domain, moodle_path, token)
         results_handler = ResultsHandler(request_helper)
@@ -32,74 +31,92 @@ class ConfigService:
             results_handler.setVersion(version)
 
             courses = results_handler.fetch_courses(userid)
-            print('')
-            print('To avoid downloading all the Moodle courses you are' +
-                  ' enrolled in, you can select which ones you want' +
-                  ' to download here. ')
-            print('')
-
-            index = 0
-            choices = []
-            defaults = []
-            for course in courses:
-                index += 1
-                choices.append(('%5i\t%s' %
-                                (course.id, course.fullname), course))
-
-                if (course.id not in dont_download_course_ids):
-                    defaults.append(course)
-
-            questions = [
-                inquirer.Checkbox('courses_to_download',
-                                  message='Which of the courses should be' +
-                                  ' downloaded?',
-                                  choices=choices,
-                                  default=defaults),
-            ]
-
-            answers = inquirer.prompt(questions)
-
-            if (answers is None):
-                raise Exception(
-                    'Error: Cancelled by user!')
-
-            dont_download_course_ids = []
-            for course in courses:
-                if course not in answers['courses_to_download']:
-                    dont_download_course_ids.append(course.id)
-
-            self.config_helper.set_property('dont_download_course_ids',
-                                            dont_download_course_ids)
-
-            print('')
-            print('Submissions are files that you or a teacher have uploaded' +
-                  ' to your assignments. Moodle does not provide an' +
-                  ' interface for downloading information from all' +
-                  ' submissions to a course at once. Therefore, it' +
-                  ' may be slow to monitor changes to submissions.')
-            print('')
-            raw_download_submissions = '-'
-            question_extension = '[y/N]   '
-            if (download_submissions):
-                question_extension = '[Y/n]   '
-
-            while raw_download_submissions not in ['y', 'n', '']:
-                raw_download_submissions = input(
-                    'Do you want to download submissions of your' +
-                    ' assignments? ' + question_extension).lower()
-
-            if (raw_download_submissions != ''):
-                download_submissions = False
-                if raw_download_submissions == 'y':
-                    download_submissions = True
-
-            self.config_helper.set_property('download_submissions',
-                                            download_submissions)
 
         except (RequestRejectedError, ValueError, RuntimeError) as error:
             raise RuntimeError(
                 'Error while communicating with the Moodle System! (%s)' % (
                     error))
+
+        self._select_courses_to_download(courses)
+        self._select_should_download_submissions()
+
+    def _select_courses_to_download(self, courses: [Course]):
+        """
+        Asks the userer for the courses that should be downloaded.
+        @param courses: All availible courses
+        """
+        download_course_ids = self.get_download_course_ids()
+
+        print('')
+        print('To avoid downloading all the Moodle courses you are' +
+              ' enrolled in, you can select which ones you want' +
+              ' to download here. ')
+        print('')
+
+        index = 0
+        choices = []
+        defaults = []
+        for course in courses:
+            index += 1
+            choices.append(('%5i\t%s' %
+                            (course.id, course.fullname), course))
+
+            if (len(download_course_ids) == 0 or
+                    course.id in download_course_ids):
+                defaults.append(course)
+
+        questions = [
+            inquirer.Checkbox('courses_to_download',
+                              message='Which of the courses should be' +
+                              ' downloaded?',
+                              choices=choices,
+                              default=defaults),
+        ]
+
+        answers = inquirer.prompt(questions)
+
+        if (answers is None):
+            raise RuntimeError(
+                'Error: Cancelled by user!')
+
+        download_course_ids = []
+        for course in courses:
+            if course in answers['courses_to_download']:
+                download_course_ids.append(course.id)
+
+        self.config_helper.set_property('download_course_ids',
+                                        download_course_ids)
+
+    def _select_should_download_submissions(self):
+        """
+        Asks the user if submissions should be downloaded
+        """
+        download_submissions = self.get_download_submissions()
+
+        print('')
+        print('Submissions are files that you or a teacher have uploaded' +
+              ' to your assignments. Moodle does not provide an' +
+              ' interface for downloading information from all' +
+              ' submissions to a course at once. Therefore, it' +
+              ' may be slow to monitor changes to submissions.')
+        print('')
+        raw_download_submissions = '-'
+        question_extension = '[y/N]   '
+        if (download_submissions):
+            question_extension = '[Y/n]   '
+
+        while raw_download_submissions not in ['y', 'n', '']:
+            raw_download_submissions = input(
+                'Do you want to download submissions of your' +
+                ' assignments? ' + question_extension).lower()
+
+        if (raw_download_submissions != ''):
+            download_submissions = False
+            if raw_download_submissions == 'y':
+                download_submissions = True
+
+        self.config_helper.set_property('download_submissions',
+                                        download_submissions)
 
     def get_token(self) -> str:
         # returns a stored token
@@ -128,6 +145,13 @@ class ConfigService:
             return self.config_helper.get_property('download_submissions')
         except ValueError:
             return False
+
+    def get_download_course_ids(self) -> str:
+        # returns a stored list of ids that should be downloaded
+        try:
+            return self.config_helper.get_property('download_course_ids')
+        except ValueError:
+            return []
 
     def get_dont_download_course_ids(self) -> str:
         # returns a stored list of ids that should not be downloaded

@@ -74,6 +74,7 @@ class MoodleService:
         request_helper = RequestHelper(moodle_domain, moodle_path, token)
         results_handler = ResultsHandler(request_helper)
 
+        download_course_ids = self.get_download_course_ids()
         dont_download_course_ids = self.get_dont_download_course_ids()
         download_submissions = self.get_download_submissions()
 
@@ -93,14 +94,15 @@ class MoodleService:
 
             if(download_submissions):
                 assignments = results_handler.fetch_submissions(
-                    userid, assignments, dont_download_course_ids)
+                    userid, assignments, download_course_ids,
+                    dont_download_course_ids)
 
             index = 0
             for course in courses:
                 index += 1
 
                 skip = False
-                if (course.id in dont_download_course_ids):
+                if (not self._should_download_course(course.id)):
                     skip = True
 
                 shorted_course_name = course.fullname
@@ -138,18 +140,34 @@ class MoodleService:
         changes = self.recorder.changes_of_new_version(filtered_courses)
 
         # Filter changes
-        changes = self._filter_courses(changes, dont_download_course_ids,
+        changes = self._filter_courses(changes, download_course_ids,
+                                       dont_download_course_ids,
                                        download_submissions)
 
         return changes
 
     @staticmethod
+    def _should_download_course(course_id: int, download_course_ids: [int],
+                                dont_download_course_ids: [int]) -> bool:
+        """
+        Checks if a course is in Whitelist and not in Blacklist
+        """
+        inBlacklist = (course_id in dont_download_course_ids)
+        inWhitelist = (course_id in download_course_ids or
+                       len(download_course_ids) == 0)
+
+        return (inWhitelist and not inBlacklist)
+
+    @staticmethod
     def _filter_courses(changes: [Course],
+                        download_course_ids: [int],
                         dont_download_course_ids: [int],
                         download_submissions: bool) -> [Course]:
         """
         Filters the changes course list from courses that
         should not get downloaded
+        @param download_course_ids: list of course ids
+                                         that should be downloaded
         @param dont_download_course_ids: list of course ids
                                          that should not be downloaded
         @param download_submissions: boolean if submissions
@@ -167,7 +185,7 @@ class MoodleService:
                         course_files.append(file)
                 course.files = course_files
 
-            if(course.id not in dont_download_course_ids and
+            if(MoodleService._should_download_course(course.id) and
                     len(course.files) > 0):
                 filtered_changes.append(course)
 
@@ -197,6 +215,14 @@ class MoodleService:
                 'download_submissions')
         except ValueError:
             return False
+
+    def get_download_course_ids(self) -> str:
+        # returns a stored list of course ids hat should be downloaded
+        try:
+            return self.config_helper.get_property(
+                'download_course_ids')
+        except ValueError:
+            return []
 
     def get_dont_download_course_ids(self) -> str:
         # returns a stored list of dont_download_course_ids
