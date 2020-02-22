@@ -63,7 +63,7 @@ class ConfigService:
                             (course.id, course.fullname), course))
 
             if (ResultsHandler._should_download_course(
-                course.id, download_course_ids, dont_download_course_ids)):
+                    course.id, download_course_ids, dont_download_course_ids)):
                 defaults.append(course)
 
         questions = [
