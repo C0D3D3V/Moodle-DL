@@ -46,6 +46,7 @@ class ConfigService:
         @param courses: All availible courses
         """
         download_course_ids = self.get_download_course_ids()
+        dont_download_course_ids = self.get_dont_download_course_ids()
 
         print('')
         print('To avoid downloading all the Moodle courses you are' +
@@ -61,8 +62,8 @@ class ConfigService:
             choices.append(('%5i\t%s' %
                             (course.id, course.fullname), course))
 
-            if (len(download_course_ids) == 0 or
-                    course.id in download_course_ids):
+            if (ResultsHandler._should_download_course(
+                course.id, download_course_ids, dont_download_course_ids)):
                 defaults.append(course)
 
         questions = [
