@@ -11,15 +11,17 @@ from moodle_connector.request_helper import RequestRejectedError, RequestHelper
 terminal = os.getenv('TERM')
 deinit()
 if terminal is None:
-    init(autoreset=True)
-else:
-    init(autoreset=True, convert=False, strip=False)
+    init()
+# else:
+#     init(convert=False, strip=False)
 
 
 class ConfigService:
-    def __init__(self, config_helper: ConfigHelper, storage_path: str):
+    def __init__(self, config_helper: ConfigHelper, storage_path: str,
+                 skip_cert_verify: bool = False):
         self.config_helper = config_helper
         self.storage_path = storage_path
+        self.skip_cert_verify = skip_cert_verify
 
     def interactively_acquire_config(self):
         """
@@ -31,7 +33,8 @@ class ConfigService:
         moodle_domain = self.get_moodle_domain()
         moodle_path = self.get_moodle_path()
 
-        request_helper = RequestHelper(moodle_domain, moodle_path, token)
+        request_helper = RequestHelper(moodle_domain, moodle_path, token,
+                                       self.skip_cert_verify)
         results_handler = ResultsHandler(request_helper)
 
         courses = []

@@ -15,8 +15,8 @@ from moodle_connector.request_helper import RequestRejectedError, RequestHelper
 
 
 class MoodleService:
-    def __init__(self, config_helper: ConfigHelper, storage_path: str, 
-                skip_cert_verify=False):
+    def __init__(self, config_helper: ConfigHelper, storage_path: str,
+                 skip_cert_verify: bool=False):
         self.config_helper = config_helper
         self.storage_path = storage_path
         self.recorder = StateRecorder(
@@ -43,10 +43,13 @@ class MoodleService:
             moodle_domain, moodle_path = self._split_moodle_uri(moodle_uri)
 
             try:
-                moodle_token = login_helper.obtain_login_token(moodle_username,
-                                                               moodle_password,
-                                                               moodle_domain,
-                                                               moodle_path)
+                moodle_token = login_helper.obtain_login_token(
+                    moodle_username,
+                    moodle_password,
+                    moodle_domain,
+                    moodle_path,
+                    self.skip_cert_verify)
+
             except RequestRejectedError as error:
                 print('Login Failed! (%s) Please try again.' % (error))
             except (ValueError, RuntimeError) as error:
@@ -74,8 +77,8 @@ class MoodleService:
         moodle_domain = self.get_moodle_domain()
         moodle_path = self.get_moodle_path()
 
-        request_helper = RequestHelper(moodle_domain, moodle_path, token, 
-                                        skip_verify_cert=self.skip_cert_verify)
+        request_helper = RequestHelper(moodle_domain, moodle_path, token,
+                                       self.skip_cert_verify)
         results_handler = ResultsHandler(request_helper)
 
         download_course_ids = self.get_download_course_ids()

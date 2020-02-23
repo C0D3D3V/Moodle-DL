@@ -2,7 +2,8 @@ from moodle_connector.request_helper import RequestHelper
 
 
 def obtain_login_token(username: str, password: str, moodle_domain: str,
-                       moodle_path: str = "/") -> str:
+                       moodle_path: str = "/",
+                       skip_cert_verify: bool = False) -> str:
     """
     Sends the login credentials to the Moodle-System and extracts the
     resulting Login-Token.
@@ -15,7 +16,8 @@ def obtain_login_token(username: str, password: str, moodle_domain: str,
         'service': 'moodle_mobile_app'
     }
 
-    response = RequestHelper(moodle_domain, moodle_path).get_login(login_data)
+    response = RequestHelper(moodle_domain, moodle_path,
+                             skip_cert_verify).get_login(login_data)
 
     if "token" not in response:
         # = we didn't get an error page (checked by the RequestHelper) but

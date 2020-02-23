@@ -17,7 +17,6 @@ from notification_services.mail.mail_service import MailService
 from notification_services.console.console_service import ConsoleService
 
 
-
 class ReRaiseOnError(logging.StreamHandler):
     """
     A logging-handler class which allows the exception-catcher of i.e. PyCharm
@@ -31,7 +30,7 @@ class ReRaiseOnError(logging.StreamHandler):
             raise RuntimeError(record.msg)
 
 
-def run_init(storage_path):
+def run_init(storage_path, skip_cert_verify=False):
     config = ConfigHelper(storage_path)
 
     if config.is_present():
@@ -56,7 +55,7 @@ def run_init(storage_path):
         sentry_dsn = input('Please enter your Sentry DSN:   ')
         config.set_property('sentry_dsn', sentry_dsn)
 
-    moodle = MoodleService(config, storage_path)
+    moodle = MoodleService(config, storage_path, skip_cert_verify)
     moodle.interactively_acquire_token()
 
     print('Configuration finished and saved!')
@@ -89,26 +88,28 @@ def run_init(storage_path):
             ' You can always do the additional configuration later' +
             ' with the --config option. [y/n]   ').lower()
     if raw_do_config == 'y':
-        run_configure(storage_path)
+        run_configure(storage_path, skip_cert_verify)
 
     print('')
     print('All set and ready to go!')
 
 
-def run_configure(storage_path):
+def run_configure(storage_path, skip_cert_verify=False):
     config = ConfigHelper(storage_path)
     config.load()  # because we do not want to override the other settings
 
-    ConfigService(config, storage_path).interactively_acquire_config()
+    ConfigService(config, storage_path,
+                  skip_cert_verify).interactively_acquire_config()
 
     print('Configuration successfully updated!')
 
 
-def run_new_token(storage_path):
+def run_new_token(storage_path, skip_cert_verify=False):
     config = ConfigHelper(storage_path)
     config.load()  # because we do not want to override the other settings
 
-    MoodleService(config, storage_path).interactively_acquire_token()
+    MoodleService(config, storage_path,
+                  skip_cert_verify).interactively_acquire_token()
 
     print('New Token successfully saved!')
 
@@ -163,7 +164,7 @@ def run_main(storage_path, skip_cert_verify=False):
     console_service = ConsoleService(config)
 
     try:
-        moodle = MoodleService(config, storage_path, skip_cert_verify=skip_cert_verify)
+        moodle = MoodleService(config, storage_path, skip_cert_verify)
 
         logging.debug(
             'Checking for changes for the configured Moodle-Account....')
@@ -278,8 +279,8 @@ parser.add_argument('--path', default='.', type=_dir_path,
                           ' directory)'))
 parser.add_argument('--skip-cert-verify', default=False, action='store_true',
                     help='If this flag is set, the SSL certificate ' +
-                        'is not verified. This option should only be used in ' +
-                        'non production environments.'
+                    'is not verified. This option should only be used in ' +
+                    'non production environments.'
                     )
 
 args = parser.parse_args()
