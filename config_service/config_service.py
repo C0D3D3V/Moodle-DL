@@ -1,9 +1,19 @@
+import os
 import cutie
+
+from colorama import init, deinit
 
 from state_recorder.course import Course
 from config_service.config_helper import ConfigHelper
 from moodle_connector.results_handler import ResultsHandler
 from moodle_connector.request_helper import RequestRejectedError, RequestHelper
+
+terminal = os.getenv('TERM')
+deinit()
+if terminal is None:
+    init(autoreset=True)
+else:
+    init(autoreset=True, convert=False, strip=False)
 
 
 class ConfigService:

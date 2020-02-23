@@ -8,8 +8,6 @@ import argparse
 import traceback
 import sentry_sdk
 
-from colorama import init
-
 from utils.logger import Log
 from config_service.config_helper import ConfigHelper
 from config_service.config_service import ConfigService
@@ -18,8 +16,6 @@ from download_service.download_service import DownloadService
 from notification_services.mail.mail_service import MailService
 from notification_services.console.console_service import ConsoleService
 
-
-init()
 
 
 class ReRaiseOnError(logging.StreamHandler):
