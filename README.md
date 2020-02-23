@@ -53,6 +53,10 @@ Options can be combined with all the actions mentioned above.
     - `PATH` must be an existing directory in which you have read and write access.
     - Default: current working directory
 
+- `--skip-cert-verify`
+    - This flag is used to skip the certification verification while sending requests to Moodle.
+    - Warning: This might lead to security flaws and should only be used in non-production environments.
+    - Default: False
 
 
 

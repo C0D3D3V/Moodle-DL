@@ -122,7 +122,7 @@ def run_change_notification_mail(storage_path):
     print('Configuration successfully updated!')
 
 
-def run_main(storage_path):
+def run_main(storage_path, skip_cert_verify=False):
     logging.basicConfig(
         filename=os.path.join(storage_path, 'MoodleDownloader.log'),
         level=logging.DEBUG,
@@ -163,7 +163,7 @@ def run_main(storage_path):
     console_service = ConsoleService(config)
 
     try:
-        moodle = MoodleService(config, storage_path)
+        moodle = MoodleService(config, storage_path, skip_cert_verify=skip_cert_verify)
 
         logging.debug(
             'Checking for changes for the configured Moodle-Account....')
@@ -276,10 +276,16 @@ parser.add_argument('--path', default='.', type=_dir_path,
                           ' existing directory in which you have read and' +
                           ' write access. (default: current working' +
                           ' directory)'))
+parser.add_argument('--skip-cert-verify', default=False, action='store_true',
+                    help='If this flag is set, the SSL certificate ' +
+                        'is not verified. This option should only be used in ' +
+                        'non production environments.'
+                    )
 
 args = parser.parse_args()
 
 storage_path = args.path
+skip_cert_verify = args.skip_cert_verify
 
 if args.init:
     run_init(storage_path)
@@ -290,4 +296,4 @@ elif args.new_token:
 elif args.change_notification_mail:
     run_change_notification_mail(storage_path)
 else:
-    run_main(storage_path)
+    run_main(storage_path, skip_cert_verify=skip_cert_verify)
