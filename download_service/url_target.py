@@ -7,6 +7,7 @@ import threading
 import urllib.parse as urlparse
 from pathlib import Path
 
+from utils.string_tools import StringTools
 from state_recorder.course import Course
 from state_recorder.file import File
 
@@ -27,6 +28,9 @@ class URLTarget(object):
         self.destination = destination
         self.token = token
         self.lock = lock
+
+        # get valid filename
+        self.filename = StringTools.to_valid_name(self.file.content_filename)
 
         # Counts the downlaod attempts
         self.url_tried = 0
@@ -122,10 +126,10 @@ class URLTarget(object):
         both cases are covered here.
         """
         self.file.saved_to = os.path.join(
-            self.destination, self.file.content_filename + ".desktop")
+            self.destination, self.filename + ".desktop")
         if os.name == "nt":
             self.file.saved_to = os.path.join(
-                self.destination, self.file.content_filename + ".URL")
+                self.destination, self.filename + ".URL")
 
         self.file.saved_to = self._rename_if_exists(self.file.saved_to)
 
@@ -136,12 +140,12 @@ class URLTarget(object):
             else:
                 shortcut.write("[Desktop Entry]" + os.linesep)
                 shortcut.write("Encoding=UTF-8" + os.linesep)
-                shortcut.write("Name=" + self.file.content_filename +
+                shortcut.write("Name=" + self.filename +
                                os.linesep)
                 shortcut.write("Type=Link" + os.linesep)
                 shortcut.write("URL=" + self.file.content_fileurl + os.linesep)
                 shortcut.write("Icon=text-html" + os.linesep)
-                shortcut.write("Name[en_US]=" + self.file.content_filename +
+                shortcut.write("Name[en_US]=" + self.filename +
                                os.linesep)
 
         self.file.time_stamp = int(time.time())
@@ -169,7 +173,7 @@ class URLTarget(object):
                 return self.success
 
             self.file.saved_to = os.path.join(self.destination,
-                                              self.file.content_filename)
+                                              self.filename)
 
             self.file.saved_to = self._rename_if_exists(self.file.saved_to)
 
