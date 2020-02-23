@@ -3,6 +3,7 @@ import html
 
 from sys import platform
 
+
 class StringTools:
 
     @staticmethod

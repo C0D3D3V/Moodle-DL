@@ -1,5 +1,6 @@
 import os
 import sys
+import shutil
 import logging
 
 from getpass import getpass
@@ -107,6 +108,9 @@ class MoodleService:
                         dont_download_course_ids)):
                     skip = True
 
+                # to limit the output to one line
+                limits = shutil.get_terminal_size()
+
                 shorted_course_name = course.fullname
                 if (len(course.fullname) > 17):
                     shorted_course_name = course.fullname[:15] + '..'
@@ -115,12 +119,15 @@ class MoodleService:
                 if (skip):
                     into = '\r    Skip course information'
 
-                sys.stdout.write(
-                    into +
-                    ' %3d/%3d [%17s|%6s]' % (index,
-                                             len(courses),
-                                             shorted_course_name,
-                                             course.id))
+                status_message = (into + ' %3d/%3d [%17s|%6s]'
+                                  % (index, len(courses),
+                                      shorted_course_name,
+                                      course.id))
+
+                if (len(status_message) > limits.columns):
+                    status_message = status_message[0:limits.columns]
+
+                sys.stdout.write(status_message)
                 sys.stdout.flush()
 
                 if (skip):

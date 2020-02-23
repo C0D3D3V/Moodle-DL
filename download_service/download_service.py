@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import shutil
 import logging
 import threading
 
@@ -147,6 +148,9 @@ class DownloadService:
         @return: A status message string
         """
 
+        # to limit the output to one line
+        limits = shutil.get_terminal_size()
+
         # Starting with a carriage return to overwrite the last message
         progressmessage = "\r"
 
@@ -171,6 +175,10 @@ class DownloadService:
             int(self.total_to_download / 1000.0))
 
         progressmessage += threads_status_message
+
+        if (len(progressmessage) > limits.columns):
+            progressmessage = progressmessage[0:limits.columns]
+
         return progressmessage
 
     def _log_failures(self):
