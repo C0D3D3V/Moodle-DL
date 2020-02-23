@@ -289,12 +289,12 @@ storage_path = args.path
 skip_cert_verify = args.skip_cert_verify
 
 if args.init:
-    run_init(storage_path)
+    run_init(storage_path, skip_cert_verify)
 elif args.config:
-    run_configure(storage_path)
+    run_configure(storage_path, skip_cert_verify)
 elif args.new_token:
-    run_new_token(storage_path)
+    run_new_token(storage_path, skip_cert_verify)
 elif args.change_notification_mail:
     run_change_notification_mail(storage_path)
 else:
-    run_main(storage_path, skip_cert_verify=skip_cert_verify)
+    run_main(storage_path, skip_cert_verify)
