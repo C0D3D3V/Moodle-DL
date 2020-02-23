@@ -277,6 +277,7 @@ parser.add_argument('--path', default='.', type=_dir_path,
                           ' existing directory in which you have read and' +
                           ' write access. (default: current working' +
                           ' directory)'))
+
 parser.add_argument('--skip-cert-verify', default=False, action='store_true',
                     help='If this flag is set, the SSL certificate ' +
                     'is not verified. This option should only be used in ' +

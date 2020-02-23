@@ -20,6 +20,7 @@
 3. `pip3 install -r requirements.txt`
 4. run `python3 main.py --init`
 
+If you run this program in mintty (MINGW or something similar), try running Python like this `winpty python`.
 
 ### Usage
 - `python main.py`

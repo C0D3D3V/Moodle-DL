@@ -12,8 +12,8 @@ terminal = os.getenv('TERM')
 deinit()
 if terminal is None:
     init()
-# else:
-#     init(convert=False, strip=False)
+else:
+    init(convert=False, strip=False)
 
 
 class ConfigService:
