@@ -1,6 +1,7 @@
 import json
 import urllib
-
+import ssl
+import logging
 from http.client import HTTPSConnection
 
 
@@ -11,11 +12,15 @@ class RequestHelper:
     """
 
     def __init__(self, moodle_domain: str, moodle_path: str = '/',
-                 token: str = ''):
+                 token: str = '', skip_verify_cert=False):
         """
         Opens a connection to the Moodle system
         """
-        self.connection = HTTPSConnection(moodle_domain)
+        if skip_verify_cert:
+            context = ssl._create_unverified_context()
+        else:
+            context = ssl._create_default_https_context()
+        self.connection = HTTPSConnection(moodle_domain, context=context)
 
         self.token = token
         self.moodle_domain = moodle_domain
