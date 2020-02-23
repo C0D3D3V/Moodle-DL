@@ -1,6 +1,7 @@
 import os
 import html
 
+from sys import platform
 
 class StringTools:
 
@@ -17,6 +18,15 @@ class StringTools:
         name = html.unescape(name)
         # Forward and Backward Slashes are not good for filenames
         name = name.replace(os.path.sep, '|')
+        if platform == "win32":
+            name = name.replace('\\', '-')
+            name = name.replace('/', '-')
+            name = name.replace(':', '-')
+            name = name.replace('?', '')
+            name = name.replace('*', '')
+            name = name.replace('<', '(')
+            name = name.replace('>', ')')
+            name = name.replace('|', '-')
         return name
 
     @staticmethod
