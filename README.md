@@ -59,6 +59,9 @@ Options can be combined with all the actions mentioned above.
     - Warning: This might lead to security flaws and should only be used in non-production environments.
     - Default: False
 
+- `--without_downloading_files`
+    - This flag is used to skip the downloading of files.
+    - This allows the local database to be updated to the latest version of Moodle without having to download all files.
 
 
 

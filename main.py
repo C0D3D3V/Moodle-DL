@@ -12,6 +12,7 @@ from utils.logger import Log
 from config_service.config_helper import ConfigHelper
 from config_service.config_service import ConfigService
 from moodle_connector.moodle_service import MoodleService
+from download_service.fake_download_service import FakeDownloadService
 from download_service.download_service import DownloadService
 from notification_services.mail.mail_service import MailService
 from notification_services.console.console_service import ConsoleService
@@ -123,7 +124,8 @@ def run_change_notification_mail(storage_path):
     print('Configuration successfully updated!')
 
 
-def run_main(storage_path, skip_cert_verify=False):
+def run_main(storage_path, skip_cert_verify=False,
+             without_downloading_files=False):
     logging.basicConfig(
         filename=os.path.join(storage_path, 'MoodleDownloader.log'),
         level=logging.DEBUG,
@@ -177,7 +179,11 @@ def run_main(storage_path, skip_cert_verify=False):
             'Start downloading changed files...')
         Log.debug('Start downloading changed files...')
 
-        downloader = DownloadService(changed_courses, moodle, storage_path)
+        if (without_downloading_files):
+            downloader = FakeDownloadService(
+                changed_courses, moodle, storage_path)
+        else:
+            downloader = DownloadService(changed_courses, moodle, storage_path)
         downloader.run()
 
         changed_courses_to_notify = moodle.recorder.changes_to_notify()
@@ -284,10 +290,18 @@ parser.add_argument('--skip-cert-verify', default=False, action='store_true',
                     'non production environments.'
                     )
 
+parser.add_argument('--without_downloading_files', default=False,
+                    action='store_true',
+                    help='If this flag is set, no files are downloaded.' +
+                    ' This allows the local database to be updated without' +
+                    ' having to download all files.'
+                    )
+
 args = parser.parse_args()
 
 storage_path = args.path
 skip_cert_verify = args.skip_cert_verify
+without_downloading_files = args.without_downloading_files
 
 if args.init:
     run_init(storage_path, skip_cert_verify)
@@ -298,4 +312,4 @@ elif args.new_token:
 elif args.change_notification_mail:
     run_change_notification_mail(storage_path)
 else:
-    run_main(storage_path, skip_cert_verify)
+    run_main(storage_path, skip_cert_verify, without_downloading_files)
