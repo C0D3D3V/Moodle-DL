@@ -134,7 +134,7 @@ def run_main(storage_path, skip_cert_verify=False,
     )
 
     logging.info('--- main started ---------------------')
-    Log.info('Moodle Donwlaoder starting...')
+    Log.info('Moodle Downloader starting...')
     if IS_DEBUG:
         logging.info(
             'Debug-Mode detected. Errors will not be logged but instead' +
