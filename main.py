@@ -235,7 +235,8 @@ def _dir_path(path):
         return path
     else:
         raise argparse.ArgumentTypeError(
-            f"'{path}' is not a valid path. Make sure the directory exists.")
+            ("'%s' is not a valid path." % (str(path)) +
+             " Make sure the directory exists."))
 
 
 # --- called at the program invocation: -------------------------------------
