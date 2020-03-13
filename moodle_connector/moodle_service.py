@@ -88,6 +88,13 @@ class MoodleService:
                   ' might not work. You can still try it, your version is: ' +
                   str(version))
 
+        raw_do_automatic = ''
+        while raw_do_automatic not in ['y', 'n']:
+            raw_do_automatic = input(
+                'Do you want to try to receive the SSO token automatically?' +
+                ' If you do not want to do so, you will be guided through' +
+                ' the manual copy process. [y/n]   ').lower()
+
         print('Please log into Moodle on this computer and then visit' +
               ' the following address in your web browser: ')
 
@@ -96,7 +103,23 @@ class MoodleService:
               'moodle_mobile_app&passport=12345&' +
               'urlscheme=http%3A%2F%2Flocalhost')
 
-        moodle_token = sso_token_receiver.receiver_token()
+        if raw_do_automatic == 'y':
+            moodle_token = sso_token_receiver.receive_token()
+        else:
+            print('If you open the link in the browser, no web page should' +
+                  ' load, instead an error will occur. Open the' +
+                  ' developer console (press F12) and go to the Network Tab,' +
+                  ' if there is no error, reload the web page.')
+
+            print('Copy the link address of the website that could not be' +
+                  ' loaded (right click, then click on Copy, then click' +
+                  ' on copy link address).')
+
+            token_address = input('Then insert the address here:   ')
+
+            moodle_token = sso_token_receiver.extract_token(token_address)
+            if(moodle_token is None):
+                raise ValueError('Invalide URL!')
 
         # Saves the created token and the successful Moodle parameters.
         self.config_helper.set_property('token', moodle_token)
