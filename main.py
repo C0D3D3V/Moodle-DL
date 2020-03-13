@@ -31,7 +31,7 @@ class ReRaiseOnError(logging.StreamHandler):
             raise RuntimeError(record.msg)
 
 
-def run_init(storage_path, skip_cert_verify=False):
+def run_init(storage_path, use_sso=False, skip_cert_verify=False):
     config = ConfigHelper(storage_path)
 
     if config.is_present():
@@ -298,14 +298,22 @@ parser.add_argument('--without_downloading_files', default=False,
                     ' having to download all files.'
                     )
 
+parser.add_argument('--sso', default=False, action='store_true',
+                    help='This flag can be used together with --init. If' +
+                    ' this flag is set, you will be guided through the' +
+                    ' Single Sign On (SSO) login process during' +
+                    'initialization.'
+                    )
+
 args = parser.parse_args()
 
+use_sso = args.sso
 storage_path = args.path
 skip_cert_verify = args.skip_cert_verify
 without_downloading_files = args.without_downloading_files
 
 if args.init:
-    run_init(storage_path, skip_cert_verify)
+    run_init(storage_path, use_sso, skip_cert_verify)
 elif args.config:
     run_configure(storage_path, skip_cert_verify)
 elif args.new_token:
