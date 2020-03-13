@@ -28,6 +28,7 @@ class StringTools:
             name = name.replace('<', '(')
             name = name.replace('>', ')')
             name = name.replace('|', '-')
+            name = name.replace('"', '')
         return name
 
     @staticmethod
