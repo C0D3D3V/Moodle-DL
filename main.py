@@ -109,12 +109,17 @@ def run_configure(storage_path, skip_cert_verify=False):
     print('Configuration successfully updated!')
 
 
-def run_new_token(storage_path, skip_cert_verify=False):
+def run_new_token(storage_path, use_sso=False, skip_cert_verify=False):
     config = ConfigHelper(storage_path)
     config.load()  # because we do not want to override the other settings
 
-    MoodleService(config, storage_path,
-                  skip_cert_verify).interactively_acquire_token()
+    moodle = MoodleService(config, storage_path,
+                           skip_cert_verify)
+
+    if (use_sso):
+        moodle.interactively_acquire_sso_token()
+    else:
+        moodle.interactively_acquire_token()
 
     print('New Token successfully saved!')
 
@@ -321,7 +326,7 @@ if args.init:
 elif args.config:
     run_configure(storage_path, skip_cert_verify)
 elif args.new_token:
-    run_new_token(storage_path, skip_cert_verify)
+    run_new_token(storage_path, use_sso, skip_cert_verify)
 elif args.change_notification_mail:
     run_change_notification_mail(storage_path)
 else:
