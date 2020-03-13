@@ -10,13 +10,14 @@ from config_service.config_helper import ConfigHelper
 from state_recorder.course import Course
 from state_recorder.state_recorder import StateRecorder
 from moodle_connector import login_helper
+from moodle_connector import sso_token_receiver
 from moodle_connector.results_handler import ResultsHandler
 from moodle_connector.request_helper import RequestRejectedError, RequestHelper
 
 
 class MoodleService:
     def __init__(self, config_helper: ConfigHelper, storage_path: str,
-                 skip_cert_verify: bool=False):
+                 skip_cert_verify: bool = False):
         self.config_helper = config_helper
         self.storage_path = storage_path
         self.recorder = StateRecorder(
@@ -56,6 +57,36 @@ class MoodleService:
                 print(
                     'Error while communicating with the Moodle System!' +
                     ' (%s) Please try again.' % (error))
+
+        # Saves the created token and the successful Moodle parameters.
+        self.config_helper.set_property('token', moodle_token)
+        self.config_helper.set_property('moodle_domain', moodle_domain)
+        self.config_helper.set_property('moodle_path', moodle_path)
+
+        return moodle_token
+
+    def interactively_acquire_sso_token(self) -> str:
+        """
+        Walks the user through the receiving of a sso token for the
+        Moodle-System and saves it.
+        @return: The Token for Moodle.
+        """
+
+        moodle_url = input('URL of Moodle:   ')
+
+        moodle_uri = urlparse(moodle_url)
+
+        moodle_domain, moodle_path = self._split_moodle_uri(moodle_uri)
+
+        print('Please log into Moodle on this computer and then visit' +
+              ' the following address in your web browser: ')
+
+        print('https://' + moodle_domain + moodle_path +
+              'admin/tool/mobile/launch.php?service=' +
+              'moodle_mobile_app&passport=12345&' +
+              'urlscheme=http%3A%2F%2Flocalhost%3A8123')
+
+        moodle_token = sso_token_receiver.receiver_token()
 
         # Saves the created token and the successful Moodle parameters.
         self.config_helper.set_property('token', moodle_token)

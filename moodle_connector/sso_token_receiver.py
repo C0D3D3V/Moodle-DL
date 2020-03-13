@@ -1,4 +1,6 @@
+import base64
 import urllib.parse as urlparse
+
 from urllib.parse import parse_qs
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
@@ -31,7 +33,7 @@ class TransferServer(BaseHTTPRequestHandler):
         return
 
 
-def receiver_token():
+def receiver_token() -> str:
     """
     Starts an http server to recieve the sso token from browser.
     It waits till a token was received.
@@ -42,10 +44,7 @@ def receiver_token():
     extracted_token = None
 
     while extracted_token is None:
-        try:
-            httpd.handle_request()
-        except KeyboardInterrupt:
-            pass
+        httpd.handle_request()
 
         parsed_url = urlparse.urlparse(TransferServer.received_token)
 
@@ -58,4 +57,9 @@ def receiver_token():
 
     httpd.server_close()
 
-    print(extracted_token)
+    decoded = base64.b64decode(extracted_token)
+    splitted = decoded.split(':::')
+    if (len(splitted) < 2):
+        raise ValueError('Invalide Token: ' + extracted_token)
+
+    return splitted[1]

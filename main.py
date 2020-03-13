@@ -57,7 +57,11 @@ def run_init(storage_path, use_sso=False, skip_cert_verify=False):
         config.set_property('sentry_dsn', sentry_dsn)
 
     moodle = MoodleService(config, storage_path, skip_cert_verify)
-    moodle.interactively_acquire_token()
+
+    if (use_sso):
+        moodle.interactively_acquire_sso_token()
+    else:
+        moodle.interactively_acquire_token()
 
     print('Configuration finished and saved!')
 
