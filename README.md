@@ -18,8 +18,9 @@
 2. Verify that `python --version` shows a version equal to or higher then 3.5.3
     Otherwise use [pyenv](https://github.com/pyenv/pyenv#installation) to install version 3.5.3
 3. `pip3 install -r requirements.txt`
-4. run `python3 main.py --init`
+4. run `python3 main.py --init`  
 
+On some operating systems the program has to run with `python` instead of `python3`, try it yourself. The same applies to `pip3`.
 If you run this program in mintty (MINGW or something similar), try running Python like this `winpty python`.
 
 ### Usage
