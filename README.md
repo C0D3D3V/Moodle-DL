@@ -32,6 +32,7 @@ If you run this program in mintty (MINGW or something similar), try running Pyth
     - Guides you trough the configuration of the software, including the activation of mail-notifications and obtainment of a login-token for your Moodle-Account.
     - After the necessary configuration, further additional configurations can be made. 
 	- It does not fetch the current state of your Moodle-Account.
+    - If you have to log in with Single Sign On (SSO), you can set the option `--sso` additionally.
 - `python main.py --config`
     - Guides you through the additional configuration of the software. This includes the selection of the courses to be downloaded and various configuration options for these courses.
     - It does not fetch the current state of your Moodle-Account.
