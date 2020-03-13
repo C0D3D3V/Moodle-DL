@@ -1,6 +1,7 @@
 import base64
 import urllib.parse as urlparse
 
+from utils.logger import Log
 from urllib.parse import parse_qs
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
@@ -38,26 +39,31 @@ def receiver_token() -> str:
     Starts an http server to recieve the sso token from browser.
     It waits till a token was received.
     """
-    server_address = ('', 8123)
-    httpd = HTTPServer(server_address, TransferServer)
+    server_address = ('localhost', 80)
+    try:
+        httpd = HTTPServer(server_address, TransferServer)
+    except PermissionError:
+        Log.error('Permission denied: Please start the' +
+                  ' downloader once with admin rights, so that it' +
+                  ' can wait on port 80 for the token.')
+        exit(1)
 
     extracted_token = None
 
     while extracted_token is None:
         httpd.handle_request()
 
-        parsed_url = urlparse.urlparse(TransferServer.received_token)
+        splitted = TransferServer.received_token.split('token=')
 
-        extracted_token = parse_qs(parsed_url.query).get('token', None)
+        if (len(splitted) < 2):
+            continue
 
-        if extracted_token is not None and len(extracted_token) == 1:
-            extracted_token = extracted_token[0]
-        else:
-            extracted_token = None
+        extracted_token = splitted[1]
 
     httpd.server_close()
 
-    decoded = base64.b64decode(extracted_token)
+    decoded = str(base64.b64decode(extracted_token))
+
     splitted = decoded.split(':::')
     if (len(splitted) < 2):
         raise ValueError('Invalide Token: ' + extracted_token)

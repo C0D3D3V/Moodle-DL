@@ -78,13 +78,23 @@ class MoodleService:
 
         moodle_domain, moodle_path = self._split_moodle_uri(moodle_uri)
 
+        version = RequestHelper(moodle_domain, moodle_path, '',
+                                self.skip_cert_verify
+                                ).get_simple_moodle_version()
+
+        if (version > 3.8):
+            print('Between version 3.81 and 3.82 a change was added to' +
+                  ' Moodle so that automatic copying of the SSO token' +
+                  ' might not work. You can still try it, your version is: ' +
+                  str(version))
+
         print('Please log into Moodle on this computer and then visit' +
               ' the following address in your web browser: ')
 
         print('https://' + moodle_domain + moodle_path +
               'admin/tool/mobile/launch.php?service=' +
               'moodle_mobile_app&passport=12345&' +
-              'urlscheme=http%3A%2F%2Flocalhost%3A8123')
+              'urlscheme=http%3A%2F%2Flocalhost')
 
         moodle_token = sso_token_receiver.receiver_token()
 

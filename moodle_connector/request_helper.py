@@ -1,7 +1,7 @@
 import json
 import urllib
 import ssl
-import logging
+import re
 from http.client import HTTPSConnection
 
 
@@ -119,6 +119,51 @@ class RequestHelper:
         response = self.connection.getresponse()
         return self._initial_parse(response)
 
+    @staticmethod
+    def _check_response_code(response):
+        # Normaly Moodle answer with response 200
+        if (response.getcode() != 200):
+            raise RuntimeError(
+                'An Unexpected Error happened on side of the Moodle System!' +
+                (' Status-Code: %s' % str(response.getcode())) +
+                ('\nHeader: %s' % (response.getheaders())) +
+                ('\nResponse: %s' % (response.read())))
+
+    def get_simple_moodle_version(self) -> float:
+        """
+        Querys the version by looking up the chnagelog (/lib/upgrade.txt)
+        of the moodle
+        @param moodle_domain: the domain of the moodle instance
+        @param moodle_path: the path of the moodle installation
+        @return: a float number represending the newset version
+                 parsed from the changelog
+        """
+
+        self.connection.request(
+            'GET',
+            '%slib/upgrade.txt' % (
+                self.moodle_path),
+            headers=self.stdHeader
+        )
+
+        response = self.connection.getresponse()
+
+        self._check_response_code(response)
+
+        changelog = str(response.read()).split('\\n')
+        version_string = '1'
+        for line in changelog:
+            match = re.match(r"^===\s*([\d\.]+)\s*===$", line)
+            if match:
+                version_string = match.group(1)
+                break
+
+        majorVersion = version_string.split('.')[0]
+        minorVersion = version_string[len(majorVersion):].replace('.', '')
+
+        version = float(majorVersion + '.' + minorVersion)
+        return version
+
     def _initial_parse(self, response) -> object:
         """
         The first time parsing the result of a REST request.
@@ -127,13 +172,7 @@ class RequestHelper:
         @return: The paresed json object
         """
 
-        # Normaly Moodle answer with response 200
-        if (response.getcode() != 200):
-            raise RuntimeError(
-                'An Unexpected Error happened on side of the Moodle System!' +
-                (' Status-Code: %s' % str(response.getcode())) +
-                ('\nHeader: %s' % (response.getheaders())) +
-                ('\nResponse: %s' % (response.read())))
+        self._check_response_code(response)
 
         # Try to parse the json
         try:
