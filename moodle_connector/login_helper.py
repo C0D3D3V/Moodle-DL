@@ -17,7 +17,8 @@ def obtain_login_token(username: str, password: str, moodle_domain: str,
     }
 
     response = RequestHelper(moodle_domain, moodle_path,
-                             skip_cert_verify).get_login(login_data)
+                             skip_cert_verify=skip_cert_verify)\
+        .get_login(login_data)
 
     if "token" not in response:
         # = we didn't get an error page (checked by the RequestHelper) but

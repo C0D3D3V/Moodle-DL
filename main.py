@@ -256,7 +256,7 @@ if 'pydevd' in sys.modules:
     print('[RUNNING IN DEBUG-MODE!]')
 
 parser = argparse.ArgumentParser(
-    description=('Moodle Donwlaoder 2 helps you download all the course' +
+    description=('Moodle Downlaoder 2 helps you download all the course' +
                  ' files  of your Moodle account.'))
 group = parser.add_mutually_exclusive_group()
 group.add_argument('--init', action='store_true',
@@ -320,6 +320,7 @@ use_sso = args.sso
 storage_path = args.path
 skip_cert_verify = args.skip_cert_verify
 without_downloading_files = args.without_downloading_files
+
 
 if args.init:
     run_init(storage_path, use_sso, skip_cert_verify)

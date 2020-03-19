@@ -12,11 +12,11 @@ class RequestHelper:
     """
 
     def __init__(self, moodle_domain: str, moodle_path: str = '/',
-                 token: str = '', skip_verify_cert=False):
+                 token: str = '', skip_cert_verify=False):
         """
         Opens a connection to the Moodle system
         """
-        if skip_verify_cert:
+        if skip_cert_verify:
             context = ssl._create_unverified_context()
         else:
             context = ssl._create_default_https_context()
