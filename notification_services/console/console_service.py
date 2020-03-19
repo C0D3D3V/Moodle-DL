@@ -38,4 +38,4 @@ class ConsoleService(NotificationService):
             print("\n")
 
     def notify_about_error(self, error_description: str):
-        raise RuntimeError("Not yet implemendet!")
+        raise RuntimeError("Not yet implemented!")

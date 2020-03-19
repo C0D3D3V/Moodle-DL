@@ -79,7 +79,7 @@ class DownloadService:
                     )
 
                     # If the file is located in a folder or in an assignment,
-                    # it should be saved in a subfolder
+                    # it should be saved in a sub-folder
                     # (with the name of the module).
                     if (file.module_modname == "assign" or
                             file.module_modname == "folder"):

@@ -6,7 +6,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 
 class TransferServer(BaseHTTPRequestHandler):
     """
-    Transfer server is an http-server that waits for an incoming sso token.
+    Transfer server is an HTTP-server that waits for an incoming SSO token.
     """
     received_token = ''
 
@@ -52,7 +52,7 @@ def extract_token(address: str) -> str:
 
 def receive_token() -> str:
     """
-    Starts an http server to recieve the sso token from browser.
+    Starts an HTTP server to receive the SSO token from browser.
     It waits till a token was received.
     """
     server_address = ('localhost', 80)
@@ -60,7 +60,7 @@ def receive_token() -> str:
         httpd = HTTPServer(server_address, TransferServer)
     except PermissionError:
         Log.error('Permission denied: Please start the' +
-                  ' downloader once with admin rights, so that it' +
+                  ' downloader once with administrator rights, so that it' +
                   ' can wait on port 80 for the token.')
         exit(1)
 

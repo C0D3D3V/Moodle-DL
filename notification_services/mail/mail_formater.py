@@ -182,7 +182,7 @@ def _finish_with_main_wrapper(content: str, introduction: str) -> (str,
     All emails use the main wrapper. This contains the normal html structure
     @return: A sendable mail object, with the content and the attachments
     """
-    # cids link the attatched media-files to be displayed inline
+    # cids link the attached media-files to be displayed inline
     header_cid = make_msgid()
     extender_cid = make_msgid()
 

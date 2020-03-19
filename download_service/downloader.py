@@ -7,8 +7,8 @@ from state_recorder.state_recorder import StateRecorder
 
 class Downloader(threading.Thread):
     """
-    Downlaoder processes the queue and puts an
-    url target back into the queue if an error occurs.
+    Downloader processes the queue and puts an
+    URL target back into the queue if an error occurs.
     """
 
     def __init__(self, queue: Queue, report: [],
@@ -43,7 +43,7 @@ class Downloader(threading.Thread):
             # All information is still saved in url_target
 
             # If a download fails but the maximum number of
-            # attempts is not reached, the url target would
+            # attempts is not reached, the URL target would
             # be returned to the queue
             if (response is False and
                     url_target.url_tried < self.url_tries):

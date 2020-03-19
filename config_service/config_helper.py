@@ -16,7 +16,7 @@ class ConfigHelper:
         return os.path.isfile(self.config_path)
 
     def load(self):
-        # Opens the conficuration file and parse it to a json object
+        # Opens the configuration file and parse it to a JSON object
         try:
             with open(self.config_path, 'r') as f:
                 config_raw = f.read()
@@ -25,7 +25,7 @@ class ConfigHelper:
             raise ValueError('No config found!')
 
     def _save(self):
-        # Saves the json object back to file
+        # Saves the JSON object back to file
         with open(self.config_path, 'w+') as f:
             config_formatted = json.dumps(self._whole_config, indent=4)
             f.write(config_formatted)
@@ -38,12 +38,12 @@ class ConfigHelper:
             raise ValueError('The %s-Property is not yet configured!' % (key))
 
     def set_property(self, key: str, value: any):
-        # sets a property in the json object
+        # sets a property in the JSON object
         self._whole_config.update({key: value})
         self._save()
 
     def remove_property(self, key):
-        # removes a property from the json object
+        # removes a property from the JSON object
         self._whole_config.pop(key, None)
-        #                           ^ behaviour if the key is not present
+        #                           ^ behavior if the key is not present
         self._save()

@@ -7,7 +7,7 @@ def obtain_login_token(username: str, password: str, moodle_domain: str,
     """
     Sends the login credentials to the Moodle-System and extracts the
     resulting Login-Token.
-    @params: The necessary parameters to create a Toekn.
+    @params: The necessary parameters to create a Token.
     @return: The received token.
     """
     login_data = {

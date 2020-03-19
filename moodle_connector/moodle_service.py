@@ -67,7 +67,7 @@ class MoodleService:
 
     def interactively_acquire_sso_token(self) -> str:
         """
-        Walks the user through the receiving of a sso token for the
+        Walks the user through the receiving of a SSO token for the
         Moodle-System and saves it.
         @return: The Token for Moodle.
         """
@@ -119,7 +119,7 @@ class MoodleService:
 
             moodle_token = sso_token_receiver.extract_token(token_address)
             if(moodle_token is None):
-                raise ValueError('Invalide URL!')
+                raise ValueError('Invalid URL!')
 
         # Saves the created token and the successful Moodle parameters.
         self.config_helper.set_property('token', moodle_token)

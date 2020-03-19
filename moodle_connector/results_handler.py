@@ -13,7 +13,7 @@ class ResultsHandler:
 
     def __init__(self, request_helper: RequestHelper):
         self.request_helper = request_helper
-        # oldest suported moodle version
+        # oldest supported Moodle version
         self.version = 2011120500
 
     def setVersion(self, version: int):
@@ -70,8 +70,8 @@ class ResultsHandler:
         """
         Fetches the Assignments List for all courses from the
         Moodle system
-        @return: A Dictonary of all assignments,
-                 idexed by courses, then assignment
+        @return: A Dictionary of all assignments,
+                 indexed by courses, then assignment
         """
         # do this only if version is greater then 2.4
         # because mod_assign_get_assignments will fail
@@ -122,17 +122,17 @@ class ResultsHandler:
                           download_course_ids: [int],
                           dont_download_course_ids: [int]) -> {int: {int: {}}}:
         """
-        Fetches for the assignments list of all courses the additionaly
-        submissions. This is kind of waste of resources, beacuse there
-        is no api to get all submissions at once
+        Fetches for the assignments list of all courses the additionally
+        submissions. This is kind of waste of resources, because there
+        is no API to get all submissions at once
         @param userid: the user id.
-        @param assignments: the dictonary of assignments of all courses.
-        @param download_course_ids: ids of courses for that sould
+        @param assignments: the dictionary of assignments of all courses.
+        @param download_course_ids: ids of courses for that should
                                     be downloaded
-        @param dont_download_course_ids: ids of courses for that sould
+        @param dont_download_course_ids: ids of courses for that should
                                          not be downloaded
-        @return: A Dictonary of all assignments,
-                 idexed by courses, then assignment
+        @return: A Dictionary of all assignments,
+                 indexed by courses, then assignment
         """
         # do this only if version is greater then 3.1
         # because mod_assign_get_submission_status will fail
@@ -156,7 +156,7 @@ class ResultsHandler:
         for course_id in assignments:
             if (not self._should_download_course(
                 course_id, download_course_ids,
-                dont_download_course_ids)):
+                    dont_download_course_ids)):
                 continue
             for assignment_id in assignments[course_id]:
                 counter += 1
@@ -185,7 +185,7 @@ class ResultsHandler:
     def _should_download_course(course_id: int, download_course_ids: [int],
                                 dont_download_course_ids: [int]) -> bool:
         """
-        Checks if a course is in Whitelist and not in Blacklist
+        Checks if a course is in White-list and not in Blacklist
         """
         inBlacklist = (course_id in dont_download_course_ids)
         inWhitelist = (course_id in download_course_ids or
@@ -237,7 +237,7 @@ class ResultsHandler:
         Iterates over all sections of a course to find files (or modules).
         @param course_sections: The course object returned by Moodle,
                                 containing the sections of the course.
-        @param assignments: the dictonary of assignments of the course.
+        @param assignments: the dictionary of assignments of the course.
         @return: A list of files of the course.
         """
         files = []
@@ -332,7 +332,7 @@ class ResultsHandler:
         """
         Queries the Moodle system for all the files that
         are present in a course
-        @param course_id: The id of the course for which you want to enquire.
+        @param course_id: The id of the course for which you want to enquirer.
         @return: A list of Files
         """
 

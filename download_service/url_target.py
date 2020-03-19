@@ -20,7 +20,7 @@ class URLTarget(object):
     def __init__(self, file: File, course: Course, destination: str,
                  token: str, thread_report: [], lock: threading.Lock):
         """
-        Initiating an url target.
+        Initiating an URL target.
         """
 
         self.file = file
@@ -32,7 +32,7 @@ class URLTarget(object):
         # get valid filename
         self.filename = StringTools.to_valid_name(self.file.content_filename)
 
-        # Counts the downlaod attempts
+        # Counts the download attempts
         self.url_tried = 0
 
         # To return errors
@@ -68,8 +68,8 @@ class URLTarget(object):
     def _add_token_to_url(self, url: str) -> str:
         """
         Adds the Moodle token to a URL
-        @param url: The url where the token should be added.
-        @return: The url with the token.
+        @param url: The URL where the token should be added.
+        @return: The URL with the token.
         """
         url_parts = list(urlparse.urlparse(url))
         query = dict(urlparse.parse_qsl(url_parts[4]))
@@ -121,7 +121,7 @@ class URLTarget(object):
 
     def create_shortcut(self):
         """
-        Creates a Schortcut to a URL
+        Creates a Shortcut to a URL
         Because shortcuts are different under Windows and Unix,
         both cases are covered here.
         """
@@ -166,7 +166,7 @@ class URLTarget(object):
         try:
             self._create_dir(self.destination)
 
-            # if it is a url we have to create a shortcut
+            # if it is a URL we have to create a shortcut
             # instead of downloading it
             if (self.file.module_modname == 'url'):
                 self.create_shortcut()

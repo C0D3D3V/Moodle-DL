@@ -27,12 +27,10 @@ class RequestHelper:
         self.moodle_path = moodle_path
 
         RequestHelper.stdHeader = {
-            # 'Cookie': 'cookie1=' + cookie1,
             'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64)' +
             ' AppleWebKit/537.36 (KHTML, like Gecko)' +
             ' Chrome/78.0.3904.108 Safari/537.36',
             'Content-Type': 'application/x-www-form-urlencoded'
-            # copied straight out of Chrome
         }
 
     def post_REST(self, function: str, data: {str: str} = None) -> object:
@@ -40,7 +38,7 @@ class RequestHelper:
         Sends a POST request to the REST endpoint of the Moodle system
         @param function: The Web service function to be called.
         @param data: The optional data is added to the POST body.
-        @return: The Json response returned by the Moodle system, already
+        @return: The JSON response returned by the Moodle system, already
         checked for errors.
         """
 
@@ -69,9 +67,9 @@ class RequestHelper:
     @staticmethod
     def _get_REST_POST_URL(moodle_path: str, function: str) -> str:
         """
-        Generates an url for a REST-POST request
+        Generates an URL for a REST-POST request
         @params: The necessary parameters for a REST URL
-        @return: A formatted url
+        @return: A formatted URL
         """
         url = (('%swebservice/rest/server.php?moodlewsrestformat=json&' % (
             moodle_path)) + ('wsfunction=%s' % (function)))
@@ -84,7 +82,7 @@ class RequestHelper:
         """
         Generates the data for a REST-POST request
         @params: The necessary parameters for a REST URL
-        @return: A url-encoded data string
+        @return: A URL-encoded data string
         """
         data = {'moodlewssettingfilter': 'true',
                 'moodlewssettingfileurl': 'true'
@@ -101,10 +99,10 @@ class RequestHelper:
     def get_login(self, data: {str: str}) -> object:
         """
         Sends a POST request to the login endpoint of the Moodle system to
-        obtain a token in Json format.
+        obtain a token in JSON format.
         @param data: The data is inserted into the Post-Body as arguments. This
-        should contain the logon data.
-        @return: The json response returned by the Moodle System, already
+        should contain the login data.
+        @return: The JSON response returned by the Moodle System, already
         checked for errors.
         """
 
@@ -121,7 +119,7 @@ class RequestHelper:
 
     @staticmethod
     def _check_response_code(response):
-        # Normaly Moodle answer with response 200
+        # Normally Moodle answer with response 200
         if (response.getcode() != 200):
             raise RuntimeError(
                 'An Unexpected Error happened on side of the Moodle System!' +
@@ -131,12 +129,12 @@ class RequestHelper:
 
     def get_simple_moodle_version(self) -> float:
         """
-        Querys the version by looking up the chnagelog (/lib/upgrade.txt)
-        of the moodle
-        @param moodle_domain: the domain of the moodle instance
-        @param moodle_path: the path of the moodle installation
-        @return: a float number represending the newset version
-                 parsed from the changelog
+        Query the version by looking up the change-log (/lib/upgrade.txt)
+        of the Moodle
+        @param moodle_domain: the domain of the Moodle instance
+        @param moodle_path: the path of the Moodle installation
+        @return: a float number representing the newest version
+                 parsed from the change-log
         """
 
         self.connection.request(
@@ -168,13 +166,13 @@ class RequestHelper:
         """
         The first time parsing the result of a REST request.
         It is checked for known errors.
-        @param response: The json response of the moodle system
-        @return: The paresed json object
+        @param response: The JSON response of the Moodle system
+        @return: The parsed JSON object
         """
 
         self._check_response_code(response)
 
-        # Try to parse the json
+        # Try to parse the JSON
         try:
             response_extracted = json.loads(response.read())
         except ValueError as error:
@@ -182,7 +180,7 @@ class RequestHelper:
                                ' to parse the json response! Moodle' +
                                ' response: %s.\nError: %s' % (
                                    response.read(), error))
-        # Check for known erorrs
+        # Check for known errors
         if ("error" in response_extracted):
             error = response_extracted.get("error", "")
             errorcode = response_extracted.get("errorcode", "")

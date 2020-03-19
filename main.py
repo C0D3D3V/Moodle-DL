@@ -256,7 +256,7 @@ if 'pydevd' in sys.modules:
     print('[RUNNING IN DEBUG-MODE!]')
 
 parser = argparse.ArgumentParser(
-    description=('Moodle Downlaoder 2 helps you download all the course' +
+    description=('Moodle Downloader 2 helps you download all the course' +
                  ' files  of your Moodle account.'))
 group = parser.add_mutually_exclusive_group()
 group.add_argument('--init', action='store_true',

@@ -13,7 +13,7 @@ class StringTools:
         @return: A filtered String, that can be used as a filename.
         """
 
-        # Moodle saves the titel of a section in HTML-Format,
+        # Moodle saves the title of a section in HTML-Format,
         # so we need to unescape the string
 
         name = html.unescape(name)

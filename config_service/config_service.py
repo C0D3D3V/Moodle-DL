@@ -55,8 +55,8 @@ class ConfigService:
 
     def _select_courses_to_download(self, courses: [Course]):
         """
-        Asks the userer for the courses that should be downloaded.
-        @param courses: All availible courses
+        Asks the user for the courses that should be downloaded.
+        @param courses: All available courses
         """
         download_course_ids = self.get_download_course_ids()
         dont_download_course_ids = self.get_dont_download_course_ids()

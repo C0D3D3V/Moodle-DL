@@ -6,8 +6,8 @@
 3. [Reference to the implemented methods](https://github.com/moodle/moodle/blob/f9db5892ec0fb8c1de22d19177879a876ec35d2b/lib/db/services.php)
   [More reference to the implemented methods](https://github.com/moodle/moodle/blob/6153be6850869cdc3a6ae925dcf6e688ac481333/mod/assign/db/services.php)
   The source code can be useful to find out which parameters are allowed on the interfaces.
-4. [Moodle Andorid App (Working in Chromium)](https://mobileapp.moodledemo.net/)
-    The Web App can be used to find out how the Andoird App makes the requests
+4. [Moodle Android App (Working in Chromium)](https://mobileapp.moodledemo.net/)
+    The Web App can be used to find out how the Android App makes the requests
 5. [Moodle Versions](https://docs.moodle.org/dev/Releases)
 
 ## Usage
@@ -41,7 +41,7 @@ The result is an array of elements that looks like this:
 ```
 
 3.	core_course_get_contents (since version 2.2)		
-* get course content (modules + web service file urls)	
+* get course content (modules + web service file URLs)	
 
 ```
 [
@@ -122,11 +122,11 @@ The result is an array of elements that looks like this:
 ]
 ```
 
-3. Download the files given in the `fileurl` Attributes with the token as an additionaly parameter.
+3. Download the files given in the `fileurl` Attributes with the token as an additional parameter.
 
 4. mod_assign_get_assignments (since version 2.4)
-* Returns the courses and assignments for the users capability  (Basicly the files stored in assignmets (except the submissions))
-* set courseid[0] to a course id to get only one course instead of all enroled ones
+* Returns the courses and assignments for the users capability  (Basically the files stored in assignments (except the submissions))
+* set courseid[0] to a course id to get only one course instead of all enrolled ones
 
 ```
 {

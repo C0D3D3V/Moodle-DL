@@ -126,7 +126,7 @@ class StateRecorder:
 
     def __get_modified_files(self, stored_courses: [Course],
                              current_courses: [Course]) -> [Course]:
-        # retuns courses with modified and deleted files
+        # returns courses with modified and deleted files
         changed_courses = []
 
         for stored_course in stored_courses:
@@ -150,7 +150,7 @@ class StateRecorder:
                 # skip the next checks!
                 continue
 
-            # there is the same couse in the current set
+            # there is the same course in the current set
             # so try to find removed files, that are still exist in storage
             # also find modified files
             changed_course = Course(
@@ -173,7 +173,7 @@ class StateRecorder:
                     # An matching file was found
                     # Test for modification
                     if(self.__files_are_diffrent(matching_file, stored_file)):
-                        # file ist modified
+                        # file is modified
                         matching_file.modified = True
                         changed_course.files.append(matching_file)
 
@@ -235,7 +235,7 @@ class StateRecorder:
         return changed_courses
 
     def changes_of_new_version(self, current_courses: [Course]) -> [Course]:
-        # The database should only have one entrence for one file,
+        # The database should only have one entry for one file,
         # no matter if it is deleted or modified, so is it easier
         # to track changes
 
@@ -246,8 +246,8 @@ class StateRecorder:
         # this is kind of bad code ... maybe someone can fix it
 
         # we need to check if there are files stored that
-        # are no longer exists on moodle => deleted
-        # And if there are files that are already exsisting
+        # are no longer exists on Moodle => deleted
+        # And if there are files that are already existing
         # check if they are modified => modified
 
         # later check for new files
