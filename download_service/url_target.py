@@ -4,8 +4,8 @@ import urllib
 import traceback
 import threading
 
-import urllib.parse as urlparse
 from pathlib import Path
+import urllib.parse as urlparse
 
 from utils.string_tools import StringTools
 from state_recorder.course import Course
@@ -111,8 +111,7 @@ class URLTarget(object):
             new_filename = "%s_%02d%s" % (
                 filename, count, file_extension)
 
-            new_path = os.path.join(destination,
-                                    new_filename)
+            new_path = str(Path(destination) / new_filename)
 
         Path(new_path).touch()
         self.lock.release()
@@ -125,11 +124,11 @@ class URLTarget(object):
         Because shortcuts are different under Windows and Unix,
         both cases are covered here.
         """
-        self.file.saved_to = os.path.join(
-            self.destination, self.filename + ".desktop")
+        self.file.saved_to = str(Path(
+            self.destination) / (self.filename + ".desktop"))
         if os.name == "nt":
-            self.file.saved_to = os.path.join(
-                self.destination, self.filename + ".URL")
+            self.file.saved_to = str(Path(
+                self.destination) / (self.filename + ".URL"))
 
         self.file.saved_to = self._rename_if_exists(self.file.saved_to)
 
@@ -172,8 +171,7 @@ class URLTarget(object):
                 self.create_shortcut()
                 return self.success
 
-            self.file.saved_to = os.path.join(self.destination,
-                                              self.filename)
+            self.file.saved_to = str(Path(self.destination) / self.filename)
 
             self.file.saved_to = self._rename_if_exists(self.file.saved_to)
 

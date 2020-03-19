@@ -1,5 +1,7 @@
-import json
 import os
+import json
+
+from pathlib import Path
 
 
 class ConfigHelper:
@@ -9,7 +11,7 @@ class ConfigHelper:
 
     def __init__(self, storage_path: str):
         self._whole_config = {}
-        self.config_path = os.path.join(storage_path, "config.json")
+        self.config_path = Path(storage_path) / "config.json"
 
     def is_present(self) -> bool:
         # Tests if a configuration file exists

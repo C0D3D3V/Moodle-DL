@@ -2,6 +2,7 @@ import os
 import html
 
 from sys import platform
+from pathlib import Path
 
 
 class StringTools:
@@ -48,12 +49,11 @@ class StringTools:
         @param file_path: The additional path of a file (subdirectory).
         @return: A path where the file should be saved.
         """
-        path = os.path.join(
-            storage_path,
-            StringTools.to_valid_name(course_fullname),
-            StringTools.to_valid_name(file_section_name),
-            StringTools.to_valid_name(file_module_name),
-            file_path.strip('/'))
+        path = (Path(storage_path) /
+                StringTools.to_valid_name(course_fullname) /
+                StringTools.to_valid_name(file_section_name) /
+                StringTools.to_valid_name(file_module_name) /
+                file_path.strip('/'))
         return path
 
     @staticmethod
@@ -68,9 +68,8 @@ class StringTools:
         @param file_path: The additional path of a file (subdirectory).
         @return: A path where the file should be saved.
         """
-        path = os.path.join(
-            storage_path,
-            StringTools.to_valid_name(course_fullname),
-            StringTools.to_valid_name(file_section_name),
-            file_path.strip('/'))
+        path = (Path(storage_path) / storage_path /
+                StringTools.to_valid_name(course_fullname) /
+                StringTools.to_valid_name(file_section_name) /
+                file_path.strip('/'))
         return path

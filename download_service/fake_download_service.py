@@ -1,5 +1,6 @@
 import os
 
+from pathlib import Path
 from utils.logger import Log
 from state_recorder.course import Course
 from utils.string_tools import StringTools
@@ -60,15 +61,14 @@ class FakeDownloadService:
 
                     filename = StringTools.to_valid_name(file.content_filename)
 
-                    file.saved_to = os.path.join(save_destination,
-                                                 filename)
+                    file.saved_to = str(Path(save_destination) / filename)
 
                     if (file.module_modname == 'url'):
-                        file.saved_to = os.path.join(
-                            save_destination, filename + ".desktop")
+                        file.saved_to = str(Path(
+                            save_destination) / (filename + ".desktop"))
                         if os.name == "nt":
-                            file.saved_to = os.path.join(
-                                save_destination, filename + ".URL")
+                            file.saved_to = str(Path(
+                                save_destination) / (filename + ".URL"))
 
                     self.state_recorder.save_file(
                         file, course.id, course.fullname)

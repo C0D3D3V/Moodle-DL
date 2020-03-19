@@ -1,8 +1,8 @@
-import os
 import sys
 import shutil
 import logging
 
+from pathlib import Path
 from getpass import getpass
 from urllib.parse import urlparse
 
@@ -21,7 +21,7 @@ class MoodleService:
         self.config_helper = config_helper
         self.storage_path = storage_path
         self.recorder = StateRecorder(
-            os.path.join(storage_path, 'moodle_state.db'))
+            Path(storage_path) / 'moodle_state.db')
         self.skip_cert_verify = skip_cert_verify
 
     def interactively_acquire_token(self) -> str:
