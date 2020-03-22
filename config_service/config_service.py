@@ -51,6 +51,7 @@ class ConfigService:
                     error))
 
         self._select_courses_to_download(courses)
+        self._set_options_of_courses(courses)
         self._select_should_download_submissions()
 
     def _select_courses_to_download(self, courses: [Course]):
@@ -93,6 +94,63 @@ class ConfigService:
                                         download_course_ids)
 
         self.config_helper.remove_property('dont_download_course_ids')
+
+    def _set_options_of_courses(self, courses: [Course]):
+        """
+        Let the user set special options for every single course
+        """
+        download_course_ids = self.get_download_course_ids()
+        dont_download_course_ids = self.get_dont_download_course_ids()
+
+        print('')
+        print('You can set special settings for every single course.\n' +
+              'You can set these options:\n' +
+              '- A different name for the course\n' +
+              '- If a folder structure should be created for the course.')
+        print('')
+
+        while(True):
+
+            choices = []
+            choices_courses = []
+            count = 0
+
+            options_of_courses = self.get_options_of_courses()
+
+            for course in courses:
+                if(ResultsHandler._should_download_course(
+                        course.id, download_course_ids,
+                        dont_download_course_ids)):
+
+                    # Todo: Print table with current settings
+                    count += 1
+                    newName = options_of_courses.get(
+                        str(course.id), {}).get('name', None)
+
+                    if(newName is not None and newName != course.fullname):
+                        choices.append(('%5i\t%s' %
+                                        (course.id, course.fullname)))
+
+                    else:
+                        choices.append(('%5i\t%s\t(%s)' %
+                                        (course.id, newName, course.fullname)))
+
+                    choices_courses.append(course)
+
+            print('For which of the following course do you want to change' +
+                  ' the settings?')
+            print('[You can select with space bar or enter key.]')
+            print('')
+            selected_course = cutie.select(options=choices)
+            if(selected_course == choices_courses):
+                break
+            else:
+                self._change_settings_of(choices_courses[selected_course],
+                                         options_of_courses)
+
+    def _change_settings_of(self, course: Course, options_of_courses: {}):
+        print(course)
+        print(options_of_courses)
 
     def _select_should_download_submissions(self):
         """
@@ -166,3 +224,10 @@ class ConfigService:
             return self.config_helper.get_property('dont_download_course_ids')
         except ValueError:
             return []
+
+    def get_options_of_courses(self) -> str:
+        # returns a stored dictionary of options for courses
+        try:
+            return self.config_helper.get_property('options_of_courses')
+        except ValueError:
+            return {}
