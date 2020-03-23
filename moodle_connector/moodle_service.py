@@ -6,6 +6,7 @@ from pathlib import Path
 from getpass import getpass
 from urllib.parse import urlparse
 
+from utils import cutie
 from config_service.config_helper import ConfigHelper
 from state_recorder.course import Course
 from state_recorder.state_recorder import StateRecorder
@@ -88,12 +89,10 @@ class MoodleService:
                   ' might not work. You can still try it, your version is: ' +
                   str(version))
 
-        raw_do_automatic = ''
-        while raw_do_automatic not in ['y', 'n']:
-            raw_do_automatic = input(
-                'Do you want to try to receive the SSO token automatically?' +
-                ' If you do not want to do so, you will be guided through' +
-                ' the manual copy process. [y/n]   ').lower()
+        do_automatic = cutie.prompt_yes_or_no(
+            'Do you want to try to receive the SSO token automatically?' +
+            ' If you do not want to do so, you will be guided through' +
+            ' the manual copy process.')
 
         print('Please log into Moodle on this computer and then visit' +
               ' the following address in your web browser: ')
@@ -103,7 +102,7 @@ class MoodleService:
               'moodle_mobile_app&passport=12345&' +
               'urlscheme=http%3A%2F%2Flocalhost')
 
-        if raw_do_automatic == 'y':
+        if do_automatic:
             moodle_token = sso_token_receiver.receive_token()
         else:
             print('If you open the link in the browser, no web page should' +

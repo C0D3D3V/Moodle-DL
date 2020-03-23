@@ -177,20 +177,10 @@ class ConfigService:
               ' submissions to a course at once. Therefore, it' +
               ' may be slow to monitor changes to submissions.')
         print('')
-        raw_download_submissions = '-'
-        question_extension = '[y/N]   '
-        if (download_submissions):
-            question_extension = '[Y/n]   '
 
-        while raw_download_submissions not in ['y', 'n', '']:
-            raw_download_submissions = input(
-                'Do you want to download submissions of your' +
-                ' assignments? ' + question_extension).lower()
-
-        if (raw_download_submissions != ''):
-            download_submissions = False
-            if raw_download_submissions == 'y':
-                download_submissions = True
+        download_submissions = cutie.prompt_yes_or_no(
+            'Do you want to download submissions of your assignments?',
+            default_is_yes=download_submissions)
 
         self.config_helper.set_property('download_submissions',
                                         download_submissions)

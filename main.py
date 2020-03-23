@@ -8,6 +8,7 @@ import argparse
 import traceback
 import sentry_sdk
 
+from utils import cutie
 from utils.logger import Log
 from config_service.config_helper import ConfigHelper
 from config_service.config_service import ConfigService
@@ -35,24 +36,17 @@ def run_init(storage_path, use_sso=False, skip_cert_verify=False):
     config = ConfigHelper(storage_path)
 
     if config.is_present():
-        do_override_input = input(
-            'Do you want to override the existing' +
-            ' config [y/n]?   ').lower()
-        while do_override_input not in ['y', 'n']:
-            do_override_input = input('Unrecognized input.' +
-                                      ' Try again:   ').lower()
+        do_override_input = cutie.prompt_yes_or_no(
+            'Do you want to override the existing config?')
 
-        if do_override_input == 'n':
+        if not do_override_input:
             sys.exit(0)
 
     MailService(config).interactively_configure()
 
-    raw_do_sentry = ''
-    while raw_do_sentry not in ['y', 'n']:
-        raw_do_sentry = input(
-            'Do you want to configure Error Reporting via' +
-            ' Sentry? [y/n]   ').lower()
-    if raw_do_sentry == 'y':
+    do_sentry = cutie.prompt_yes_or_no(
+        'Do you want to configure Error Reporting via Sentry?')
+    if do_sentry:
         sentry_dsn = input('Please enter your Sentry DSN:   ')
         config.set_property('sentry_dsn', sentry_dsn)
 
@@ -86,13 +80,13 @@ def run_init(storage_path, use_sso=False, skip_cert_verify=False):
         )
 
     print('')
-    raw_do_config = ''
-    while raw_do_config not in ['y', 'n']:
-        raw_do_config = input(
-            'Do you want to make additional configurations now?' +
-            ' You can always do the additional configuration later' +
-            ' with the --config option. [y/n]   ').lower()
-    if raw_do_config == 'y':
+
+    do_config = cutie.prompt_yes_or_no(
+        'Do you want to make additional configurations now?' +
+        ' You can always do the additional configuration later' +
+        ' with the --config option.')
+
+    if do_config:
         run_configure(storage_path, skip_cert_verify)
 
     print('')

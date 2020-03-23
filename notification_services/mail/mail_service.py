@@ -3,6 +3,7 @@ import traceback
 
 from getpass import getpass
 
+from utils import cutie
 from state_recorder.course import Course
 from notification_services.mail.mail_shooter import MailShooter
 from notification_services.notification_service import NotificationService
@@ -15,12 +16,11 @@ class MailService(NotificationService):
         """
         Guides the user through the configuration of the mail notification.
         """
-        do_mail_input = input(
-            'Do you want to activate Notifications via mail [y/n]?   ')
-        while not (do_mail_input == 'y' or do_mail_input == 'n'):
-            do_mail_input = input('Unrecognized input. Try again:   ')
 
-        if do_mail_input == 'n':
+        do_mail = cutie.prompt_yes_or_no(
+            'Do you want to activate Notifications via mail?')
+
+        if not do_mail:
             self.config_helper.remove_property('mail')
         else:
             print('[The following Inputs are not validated!]')
