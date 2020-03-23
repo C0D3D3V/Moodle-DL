@@ -1,3 +1,2 @@
 sentry_sdk>=0.13.5
-cutie>=0.2.2
 colorama>=0.4.3

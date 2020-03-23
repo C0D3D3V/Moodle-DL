@@ -1,19 +1,11 @@
-import os
-import cutie
+import pprint
 
-from colorama import init, deinit
 
+from utils import cutie
 from state_recorder.course import Course
 from config_service.config_helper import ConfigHelper
 from moodle_connector.results_handler import ResultsHandler
 from moodle_connector.request_helper import RequestRejectedError, RequestHelper
-
-terminal = os.getenv('TERM')
-deinit()
-if terminal is None:
-    init()
-else:
-    init(convert=False, strip=False)
 
 
 class ConfigService:
@@ -103,46 +95,66 @@ class ConfigService:
         dont_download_course_ids = self.get_dont_download_course_ids()
 
         print('')
-        print('You can set special settings for every single course.\n' +
-              'You can set these options:\n' +
+        print('You can set special settings for every single course.' +
+              ' You can set these options:\n' +
               '- A different name for the course\n' +
-              '- If a folder structure should be created for the course.')
+              '- If a file structure should be created for the course.')
         print('')
 
         while(True):
 
             choices = []
             choices_courses = []
-            count = 0
 
             options_of_courses = self.get_options_of_courses()
+            print_settings = {}
 
             for course in courses:
                 if(ResultsHandler._should_download_course(
                         course.id, download_course_ids,
                         dont_download_course_ids)):
 
-                    # Todo: Print table with current settings
-                    count += 1
-                    newName = options_of_courses.get(
-                        str(course.id), {}).get('name', None)
+                    current_course_settings = options_of_courses.get(
+                        str(course.id), None)
 
+                    # create printable settings
+                    if current_course_settings is None:
+                        current_course_settings = {
+                            'overwrite_name_with': None,
+                            'create_file_structure': True
+                        }
+
+                    current_course_settings.update({
+                        "original_name": course.fullname})
+                    print_settings.update(
+                        {str(course.id): current_course_settings})
+
+                    # create list of options
+                    newName = current_course_settings.get(
+                        'overwrite_name_with', None)
                     if(newName is not None and newName != course.fullname):
-                        choices.append(('%5i\t%s' %
-                                        (course.id, course.fullname)))
-
-                    else:
                         choices.append(('%5i\t%s\t(%s)' %
                                         (course.id, newName, course.fullname)))
 
+                    else:
+                        choices.append(('%5i\t%s' %
+                                        (course.id, course.fullname)))
+
                     choices_courses.append(course)
+
+            choices.append('None')
+
+            print('Current settings:')
+            pprint.pprint(print_settings)
+            print('')
 
             print('For which of the following course do you want to change' +
                   ' the settings?')
-            print('[You can select with space bar or enter key.]')
+            print('[Any key except the Up and Down key selects.]')
             print('')
+
             selected_course = cutie.select(options=choices)
-            if(selected_course == choices_courses):
+            if(selected_course == len(choices_courses)):
                 break
             else:
                 self._change_settings_of(choices_courses[selected_course],
