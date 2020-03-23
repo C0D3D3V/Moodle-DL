@@ -89,10 +89,10 @@ class MoodleService:
                   ' might not work. You can still try it, your version is: ' +
                   str(version))
 
+        print(' If you want to copy the login-token manual,' +
+              ' you will be guided through the manual copy process.')
         do_automatic = cutie.prompt_yes_or_no(
-            'Do you want to try to receive the SSO token automatically?' +
-            ' If you do not want to do so, you will be guided through' +
-            ' the manual copy process.')
+            'Do you want to try to receive the SSO token automatically?')
 
         print('Please log into Moodle on this computer and then visit' +
               ' the following address in your web browser: ')

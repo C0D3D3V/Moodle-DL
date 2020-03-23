@@ -81,10 +81,11 @@ def run_init(storage_path, use_sso=False, skip_cert_verify=False):
 
     print('')
 
+    print('You can always do the additional configuration later' +
+          ' with the --config option.')
+
     do_config = cutie.prompt_yes_or_no(
-        'Do you want to make additional configurations now?' +
-        ' You can always do the additional configuration later' +
-        ' with the --config option.')
+        'Do you want to make additional configurations now?')
 
     if do_config:
         run_configure(storage_path, skip_cert_verify)
