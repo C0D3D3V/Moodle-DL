@@ -159,6 +159,7 @@ class MoodleService:
             results_handler.setVersion(version)
 
             courses = results_handler.fetch_courses(userid)
+            courses = self.add_options_to_courses(courses)
 
             assignments = results_handler.fetch_assignments()
 
@@ -223,6 +224,21 @@ class MoodleService:
                                        download_submissions)
 
         return changes
+
+    def add_options_to_courses(self, courses: [Course]):
+        """
+        Updates a array of courses with its options
+        """
+        options_of_courses = self.get_options_of_courses()
+        for course in courses:
+            options = options_of_courses.get(str(course.id), None)
+            if options is not None:
+                course.overwrite_name_with = options.get(
+                    'overwrite_name_with', None)
+                course.create_file_structure = options.get(
+                    'create_file_structure', True)
+
+        return courses
 
     @staticmethod
     def _filter_courses(changes: [Course],
@@ -320,3 +336,10 @@ class MoodleService:
             return self.config_helper.get_property('moodle_path')
         except ValueError:
             raise ValueError('Not yet configured!')
+
+    def get_options_of_courses(self) -> str:
+        # returns a stored dictionary of options for courses
+        try:
+            return self.config_helper.get_property('options_of_courses')
+        except ValueError:
+            return {}
