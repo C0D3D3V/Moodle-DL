@@ -73,3 +73,18 @@ class StringTools:
                 StringTools.to_valid_name(file_section_name) /
                 file_path.strip('/'))
         return path
+
+    @staticmethod
+    def flat_path_of_file(storage_path: str, course_fullname: str,
+                          file_path: str):
+        """
+        @param storage_path: The path where all files should be stored.
+        @param course_fullname: The name of the course where the file is
+                                located.
+        @param file_path: The additional path of a file (subdirectory).
+        @return: A path where the file should be saved.
+        """
+        path = (Path(storage_path) / storage_path /
+                StringTools.to_valid_name(course_fullname) /
+                file_path.strip('/'))
+        return path

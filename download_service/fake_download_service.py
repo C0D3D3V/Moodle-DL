@@ -5,6 +5,7 @@ from utils.logger import Log
 from state_recorder.course import Course
 from utils.string_tools import StringTools
 from moodle_connector.moodle_service import MoodleService
+from download_service.download_service import DownloadService
 
 
 class FakeDownloadService:
@@ -37,27 +38,8 @@ class FakeDownloadService:
             for file in course.files:
                 if(file.deleted is False):
 
-                    save_destination = StringTools.path_of_file(
-                        self.storage_path, course.fullname,
-                        file.section_name,
-                        file.content_filepath
-                    )
-
-                    # If the file is located in a folder or in an assignment,
-                    # it should be saved in a sub-folder
-                    # (with the name of the module).
-                    if (file.module_modname == "assign" or
-                            file.module_modname == "folder"):
-                        file_path = file.content_filepath
-                        if (file.content_type == "submission_file"):
-                            file_path = os.path.join('/submissions/',
-                                                     file_path.strip('/'))
-
-                        save_destination = StringTools.path_of_file_in_module(
-                            self.storage_path, course.fullname,
-                            file.section_name, file.module_name,
-                            file_path
-                        )
+                    save_destination = DownloadService.genPath(
+                        self.storage_path, course, file)
 
                     filename = StringTools.to_valid_name(file.content_filename)
 

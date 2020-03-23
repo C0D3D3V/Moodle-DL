@@ -14,9 +14,9 @@
 
 
 ### Setup
-1. Install [Python](https://www.python.org/) >=3.5.3 `apt-get install python3 && apt-get install python3-pip`
-2. Verify that `python --version` shows a version equal to or higher then 3.5.3
-    Otherwise use [pyenv](https://github.com/pyenv/pyenv#installation) to install version 3.5.3
+1. Install [Python](https://www.python.org/) >=3.6 `apt-get install python3 && apt-get install python3-pip`
+2. Verify that `python --version` shows a version equal to or higher then 3.6
+    Otherwise use [pyenv](https://github.com/pyenv/pyenv#installation) to install the newest version
 3. `pip3 install -r requirements.txt` (Linux users should first check if the requirements are available via there package manager)
 4. run `python3 main.py --init`  
 

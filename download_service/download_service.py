@@ -8,7 +8,7 @@ import threading
 from queue import Queue
 
 from utils.logger import Log
-from state_recorder.course import Course
+from state_recorder.course import Course, File
 from utils.string_tools import StringTools
 from download_service.url_target import URLTarget
 from download_service.downloader import Downloader
@@ -72,31 +72,50 @@ class DownloadService:
                 if(file.deleted is False):
                     self.total_to_download += file.content_filesize
 
-                    save_destination = StringTools.path_of_file(
-                        self.storage_path, course.fullname,
-                        file.section_name,
-                        file.content_filepath
-                    )
-
-                    # If the file is located in a folder or in an assignment,
-                    # it should be saved in a sub-folder
-                    # (with the name of the module).
-                    if (file.module_modname == "assign" or
-                            file.module_modname == "folder"):
-                        file_path = file.content_filepath
-                        if (file.content_type == "submission_file"):
-                            file_path = os.path.join('/submissions/',
-                                                     file_path.strip('/'))
-
-                        save_destination = StringTools.path_of_file_in_module(
-                            self.storage_path, course.fullname,
-                            file.section_name, file.module_name,
-                            file_path
-                        )
+                    save_destination = self.genPath(
+                        self.storage_path, course, file)
 
                     self.queue.put(URLTarget(
                         file, course, save_destination, self.token,
                         self.thread_report, self.lock2))
+
+    @staticmethod
+    def genPath(storage_path: str, course: Course, file: File):
+        """
+        Generates the directory path where a file should be stored
+        """
+        course_name = course.fullname
+        if (course.overwrite_name_with is not None):
+            course_name = course.overwrite_name_with
+
+        # if a flat path is requested
+        if (not course.create_file_structure):
+            return StringTools.flat_path_of_file(
+                storage_path, course_name,
+                file.content_filepath
+            )
+
+        # If the file is located in a folder or in an assignment,
+        # it should be saved in a sub-folder
+        # (with the name of the module).
+        if (file.module_modname == "assign" or
+                file.module_modname == "folder"):
+            file_path = file.content_filepath
+            if (file.content_type == "submission_file"):
+                file_path = os.path.join('/submissions/',
+                                         file_path.strip('/'))
+
+            return StringTools.path_of_file_in_module(
+                storage_path, course_name,
+                file.section_name, file.module_name,
+                file_path
+            )
+        else:
+            return StringTools.path_of_file(
+                storage_path, course_name,
+                file.section_name,
+                file.content_filepath
+            )
 
     def run(self):
         """
@@ -194,3 +213,5 @@ class DownloadService:
         for url_target in self.report['failure']:
             logging.error('Error while trying to download file:' +
                           ' %s' % (url_target))
+            Log.error('%s\t%s' % (url_target.file.content_filename,
+                                  url_target.error))
