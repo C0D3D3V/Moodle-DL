@@ -95,7 +95,7 @@ class ConfigService:
         print('You can set special settings for every single course.' +
               ' You can set these options:\n' +
               '- A different name for the course\n' +
-              '- If a file structure should be created for the course' +
+              '- If a directory structure should be created for the course' +
               ' [create_directory_structure (cfs)].')
         print('')
 
@@ -197,7 +197,7 @@ class ConfigService:
             'create_directory_structure', True)
 
         create_directory_structure = cutie.prompt_yes_or_no(
-            'Should a file structure be created for this course?',
+            'Should a directory structure be created for this course?',
             default_is_yes=create_directory_structure)
 
         if (create_directory_structure is not current_course_settings.get(
