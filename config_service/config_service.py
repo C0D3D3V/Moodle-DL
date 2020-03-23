@@ -95,7 +95,8 @@ class ConfigService:
         print('You can set special settings for every single course.' +
               ' You can set these options:\n' +
               '- A different name for the course\n' +
-              '- If a file structure should be created for the course.')
+              '- If a file structure should be created for the course' +
+              ' [create_file_structure (cfs)].')
         print('')
 
         while(True):
