@@ -207,9 +207,10 @@ class ConfigService:
                 {'create_file_structure': create_file_structure})
 
         if(changed):
+            options_of_courses.update(
+                {str(course.id): current_course_settings})
             self.config_helper.set_property(
-                'options_of_courses.' + str(course.id),
-                current_course_settings)
+                'options_of_courses', options_of_courses)
 
     def _select_should_download_submissions(self):
         """
