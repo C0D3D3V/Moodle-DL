@@ -37,6 +37,7 @@ If you run this program in mintty (MINGW or something similar), try running Pyth
 - `python main.py --config`
     - Guides you through the additional configuration of the software.
     - This includes the selection of the courses to be downloaded and various configuration options for these courses.
+    - You can rename each course individually and decide if a folder structure should be created.
     - You can set whether submissions (files uploaded to Assignments by yourself or a teacher) should be downloaded.
     - It does not fetch the current state of your Moodle-Account.
 - `python main.py --new-token`
