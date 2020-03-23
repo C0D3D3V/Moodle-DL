@@ -181,25 +181,27 @@ class ConfigService:
             ('Enter a new name for this Course [leave blank for "%s"]:   ' %
              (course.fullname,)))
 
-        if (overwrite_name_with != '' and
-                overwrite_name_with != course.fullname and
+        if (overwrite_name_with == ''):
+            overwrite_name_with = None
+
+        if (overwrite_name_with != course.fullname and
                 current_course_settings.get(
                     'overwrite_name_with', None) != overwrite_name_with):
             current_course_settings.update(
                 {'overwrite_name_with': overwrite_name_with})
-            changed=True
+            changed = True
 
         # Ask if a file structure should be created
-        create_file_structure=current_course_settings.get(
+        create_file_structure = current_course_settings.get(
             'create_file_structure', True)
 
-        create_file_structure=cutie.prompt_yes_or_no(
+        create_file_structure = cutie.prompt_yes_or_no(
             'Should a file structure be created for this course?',
             default_is_yes=create_file_structure)
 
         if (create_file_structure is not current_course_settings.get(
                 'create_file_structure', True)):
-            changed=True
+            changed = True
             current_course_settings.update(
                 {'create_file_structure': create_file_structure})
 
@@ -212,7 +214,7 @@ class ConfigService:
         """
         Asks the user if submissions should be downloaded
         """
-        download_submissions=self.get_download_submissions()
+        download_submissions = self.get_download_submissions()
 
         print('')
         print('Submissions are files that you or a teacher have uploaded' +
@@ -222,7 +224,7 @@ class ConfigService:
               ' may be slow to monitor changes to submissions.')
         print('')
 
-        download_submissions=cutie.prompt_yes_or_no(
+        download_submissions = cutie.prompt_yes_or_no(
             'Do you want to download submissions of your assignments?',
             default_is_yes=download_submissions)
 
