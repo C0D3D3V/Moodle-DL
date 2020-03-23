@@ -96,7 +96,7 @@ class ConfigService:
               ' You can set these options:\n' +
               '- A different name for the course\n' +
               '- If a file structure should be created for the course' +
-              ' [create_file_structure (cfs)].')
+              ' [create_directory_structure (cfs)].')
         print('')
 
         while(True):
@@ -119,27 +119,27 @@ class ConfigService:
                         current_course_settings = {
                             'original_name': course.fullname,
                             'overwrite_name_with': None,
-                            'create_file_structure': True
+                            'create_directory_structure': True
                         }
 
                     # create list of options
                     overwrite_name_with = current_course_settings.get(
                         'overwrite_name_with', None)
 
-                    create_file_structure = current_course_settings.get(
-                        'create_file_structure', True)
+                    create_directory_structure = current_course_settings.get(
+                        'create_directory_structure', True)
 
                     if(overwrite_name_with is not None and
                             overwrite_name_with != course.fullname):
                         choices.append(('%5i\t%s\t(%s) cfs=%s' %
                                         (course.id, overwrite_name_with,
                                             course.fullname,
-                                            create_file_structure)))
+                                            create_directory_structure)))
 
                     else:
                         choices.append(('%5i\t%s  cfs=%s' %
                                         (course.id, course.fullname,
-                                            create_file_structure)))
+                                            create_directory_structure)))
 
                     choices_courses.append(course)
 
@@ -172,7 +172,7 @@ class ConfigService:
             current_course_settings = {
                 'original_name': course.fullname,
                 'overwrite_name_with': None,
-                'create_file_structure': True
+                'create_directory_structure': True
             }
 
         changed = False
@@ -193,18 +193,18 @@ class ConfigService:
             changed = True
 
         # Ask if a file structure should be created
-        create_file_structure = current_course_settings.get(
-            'create_file_structure', True)
+        create_directory_structure = current_course_settings.get(
+            'create_directory_structure', True)
 
-        create_file_structure = cutie.prompt_yes_or_no(
+        create_directory_structure = cutie.prompt_yes_or_no(
             'Should a file structure be created for this course?',
-            default_is_yes=create_file_structure)
+            default_is_yes=create_directory_structure)
 
-        if (create_file_structure is not current_course_settings.get(
-                'create_file_structure', True)):
+        if (create_directory_structure is not current_course_settings.get(
+                'create_directory_structure', True)):
             changed = True
             current_course_settings.update(
-                {'create_file_structure': create_file_structure})
+                {'create_directory_structure': create_directory_structure})
 
         if(changed):
             options_of_courses.update(

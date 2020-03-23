@@ -89,7 +89,7 @@ class DownloadService:
             course_name = course.overwrite_name_with
 
         # if a flat path is requested
-        if (not course.create_file_structure):
+        if (not course.create_directory_structure):
             return StringTools.flat_path_of_file(
                 storage_path, course_name,
                 file.content_filepath

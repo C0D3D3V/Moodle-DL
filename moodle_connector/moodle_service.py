@@ -235,8 +235,8 @@ class MoodleService:
             if options is not None:
                 course.overwrite_name_with = options.get(
                     'overwrite_name_with', None)
-                course.create_file_structure = options.get(
-                    'create_file_structure', True)
+                course.create_directory_structure = options.get(
+                    'create_directory_structure', True)
 
         return courses
 

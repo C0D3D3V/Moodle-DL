@@ -8,7 +8,7 @@ class Course:
         self.files = files
 
         self.overwrite_name_with = None
-        self.create_file_structure = True
+        self.create_directory_structure = True
 
     def __str__(self):
         message = "Course ("
@@ -16,7 +16,8 @@ class Course:
         message += 'id: %s' % (self.id)
         message += ', fullname: %s' % (self.fullname)
         message += ', overwrite_name_with: %s' % (self.overwrite_name_with)
-        message += ', create_file_structure: %s' % (self.create_file_structure)
+        message += ', create_directory_structure: %s' % (
+            self.create_directory_structure)
         message += ', files: %s' % (len(self.files))
 
         for i, file in enumerate(self.files):
