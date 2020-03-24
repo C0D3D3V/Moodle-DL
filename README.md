@@ -11,6 +11,7 @@
 - Watch your Moodle account for any added or changed files in your enrolled courses.
 - Optionally get notified via mail about these changes.
 - Save yourself precious time through all these nice features.
+- Do not miss any files, if files are deleted online, they are still available offline.
 
 
 ### Setup
