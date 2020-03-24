@@ -1,4 +1,5 @@
 import os
+import ssl
 import sys
 import time
 import shutil
@@ -24,7 +25,7 @@ class DownloadService:
     """
 
     def __init__(self, courses: [Course], moodle_service: MoodleService,
-                 storage_path: str):
+                 storage_path: str, skip_cert_verify: bool = False):
         """
         Initiates the DownloadService with all files that
         need to be downloaded. A URLTarget is created for each file.
@@ -66,6 +67,11 @@ class DownloadService:
         # delete files, that should be deleted
         self.state_recorder.batch_delete_files(self.courses)
 
+        if skip_cert_verify:
+            self.ssl_context = ssl._create_unverified_context()
+        else:
+            self.ssl_context = ssl._create_default_https_context()
+
         # Prepopulate queue with any files that were given
         for course in self.courses:
             for file in course.files:
@@ -77,7 +83,7 @@ class DownloadService:
 
                     self.queue.put(URLTarget(
                         file, course, save_destination, self.token,
-                        self.thread_report, self.lock2))
+                        self.thread_report, self.lock2, self.ssl_context))
 
     @staticmethod
     def genPath(storage_path: str, course: Course, file: File):

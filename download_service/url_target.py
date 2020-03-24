@@ -1,8 +1,10 @@
 import os
+import ssl
 import time
 import urllib
 import traceback
 import threading
+import contextlib
 
 from pathlib import Path
 import urllib.parse as urlparse
@@ -18,7 +20,8 @@ class URLTarget(object):
     """
 
     def __init__(self, file: File, course: Course, destination: str,
-                 token: str, thread_report: [], lock: threading.Lock):
+                 token: str, thread_report: [], lock: threading.Lock,
+                 ssl_context: ssl.SSLContext):
         """
         Initiating an URL target.
         """
@@ -28,6 +31,7 @@ class URLTarget(object):
         self.destination = destination
         self.token = token
         self.lock = lock
+        self.ssl_context = ssl_context
 
         # get valid filename
         self.filename = StringTools.to_valid_name(self.file.content_filename)
@@ -175,9 +179,9 @@ class URLTarget(object):
 
             self.file.saved_to = self._rename_if_exists(self.file.saved_to)
 
-            urllib.request.urlretrieve(self._add_token_to_url(
+            self.urlretrieve(self._add_token_to_url(
                 self.file.content_fileurl),
-                self.file.saved_to,
+                self.file.saved_to, context=self.ssl_context,
                 reporthook=self.add_progress)
 
             self.file.time_stamp = int(time.time())
@@ -196,6 +200,69 @@ class URLTarget(object):
                 self.thread_report[self.thread_id]['percentage'] = 100
 
         return self.success
+
+    @staticmethod
+    def urlretrieve(url: str, filename: str,
+                    context: ssl.SSLContext, reporthook=None):
+        """
+        original source:
+        https://github.com/python/cpython/blob/
+        21bee0bd71e1ad270274499f9f58194ebb52e236/Lib/urllib/request.py#L229
+
+        Because urlopen also supports context,
+        I decided to adapt the download function.
+        """
+        url_type, path = urlparse._splittype(url)
+
+        with contextlib.closing(urllib.request.urlopen(url,
+                                               context=context)) as fp:
+            headers = fp.info()
+
+            # Just return the local path and the "headers" for file://
+            # URLs. No sense in performing a copy unless requested.
+            if url_type == "file" and not filename:
+                return os.path.normpath(path), headers
+
+            # Handle temporary file setup.
+            if not filename:
+                raise RuntimeError("No filename specified!")
+
+            tfp = open(filename, 'wb')
+
+            with tfp:
+                result = filename, headers
+
+                # read overall
+                read = 0
+
+                # 4kb at once
+                bs = 1024 * 8
+                blocknum = 0
+
+                # guess size
+                size = -1
+                if "content-length" in headers:
+                    size = int(headers["Content-Length"])
+
+                if reporthook:
+                    reporthook(blocknum, bs, size)
+
+                while True:
+                    block = fp.read(bs)
+                    if not block:
+                        break
+                    read += len(block)
+                    tfp.write(block)
+                    blocknum += 1
+                    if reporthook:
+                        reporthook(blocknum, bs, size)
+
+        if size >= 0 and read < size:
+            raise urllib.ContentTooShortError(
+                "retrieval incomplete: got only %i out of %i bytes"
+                % (read, size), result)
+
+        return result
 
     def __str__(self):
         # URLTarget to string
