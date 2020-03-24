@@ -91,7 +91,7 @@ class StateRecorder:
             return True
         return False
 
-    def __get_stored_files(self) -> [Course]:
+    def get_stored_files(self) -> [Course]:
         # get all stored files (that are not yet deleted)
         conn = sqlite3.connect(self.db_file)
         conn.row_factory = sqlite3.Row
@@ -253,7 +253,7 @@ class StateRecorder:
         # later check for new files
 
         # first get all stored files (that are not yet deleted)
-        stored_courses = self.__get_stored_files()
+        stored_courses = self.get_stored_files()
 
         changed_courses = self.__get_modified_files(
             stored_courses, current_courses)

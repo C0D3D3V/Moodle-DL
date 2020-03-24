@@ -12,6 +12,7 @@ from utils import cutie
 from utils.logger import Log
 from config_service.config_helper import ConfigHelper
 from config_service.config_service import ConfigService
+from state_recorder.offline_service import OfflineService
 from moodle_connector.moodle_service import MoodleService
 from download_service.fake_download_service import FakeDownloadService
 from download_service.download_service import DownloadService
@@ -119,6 +120,13 @@ def run_new_token(storage_path, use_sso=False, skip_cert_verify=False):
     print('New Token successfully saved!')
 
 
+def run_manage_database(storage_path):
+    offline_service = OfflineService(storage_path)
+    offline_service.interactively_manage_database()
+
+    print('All done.')
+
+
 def run_change_notification_mail(storage_path):
     config = ConfigHelper(storage_path)
     config.load()
@@ -187,7 +195,8 @@ def run_main(storage_path, skip_cert_verify=False,
             downloader = FakeDownloadService(
                 changed_courses, moodle, storage_path)
         else:
-            downloader = DownloadService(changed_courses, moodle, storage_path)
+            downloader = DownloadService(
+                changed_courses, moodle, storage_path, skip_cert_verify)
         downloader.run()
 
         changed_courses_to_notify = moodle.recorder.changes_to_notify()
@@ -282,6 +291,13 @@ group.add_argument('--change-notification-mail', action='store_true',
                          ' receiving notifications via e-mail. It does not' +
                          ' affect the rest of the config.'))
 
+group.add_argument('--manage_database', action='store_true',
+                   help=('This option lets you manage the offline database.' +
+                         ' It allows you to delete entries from the database' +
+                         ' that are no longer available locally so that they' +
+                         ' can be downloaded again.'))
+
+
 parser.add_argument('--path', default='.', type=_dir_path,
                     help=('Sets the location of the configuration,' +
                           ' logs and downloaded files. PATH must be an' +
@@ -316,7 +332,6 @@ storage_path = args.path
 skip_cert_verify = args.skip_cert_verify
 without_downloading_files = args.without_downloading_files
 
-
 if args.init:
     run_init(storage_path, use_sso, skip_cert_verify)
 elif args.config:
@@ -325,5 +340,7 @@ elif args.new_token:
     run_new_token(storage_path, use_sso, skip_cert_verify)
 elif args.change_notification_mail:
     run_change_notification_mail(storage_path)
+elif args.manage_database:
+    run_manage_database(storage_path)
 else:
     run_main(storage_path, skip_cert_verify, without_downloading_files)
