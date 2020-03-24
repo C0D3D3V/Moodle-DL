@@ -215,7 +215,7 @@ class URLTarget(object):
         url_type, path = urlparse._splittype(url)
 
         with contextlib.closing(urllib.request.urlopen(url,
-                                               context=context)) as fp:
+                                                       context=context)) as fp:
             headers = fp.info()
 
             # Just return the local path and the "headers" for file://
@@ -223,7 +223,6 @@ class URLTarget(object):
             if url_type == "file" and not filename:
                 return os.path.normpath(path), headers
 
-            # Handle temporary file setup.
             if not filename:
                 raise RuntimeError("No filename specified!")
 
