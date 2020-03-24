@@ -18,7 +18,7 @@ class StateRecorder:
         If no database exists yet, a new one is created.
         @param db_file: The path to the database
         """
-        self.db_file = db_file
+        self.db_file = str(db_file)
 
         try:
             conn = sqlite3.connect(self.db_file)
