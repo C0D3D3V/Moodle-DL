@@ -212,7 +212,7 @@ class URLTarget(object):
         Because urlopen also supports context,
         I decided to adapt the download function.
         """
-        url_type, path = urlparse._splittype(url)
+        url_parsed = urlparse.urlparse(url)
 
         with contextlib.closing(urllib.request.urlopen(url,
                                                        context=context)) as fp:
@@ -220,8 +220,8 @@ class URLTarget(object):
 
             # Just return the local path and the "headers" for file://
             # URLs. No sense in performing a copy unless requested.
-            if url_type == "file" and not filename:
-                return os.path.normpath(path), headers
+            if url_parsed.scheme == "file" and not filename:
+                return os.path.normpath(url_parsed.path), headers
 
             if not filename:
                 raise RuntimeError("No filename specified!")
