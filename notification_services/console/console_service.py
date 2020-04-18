@@ -22,7 +22,6 @@ class ConsoleService(NotificationService):
         BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = range(30, 38)
         print("\n")
 
-
         diff_count = 0
         for course in changes:
             diff_count += len(course.files)

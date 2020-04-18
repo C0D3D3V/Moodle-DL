@@ -68,6 +68,7 @@ class File:
             'notified': 1 if self.notified else 0,
         }
 
+    @staticmethod
     def fromRow(row):
 
         return File(

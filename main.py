@@ -283,7 +283,7 @@ group.add_argument('--change-notification-mail', action='store_true',
                          ' receiving notifications via e-mail. It does not' +
                          ' affect the rest of the config.'))
 
-group.add_argument('--manage_database', action='store_true',
+group.add_argument('--manage-database', action='store_true',
                    help=('This option lets you manage the offline database.' +
                          ' It allows you to delete entries from the database' +
                          ' that are no longer available locally so that they' +
@@ -303,7 +303,7 @@ parser.add_argument('--skip-cert-verify', default=False, action='store_true',
                     'non production environments.'
                     )
 
-parser.add_argument('--without_downloading_files', default=False,
+parser.add_argument('--without-downloading-files', default=False,
                     action='store_true',
                     help='If this flag is set, no files are downloaded.' +
                     ' This allows the local database to be updated without' +

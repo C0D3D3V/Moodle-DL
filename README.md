@@ -47,6 +47,10 @@ If you run this program in mintty (MINGW or something similar), try running Pyth
     - Activate/deactivate/change the settings for receiving notifications via e-mail.
     - It does not affect the rest of the config.
     - It prints all information into the console.
+- `python main.py --manage-database`
+    - To manage the offline database.
+    - It allows you to delete entries from the database that are no longer available locally so that they can be downloaded again.
+
 
 ### Options
 Options can be combined with all the actions mentioned above.
@@ -61,7 +65,7 @@ Options can be combined with all the actions mentioned above.
     - Warning: This might lead to security flaws and should only be used in non-production environments.
     - Default: False
 
-- `--without_downloading_files`
+- `--without-downloading-files`
     - This flag is used to skip the downloading of files.
     - This allows the local database to be updated to the latest version of Moodle without having to download all files.
 
