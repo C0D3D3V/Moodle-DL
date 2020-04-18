@@ -3,10 +3,6 @@
 > Because manually downloading all the course files every few days is just ~~way too easy~~ inefficient.
 
 
-### Disclaimer
-*This software is provided "as is" and any expressed or implied warranties, including, but not limited to, the implied warranties of merchantability and fitness for a particular purpose are disclaimed. In no event shall the author or additional contributors be liable for any direct, indirect, incidental, special, exemplary, or consequential damages (including, but not limited to, procurement of substitute goods or services; loss of use, data, or profits; or business interruption).*
-
-
 ### Features
 - Watch your Moodle account for any added or changed files in your enrolled courses.
 - Optionally get notified via mail about these changes.
