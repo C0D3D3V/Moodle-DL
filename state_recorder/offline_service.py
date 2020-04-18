@@ -2,6 +2,7 @@ import os
 
 from pathlib import Path
 from utils import cutie
+from state_recorder.file import File
 from state_recorder.state_recorder import StateRecorder
 
 
@@ -19,29 +20,66 @@ class OfflineService:
 
         stored_files = self.state_recorder.get_stored_files()
 
-        choices = []
-        caption_indices = []
-        index = 0
-        for course in stored_files:
-            course_appended = False
-            for file in course.files:
-                if(not os.path.exists(file.saved_to)):
-                    if(not course_appended):
-                        choices.append(COLOR_SEQ %
-                                       BLUE + course.fullname + RESET_SEQ)
-                        caption_indices.append(index)
-                        index += 1
-                        course_appended = True
+        if(len(stored_files) <= 0):
+            return
 
-                    choices.append(COLOR_SEQ % MAGENTA + file.section_name + RESET_SEQ +
-                                   "\t" + COLOR_SEQ % MAGENTA + file.content_filename + RESET_SEQ)
-                    index += 1
+        print("This management tool will navigate you through a menu to" +
+              " selectively remove file entries from the database so" +
+              " that these files can be downloaded again.")
+
+        course_options = []
+        courses = []
+        for course in stored_files:
+            for course_file in course.files:
+                if(not os.path.exists(course_file.saved_to)):
+                    course_options.append(COLOR_SEQ %
+                                          BLUE + course.fullname + RESET_SEQ)
+                    courses.append(course)
+                    break
+
+        print('Choose one of the courses:')
+        print('[Confirm your selection with the Enter key]')
+        print('')
+        selected_course_id = cutie.select(options=course_options)
+
+        selected_course = courses[selected_course_id]
+
+        section_options = []
+        sections = []
+        for course_file in selected_course.files:
+            if (not os.path.exists(course_file.saved_to) and (course_file.section_name not in sections)):
+                section_options.append(COLOR_SEQ % MAGENTA + course_file.section_name + RESET_SEQ)
+                sections.append(course_file.section_name)
+        
+        print('From which sections you want to select files.')
+        print('[You can select with the space bar and confirm' +
+              ' your selection with the enter key]')
+        print('')
+
+        selected_sections_ids = cutie.select_multiple(options=section_options, minimal_count=1)
+        selected_sections = []
+        for selected_sections_id in selected_sections_ids:
+            if(selected_sections_id < len(sections)):
+                selected_sections.append(sections[selected_sections_id])
+
+
+        file_options = []
+        files = []
+        for course_file in selected_course.files:
+            if (not os.path.exists(course_file.saved_to) and (course_file.section_name in selected_sections)):
+                file_options.append(COLOR_SEQ % CYAN + course_file.content_filename + RESET_SEQ)
+                files.append(course_file)
 
         print('Which of the files should be removed form the database, so that they will be redownloaded?')
         print('[You can select with the space bar and confirm' +
               ' your selection with the enter key]')
         print('')
-        selected_files = cutie.select_multiple(
-            options=choices, caption_indices=caption_indices)
+        selected_files = cutie.select_multiple(options=file_options)
 
-        print(selected_files)
+ 
+        files_to_delete = []
+        for file_index in selected_files:
+            if(file_index < len(files) and isinstance(files[file_index], File)):
+                files_to_delete.append(files[file_index])
+
+        self.state_recorder.batch_delete_files_from_db(files_to_delete)

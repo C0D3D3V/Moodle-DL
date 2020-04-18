@@ -387,6 +387,35 @@ class StateRecorder:
         conn.commit()
         conn.close()
 
+    def batch_delete_files_from_db(self, files: [File]):
+        conn = sqlite3.connect(self.db_file)
+        cursor = conn.cursor()
+
+        for file in files:
+            data = {}
+            data.update(file.getMap())
+            
+            cursor.execute("""DELETE FROM files
+                WHERE module_id = :module_id
+                AND section_name = :section_name
+                AND module_name = :module_name
+                AND module_modname = :module_modname
+                AND content_filepath = :content_filepath
+                AND content_filename = :content_filename
+                AND content_fileurl = :content_fileurl
+                AND content_filesize = :content_filesize
+                AND content_timemodified = :content_timemodified
+                AND content_isexternalfile = :content_isexternalfile
+                AND saved_to = :saved_to
+                AND time_stamp = :time_stamp
+                AND modified = :modified
+                AND notified = :notified
+                AND deleted = :deleted
+                """, data)
+
+        conn.commit()
+        conn.close()
+
     def delete_file(self, file: File, course_id: int, course_fullname: str):
         conn = sqlite3.connect(self.db_file)
         cursor = conn.cursor()
