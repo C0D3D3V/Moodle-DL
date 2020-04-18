@@ -182,13 +182,6 @@ class ConfigService:
             ('Enter a new name for this Course [leave blank for "%s"]:   ' %
              (course.fullname,)))
 
-        try:
-            overwrite_name_with = str(overwrite_name_with).encode('utf-8').decode('utf-8')
-        except Exception:
-            print("Your input contains invalid UTF-8 characters, please repeat the input!")
-            overwrite_name_with = ''
-
-
         if (overwrite_name_with == ''):
             overwrite_name_with = None
 

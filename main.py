@@ -5,6 +5,7 @@ import os
 import sys
 import logging
 import argparse
+import readline
 import traceback
 import sentry_sdk
 
