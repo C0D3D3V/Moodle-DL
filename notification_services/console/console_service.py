@@ -1,3 +1,7 @@
+
+import logging
+
+from utils.logger import Log
 from state_recorder.course import Course
 from notification_services.notification_service import NotificationService
 
@@ -17,6 +21,19 @@ class ConsoleService(NotificationService):
 
         BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = range(30, 38)
         print("\n")
+
+
+        diff_count = 0
+        for course in changes:
+            diff_count += len(course.files)
+
+        if diff_count > 0:
+            logging.info('%s changes found for the configured Moodle-Account.'
+                         % (diff_count))
+
+            Log.success('%s changes found for the configured Moodle-Account.'
+                        % (diff_count))
+
         for course in changes:
             if (len(course.files) == 0):
                 continue

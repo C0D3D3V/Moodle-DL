@@ -56,7 +56,7 @@ class Downloader(threading.Thread):
                 self.report['failure'].append(url_target)
 
             # If a download was successful, store it in the database.
-            elif (response):
+            elif (response is True):
                 self.lock.acquire()
                 self.state_recorder.save_file(
                     url_target.file, url_target.course.id,

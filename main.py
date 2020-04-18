@@ -185,7 +185,6 @@ def run_main(storage_path, skip_cert_verify=False,
         Log.debug('Checking for changes for the configured Moodle-Account...')
         changed_courses = moodle.fetch_state()
 
-        diff_count = 0
 
         logging.debug(
             'Start downloading changed files...')
@@ -201,26 +200,18 @@ def run_main(storage_path, skip_cert_verify=False,
 
         changed_courses_to_notify = moodle.recorder.changes_to_notify()
 
-        for course in changed_courses:
-            diff_count += len(course.files)
-
-        if diff_count > 0:
-            logging.info('%s changes found for the configured Moodle-Account.'
-                         % (diff_count))
-
-            Log.success('%s changes found for the configured Moodle-Account.'
-                        % (diff_count))
-
+        if (len(changed_courses_to_notify) > 0):
             console_service.notify_about_changes_in_moodle(
-                changed_courses)
+                changed_courses_to_notify)
+
+            mail_service.notify_about_changes_in_moodle(
+                changed_courses_to_notify)
+
+            moodle.recorder.notified(changed_courses_to_notify)
+
         else:
             logging.info('No changes found for the configured Moodle-Account.')
             Log.warning('No changes found for the configured Moodle-Account.')
-
-        if (len(changed_courses_to_notify) > 0):
-            mail_service.notify_about_changes_in_moodle(
-                changed_courses_to_notify)
-            moodle.recorder.notified(changed_courses_to_notify)
 
         logging.debug('All done. Exiting...')
         Log.success('All done. Exiting..')

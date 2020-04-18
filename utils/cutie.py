@@ -10,6 +10,7 @@ License: MIT
 """
 
 import os
+import shutil
 import getpass
 import readchar
 
@@ -115,18 +116,27 @@ def select(
     Returns:
         int: The index that has been selected.
     """
+    
     print('\n' * (len(options) - 1))
     if caption_indices is None:
         caption_indices = []
     while True:
         print(f'\033[{len(options) + 1}A')
+        console_columns = shutil.get_terminal_size().columns - 4
+        
         for i, option in enumerate(options):
+            printable_option = option.expandtabs()
+            if len(printable_option) > console_columns:
+                printable_option = (printable_option[:(console_columns - 2)] + '..') 
+
             if i not in caption_indices:
                 print('\033[K{}{}'.format(
                     selected_prefix if i == selected_index else
-                    deselected_prefix, option))
+                    deselected_prefix, printable_option))
             elif i in caption_indices:
-                print('\033[K{}{}'.format(caption_prefix, options[i]))
+                print('\033[K{}{}'.format(caption_prefix, printable_option))
+
+        
         keypress = readchar.readkey()
         if keypress in DefaultKeys.up:
             new_index = selected_index
@@ -206,6 +216,12 @@ def select_multiple(
     while True:
         print(f'\033[{len(options) + 2}A')
         for i, option in enumerate(options):
+            console_columns = shutil.get_terminal_size().columns - 4
+            printable_option = option.expandtabs()
+            if len(printable_option) > console_columns:
+                printable_option = (printable_option[:(console_columns - 2)] + '..') 
+
+
             prefix = ''
             if i in caption_indices:
                 prefix = caption_prefix
@@ -219,7 +235,7 @@ def select_multiple(
                     prefix = deselected_ticked_prefix
                 else:
                     prefix = deselected_unticked_prefix
-            print('\033[K{}{}'.format(prefix, option))
+            print('\033[K{}{}'.format(prefix, printable_option))
         if hide_confirm:
             print(f'{error_message}\033[K')
         else:

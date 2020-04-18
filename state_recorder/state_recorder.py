@@ -302,15 +302,15 @@ class StateRecorder:
         # saves that a notification with the changes where send
 
         conn = sqlite3.connect(self.db_file)
+        cursor = conn.cursor()
+
         for course in courses:
             course_id = course.id
 
             for file in course.files:
-
                 data = {'course_id': course_id}
                 data.update(file.getMap())
 
-                cursor = conn.cursor()
                 cursor.execute("""UPDATE files
                     SET notified = 1
                     WHERE module_id = :module_id AND course_id = :course_id
@@ -389,11 +389,11 @@ class StateRecorder:
 
     def delete_file(self, file: File, course_id: int, course_fullname: str):
         conn = sqlite3.connect(self.db_file)
+        cursor = conn.cursor()
 
         data = {'course_id': course_id, 'course_fullname': course_fullname}
         data.update(file.getMap())
 
-        cursor = conn.cursor()
         cursor.execute("""UPDATE files
             SET notified = 0, deleted = 1, time_stamp = :time_stamp
             WHERE module_id = :module_id AND course_id = :course_id
@@ -412,11 +412,11 @@ class StateRecorder:
 
     def modifie_file(self, file: File, course_id: int, course_fullname: str):
         conn = sqlite3.connect(self.db_file)
+        cursor = conn.cursor()
 
         data = {'course_id': course_id, 'course_fullname': course_fullname}
         data.update(file.getMap())
 
-        cursor = conn.cursor()
         cursor.execute("""UPDATE files
             SET notified = 0, modified = 1, time_stamp = :time_stamp,
             saved_to = :saved_to, content_fileurl = :content_fileurl,
