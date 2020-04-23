@@ -159,7 +159,6 @@ class MoodleService:
             results_handler.setVersion(version)
 
             courses = results_handler.fetch_courses(userid)
-            courses = self.add_options_to_courses(courses)
 
             assignments = results_handler.fetch_assignments()
 
@@ -222,6 +221,8 @@ class MoodleService:
         changes = self._filter_courses(changes, download_course_ids,
                                        dont_download_course_ids,
                                        download_submissions)
+
+        changes = self.add_options_to_courses(changes)
 
         return changes
 

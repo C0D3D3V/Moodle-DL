@@ -1,4 +1,4 @@
-# Moodle-Downloader
+# Moodle Downloader 2
 
 > Because manually downloading all the course files every few days is just ~~way too easy~~ inefficient.
 
