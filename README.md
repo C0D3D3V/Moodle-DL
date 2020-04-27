@@ -36,6 +36,7 @@ If you run this program in mintty (MINGW or something similar), try running Pyth
     - This includes the selection of the courses to be downloaded and various configuration options for these courses.
     - You can rename each course individually and decide if a folder structure should be created.
     - You can set whether submissions (files uploaded to Assignments by yourself or a teacher) should be downloaded.
+    - You can choose to download descriptions of Moodle courses. 
     - It does not fetch the current state of your Moodle-Account.
 - `python main.py --new-token`
     - Overrides the login-token with a newly obtained one.
