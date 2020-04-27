@@ -42,6 +42,7 @@ class ConfigService:
         self._select_courses_to_download(courses)
         self._set_options_of_courses(courses)
         self._select_should_download_submissions()
+        self._select_should_download_descriptions()
 
     def _select_courses_to_download(self, courses: [Course]):
         """
@@ -106,6 +107,8 @@ class ConfigService:
 
             options_of_courses = self.get_options_of_courses()
 
+            choices.append('None')
+
             for course in courses:
                 if(ResultsHandler._should_download_course(
                         course.id, download_course_ids,
@@ -143,8 +146,6 @@ class ConfigService:
 
                     choices_courses.append(course)
 
-            choices.append('None')
-
             print('')
             print('For which of the following course do you want to change' +
                   ' the settings?')
@@ -152,10 +153,10 @@ class ConfigService:
             print('')
 
             selected_course = cutie.select(options=choices)
-            if(selected_course == len(choices_courses)):
+            if(selected_course == 0):
                 break
             else:
-                self._change_settings_of(choices_courses[selected_course],
+                self._change_settings_of(choices_courses[selected_course - 1],
                                          options_of_courses)
 
     def _change_settings_of(self, course: Course, options_of_courses: {}):
@@ -233,6 +234,31 @@ class ConfigService:
         self.config_helper.set_property('download_submissions',
                                         download_submissions)
 
+    def _select_should_download_descriptions(self):
+        """
+        Asks the user if descriptions should be downloaded
+        """
+        download_descriptions = self.get_download_descriptions()
+
+        print('')
+        print('In Moodle courses, descriptions can be added to all kinds' +
+              ' of resources, such as files, tasks, assignments or simply' +
+              ' free text. These descriptions are usually unnecessary to' +
+              ' download because you have already read the information or' +
+              ' know it from context. However, there are situations where' +
+              ' it might be interesting to download these descriptions. The' +
+              ' descriptions are created as HTML files and can be deleted as' +
+              ' desired.')
+        print('')
+
+        download_descriptions = cutie.prompt_yes_or_no(
+            'Would you like to download descriptions of the courses you' +
+            ' selected?',
+            default_is_yes=download_descriptions)
+
+        self.config_helper.set_property('download_descriptions',
+                                        download_descriptions)
+
     def get_token(self) -> str:
         # returns a stored token
         try:
@@ -258,6 +284,13 @@ class ConfigService:
         # returns a stored boolean if submissions should be downloaded
         try:
             return self.config_helper.get_property('download_submissions')
+        except ValueError:
+            return False
+
+    def get_download_descriptions(self) -> str:
+        # returns a stored boolean if descriptions should be downloaded
+        try:
+            return self.config_helper.get_property('download_descriptions')
         except ValueError:
             return False
 

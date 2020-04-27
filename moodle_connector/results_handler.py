@@ -1,9 +1,12 @@
 import sys
 import logging
+import hashlib
 
-from state_recorder.file import File
-from state_recorder.course import Course
+from electrum.plugins.coldcard import description
+
 from moodle_connector.request_helper import RequestHelper
+from state_recorder.course import Course
+from state_recorder.file import File
 
 
 class ResultsHandler:
@@ -232,12 +235,14 @@ class ResultsHandler:
 
     @staticmethod
     def _get_files_in_sections(course_sections: [],
-                               assignments: {int: {}}) -> [File]:
+                               assignments: {int: {}},
+                               download_descriptions: bool) -> [File]:
         """
         Iterates over all sections of a course to find files (or modules).
         @param course_sections: The course object returned by Moodle,
                                 containing the sections of the course.
         @param assignments: the dictionary of assignments of the course.
+        @param download_descriptions: If descriptions should be downloaded
         @return: A list of files of the course.
         """
         files = []
@@ -246,18 +251,21 @@ class ResultsHandler:
             section_modules = section.get("modules", [])
             files += ResultsHandler._get_files_in_modules(section_name,
                                                           section_modules,
-                                                          assignments)
+                                                          assignments,
+                                                          download_descriptions)
         return files
 
     @staticmethod
     def _get_files_in_modules(section_name: str,
                               section_modules: [],
-                              assignments: {int: {}}) -> [File]:
+                              assignments: {int: {}},
+                              download_descriptions: bool) -> [File]:
         """
         Iterates over all modules to find files (or content) in them.
         @param section_name: The name of the section to be iterated over.
         @param section_modules: The modules of the section.
         @param assignments: the dictionary of assignments of the course.
+        @param download_descriptions: If descriptions should be downloaded
         @return: A list of files of the section.
         """
         files = []
@@ -267,6 +275,16 @@ class ResultsHandler:
             module_id = module.get("id", 0)
 
             module_contents = module.get("contents", [])
+
+            module_description = module.get("description", None)
+
+            if (module_description is not None and
+                    download_descriptions is True):
+                files += ResultsHandler._handle_description(section_name,
+                                                            module_name,
+                                                            module_modname,
+                                                            module_id,
+                                                            module_description)
 
             if (module_modname in ["resource", "folder", "url"]):
                 files += ResultsHandler._handle_files(section_name,
@@ -313,6 +331,9 @@ class ResultsHandler:
             content_timemodified = content.get("timemodified", 0)
             content_isexternalfile = content.get("isexternalfile", False)
 
+            if(content_fileurl == "" and module_modname == "url"):
+                continue
+
             files.append(File(
                 module_id=module_id,
                 section_name=section_name,
@@ -328,11 +349,60 @@ class ResultsHandler:
             )
         return files
 
-    def fetch_files(self, course_id: str, assignments: {int: {}}) -> [File]:
+    @staticmethod
+    def _handle_description(section_name: str, module_name: str,
+                            module_modname: str, module_id: str,
+                            module_description: str) -> [File]:
+        """
+        Creates a description file
+        @param module_description: The description of the module
+        @params: All necessary parameters to create a file.
+        @return: A list of files that exist in a module.
+        """
+        files = []
+        content_type = "description"
+        content_filename = module_name
+        content_filepath = "/"
+        content_filesize = len(module_description)
+        content_fileurl = ""
+        content_timemodified = 0
+        content_isexternalfile = False
+
+        m = hashlib.sha1()
+        m.update(module_description.encode('utf-8'))
+        hash_description = m.hexdigest()
+
+        if(module_modname == 'url'):
+            module_modname = 'url_description'
+
+        description = File(
+            module_id=module_id,
+            section_name=section_name,
+            module_name=module_name,
+            content_filepath=content_filepath,
+            content_filename=content_filename,
+            content_fileurl=content_fileurl,
+            content_filesize=content_filesize,
+            content_timemodified=content_timemodified,
+            module_modname=module_modname,
+            content_type=content_type,
+            content_isexternalfile=content_isexternalfile,
+            hash=hash_description)
+
+        description.text_content = module_description
+
+        files.append(description)
+
+        return files
+
+    def fetch_files(self, course_id: str, assignments: {int: {}, },
+                    download_descriptions: bool) -> [File]:
         """
         Queries the Moodle system for all the files that
         are present in a course
         @param course_id: The id of the course for which you want to enquirer.
+        @param assignments: A dictionary with assignments
+        @param download_descriptions: If descriptions should be downloaded
         @return: A list of Files
         """
 
@@ -342,6 +412,7 @@ class ResultsHandler:
         course_sections = self.request_helper.post_REST(
             'core_course_get_contents', data)
 
-        files = self._get_files_in_sections(course_sections, assignments)
+        files = self._get_files_in_sections(course_sections, assignments,
+                                            download_descriptions)
 
         return files

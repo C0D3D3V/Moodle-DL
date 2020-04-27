@@ -155,6 +155,24 @@ class URLTarget(object):
 
         self.success = True
 
+    def create_description(self):
+        """
+        Creates a Description file
+        """
+
+        self.file.saved_to = str(Path(
+            self.destination) / (self.filename + ".html"))
+
+        self.file.saved_to = self._rename_if_exists(self.file.saved_to)
+
+        with open(self.file.saved_to, 'w+') as description:
+            if(self.file.text_content is not None):
+                description.write(self.file.text_content)
+
+        self.file.time_stamp = int(time.time())
+
+        self.success = True
+
     def download(self, thread_id: int):
         """
         Downloads a file
@@ -168,6 +186,12 @@ class URLTarget(object):
 
         try:
             self._create_dir(self.destination)
+
+            # if it is a Description we have to create a descripton file
+            # instead of downloading it
+            if (self.file.content_type == 'description'):
+                self.create_description()
+                return self.success
 
             # if it is a URL we have to create a shortcut
             # instead of downloading it

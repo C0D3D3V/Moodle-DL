@@ -147,6 +147,7 @@ class MoodleService:
         download_course_ids = self.get_download_course_ids()
         dont_download_course_ids = self.get_dont_download_course_ids()
         download_submissions = self.get_download_submissions()
+        download_descriptions = self.get_download_descriptions()
 
         courses = []
         filtered_courses = []
@@ -204,7 +205,7 @@ class MoodleService:
 
                 course_assignments = assignments.get(course.id, [])
                 course.files = results_handler.fetch_files(
-                    course.id, course_assignments)
+                    course.id, course_assignments, download_descriptions)
 
                 filtered_courses.append(course)
             print("")
@@ -220,7 +221,8 @@ class MoodleService:
         # Filter changes
         changes = self._filter_courses(changes, download_course_ids,
                                        dont_download_course_ids,
-                                       download_submissions)
+                                       download_submissions,
+                                       download_descriptions)
 
         changes = self.add_options_to_courses(changes)
 
@@ -245,7 +247,8 @@ class MoodleService:
     def _filter_courses(changes: [Course],
                         download_course_ids: [int],
                         dont_download_course_ids: [int],
-                        download_submissions: bool) -> [Course]:
+                        download_submissions: bool,
+                        download_descriptions: bool) -> [Course]:
         """
         Filters the changes course list from courses that
         should not get downloaded
@@ -254,6 +257,8 @@ class MoodleService:
         @param dont_download_course_ids: list of course ids
                                          that should not be downloaded
         @param download_submissions: boolean if submissions
+                                    should be downloaded
+        @param download_descriptions: boolean if descriptions
                                     should be downloaded
         @return: filtered changes course list
         """
@@ -265,6 +270,13 @@ class MoodleService:
                 course_files = []
                 for file in course.files:
                     if (file.content_type != "submission_file"):
+                        course_files.append(file)
+                course.files = course_files
+
+            if (not download_descriptions):
+                course_files = []
+                for file in course.files:
+                    if (file.content_type != "description"):
                         course_files.append(file)
                 course.files = course_files
 
@@ -298,6 +310,14 @@ class MoodleService:
         try:
             return self.config_helper.get_property(
                 'download_submissions')
+        except ValueError:
+            return False
+
+    def get_download_descriptions(self) -> bool:
+        # returns a stored bool of download_descriptions
+        try:
+            return self.config_helper.get_property(
+                'download_descriptions')
         except ValueError:
             return False
 

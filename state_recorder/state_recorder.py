@@ -1,4 +1,5 @@
 import sqlite3
+import logging
 
 from sqlite3 import Error
 
@@ -63,6 +64,19 @@ class StateRecorder:
             c.execute(sql_create_index2)
 
             conn.commit()
+
+            current_version = c.execute('pragma user_version').fetchone()[0]
+
+            # Update Table
+            if (current_version == 0):
+                sql_create_hash_column = "ALTER TABLE files ADD COLUMN hash text NULL;"
+                c.execute(sql_create_hash_column)
+                c.execute("PRAGMA user_version = 1;")
+                current_version = 1
+
+            conn.commit()
+            logging.debug('Database Version: %s' % str(current_version))
+
             conn.close()
 
         except Error as error:
@@ -88,6 +102,10 @@ class StateRecorder:
         if (file1.content_fileurl != file2.content_fileurl or
             file1.content_filesize != file2.content_filesize or
                 file1.content_timemodified != file2.content_timemodified):
+            return True
+        if (file1.content_type == "description" and
+            file1.content_type == file2.content_type and
+                file1.hash != file2.hash):
             return True
         return False
 
@@ -348,13 +366,13 @@ class StateRecorder:
                     module_name, content_filepath, content_filename,
                     content_fileurl, content_filesize, content_timemodified,
                     module_modname, content_type, content_isexternalfile,
-                    saved_to, time_stamp, modified, deleted, notified)
+                    saved_to, time_stamp, modified, deleted, notified, hash)
                     VALUES (:course_id, :course_fullname, :module_id,
                     :section_name, :module_name, :content_filepath,
                     :content_filename, :content_fileurl, :content_filesize,
                     :content_timemodified, :module_modname, :content_type,
                     :content_isexternalfile, :saved_to, :time_stamp,
-                    :modified, :deleted, 0);
+                    :modified, :deleted, 0, :hash);
                     """, data)
 
         conn.commit()
@@ -394,7 +412,7 @@ class StateRecorder:
         for file in files:
             data = {}
             data.update(file.getMap())
-            
+
             cursor.execute("""DELETE FROM files
                 WHERE module_id = :module_id
                 AND section_name = :section_name
@@ -451,7 +469,7 @@ class StateRecorder:
             saved_to = :saved_to, content_fileurl = :content_fileurl,
             content_filesize = :content_filesize,
             content_timemodified = :content_timemodified,
-            module_name = :module_name
+            module_name = :module_name, hash = :hash
             WHERE module_id = :module_id AND course_id = :course_id
             AND course_fullname = :course_fullname
             AND section_name = :section_name
