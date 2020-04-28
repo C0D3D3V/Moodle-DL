@@ -9,6 +9,7 @@ import contextlib
 from pathlib import Path
 import urllib.parse as urlparse
 
+from utils import tomd
 from utils.string_tools import StringTools
 from state_recorder.course import Course
 from state_recorder.file import File
@@ -161,13 +162,13 @@ class URLTarget(object):
         """
 
         self.file.saved_to = str(Path(
-            self.destination) / (self.filename + ".html"))
+            self.destination) / (self.filename + ".md"))
 
         self.file.saved_to = self._rename_if_exists(self.file.saved_to)
 
         with open(self.file.saved_to, 'w+') as description:
             if(self.file.text_content is not None):
-                description.write(self.file.text_content)
+                description.write(tomd.convert(self.file.text_content))
 
         self.file.time_stamp = int(time.time())
 

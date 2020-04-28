@@ -3,11 +3,14 @@ import os
 from pathlib import Path
 from utils import cutie
 from state_recorder.file import File
+from config_service.config_helper import ConfigHelper
 from state_recorder.state_recorder import StateRecorder
+from moodle_connector.results_handler import ResultsHandler
 
 
 class OfflineService:
-    def __init__(self, storage_path: str):
+    def __init__(self, config_helper: ConfigHelper, storage_path: str):
+        self.config_helper = config_helper
         self.storage_path = storage_path
         self.state_recorder = StateRecorder(
             Path(storage_path) / 'moodle_state.db')
@@ -27,9 +30,16 @@ class OfflineService:
               " selectively remove file entries from the database so" +
               " that these files can be downloaded again.")
 
+        download_course_ids = self.config_helper.get_download_course_ids()
+        dont_download_course_ids = self.config_helper.get_dont_download_course_ids()
+
         course_options = []
         courses = []
         for course in stored_files:
+            if (not ResultsHandler._should_download_course(
+                    course.id, download_course_ids, dont_download_course_ids)):
+                continue
+
             for course_file in course.files:
                 if(not os.path.exists(course_file.saved_to)):
                     course_options.append(COLOR_SEQ %
@@ -48,26 +58,28 @@ class OfflineService:
         sections = []
         for course_file in selected_course.files:
             if (not os.path.exists(course_file.saved_to) and (course_file.section_name not in sections)):
-                section_options.append(COLOR_SEQ % MAGENTA + course_file.section_name + RESET_SEQ)
+                section_options.append(
+                    COLOR_SEQ % MAGENTA + course_file.section_name + RESET_SEQ)
                 sections.append(course_file.section_name)
-        
+
         print('From which sections you want to select files.')
         print('[You can select with the space bar and confirm' +
               ' your selection with the enter key]')
         print('')
 
-        selected_sections_ids = cutie.select_multiple(options=section_options, minimal_count=1)
+        selected_sections_ids = cutie.select_multiple(
+            options=section_options, minimal_count=1)
         selected_sections = []
         for selected_sections_id in selected_sections_ids:
             if(selected_sections_id < len(sections)):
                 selected_sections.append(sections[selected_sections_id])
 
-
         file_options = []
         files = []
         for course_file in selected_course.files:
             if (not os.path.exists(course_file.saved_to) and (course_file.section_name in selected_sections)):
-                file_options.append(COLOR_SEQ % CYAN + course_file.content_filename + RESET_SEQ)
+                file_options.append(COLOR_SEQ % CYAN +
+                                    course_file.content_filename + RESET_SEQ)
                 files.append(course_file)
 
         print('Which of the files should be removed form the database, so that they will be redownloaded?')
@@ -76,7 +88,6 @@ class OfflineService:
         print('')
         selected_files = cutie.select_multiple(options=file_options)
 
- 
         files_to_delete = []
         for file_index in selected_files:
             if(file_index < len(files) and isinstance(files[file_index], File)):

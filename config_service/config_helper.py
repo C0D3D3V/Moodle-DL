@@ -49,3 +49,61 @@ class ConfigHelper:
         self._whole_config.pop(key, None)
         #                           ^ behavior if the key is not present
         self._save()
+
+    # ---------------------------- GETTERS ------------------------------------
+
+    def get_download_submissions(self) -> str:
+        # returns a stored boolean if submissions should be downloaded
+        try:
+            return self.get_property('download_submissions')
+        except ValueError:
+            return False
+
+    def get_download_descriptions(self) -> bool:
+        # returns a stored boolean if descriptions should be downloaded
+        try:
+            return self.get_property('download_descriptions')
+        except ValueError:
+            return False
+
+    def get_download_course_ids(self) -> str:
+        # returns a stored list of course ids hat should be downloaded
+        try:
+            return self.get_property('download_course_ids')
+        except ValueError:
+            return []
+
+    def get_token(self) -> str:
+        # returns a stored token
+        try:
+            return self.get_property('token')
+        except ValueError:
+            raise ValueError('Not yet configured!')
+
+    def get_moodle_domain(self) -> str:
+        # returns a stored moodle_domain
+        try:
+            return self.get_property('moodle_domain')
+        except ValueError:
+            raise ValueError('Not yet configured!')
+
+    def get_moodle_path(self) -> str:
+        # returns a stored moodle_path
+        try:
+            return self.get_property('moodle_path')
+        except ValueError:
+            raise ValueError('Not yet configured!')
+
+    def get_options_of_courses(self) -> str:
+        # returns a stored dictionary of options for courses
+        try:
+            return self.get_property('options_of_courses')
+        except ValueError:
+            return {}
+
+    def get_dont_download_course_ids(self) -> str:
+        # returns a stored list of ids that should not be downloaded
+        try:
+            return self.get_property('dont_download_course_ids')
+        except ValueError:
+            return []

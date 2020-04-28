@@ -18,9 +18,9 @@ class ConfigService:
         for the courses to be downloaded and in what way
         """
 
-        token = self.get_token()
-        moodle_domain = self.get_moodle_domain()
-        moodle_path = self.get_moodle_path()
+        token = self.config_helper.get_token()
+        moodle_domain = self.config_helper.get_moodle_domain()
+        moodle_path = self.config_helper.get_moodle_path()
 
         request_helper = RequestHelper(moodle_domain, moodle_path, token,
                                        self.skip_cert_verify)
@@ -49,8 +49,8 @@ class ConfigService:
         Asks the user for the courses that should be downloaded.
         @param courses: All available courses
         """
-        download_course_ids = self.get_download_course_ids()
-        dont_download_course_ids = self.get_dont_download_course_ids()
+        download_course_ids = self.config_helper.get_download_course_ids()
+        dont_download_course_ids = self.config_helper.get_dont_download_course_ids()
 
         print('')
         print('To avoid downloading all the Moodle courses you are' +
@@ -89,8 +89,8 @@ class ConfigService:
         """
         Let the user set special options for every single course
         """
-        download_course_ids = self.get_download_course_ids()
-        dont_download_course_ids = self.get_dont_download_course_ids()
+        download_course_ids = self.config_helper.get_download_course_ids()
+        dont_download_course_ids = self.config_helper.get_dont_download_course_ids()
 
         print('')
         print('You can set special settings for every single course.' +
@@ -105,7 +105,7 @@ class ConfigService:
             choices = []
             choices_courses = []
 
-            options_of_courses = self.get_options_of_courses()
+            options_of_courses = self.config_helper.get_options_of_courses()
 
             choices.append('None')
 
@@ -217,7 +217,7 @@ class ConfigService:
         """
         Asks the user if submissions should be downloaded
         """
-        download_submissions = self.get_download_submissions()
+        download_submissions = self.config_helper.get_download_submissions()
 
         print('')
         print('Submissions are files that you or a teacher have uploaded' +
@@ -238,7 +238,7 @@ class ConfigService:
         """
         Asks the user if descriptions should be downloaded
         """
-        download_descriptions = self.get_download_descriptions()
+        download_descriptions = self.config_helper.get_download_descriptions()
 
         print('')
         print('In Moodle courses, descriptions can be added to all kinds' +
@@ -258,59 +258,3 @@ class ConfigService:
 
         self.config_helper.set_property('download_descriptions',
                                         download_descriptions)
-
-    def get_token(self) -> str:
-        # returns a stored token
-        try:
-            return self.config_helper.get_property('token')
-        except ValueError:
-            raise ValueError('Not yet configured!')
-
-    def get_moodle_domain(self) -> str:
-        # returns a stored moodle_domain
-        try:
-            return self.config_helper.get_property('moodle_domain')
-        except ValueError:
-            raise ValueError('Not yet configured!')
-
-    def get_moodle_path(self) -> str:
-        # returns a stored moodle_path
-        try:
-            return self.config_helper.get_property('moodle_path')
-        except ValueError:
-            raise ValueError('Not yet configured!')
-
-    def get_download_submissions(self) -> str:
-        # returns a stored boolean if submissions should be downloaded
-        try:
-            return self.config_helper.get_property('download_submissions')
-        except ValueError:
-            return False
-
-    def get_download_descriptions(self) -> str:
-        # returns a stored boolean if descriptions should be downloaded
-        try:
-            return self.config_helper.get_property('download_descriptions')
-        except ValueError:
-            return False
-
-    def get_download_course_ids(self) -> str:
-        # returns a stored list of ids that should be downloaded
-        try:
-            return self.config_helper.get_property('download_course_ids')
-        except ValueError:
-            return []
-
-    def get_dont_download_course_ids(self) -> str:
-        # returns a stored list of ids that should not be downloaded
-        try:
-            return self.config_helper.get_property('dont_download_course_ids')
-        except ValueError:
-            return []
-
-    def get_options_of_courses(self) -> str:
-        # returns a stored dictionary of options for courses
-        try:
-            return self.config_helper.get_property('options_of_courses')
-        except ValueError:
-            return {}

@@ -122,7 +122,10 @@ def run_new_token(storage_path, use_sso=False, skip_cert_verify=False):
 
 
 def run_manage_database(storage_path):
-    offline_service = OfflineService(storage_path)
+    config = ConfigHelper(storage_path)
+    config.load()  # because we want to only manage configured courses
+
+    offline_service = OfflineService(config, storage_path)
     offline_service.interactively_manage_database()
 
     print('All done.')
@@ -185,7 +188,6 @@ def run_main(storage_path, skip_cert_verify=False,
             'Checking for changes for the configured Moodle-Account....')
         Log.debug('Checking for changes for the configured Moodle-Account...')
         changed_courses = moodle.fetch_state()
-
 
         logging.debug(
             'Start downloading changed files...')

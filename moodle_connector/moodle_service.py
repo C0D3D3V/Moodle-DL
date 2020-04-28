@@ -136,18 +136,18 @@ class MoodleService:
         """
         logging.debug('Fetching current Moodle State...')
 
-        token = self.get_token()
-        moodle_domain = self.get_moodle_domain()
-        moodle_path = self.get_moodle_path()
+        token = self.config_helper.get_token()
+        moodle_domain = self.config_helper.get_moodle_domain()
+        moodle_path = self.config_helper.get_moodle_path()
 
         request_helper = RequestHelper(moodle_domain, moodle_path, token,
                                        self.skip_cert_verify)
         results_handler = ResultsHandler(request_helper)
 
-        download_course_ids = self.get_download_course_ids()
-        dont_download_course_ids = self.get_dont_download_course_ids()
-        download_submissions = self.get_download_submissions()
-        download_descriptions = self.get_download_descriptions()
+        download_course_ids = self.config_helper.get_download_course_ids()
+        dont_download_course_ids = self.config_helper.get_dont_download_course_ids()
+        download_submissions = self.config_helper.get_download_submissions()
+        download_descriptions = self.config_helper.get_download_descriptions()
 
         courses = []
         filtered_courses = []
@@ -232,7 +232,7 @@ class MoodleService:
         """
         Updates a array of courses with its options
         """
-        options_of_courses = self.get_options_of_courses()
+        options_of_courses = self.config_helper.get_options_of_courses()
         for course in courses:
             options = options_of_courses.get(str(course.id), None)
             if options is not None:
@@ -304,63 +304,3 @@ class MoodleService:
             moodle_path = '/'
 
         return moodle_domain, moodle_path
-
-    def get_download_submissions(self) -> bool:
-        # returns a stored bool of download_submissions
-        try:
-            return self.config_helper.get_property(
-                'download_submissions')
-        except ValueError:
-            return False
-
-    def get_download_descriptions(self) -> bool:
-        # returns a stored bool of download_descriptions
-        try:
-            return self.config_helper.get_property(
-                'download_descriptions')
-        except ValueError:
-            return False
-
-    def get_download_course_ids(self) -> str:
-        # returns a stored list of course ids hat should be downloaded
-        try:
-            return self.config_helper.get_property(
-                'download_course_ids')
-        except ValueError:
-            return []
-
-    def get_dont_download_course_ids(self) -> str:
-        # returns a stored list of dont_download_course_ids
-        try:
-            return self.config_helper.get_property(
-                'dont_download_course_ids')
-        except ValueError:
-            return []
-
-    def get_token(self) -> str:
-        # returns a stored token
-        try:
-            return self.config_helper.get_property('token')
-        except ValueError:
-            raise ValueError('Not yet configured!')
-
-    def get_moodle_domain(self) -> str:
-        # returns a stored moodle_domain
-        try:
-            return self.config_helper.get_property('moodle_domain')
-        except ValueError:
-            raise ValueError('Not yet configured!')
-
-    def get_moodle_path(self) -> str:
-        # returns a stored moodle_path
-        try:
-            return self.config_helper.get_property('moodle_path')
-        except ValueError:
-            raise ValueError('Not yet configured!')
-
-    def get_options_of_courses(self) -> str:
-        # returns a stored dictionary of options for courses
-        try:
-            return self.config_helper.get_property('options_of_courses')
-        except ValueError:
-            return {}
