@@ -169,7 +169,10 @@ class URLTarget(object):
         description = open(self.file.saved_to, 'w+')
         to_save = ""
         if(self.file.text_content is not None):
-            to_save = tomd.convert(self.file.text_content).strip()
+            to_save = tomd.convert(
+                self.file.text_content).strip()
+            # to_save could also be html.unescape(),
+            # but this could destroy the md file
             if (to_save != ""):
                 description.write(to_save)
 
