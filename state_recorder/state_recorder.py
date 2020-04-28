@@ -131,12 +131,14 @@ class StateRecorder:
         # Not sure if this would be a good idea
         #  or file1.module_name != file2.module_name)
         if (file1.content_fileurl != file2.content_fileurl or
-            file1.content_filesize != file2.content_filesize or
-                file1.content_timemodified != file2.content_timemodified):
+                file1.content_filesize != file2.content_filesize):
             return True
         if (file1.content_type == "description" and
             file1.content_type == file2.content_type and
                 file1.hash != file2.hash):
+            return True
+        if (file1.module_modname != "folder" and
+                file1.content_timemodified != file2.content_timemodified):
             return True
         return False
 
