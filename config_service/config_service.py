@@ -247,7 +247,7 @@ class ConfigService:
               ' download because you have already read the information or' +
               ' know it from context. However, there are situations where' +
               ' it might be interesting to download these descriptions. The' +
-              ' descriptions are created as HTML files and can be deleted as' +
+              ' descriptions are created as Markdown files and can be deleted as' +
               ' desired.')
         print('')
 

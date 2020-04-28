@@ -166,9 +166,17 @@ class URLTarget(object):
 
         self.file.saved_to = self._rename_if_exists(self.file.saved_to)
 
-        with open(self.file.saved_to, 'w+') as description:
-            if(self.file.text_content is not None):
-                description.write(tomd.convert(self.file.text_content))
+        description = open(self.file.saved_to, 'w+')
+        to_save = ""
+        if(self.file.text_content is not None):
+            to_save = tomd.convert(self.file.text_content).strip()
+            if (to_save != ""):
+                description.write(to_save)
+
+        description.close()
+
+        if(to_save == ""):
+            os.remove(self.file.saved_to)
 
         self.file.time_stamp = int(time.time())
 

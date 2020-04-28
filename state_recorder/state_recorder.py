@@ -90,7 +90,9 @@ class StateRecorder:
         if (file1.module_id == file2.module_id and
             file1.section_name == file2.section_name and
             file1.content_filepath == file2.content_filepath and
-                file1.content_filename == file2.content_filename):
+                file1.content_filename == file2.content_filename and
+                file1.content_type == file2.content_type and
+                file1.module_modname == file2.module_modname):
             return True
         return False
 

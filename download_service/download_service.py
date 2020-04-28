@@ -43,7 +43,7 @@ class DownloadService:
 
         self.courses = courses
         self.state_recorder = moodle_service.recorder
-        self.token = moodle_service.get_token()
+        self.token = moodle_service.config_helper.get_token()
         self.storage_path = storage_path
 
         # The wait queue for all URL targets to be downloaded.
