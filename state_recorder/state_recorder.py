@@ -69,10 +69,32 @@ class StateRecorder:
 
             # Update Table
             if (current_version == 0):
-                sql_create_hash_column = "ALTER TABLE files ADD COLUMN hash text NULL;"
+                # Add Hash Column
+                sql_create_hash_column = """ALTER TABLE files 
+                ADD COLUMN hash text NULL;
+                """
                 c.execute(sql_create_hash_column)
                 c.execute("PRAGMA user_version = 1;")
                 current_version = 1
+                conn.commit()
+
+            if (current_version == 1):
+                # Add Moved Column
+                sql_create_moved_column = """ALTER TABLE files 
+                ADD COLUMN moved integer DEFAULT 0 NOT NULL;
+                """
+                c.execute(sql_create_moved_column)
+
+                # Modified gets a new meaning
+                sql_create_moved_column = """UPDATE files
+                    SET modified = 0
+                    WHERE modified = 1;
+                """
+                c.execute(sql_create_moved_column)
+
+                c.execute("PRAGMA user_version = 2;")
+                current_version = 2
+                conn.commit()
 
             conn.commit()
             logging.debug('Database Version: %s' % str(current_version))
@@ -84,6 +106,14 @@ class StateRecorder:
                 'Could not create database! Error: %s' % (error)
             )
 
+    def __files_have_same_type(self, file1: File, file2: File) -> bool:
+        # Returns True if the files have the same type attributes
+
+        if (file1.content_type == file2.content_type and
+                file1.module_modname == file2.module_modname):
+            return True
+        return False
+
     def __files_have_same_path(self, file1: File, file2: File) -> bool:
         # Returns True if the files have the same path attributes
 
@@ -91,8 +121,7 @@ class StateRecorder:
             file1.section_name == file2.section_name and
             file1.content_filepath == file2.content_filepath and
                 file1.content_filename == file2.content_filename and
-                file1.content_type == file2.content_type and
-                file1.module_modname == file2.module_modname):
+                self.__files_have_same_type(file1, file2)):
             return True
         return False
 
@@ -102,12 +131,23 @@ class StateRecorder:
         # Not sure if this would be a good idea
         #  or file1.module_name != file2.module_name)
         if (file1.content_fileurl != file2.content_fileurl or
-            file1.content_filesize != file2.content_filesize or
-                file1.content_timemodified != file2.content_timemodified):
+                file1.content_filesize != file2.content_filesize):
             return True
         if (file1.content_type == "description" and
             file1.content_type == file2.content_type and
                 file1.hash != file2.hash):
+            return True
+        # if (file1.module_modname != "folder" and
+        #         file1.content_timemodified != file2.content_timemodified):
+        #     return True
+        return False
+
+    def __file_was_moved(self, file1: File, file2: File) -> bool:
+        # Returns True if the file was moved to an other path
+
+        if (not self.__files_are_diffrent(file1, file2) and
+            self.__files_have_same_type(file1, file2) and
+                not self.__files_have_same_path(file1, file2)):
             return True
         return False
 
@@ -179,9 +219,30 @@ class StateRecorder:
                 matching_file = None
 
                 for current_file in same_course_in_current.files:
-                    # Try to find a matching file
+                    # Try to find a matching file with same path
                     if(self.__files_have_same_path(current_file, stored_file)):
                         matching_file = current_file
+                        # file does still exist
+                        break
+
+                if matching_file is not None:
+                    # An matching file was found
+                    # Test for modification
+                    if(self.__files_are_diffrent(matching_file, stored_file)):
+                        # file is modified
+                        matching_file.modified = True
+                        changed_course.files.append(matching_file)
+
+                    continue
+
+                # No matching file was found --> file was deleted or moved
+                # check for moved files
+
+                for current_file in same_course_in_current.files:
+                    # Try to find a matching file that was moved
+                    if(self.__file_was_moved(current_file, stored_file)):
+                        matching_file = current_file
+                        # file does still exist
                         break
 
                 if matching_file is None:
@@ -190,12 +251,8 @@ class StateRecorder:
                     stored_file.notified = False
                     changed_course.files.append(stored_file)
                 else:
-                    # An matching file was found
-                    # Test for modification
-                    if(self.__files_are_diffrent(matching_file, stored_file)):
-                        # file is modified
-                        matching_file.modified = True
-                        changed_course.files.append(matching_file)
+                    matching_file.moved = True
+                    changed_course.files.append(matching_file)
 
             if (len(changed_course.files) > 0):
                 changed_courses.append(changed_course)
@@ -234,7 +291,8 @@ class StateRecorder:
 
                 for stored_file in same_course_in_stored.files:
                     # Try to find a matching file
-                    if(self.__files_have_same_path(current_file, stored_file)):
+                    if(self.__files_have_same_path(current_file, stored_file) or
+                       self.__file_was_moved(current_file, stored_file)):
                         matching_file = current_file
                         break
 
@@ -368,13 +426,13 @@ class StateRecorder:
                     module_name, content_filepath, content_filename,
                     content_fileurl, content_filesize, content_timemodified,
                     module_modname, content_type, content_isexternalfile,
-                    saved_to, time_stamp, modified, deleted, notified, hash)
+                    saved_to, time_stamp, modified, deleted, notified, moved, hash)
                     VALUES (:course_id, :course_fullname, :module_id,
                     :section_name, :module_name, :content_filepath,
                     :content_filename, :content_fileurl, :content_filesize,
                     :content_timemodified, :module_modname, :content_type,
                     :content_isexternalfile, :saved_to, :time_stamp,
-                    :modified, :deleted, 0, :hash);
+                    :modified, :deleted, 0, :moved, :hash);
                     """, data)
 
         conn.commit()

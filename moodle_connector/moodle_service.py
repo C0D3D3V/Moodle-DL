@@ -159,9 +159,16 @@ class MoodleService:
             userid, version = results_handler.fetch_userid_and_version()
             results_handler.setVersion(version)
 
-            courses = results_handler.fetch_courses(userid)
+            courses_list = results_handler.fetch_courses(userid)
+            courses = []
+            # Filter unselected courses
+            for course in courses_list:
+                if (ResultsHandler._should_download_course(
+                    course.id, download_course_ids,
+                        dont_download_course_ids)):
+                    courses.append(course)
 
-            assignments = results_handler.fetch_assignments()
+            assignments = results_handler.fetch_assignments(courses)
 
             if(download_submissions):
                 assignments = results_handler.fetch_submissions(
@@ -172,12 +179,6 @@ class MoodleService:
             for course in courses:
                 index += 1
 
-                skip = False
-                if (not ResultsHandler._should_download_course(
-                    course.id, download_course_ids,
-                        dont_download_course_ids)):
-                    skip = True
-
                 # to limit the output to one line
                 limits = shutil.get_terminal_size()
 
@@ -186,8 +187,6 @@ class MoodleService:
                     shorted_course_name = course.fullname[:15] + '..'
 
                 into = '\rDownload course information'
-                if (skip):
-                    into = '\r    Skip course information'
 
                 status_message = (into + ' %3d/%3d [%17s|%6s]'
                                   % (index, len(courses),
@@ -199,9 +198,6 @@ class MoodleService:
 
                 sys.stdout.write(status_message)
                 sys.stdout.flush()
-
-                if (skip):
-                    continue
 
                 course_assignments = assignments.get(course.id, [])
                 course.files = results_handler.fetch_files(

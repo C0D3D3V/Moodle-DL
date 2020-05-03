@@ -27,9 +27,9 @@ class RequestHelper:
         self.moodle_path = moodle_path
 
         RequestHelper.stdHeader = {
-            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64)' +
-            ' AppleWebKit/537.36 (KHTML, like Gecko)' +
-            ' Chrome/78.0.3904.108 Safari/537.36',
+            'User-Agent': ('Mozilla/5.0 (X11; Linux x86_64)' +
+                           ' AppleWebKit/537.36 (KHTML, like Gecko)' +
+                           ' Chrome/78.0.3904.108 Safari/537.36'),
             'Content-Type': 'application/x-www-form-urlencoded'
         }
 
@@ -49,10 +49,10 @@ class RequestHelper:
         url = self._get_REST_POST_URL(self.moodle_path, function)
 
         # uncomment this print to debug requested post-urls
-        # print(url)
+        print(url)
 
         # uncomment this print to debug posted data
-        # print(data_urlencoded)
+        print(data_urlencoded)
 
         self.connection.request(
             'POST',
@@ -94,7 +94,7 @@ class RequestHelper:
         data.update({'wsfunction': function,
                      'wstoken': token})
 
-        return urllib.parse.urlencode(data)
+        return RequestHelper.recursive_urlencode(data)
 
     def get_login(self, data: {str: str}) -> object:
         """
@@ -209,6 +209,34 @@ class RequestHelper:
             )
 
         return response_extracted
+
+    @staticmethod
+    def recursive_urlencode(data):
+        """URL-encode a multidimensional dictionary.
+        @param data: the data to be encoded
+        @returns: the url encoded data
+        """
+        def recursion(data, base=[]):
+            pairs = []
+
+            for key, value in data.items():
+                new_base = base + [key]
+                if hasattr(value, 'values'):
+                    pairs += recursion(value, new_base)
+                else:
+                    new_pair = None
+                    if len(new_base) > 1:
+                        first = urllib.parse.quote(new_base.pop(0))
+                        rest = map(lambda x: urllib.parse.quote(x), new_base)
+                        new_pair = "%s[%s]=%s" % (first, ']['.join(
+                            rest), urllib.parse.quote(str(value)))
+                    else:
+                        new_pair = "%s=%s" % (urllib.parse.quote(
+                            str(key)), urllib.parse.quote(str(value)))
+                    pairs.append(new_pair)
+            return pairs
+
+        return '&'.join(recursion(data))
 
 
 class RequestRejectedError(Exception):

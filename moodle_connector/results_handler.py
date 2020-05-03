@@ -1,7 +1,7 @@
 import sys
 import logging
 import hashlib
-    
+
 from moodle_connector.request_helper import RequestHelper
 from state_recorder.course import Course
 from state_recorder.file import File
@@ -67,7 +67,7 @@ class ResultsHandler:
             )
         return results
 
-    def fetch_assignments(self) -> {int: {int: {}}}:
+    def fetch_assignments(self, courses: [Course]) -> {int: {int: {}}}:
         """
         Fetches the Assignments List for all courses from the
         Moodle system
@@ -86,8 +86,15 @@ class ResultsHandler:
         sys.stdout.write('\rDownload assignments information')
         sys.stdout.flush()
 
+        extra_data = {}
+        courseids = {}
+        for index, course in enumerate(courses):
+            courseids.update({str(index): course.id})
+
+        extra_data.update({'courseids': courseids})
+
         assign_result = self.request_helper.post_REST(
-            'mod_assign_get_assignments')
+            'mod_assign_get_assignments', extra_data)
 
         assign_courses = assign_result.get('courses', [])
 
@@ -247,10 +254,11 @@ class ResultsHandler:
         for section in course_sections:
             section_name = section.get("name", "")
             section_modules = section.get("modules", [])
-            files += ResultsHandler._get_files_in_modules(section_name,
-                                                          section_modules,
-                                                          assignments,
-                                                          download_descriptions)
+            files += ResultsHandler._get_files_in_modules(
+                section_name,
+                section_modules,
+                assignments,
+                download_descriptions)
         return files
 
     @staticmethod

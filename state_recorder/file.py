@@ -6,7 +6,7 @@ class File:
                  content_type: str, content_isexternalfile: bool,
                  saved_to: str = "", time_stamp: int = 0,
                  modified: int = 0, deleted: int = 0,
-                 notified: int = 0, hash: str = None):
+                 notified: int = 0, moved: int = 0, hash: str = None):
 
         self.module_id = module_id
         self.section_name = section_name
@@ -47,7 +47,12 @@ class File:
             self.notified = True
         else:
             self.notified = False
-        
+
+        if (moved == 1):
+            self.moved = True
+        else:
+            self.moved = False
+
         self.hash = hash
 
         # For Textlable
@@ -71,6 +76,7 @@ class File:
             'modified': 1 if self.modified else 0,
             'deleted': 1 if self.deleted else 0,
             'notified': 1 if self.notified else 0,
+            'moved': 1 if self.moved else 0,
             'hash': self.hash
         }
 
@@ -94,6 +100,7 @@ class File:
             modified=row['modified'],
             deleted=row['deleted'],
             notified=row['notified'],
+            moved=row['moved'],
             hash=row['hash']
         )
 
@@ -117,6 +124,7 @@ class File:
         message += ', modified: %s' % (self.modified)
         message += ', deleted: %s' % (self.deleted)
         message += ', notified: %s' % (self.notified)
+        message += ', moved: %s' % (self.moved)
         message += ', hash: %s' % (self.hash)
 
         message += ")"
