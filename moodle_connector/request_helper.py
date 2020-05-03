@@ -49,10 +49,10 @@ class RequestHelper:
         url = self._get_REST_POST_URL(self.moodle_path, function)
 
         # uncomment this print to debug requested post-urls
-        print(url)
+        # print(url)
 
         # uncomment this print to debug posted data
-        print(data_urlencoded)
+        # print(data_urlencoded)
 
         self.connection.request(
             'POST',
