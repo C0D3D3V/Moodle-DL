@@ -237,7 +237,7 @@ def run_main(storage_path, skip_cert_verify=False,
             sentry_sdk.capture_exception(e)
 
         mail_service.notify_about_error(str(e))
-        telegram_service.notify_about_error(str(e))
+        tg_service.notify_about_error(str(e))
 
         logging.debug('Exception-Handling completed. Exiting...',
                       extra={'exception': e})
