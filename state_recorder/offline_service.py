@@ -31,7 +31,8 @@ class OfflineService:
               " that these files can be downloaded again.")
 
         download_course_ids = self.config_helper.get_download_course_ids()
-        dont_download_course_ids = self.config_helper.get_dont_download_course_ids()
+        dont_download_course_ids = self.config_helper\
+            .get_dont_download_course_ids()
 
         course_options = []
         courses = []
@@ -57,7 +58,8 @@ class OfflineService:
         section_options = []
         sections = []
         for course_file in selected_course.files:
-            if (not os.path.exists(course_file.saved_to) and (course_file.section_name not in sections)):
+            if (not os.path.exists(course_file.saved_to)
+                    and (course_file.section_name not in sections)):
                 section_options.append(
                     COLOR_SEQ % MAGENTA + course_file.section_name + RESET_SEQ)
                 sections.append(course_file.section_name)
@@ -77,12 +79,14 @@ class OfflineService:
         file_options = []
         files = []
         for course_file in selected_course.files:
-            if (not os.path.exists(course_file.saved_to) and (course_file.section_name in selected_sections)):
+            if (not os.path.exists(course_file.saved_to)
+                    and (course_file.section_name in selected_sections)):
                 file_options.append(COLOR_SEQ % CYAN +
                                     course_file.content_filename + RESET_SEQ)
                 files.append(course_file)
 
-        print('Which of the files should be removed form the database, so that they will be redownloaded?')
+        print('Which of the files should be removed form the database,' +
+              ' so that they will be redownloaded?')
         print('[You can select with the space bar and confirm' +
               ' your selection with the enter key]')
         print('')
@@ -90,7 +94,8 @@ class OfflineService:
 
         files_to_delete = []
         for file_index in selected_files:
-            if(file_index < len(files) and isinstance(files[file_index], File)):
+            if(file_index < len(files)
+               and isinstance(files[file_index], File)):
                 files_to_delete.append(files[file_index])
 
         self.state_recorder.batch_delete_files_from_db(files_to_delete)

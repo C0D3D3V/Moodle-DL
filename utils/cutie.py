@@ -116,18 +116,19 @@ def select(
     Returns:
         int: The index that has been selected.
     """
-    
+
     print('\n' * (len(options) - 1))
     if caption_indices is None:
         caption_indices = []
     while True:
         print(f'\033[{len(options) + 1}A')
         console_columns = shutil.get_terminal_size().columns - 4
-        
+
         for i, option in enumerate(options):
             printable_option = option.expandtabs()
             if len(printable_option) > console_columns:
-                printable_option = (printable_option[:(console_columns - 2)] + '..') 
+                printable_option = (
+                    printable_option[:(console_columns - 2)] + '..')
 
             if i not in caption_indices:
                 print('\033[K{}{}'.format(
@@ -136,7 +137,6 @@ def select(
             elif i in caption_indices:
                 print('\033[K{}{}'.format(caption_prefix, printable_option))
 
-        
         keypress = readchar.readkey()
         if keypress in DefaultKeys.up:
             new_index = selected_index
@@ -219,8 +219,8 @@ def select_multiple(
             console_columns = shutil.get_terminal_size().columns - 4
             printable_option = option.expandtabs()
             if len(printable_option) > console_columns:
-                printable_option = (printable_option[:(console_columns - 2)] + '..') 
-
+                printable_option = (
+                    printable_option[:(console_columns - 2)] + '..')
 
             prefix = ''
             if i in caption_indices:

@@ -145,7 +145,8 @@ class MoodleService:
         results_handler = ResultsHandler(request_helper)
 
         download_course_ids = self.config_helper.get_download_course_ids()
-        dont_download_course_ids = self.config_helper.get_dont_download_course_ids()
+        dont_download_course_ids = self.config_helper\
+            .get_dont_download_course_ids()
         download_submissions = self.config_helper.get_download_submissions()
         download_descriptions = self.config_helper.get_download_descriptions()
 

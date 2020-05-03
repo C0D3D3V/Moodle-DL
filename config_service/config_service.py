@@ -50,7 +50,8 @@ class ConfigService:
         @param courses: All available courses
         """
         download_course_ids = self.config_helper.get_download_course_ids()
-        dont_download_course_ids = self.config_helper.get_dont_download_course_ids()
+        dont_download_course_ids = self.config_helper\
+            .get_dont_download_course_ids()
 
         print('')
         print('To avoid downloading all the Moodle courses you are' +
@@ -90,7 +91,8 @@ class ConfigService:
         Let the user set special options for every single course
         """
         download_course_ids = self.config_helper.get_download_course_ids()
-        dont_download_course_ids = self.config_helper.get_dont_download_course_ids()
+        dont_download_course_ids = self.config_helper\
+            .get_dont_download_course_ids()
 
         print('')
         print('You can set special settings for every single course.' +
@@ -247,8 +249,8 @@ class ConfigService:
               ' download because you have already read the information or' +
               ' know it from context. However, there are situations where' +
               ' it might be interesting to download these descriptions. The' +
-              ' descriptions are created as Markdown files and can be deleted as' +
-              ' desired.')
+              ' descriptions are created as Markdown files and can be' +
+              ' deleted as desired.')
         print('')
 
         download_descriptions = cutie.prompt_yes_or_no(

@@ -70,7 +70,7 @@ class StateRecorder:
             # Update Table
             if (current_version == 0):
                 # Add Hash Column
-                sql_create_hash_column = """ALTER TABLE files 
+                sql_create_hash_column = """ALTER TABLE files
                 ADD COLUMN hash text NULL;
                 """
                 c.execute(sql_create_hash_column)
@@ -80,7 +80,7 @@ class StateRecorder:
 
             if (current_version == 1):
                 # Add Moved Column
-                sql_create_moved_column = """ALTER TABLE files 
+                sql_create_moved_column = """ALTER TABLE files
                 ADD COLUMN moved integer DEFAULT 0 NOT NULL;
                 """
                 c.execute(sql_create_moved_column)
@@ -291,8 +291,8 @@ class StateRecorder:
 
                 for stored_file in same_course_in_stored.files:
                     # Try to find a matching file
-                    if(self.__files_have_same_path(current_file, stored_file) or
-                       self.__file_was_moved(current_file, stored_file)):
+                    if(self.__files_have_same_path(current_file, stored_file)
+                       or self.__file_was_moved(current_file, stored_file)):
                         matching_file = current_file
                         break
 
@@ -426,7 +426,8 @@ class StateRecorder:
                     module_name, content_filepath, content_filename,
                     content_fileurl, content_filesize, content_timemodified,
                     module_modname, content_type, content_isexternalfile,
-                    saved_to, time_stamp, modified, deleted, notified, moved, hash)
+                    saved_to, time_stamp, modified, deleted, notified, moved,
+                    hash)
                     VALUES (:course_id, :course_fullname, :module_id,
                     :section_name, :module_name, :content_filepath,
                     :content_filename, :content_fileurl, :content_filesize,
