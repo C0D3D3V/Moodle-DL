@@ -137,9 +137,9 @@ class StateRecorder:
             file1.content_type == file2.content_type and
                 file1.hash != file2.hash):
             return True
-        if (file1.module_modname != "folder" and
-                file1.content_timemodified != file2.content_timemodified):
-            return True
+        # if (file1.module_modname != "folder" and
+        #         file1.content_timemodified != file2.content_timemodified):
+        #     return True
         return False
 
     def __file_was_moved(self, file1: File, file2: File) -> bool:
