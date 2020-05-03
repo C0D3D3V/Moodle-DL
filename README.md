@@ -11,11 +11,12 @@
 
 
 ### Setup
-1. Install [Python](https://www.python.org/) >=3.6
-2. Verify that `python --version` shows a version equal to or higher then 3.6
+1. Please preferably download the [latest release](https://github.com/C0D3D3V/Moodle-Downloader-2/releases) from here, because the master branch is sometimes unstable. 
+2. Install [Python](https://www.python.org/) >=3.6
+3. Verify that `python --version` shows a version equal to or higher then 3.6
     Otherwise use [pyenv](https://github.com/pyenv/pyenv#installation) to install the newest version
-3. `pip install -r requirements.txt` (Linux users should first check if the requirements are available via there package manager)
-4. run `python main.py --init`  
+4. `pip install -r requirements.txt` (Linux users should first check if the requirements are available via there package manager)
+5. run `python main.py --init`  
 
 On some operating systems the program has to run with `python3` instead of `python`, try it yourself. The same applies to `pip3`.
 If you run this program in mintty (MINGW or something similar), try running Python like this `winpty python`.
