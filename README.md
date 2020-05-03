@@ -11,7 +11,7 @@
 
 
 ### Setup
-1. Please preferably download the [latest release](https://github.com/C0D3D3V/Moodle-Downloader-2/releases) from here, because the master branch is sometimes unstable. 
+1. Please preferably to download the [latest release](https://github.com/C0D3D3V/Moodle-Downloader-2/releases) from here, because the master branch is sometimes unstable. 
 2. Install [Python](https://www.python.org/) >=3.6
 3. Verify that `python --version` shows a version equal to or higher then 3.6
     Otherwise use [pyenv](https://github.com/pyenv/pyenv#installation) to install the newest version
