@@ -5,10 +5,11 @@ import os
 import sys
 import logging
 import argparse
-import readline
 import traceback
 import sentry_sdk
 
+from notification_services.telegram import telegram_service
+from notification_services.telegram.telegram_service import TelegramService
 from utils import cutie
 from utils.logger import Log
 from config_service.config_helper import ConfigHelper
@@ -140,6 +141,15 @@ def run_change_notification_mail(storage_path):
     print('Configuration successfully updated!')
 
 
+def run_change_notification_telegram(storage_path):
+    config = ConfigHelper(storage_path)
+    config.load()
+
+    TelegramService(config).interactively_configure()
+
+    print('Telegram Configuration successfully updated!')
+
+
 def run_main(storage_path, skip_cert_verify=False,
              without_downloading_files=False):
     logging.basicConfig(
@@ -179,6 +189,7 @@ def run_main(storage_path, skip_cert_verify=False,
         pass
 
     mail_service = MailService(config)
+    tg_service = TelegramService(config)
     console_service = ConsoleService(config)
 
     try:
@@ -207,8 +218,8 @@ def run_main(storage_path, skip_cert_verify=False,
             console_service.notify_about_changes_in_moodle(
                 changed_courses_to_notify)
 
-            mail_service.notify_about_changes_in_moodle(
-                changed_courses_to_notify)
+            mail_service.notify_about_changes_in_moodle(changed_courses_to_notify)
+            tg_service.notify_about_changes_in_moodle(changed_courses_to_notify)
 
             moodle.recorder.notified(changed_courses_to_notify)
 
@@ -226,6 +237,7 @@ def run_main(storage_path, skip_cert_verify=False,
             sentry_sdk.capture_exception(e)
 
         mail_service.notify_about_error(str(e))
+        telegram_service.notify_about_error(str(e))
 
         logging.debug('Exception-Handling completed. Exiting...',
                       extra={'exception': e})
@@ -285,6 +297,11 @@ group.add_argument('--change-notification-mail', action='store_true',
                          ' receiving notifications via e-mail. It does not' +
                          ' affect the rest of the config.'))
 
+group.add_argument('--change-notification-telegram', action='store_true',
+                   help=('Activate/deactivate/change the settings for' +
+                         ' receiving notifications via Telegram. It does not' +
+                         ' affect the rest of the config.'))
+
 group.add_argument('--manage-database', action='store_true',
                    help=('This option lets you manage the offline database.' +
                          ' It allows you to delete entries from the database' +
@@ -334,6 +351,8 @@ elif args.new_token:
     run_new_token(storage_path, use_sso, skip_cert_verify)
 elif args.change_notification_mail:
     run_change_notification_mail(storage_path)
+elif args.change_notification_telegram:
+    run_change_notification_telegram(storage_path)
 elif args.manage_database:
     run_manage_database(storage_path)
 else:
