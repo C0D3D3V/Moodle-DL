@@ -2,8 +2,6 @@ import sys
 import logging
 import hashlib
 
-from electrum.plugins.coldcard import description
-
 from moodle_connector.request_helper import RequestHelper
 from state_recorder.course import Course
 from state_recorder.file import File
@@ -256,10 +254,11 @@ class ResultsHandler:
         for section in course_sections:
             section_name = section.get("name", "")
             section_modules = section.get("modules", [])
-            files += ResultsHandler._get_files_in_modules(section_name,
-                                                          section_modules,
-                                                          assignments,
-                                                          download_descriptions)
+            files += ResultsHandler._get_files_in_modules(
+                section_name,
+                section_modules,
+                assignments,
+                download_descriptions)
         return files
 
     @staticmethod
