@@ -1,9 +1,7 @@
 import sys
 import logging
 import hashlib
-
-from electrum.plugins.coldcard import description
-
+    
 from moodle_connector.request_helper import RequestHelper
 from state_recorder.course import Course
 from state_recorder.file import File
