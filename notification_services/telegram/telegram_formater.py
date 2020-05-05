@@ -24,7 +24,7 @@ def create_full_moodle_diff_message(changed_courses: [Course]) -> (str, {str: st
             else:
                 full_content += "\r\n+ Added: " + file.content_filename
 
-        return full_content
+    return full_content
 
 
 def create_full_error_message(details) -> (str, {str: str}):
