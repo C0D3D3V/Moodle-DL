@@ -5,7 +5,7 @@
 
 ### Features
 - Watch your Moodle account for any added or changed files in your enrolled courses.
-- Optionally get notified via mail about these changes.
+- Optionally get notified via mail or [Telegram](https://telegram.org/apps) about these changes.
 - Save yourself precious time through all these nice features.
 - Do not miss any files, if files are deleted online, they are still available offline.
 
@@ -49,6 +49,11 @@ If you run this program in mintty (MINGW or something similar), try running Pyth
     - Activate/deactivate/change the settings for receiving notifications via e-mail.
     - It does not affect the rest of the config.
     - It prints all information into the console.
+- `python main.py --change-notification-telegram`
+    - Activate/deactivate/change the settings for receiving notifications via Telegram.
+    - It does not affect the rest of the config.
+    - It prints all information into the console.
+    - Help with setting up Notifications via Telegram will be here soon
 - `python main.py --manage-database`
     - To manage the offline database.
     - It allows you to delete entries from the database that are no longer available locally so that they can be downloaded again.
