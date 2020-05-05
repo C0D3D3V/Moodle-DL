@@ -5,7 +5,8 @@ from utils import cutie
 from state_recorder.course import Course
 from notification_services.telegram.telegram_shooter import TelegramShooter
 from notification_services.notification_service import NotificationService
-from notification_services.telegram.telegram_formater import create_full_moodle_diff_message
+from notification_services.telegram.telegram_formater \
+    import create_full_moodle_diff_message
 
 
 class TelegramService(NotificationService):
@@ -30,10 +31,14 @@ class TelegramService(NotificationService):
                 print('Testing Telegram-Config...')
 
                 try:
-                    telegram_shooter = TelegramShooter(telegram_token, telegram_chatID)
-                    telegram_shooter.send("This is a Testmessage from Moodle Downloader!")
+                    telegram_shooter = TelegramShooter(
+                        telegram_token, telegram_chatID)
+                    telegram_shooter.send(
+                        "This is a Testmessage from Moodle Downloader!")
                 except BaseException as e:
-                    print('Error while sending the test message: %s' % (str(e)))
+                    print('Error while sending the test message: %s' %
+                          (str(e)))
+
                 else:
                     input(
                         'Please check if you received the Testmessage.' +
@@ -45,8 +50,9 @@ class TelegramService(NotificationService):
                 raw_send_error_msg = ''
                 while raw_send_error_msg not in ['y', 'n']:
                     raw_send_error_msg = input(
-                        'Do you want to also get error reports sent in telegram?' +
-                        ' [y/n]   ')
+                        'Do you want to also get error reports sent in' +
+                        '  telegram? [y/n]   ')
+
                 do_send_error_msg = raw_send_error_msg == 'y'
 
                 telegram_cfg = {
@@ -77,7 +83,8 @@ class TelegramService(NotificationService):
 
         try:
             logging.debug('Sending Notification via Telegram...')
-            telegram_shooter = TelegramShooter(telegram_cfg['token'], telegram_cfg['chat_id'])
+            telegram_shooter = TelegramShooter(
+                telegram_cfg['token'], telegram_cfg['chat_id'])
             telegram_shooter.send(message_content)
         except BaseException as e:
             error_formatted = traceback.format_exc()
@@ -99,7 +106,9 @@ class TelegramService(NotificationService):
         for course in changes:
             diff_count += len(course.files)
 
-        self._send_message(("%s new Changes in the Moodle courses!\r\n" % (diff_count)) + message_content)
+        self._send_message(
+            ("%s new Changes in the Moodle courses!\r\n" % (diff_count))
+            + message_content)
 
     def notify_about_error(self, error_description: str):
         """
