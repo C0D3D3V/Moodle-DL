@@ -9,18 +9,17 @@ import readline  # needed for arrowkey support in inputs
 import traceback
 import sentry_sdk
 
-from notification_services.telegram import telegram_service
-from notification_services.telegram.telegram_service import TelegramService
 from utils import cutie
 from utils.logger import Log
 from config_service.config_helper import ConfigHelper
 from config_service.config_service import ConfigService
 from state_recorder.offline_service import OfflineService
 from moodle_connector.moodle_service import MoodleService
-from download_service.fake_download_service import FakeDownloadService
 from download_service.download_service import DownloadService
 from notification_services.mail.mail_service import MailService
+from download_service.fake_download_service import FakeDownloadService
 from notification_services.console.console_service import ConsoleService
+from notification_services.telegram.telegram_service import TelegramService
 
 
 class ReRaiseOnError(logging.StreamHandler):
