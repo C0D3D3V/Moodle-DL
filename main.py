@@ -215,12 +215,12 @@ def run_main(storage_path, skip_cert_verify=False,
         changed_courses_to_notify = moodle.recorder.changes_to_notify()
 
         if (len(changed_courses_to_notify) > 0):
-            console_service.notify_about_changes_in_moodle(
-                changed_courses_to_notify)
-
-            mail_service.notify_about_changes_in_moodle(
-                changed_courses_to_notify)
-            tg_service.notify_about_changes_in_moodle(changed_courses_to_notify)
+            console_service.\
+                notify_about_changes_in_moodle(changed_courses_to_notify)
+            mail_service\
+                .notify_about_changes_in_moodle(changed_courses_to_notify)
+            tg_service\
+                .notify_about_changes_in_moodle(changed_courses_to_notify)
 
             moodle.recorder.notified(changed_courses_to_notify)
 
