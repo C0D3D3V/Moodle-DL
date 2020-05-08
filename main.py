@@ -5,9 +5,15 @@ import os
 import sys
 import logging
 import argparse
-import readline  # needed for arrowkey support in inputs
 import traceback
 import sentry_sdk
+
+try:
+    # In unix readline needs to be loaded so that
+    # arrowkeys work in inputs
+    import readline
+except ImportError:
+    pass
 
 from utils import cutie
 from utils.logger import Log
