@@ -166,7 +166,7 @@ class URLTarget(object):
 
         self.file.saved_to = self._rename_if_exists(self.file.saved_to)
 
-        description = open(self.file.saved_to, 'w+')
+        description = open(self.file.saved_to, 'w+', encoding='utf-8')
         to_save = ""
         if(self.file.text_content is not None):
             to_save = tomd.convert(
