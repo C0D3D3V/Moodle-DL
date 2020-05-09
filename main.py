@@ -10,8 +10,8 @@ import sentry_sdk
 
 try:
     # In unix readline needs to be loaded so that
-    # arrowkeys work in inputs
-    import readline
+    # arrowkeys work in input
+    import readline  # noqa: F401
 except ImportError:
     pass
 
