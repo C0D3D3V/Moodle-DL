@@ -90,18 +90,6 @@ class StateRecorder:
                 conn.commit()
 
             if (current_version == 2):
-                # Add file_id Column
-                sql_create_file_id_column = """ALTER TABLE files
-                ADD COLUMN file_id INTEGER PRIMARY KEY AUTOINCREMENT;
-                """
-                c.execute(sql_create_file_id_column)
-
-                # Add old_file_id Column
-                sql_create_old_file_id_column = """ALTER TABLE files
-                ADD COLUMN old_file_id integer NULL;
-                """
-                c.execute(sql_create_old_file_id_column)
-
                 # Modified gets a new meaning
                 sql_remove_modified_entries = """UPDATE files
                     SET modified = 0
@@ -111,6 +99,63 @@ class StateRecorder:
 
                 c.execute("PRAGMA user_version = 3;")
                 current_version = 3
+
+                conn.commit()
+
+            if (current_version == 3):
+                # Add file_id Column
+                sql_create_new_files_table_1 = """
+                ALTER TABLE files
+                RENAME TO old_files;
+                """
+
+                sql_create_new_files_table_2 = """
+                CREATE TABLE IF NOT EXISTS files (
+                file_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                course_id integer NOT NULL,
+                course_fullname integer NOT NULL,
+                module_id integer NOT NULL,
+                section_name text NOT NULL,
+                module_name text NOT NULL,
+                content_filepath text NOT NULL,
+                content_filename text NOT NULL,
+                content_fileurl text NOT NULL,
+                content_filesize integer NOT NULL,
+                content_timemodified integer NOT NULL,
+                module_modname text NOT NULL,
+                content_type text NOT NULL,
+                content_isexternalfile text NOT NULL,
+                saved_to text NOT NULL,
+                hash text NULL,
+                time_stamp integer NOT NULL,
+                old_file_id integer NULL,
+                modified integer DEFAULT 0 NOT NULL,
+                moved integer DEFAULT 0 NOT NULL,
+                deleted integer DEFAULT 0 NOT NULL,
+                notified integer DEFAULT 0 NOT NULL
+                );"""
+
+                sql_create_new_files_table_3 = """
+                INSERT INTO files
+                (course_id, course_fullname, module_id, section_name,
+                 module_name, content_filepath, content_filename,
+                 content_fileurl, content_filesize, content_timemodified,
+                 module_modname, content_type, content_isexternalfile,
+                 saved_to, time_stamp, modified, deleted, notified, hash,
+                 moved)
+                SELECT * FROM old_files
+                """
+
+                sql_create_new_files_table_4 = """
+                DROP TABLE old_files;
+                """
+                c.execute(sql_create_new_files_table_1)
+                c.execute(sql_create_new_files_table_2)
+                c.execute(sql_create_new_files_table_3)
+                c.execute(sql_create_new_files_table_4)
+
+                c.execute("PRAGMA user_version = 4;")
+                current_version = 4
 
                 conn.commit()
 
