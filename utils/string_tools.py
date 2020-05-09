@@ -30,6 +30,8 @@ class StringTools:
             name = name.replace('>', ')')
             name = name.replace('|', '-')
             name = name.replace('"', '')
+            name = name.replace('\n', ' ')
+            name = name.replace('\r', ' ')
             name = name.rstrip('. ')
 
         return name
