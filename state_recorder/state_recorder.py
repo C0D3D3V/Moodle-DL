@@ -439,6 +439,18 @@ class StateRecorder:
 
             for file_row in file_rows:
                 notify_file = File.fromRow(file_row)
+                if(notify_file.modified or notify_file.moved):
+                    # add reference to new file
+
+                    cursor.execute("""SELECT *
+                        FROM files
+                        WHERE old_file_id = ?;""",
+                                   (notify_file.file_id,))
+
+                    file_row = cursor.fetchone()
+                    if(file_row is not None):
+                        notify_file.new_file = File.fromRow(file_row)
+
                 course.files.append(notify_file)
 
             changed_courses.append(course)

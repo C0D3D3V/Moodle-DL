@@ -21,7 +21,11 @@ def create_full_moodle_diff_message(changed_courses: [Course]) -> str:
             if file.modified:
                 full_content += "\r\n* Modified: " + file.content_filename
             if file.moved:
-                full_content += "\r\n* Moved: " + file.content_filename
+                if(file.new_file is not None):
+                    full_content += ("\r\n* Moved: " +
+                                     file.new_file.content_filename)
+                else:
+                    full_content += "\r\n* Moved: " + file.content_filename
             elif file.deleted:
                 full_content += "\r\n- Deleted: " + file.content_filename
             else:

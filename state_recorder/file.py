@@ -64,6 +64,7 @@ class File:
 
         # To manage the corresponding moved or changed files
         self.old_file = None
+        self.new_file = None
 
         self.old_file_id = old_file_id
 

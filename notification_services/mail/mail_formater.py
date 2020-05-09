@@ -231,9 +231,16 @@ def create_full_moodle_diff_mail(changed_courses: [Course]) -> (str,
                     file_name=file.saved_to
                 )
             elif file.moved:
-                inner_content += moodle_moved_box.substitute(
-                    file_name=file.saved_to
-                )
+                if(file.new_file is not None):
+                    inner_content += moodle_moved_box.substitute(
+                        file_name=(file.saved_to + " ==> " +
+                                   file.new_file.saved_to)
+                    )
+                else:
+                    inner_content += moodle_moved_box.substitute(
+                        file_name=file.saved_to
+                    )
+
             elif file.deleted:
                 inner_content += moodle_deleted_box.substitute(
                     file_name=file.saved_to

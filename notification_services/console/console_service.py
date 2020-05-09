@@ -45,8 +45,13 @@ class ConsoleService(NotificationService):
                           file.saved_to + RESET_SEQ)
 
                 elif file.moved:
-                    print(COLOR_SEQ % CYAN + '<->\t' +
-                          file.saved_to + RESET_SEQ)
+                    if (file.new_file is not None):
+                        print(COLOR_SEQ % CYAN + '<->\t' +
+                              (file.saved_to + RESET_SEQ + COLOR_SEQ % GREEN +
+                               " ==> " + file.new_file.saved_to + RESET_SEQ))
+                    else:
+                        print(COLOR_SEQ % CYAN + '<->\t' +
+                              file.saved_to + RESET_SEQ)
 
                 elif file.deleted:
                     print(COLOR_SEQ % MAGENTA + '-\t' +
