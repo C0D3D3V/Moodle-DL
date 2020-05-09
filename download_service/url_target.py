@@ -137,7 +137,7 @@ class URLTarget(object):
 
         self.file.saved_to = self._rename_if_exists(self.file.saved_to)
 
-        with open(self.file.saved_to, 'w+') as shortcut:
+        with open(self.file.saved_to, 'w+', encoding='utf-8') as shortcut:
             if os.name == "nt":
                 shortcut.write("[InternetShortcut]" + os.linesep)
                 shortcut.write("URL=" + self.file.content_fileurl + os.linesep)
@@ -179,11 +179,18 @@ class URLTarget(object):
         description.close()
 
         if(to_save == ""):
-            os.remove(self.file.saved_to)
+            try:
+                os.remove(self.file.saved_to)
 
-        self.file.time_stamp = int(time.time())
+                self.file.time_stamp = int(time.time())
 
-        self.success = True
+                self.success = True
+            except Exception as e:
+                self.error = traceback.format_exc() + "\nError:" + str(e)
+        else:
+            self.file.time_stamp = int(time.time())
+
+            self.success = True
 
     def download(self, thread_id: int):
         """
@@ -198,6 +205,9 @@ class URLTarget(object):
 
         try:
             self._create_dir(self.destination)
+
+            if (self.file.moved):
+                self.try_move_file()
 
             # if it is a Description we have to create a descripton file
             # instead of downloading it
@@ -226,10 +236,18 @@ class URLTarget(object):
 
         except Exception as e:
             self.error = traceback.format_exc() + "\nError:" + str(e)
-            if (self.downloaded == 0 and
-                # remove touched file
-                    os.path.getsize(self.file.saved_to) == 0):
-                os.remove(self.file.saved_to)
+            filesize = 0
+            try:
+                filesize = os.path.getsize(self.file.saved_to)
+            except Exception:
+                pass
+
+            if (self.downloaded == 0 and filesize == 0):
+                try:
+                    # remove touched file
+                    os.remove(self.file.saved_to)
+                except Exception:
+                    pass
             else:
                 # Subtract the already downloaded content in case of an error.
                 self.thread_report[self.thread_id]['total'] -= self.downloaded
