@@ -42,6 +42,11 @@ class File:
         else:
             self.modified = False
 
+        if (moved == 1):
+            self.moved = True
+        else:
+            self.moved = False
+
         if (deleted == 1):
             self.deleted = True
         else:
@@ -51,11 +56,6 @@ class File:
             self.notified = True
         else:
             self.notified = False
-
-        if (moved == 1):
-            self.moved = True
-        else:
-            self.moved = False
 
         self.hash = hash
 
@@ -69,6 +69,7 @@ class File:
 
     def getMap(self) -> {str: str}:
         return {
+            'file_id': self.file_id,
             'module_id': self.module_id,
             'section_name': self.section_name,
             'module_name': self.module_name,
@@ -83,9 +84,9 @@ class File:
             'saved_to': self.saved_to,
             'time_stamp': self.time_stamp,
             'modified': 1 if self.modified else 0,
+            'moved': 1 if self.moved else 0,
             'deleted': 1 if self.deleted else 0,
             'notified': 1 if self.notified else 0,
-            'moved': 1 if self.moved else 0,
             'hash': self.hash,
             'old_file_id': self.old_file_id
         }
@@ -94,6 +95,7 @@ class File:
     def fromRow(row):
 
         return File(
+            file_id=row['file_id'],
             module_id=row['module_id'],
             section_name=row['section_name'],
             module_name=row['module_name'],
@@ -108,13 +110,28 @@ class File:
             saved_to=row['saved_to'],
             time_stamp=row['time_stamp'],
             modified=row['modified'],
+            moved=row['moved'],
             deleted=row['deleted'],
             notified=row['notified'],
-            moved=row['moved'],
             hash=row['hash'],
-            file_id=row['file_id'],
             old_file_id=row['old_file_id']
         )
+
+    INSERT = """INSERT INTO files
+            (course_id, course_fullname, module_id, section_name,
+            module_name, content_filepath, content_filename,
+            content_fileurl, content_filesize, content_timemodified,
+            module_modname, content_type, content_isexternalfile,
+            saved_to, time_stamp, modified, moved, deleted, notified, 
+            hash, old_file_id)
+            VALUES (:course_id, :course_fullname, :module_id,
+            :section_name, :module_name, :content_filepath,
+            :content_filename, :content_fileurl, :content_filesize,
+            :content_timemodified, :module_modname, :content_type,
+            :content_isexternalfile, :saved_to, :time_stamp,
+            :modified, :moved, :deleted, :notified,  :hash,
+            :old_file_id);
+            """
 
     def __str__(self):
         message = "File ("
@@ -134,9 +151,9 @@ class File:
         message += ', saved_to: %s' % (self.saved_to)
         message += ', time_stamp: %s' % (self.time_stamp)
         message += ', modified: %s' % (self.modified)
+        message += ', moved: %s' % (self.moved)
         message += ', deleted: %s' % (self.deleted)
         message += ', notified: %s' % (self.notified)
-        message += ', moved: %s' % (self.moved)
         message += ', hash: %s' % (self.hash)
 
         message += ")"
