@@ -153,7 +153,7 @@ class URLTarget(object):
     def set_path(self):
         """
         Sets the path where a file should be created.
-        It takes into account which file type is involved. 
+        It takes into account which file type is involved.
         An empty temporary file is created which may need to be cleaned up.
         """
 

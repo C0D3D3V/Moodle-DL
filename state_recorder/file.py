@@ -6,7 +6,11 @@ class File:
                  content_type: str, content_isexternalfile: bool,
                  saved_to: str = "", time_stamp: int = 0,
                  modified: int = 0, deleted: int = 0,
-                 notified: int = 0, moved: int = 0, hash: str = None):
+                 notified: int = 0, moved: int = 0,
+                 hash: str = None, file_id: int = None,
+                 old_file_id: int = None):
+
+        self.file_id = file_id
 
         self.module_id = module_id
         self.section_name = section_name
@@ -61,6 +65,8 @@ class File:
         # To manage the corresponding moved or changed files
         self.old_file = None
 
+        self.old_file_id = old_file_id
+
     def getMap(self) -> {str: str}:
         return {
             'module_id': self.module_id,
@@ -80,7 +86,8 @@ class File:
             'deleted': 1 if self.deleted else 0,
             'notified': 1 if self.notified else 0,
             'moved': 1 if self.moved else 0,
-            'hash': self.hash
+            'hash': self.hash,
+            'old_file_id': self.old_file_id
         }
 
     @staticmethod
@@ -104,7 +111,9 @@ class File:
             deleted=row['deleted'],
             notified=row['notified'],
             moved=row['moved'],
-            hash=row['hash']
+            hash=row['hash'],
+            file_id=row['file_id'],
+            old_file_id=row['old_file_id']
         )
 
     def __str__(self):

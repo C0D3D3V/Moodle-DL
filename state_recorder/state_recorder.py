@@ -79,21 +79,39 @@ class StateRecorder:
                 conn.commit()
 
             if (current_version == 1):
-                # Add Moved Column
+                # Add moved Column
                 sql_create_moved_column = """ALTER TABLE files
                 ADD COLUMN moved integer DEFAULT 0 NOT NULL;
                 """
                 c.execute(sql_create_moved_column)
 
+                c.execute("PRAGMA user_version = 2;")
+                current_version = 2
+                conn.commit()
+
+            if (current_version == 2):
+                # Add file_id Column
+                sql_create_file_id_column = """ALTER TABLE files
+                ADD COLUMN file_id INTEGER PRIMARY KEY AUTOINCREMENT;
+                """
+                c.execute(sql_create_file_id_column)
+
+                # Add old_file_id Column
+                sql_create_old_file_id_column = """ALTER TABLE files
+                ADD COLUMN old_file_id integer NULL;
+                """
+                c.execute(sql_create_old_file_id_column)
+
                 # Modified gets a new meaning
-                sql_create_moved_column = """UPDATE files
+                sql_remove_modified_entries = """UPDATE files
                     SET modified = 0
                     WHERE modified = 1;
                 """
-                c.execute(sql_create_moved_column)
+                c.execute(sql_remove_modified_entries)
 
-                c.execute("PRAGMA user_version = 2;")
-                current_version = 2
+                c.execute("PRAGMA user_version = 3;")
+                current_version = 3
+
                 conn.commit()
 
             conn.commit()
@@ -168,7 +186,11 @@ class StateRecorder:
                             course_row['course_fullname'], [])
 
             cursor.execute("""SELECT *
-                FROM files WHERE deleted = 0 AND course_id = ?;""",
+                FROM files
+                WHERE deleted = 0
+                AND modified = 0
+                AND moved = 0
+                AND course_id = ?;""",
                            (course.id,))
 
             file_rows = cursor.fetchall()
@@ -411,6 +433,8 @@ class StateRecorder:
             self.delete_file(file, course_id, course_fullname)
         elif (file.modified):
             self.modifie_file(file, course_id, course_fullname)
+        elif (file.moved):
+            self.move_file(file, course_id, course_fullname)
         else:
             self.new_file(file, course_id, course_fullname)
 
@@ -520,14 +544,38 @@ class StateRecorder:
         conn.commit()
         conn.close()
 
-    def modifie_file(self, file: File, course_id: int, course_fullname: str):
+    def move_file(self, file: File, course_id: int, course_fullname: str):
         conn = sqlite3.connect(self.db_file)
         cursor = conn.cursor()
 
-        data = {'course_id': course_id, 'course_fullname': course_fullname}
-        data.update(file.getMap())
+        data_new = {'course_id': course_id, 'course_fullname': course_fullname}
+        data_new.update(file.getMap())
 
-        cursor.execute("""UPDATE files
+        if (file.old_file is not None):
+            # insert a new file,
+            # but it is already notified because the same file already exists
+            # as moved
+            data_new.update({'old_file_id': file.old_file.file_id})
+            cursor.execute("""INSERT INTO files
+                    (course_id, course_fullname, module_id, section_name,
+                    module_name, content_filepath, content_filename,
+                    content_fileurl, content_filesize, content_timemodified,
+                    module_modname, content_type, content_isexternalfile,
+                    saved_to, time_stamp, modified, deleted, notified, moved,
+                    hash, old_file_id)
+                    VALUES (:course_id, :course_fullname, :module_id,
+                    :section_name, :module_name, :content_filepath,
+                    :content_filename, :content_fileurl, :content_filesize,
+                    :content_timemodified, :module_modname, :content_type,
+                    :content_isexternalfile, :saved_to, :time_stamp,
+                    0, 0, 1, 0, :hash, :old_file_id);
+                    """, data_new)
+
+            data_old = {'course_id': course_id,
+                        'course_fullname': course_fullname}
+            data_old.update(file.old_file.getMap())
+
+            cursor.execute("""UPDATE files
             SET notified = 0, modified = 1, time_stamp = :time_stamp,
             saved_to = :saved_to, content_fileurl = :content_fileurl,
             content_filesize = :content_filesize,
@@ -539,7 +587,91 @@ class StateRecorder:
             AND content_filepath = :content_filepath
             AND content_filename = :content_filename
             AND deleted = 0;
-            """, data)
+            """, data_old)
+        else:
+            # this should never happen, but the old file is not saved in the
+            # file descriptor, so we need to inform about the new file
+            # notified = 0
+            cursor.execute("""INSERT INTO files
+                    (course_id, course_fullname, module_id, section_name,
+                    module_name, content_filepath, content_filename,
+                    content_fileurl, content_filesize, content_timemodified,
+                    module_modname, content_type, content_isexternalfile,
+                    saved_to, time_stamp, modified, deleted, notified, moved,
+                    hash)
+                    VALUES (:course_id, :course_fullname, :module_id,
+                    :section_name, :module_name, :content_filepath,
+                    :content_filename, :content_fileurl, :content_filesize,
+                    :content_timemodified, :module_modname, :content_type,
+                    :content_isexternalfile, :saved_to, :time_stamp,
+                    0, 0, 0, 0, :hash);
+                    """, data_new)
+
+        conn.commit()
+        conn.close()
+
+    def modifie_file(self, file: File, course_id: int, course_fullname: str):
+        conn = sqlite3.connect(self.db_file)
+        cursor = conn.cursor()
+
+        data_new = {'course_id': course_id, 'course_fullname': course_fullname}
+        data_new.update(file.getMap())
+
+        if (file.old_file is not None):
+            # insert a new file,
+            # but it is already notified because the same file already exists
+            # as modified
+            data_new.update({'old_file_id': file.old_file.file_id})
+            cursor.execute("""INSERT INTO files
+                    (course_id, course_fullname, module_id, section_name,
+                    module_name, content_filepath, content_filename,
+                    content_fileurl, content_filesize, content_timemodified,
+                    module_modname, content_type, content_isexternalfile,
+                    saved_to, time_stamp, modified, deleted, notified, moved,
+                    hash, old_file_id)
+                    VALUES (:course_id, :course_fullname, :module_id,
+                    :section_name, :module_name, :content_filepath,
+                    :content_filename, :content_fileurl, :content_filesize,
+                    :content_timemodified, :module_modname, :content_type,
+                    :content_isexternalfile, :saved_to, :time_stamp,
+                    0, 0, 1, 0, :hash, :old_file_id);
+                    """, data_new)
+
+            data_old = {'course_id': course_id,
+                        'course_fullname': course_fullname}
+            data_old.update(file.old_file.getMap())
+
+            cursor.execute("""UPDATE files
+            SET notified = 0, modified = 1, time_stamp = :time_stamp,
+            saved_to = :saved_to, content_fileurl = :content_fileurl,
+            content_filesize = :content_filesize,
+            content_timemodified = :content_timemodified,
+            module_name = :module_name, hash = :hash
+            WHERE module_id = :module_id AND course_id = :course_id
+            AND course_fullname = :course_fullname
+            AND section_name = :section_name
+            AND content_filepath = :content_filepath
+            AND content_filename = :content_filename
+            AND deleted = 0;
+            """, data_old)
+        else:
+            # this should never happen, but the old file is not saved in the
+            # file descriptor, so we need to inform about the new file
+            # notified = 0
+            cursor.execute("""INSERT INTO files
+                    (course_id, course_fullname, module_id, section_name,
+                    module_name, content_filepath, content_filename,
+                    content_fileurl, content_filesize, content_timemodified,
+                    module_modname, content_type, content_isexternalfile,
+                    saved_to, time_stamp, modified, deleted, notified, moved,
+                    hash)
+                    VALUES (:course_id, :course_fullname, :module_id,
+                    :section_name, :module_name, :content_filepath,
+                    :content_filename, :content_fileurl, :content_filesize,
+                    :content_timemodified, :module_modname, :content_type,
+                    :content_isexternalfile, :saved_to, :time_stamp,
+                    0, 0, 0, 0, :hash);
+                    """, data_new)
 
         conn.commit()
         conn.close()
