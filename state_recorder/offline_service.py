@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 from utils import cutie
 from state_recorder.file import File
+from moodle_connector.moodle_service import MoodleService
 from config_service.config_helper import ConfigHelper
 from state_recorder.state_recorder import StateRecorder
 from moodle_connector.results_handler import ResultsHandler
@@ -23,6 +24,16 @@ class OfflineService:
 
         stored_files = self.state_recorder.get_stored_files()
 
+        download_course_ids = self.config_helper.get_download_course_ids()
+        dont_download_course_ids = self.config_helper\
+            .get_dont_download_course_ids()
+        download_submissions = self.config_helper.get_download_submissions()
+        download_descriptions = self.config_helper.get_download_descriptions()
+
+        stored_files = MoodleService._filter_courses(
+            stored_files, download_course_ids, dont_download_course_ids,
+            download_submissions, download_descriptions)
+
         if(len(stored_files) <= 0):
             return
 
@@ -30,17 +41,9 @@ class OfflineService:
               " selectively remove file entries from the database so" +
               " that these files can be downloaded again.")
 
-        download_course_ids = self.config_helper.get_download_course_ids()
-        dont_download_course_ids = self.config_helper\
-            .get_dont_download_course_ids()
-
         course_options = []
         courses = []
         for course in stored_files:
-            if (not ResultsHandler._should_download_course(
-                    course.id, download_course_ids, dont_download_course_ids)):
-                continue
-
             for course_file in course.files:
                 if(not os.path.exists(course_file.saved_to)):
                     course_options.append(COLOR_SEQ %
