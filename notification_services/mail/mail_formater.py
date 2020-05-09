@@ -230,7 +230,7 @@ def create_full_moodle_diff_mail(changed_courses: [Course]) -> (str,
                 inner_content += moodle_modified_box.substitute(
                     file_name=file.saved_to
                 )
-            elif file.modified:
+            elif file.moved:
                 inner_content += moodle_moved_box.substitute(
                     file_name=file.saved_to
                 )
