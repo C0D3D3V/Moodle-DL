@@ -52,6 +52,7 @@ def run_init(storage_path, use_sso=False, skip_cert_verify=False):
             sys.exit(0)
 
     MailService(config).interactively_configure()
+    TelegramService(config).interactively_configure()
 
     do_sentry = cutie.prompt_yes_or_no(
         'Do you want to configure Error Reporting via Sentry?')
