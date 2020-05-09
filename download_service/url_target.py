@@ -1,6 +1,7 @@
 import os
 import ssl
 import time
+import shutil
 import urllib
 import traceback
 import threading
@@ -129,13 +130,6 @@ class URLTarget(object):
         Because shortcuts are different under Windows and Unix,
         both cases are covered here.
         """
-        self.file.saved_to = str(Path(
-            self.destination) / (self.filename + ".desktop"))
-        if os.name == "nt":
-            self.file.saved_to = str(Path(
-                self.destination) / (self.filename + ".URL"))
-
-        self.file.saved_to = self._rename_if_exists(self.file.saved_to)
 
         with open(self.file.saved_to, 'w+', encoding='utf-8') as shortcut:
             if os.name == "nt":
@@ -156,16 +150,37 @@ class URLTarget(object):
 
         self.success = True
 
+    def set_path(self):
+        """
+        Sets the path where a file should be created.
+        It takes into account which file type is involved. 
+        An empty temporary file is created which may need to be cleaned up.
+        """
+
+        if (self.file.content_type == 'description'):
+            self.file.saved_to = str(Path(
+                self.destination) / (self.filename + ".md"))
+
+            self.file.saved_to = self._rename_if_exists(self.file.saved_to)
+
+        elif (self.file.module_modname == 'url'):
+            self.file.saved_to = str(Path(
+                self.destination) / (self.filename + ".desktop"))
+            if os.name == "nt":
+                self.file.saved_to = str(Path(
+                    self.destination) / (self.filename + ".URL"))
+
+            self.file.saved_to = self._rename_if_exists(self.file.saved_to)
+
+        else:   # normal path
+            self.file.saved_to = str(Path(self.destination) / self.filename)
+
+            self.file.saved_to = self._rename_if_exists(self.file.saved_to)
+
     def create_description(self):
         """
         Creates a Description file
         """
-
-        self.file.saved_to = str(Path(
-            self.destination) / (self.filename + ".md"))
-
-        self.file.saved_to = self._rename_if_exists(self.file.saved_to)
-
         description = open(self.file.saved_to, 'w+', encoding='utf-8')
         to_save = ""
         if(self.file.text_content is not None):
@@ -192,6 +207,42 @@ class URLTarget(object):
 
             self.success = True
 
+    def try_move_file(self) -> bool:
+        """
+        It will try to move the old file to the new location.
+        If it worked it returns True. Else the file needs to be redownloaded.
+        """
+
+        old_path = self.file.old_file.saved_to
+        if (not os.path.exists(old_path)):
+            return False
+
+        try:
+            shutil.move(old_path, self.file.saved_to)
+            self.file.time_stamp = int(time.time())
+            self.success = True
+            return True
+        except FileExistsError:
+            # On Windows, the temporary file must be deleted first.
+            self.lock.acquire()
+
+            try:
+                os.remove(self.file.saved_to)
+                shutil.move(old_path, self.file.saved_to)
+                self.file.time_stamp = int(time.time())
+                self.success = True
+
+                self.lock.release()
+                return True
+            except Exception:
+                pass
+
+            self.lock.release()
+        except Exception:
+            pass
+
+        return False
+
     def download(self, thread_id: int):
         """
         Downloads a file
@@ -205,9 +256,13 @@ class URLTarget(object):
 
         try:
             self._create_dir(self.destination)
+            # create a empty destination file
+            self.set_path()
 
+            # Try to move the old file if it still exists
             if (self.file.moved):
-                self.try_move_file()
+                if(self.try_move_file()):
+                    return self.success
 
             # if it is a Description we have to create a descripton file
             # instead of downloading it
@@ -220,10 +275,6 @@ class URLTarget(object):
             if (self.file.module_modname == 'url'):
                 self.create_shortcut()
                 return self.success
-
-            self.file.saved_to = str(Path(self.destination) / self.filename)
-
-            self.file.saved_to = self._rename_if_exists(self.file.saved_to)
 
             self.urlretrieve(self._add_token_to_url(
                 self.file.content_fileurl),
