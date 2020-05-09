@@ -617,7 +617,7 @@ class StateRecorder:
             cursor.execute("""UPDATE files
             SET notified = 0, modified = 1,
             saved_to = :saved_to
-            WHERE file_id = :file:id;
+            WHERE file_id = :file_id;
             """, data_old)
         else:
             # this should never happen, but the old file is not saved in the
