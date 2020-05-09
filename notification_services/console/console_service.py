@@ -44,6 +44,10 @@ class ConsoleService(NotificationService):
                     print(COLOR_SEQ % YELLOW + '≠\t' +
                           file.saved_to + RESET_SEQ)
 
+                elif file.moved:
+                    print(COLOR_SEQ % CYAN + '<->\t' +
+                          file.saved_to + RESET_SEQ)
+
                 elif file.deleted:
                     print(COLOR_SEQ % MAGENTA + '-\t' +
                           file.saved_to + RESET_SEQ)

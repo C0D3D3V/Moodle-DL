@@ -5,8 +5,8 @@ class File:
                  content_timemodified: int, module_modname: str,
                  content_type: str, content_isexternalfile: bool,
                  saved_to: str = "", time_stamp: int = 0,
-                 modified: int = 0, deleted: int = 0,
-                 notified: int = 0, moved: int = 0,
+                 modified: int = 0, moved: int = 0, deleted: int = 0,
+                 notified: int = 0,
                  hash: str = None, file_id: int = None,
                  old_file_id: int = None):
 
@@ -122,7 +122,7 @@ class File:
             module_name, content_filepath, content_filename,
             content_fileurl, content_filesize, content_timemodified,
             module_modname, content_type, content_isexternalfile,
-            saved_to, time_stamp, modified, moved, deleted, notified, 
+            saved_to, time_stamp, modified, moved, deleted, notified,
             hash, old_file_id)
             VALUES (:course_id, :course_fullname, :module_id,
             :section_name, :module_name, :content_filepath,

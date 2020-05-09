@@ -142,6 +142,21 @@ moodle_modified_box = Template('''
     </tr>
 ''')
 
+moodle_moved_box = Template('''
+    <tr>
+        <td style="padding-bottom: 10px; color: #7d878d; font-size: 14px;
+        font-family: 'Segoe UI', 'Calibri', 'Lucida Grande', Arial,
+        sans-serif;">
+            <->
+        </td>
+        <td style="padding-bottom: 10px; color: #7d878d; font-size: 16px;
+        font-family: 'Segoe UI', 'Calibri', 'Lucida Grande', Arial,
+        sans-serif;">
+            ${file_name}
+        </td>
+    </tr>
+''')
+
 moodle_deleted_box = Template('''
     <tr>
         <td style="padding-bottom: 10px; color: #7d878d; font-size: 14px;
@@ -213,6 +228,10 @@ def create_full_moodle_diff_mail(changed_courses: [Course]) -> (str,
 
             if file.modified:
                 inner_content += moodle_modified_box.substitute(
+                    file_name=file.saved_to
+                )
+            elif file.modified:
+                inner_content += moodle_moved_box.substitute(
                     file_name=file.saved_to
                 )
             elif file.deleted:
