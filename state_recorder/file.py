@@ -58,6 +58,9 @@ class File:
         # For Textlable
         self.text_content = None
 
+        # To manage the corresponding moved or changed files
+        self.old_file = None
+
     def getMap(self) -> {str: str}:
         return {
             'module_id': self.module_id,

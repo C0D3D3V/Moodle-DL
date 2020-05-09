@@ -231,6 +231,7 @@ class StateRecorder:
                     if(self.__files_are_diffrent(matching_file, stored_file)):
                         # file is modified
                         matching_file.modified = True
+                        matching_file.old_file = stored_file
                         changed_course.files.append(matching_file)
 
                     continue
@@ -252,6 +253,7 @@ class StateRecorder:
                     changed_course.files.append(stored_file)
                 else:
                     matching_file.moved = True
+                    matching_file.old_file = stored_file
                     changed_course.files.append(matching_file)
 
             if (len(changed_course.files) > 0):
