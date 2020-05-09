@@ -6,7 +6,6 @@ from state_recorder.file import File
 from moodle_connector.moodle_service import MoodleService
 from config_service.config_helper import ConfigHelper
 from state_recorder.state_recorder import StateRecorder
-from moodle_connector.results_handler import ResultsHandler
 
 
 class OfflineService:
