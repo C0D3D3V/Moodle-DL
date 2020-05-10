@@ -17,4 +17,3 @@ class TelegramShooter:
         request = requests.post('https://api.telegram.org/bot' +
                                 self.telegram_token + '/sendMessage',
                                 json=payload)
-        print(request.text)

@@ -20,7 +20,7 @@ def create_full_moodle_diff_message(changed_courses: [Course]) -> str:
                         " But it's to much text for this message.</b>")
             if file.modified:
                 full_content += "\r\n* Modified: " + file.content_filename
-            if file.moved:
+            elif file.moved:
                 if(file.new_file is not None):
                     full_content += ("\r\n* Moved: " +
                                      file.new_file.content_filename)
