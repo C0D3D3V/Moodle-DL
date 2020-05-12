@@ -30,7 +30,10 @@ class MailService(NotificationService):
                 sender = input('E-Mail-Address of the Sender:   ')
                 server_host = input('Host of the SMTP-Server:   ')
                 server_port = input(
-                    'Port of the SMTP-Server [STARTTLS, mostly 587]:   ')
+                    'Port of the SMTP-Server [STARTTLS, default 587]:   ')
+                if(server_port == ""):
+                    print("Using default port 587!")
+                    server_port = "587"
                 username = input('Username for the SMTP-Server:   ')
                 password = getpass(
                     'Password for the SMTP-Server [no output]:   ')
