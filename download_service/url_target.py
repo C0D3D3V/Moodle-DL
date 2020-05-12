@@ -163,6 +163,7 @@ class URLTarget(object):
 
         try:
             shutil.move(old_path, new_path)
+            self.file.old_file.saved_to = new_path
         except Exception:
             self.lock.release()
             return False
