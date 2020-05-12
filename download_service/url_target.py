@@ -124,6 +124,52 @@ class URLTarget(object):
 
         return new_path
 
+    def try_rename_old_file(self) -> bool:
+        """
+        This tries to rename an existing modified file.
+        It will add the file name extension '_old' if possible.
+        On success it returns True
+        """
+        if (self.file.old_file is None):
+            return False
+
+        old_path = self.file.old_file.saved_to
+        if (not os.path.exists(old_path)):
+            return False
+
+        count = 1
+        content_filename = os.path.basename(old_path)
+        filename, file_extension = os.path.splitext(
+            content_filename)
+        content_filename = "%s_old%s" % (filename, file_extension)
+
+        destination = os.path.dirname(old_path)
+        new_path = str(Path(destination) / content_filename)
+
+        # this is some kind of raise condition
+        # Even though it should hardly ever happen,
+        # it is possible that threads try to create the same file
+        self.lock.acquire()
+        while os.path.exists(new_path):
+            count += 1
+
+            filename, file_extension = os.path.splitext(
+                content_filename)
+
+            new_filename = "%s_%02d%s" % (
+                filename, count, file_extension)
+
+            new_path = str(Path(destination) / new_filename)
+
+        try:
+            shutil.move(old_path, new_path)
+        except Exception:
+            self.lock.release()
+            return False
+
+        self.lock.release()
+        return True
+
     def create_shortcut(self):
         """
         Creates a Shortcut to a URL
@@ -213,6 +259,9 @@ class URLTarget(object):
         If it worked it returns True. Else the file needs to be redownloaded.
         """
 
+        if (self.file.old_file is None):
+            return False
+
         old_path = self.file.old_file.saved_to
         if (not os.path.exists(old_path)):
             return False
@@ -256,6 +305,12 @@ class URLTarget(object):
 
         try:
             self._create_dir(self.destination)
+
+            # if file was modified try rename the old file,
+            # before create new one
+            if (self.file.modified):
+                self.try_rename_old_file()
+
             # create a empty destination file
             self.set_path()
 

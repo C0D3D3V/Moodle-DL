@@ -52,6 +52,10 @@ class FakeDownloadService:
                             file.saved_to = str(Path(
                                 save_destination) / (filename + ".URL"))
 
+                    if (file.content_type == 'description'):
+                        file.saved_to = str(Path(
+                            save_destination) / (filename + ".md"))
+
                     self.state_recorder.save_file(
                         file, course.id, course.fullname)
 
