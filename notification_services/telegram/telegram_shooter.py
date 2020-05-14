@@ -1,3 +1,5 @@
+import json
+import pprint
 import urllib
 
 from http.client import HTTPSConnection
@@ -34,3 +36,53 @@ class TelegramShooter:
             body=data_urlencoded,
             headers=self.stdHeader
         )
+
+        response = self.connection.getresponse()
+        self._check_errors(response)
+
+    @staticmethod
+    def _check_response_code(response):
+        # Normally Telegram answer with response 200
+        if (response.getcode() != 200):
+            raise RuntimeError(
+                'An Unexpected Error happened on side of the Telegram System!' +
+                (' Status-Code: %s' % str(response.getcode())) +
+                ('\nHeader: %s' % (response.getheaders())) +
+                ('\nResponse: %s' % (response.read())))
+
+    def _check_errors(self, response) -> object:
+        """
+        The first time parsing the result of a REST request.
+        It is checked for known errors.
+        @param response: The JSON response of the Moodle system
+        @return: The parsed JSON object
+        """
+
+        self._check_response_code(response)
+
+        # Try to parse the JSON
+        try:
+            response_extracted = json.loads(response.read())
+        except ValueError as error:
+            raise RuntimeError('An Unexpected Error occurred while trying' +
+                               ' to parse the json response! Telegram' +
+                               ' response: %s.\nError: %s' % (
+                                   response.read(), error))
+        # Check for known errors
+        if ("ok" in response_extracted):
+            ok = response_extracted.get("ok", False)
+
+            if(not ok):
+                raise RequestRejectedError(
+                    'The Telegram System rejected the Request.' +
+                    (' Details: %s ' % (pprint.pformat(response_extracted,
+                                                       indent=4)), )
+                )
+
+        return response_extracted
+
+
+class RequestRejectedError(Exception):
+    """An Exception which gets thrown if the Telegram-System answered with an
+    Error to our Request"""
+    pass
