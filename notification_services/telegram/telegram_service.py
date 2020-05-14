@@ -123,4 +123,4 @@ class TelegramService(NotificationService):
         if not telegram_cfg.get('send_error_msg', True):
             return
 
-        self._send_message('Error!', error_description)
+        self._send_message('Error!\r\n' + error_description)
