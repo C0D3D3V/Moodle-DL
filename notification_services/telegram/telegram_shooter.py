@@ -45,7 +45,8 @@ class TelegramShooter:
         # Normally Telegram answer with response 200
         if (response.getcode() != 200):
             raise RuntimeError(
-                'An Unexpected Error happened on side of the Telegram System!' +
+                'An Unexpected Error happened on side of the' +
+                ' Telegram System!' +
                 (' Status-Code: %s' % str(response.getcode())) +
                 ('\nHeader: %s' % (response.getheaders())) +
                 ('\nResponse: %s' % (response.read())))
