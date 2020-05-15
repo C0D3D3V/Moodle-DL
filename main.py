@@ -244,8 +244,9 @@ def run_main(storage_path, skip_cert_verify=False,
         if r_client:
             sentry_sdk.capture_exception(e)
 
-        mail_service.notify_about_error(str(e))
-        tg_service.notify_about_error(str(e))
+        short_error = "%s\r\n%s" % (str(e), traceback.format_exc(limit=1))
+        mail_service.notify_about_error(short_error)
+        tg_service.notify_about_error(short_error)
 
         logging.debug('Exception-Handling completed. Exiting...',
                       extra={'exception': e})
