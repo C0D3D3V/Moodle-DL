@@ -20,7 +20,7 @@
 
 On some operating systems the program has to run with `python3` instead of `python`, try it yourself. The same applies to `pip3`.
 
-If you run the program on Windows, please use the [Powershell or CMD](https://www.isunshare.com/windows-10/5-ways-to-open-windows-powershell-in-windows-10.html). Please do not use a mintty like MINGW or similar (in MINGW python must be executed as 'winpty python').
+If you run the program on Windows, please use the [Powershell or CMD](https://www.isunshare.com/windows-10/5-ways-to-open-windows-powershell-in-windows-10.html). Please do not use a mintty like MINGW or similar (in MINGW python must be executed as `winpty python`).
 
 ### Usage
 - `python main.py`
