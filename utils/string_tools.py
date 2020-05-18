@@ -20,19 +20,18 @@ class StringTools:
         name = html.unescape(name)
         # Forward and Backward Slashes are not good for filenames
         name = name.replace(os.path.sep, '|')
-        if platform == "win32":
-            name = name.replace('\\', '-')
-            name = name.replace('/', '-')
-            name = name.replace(':', '-')
-            name = name.replace('?', '')
-            name = name.replace('*', '')
-            name = name.replace('<', '(')
-            name = name.replace('>', ')')
-            name = name.replace('|', '-')
-            name = name.replace('"', '')
-            name = name.replace('\n', ' ')
-            name = name.replace('\r', ' ')
-            name = name.rstrip('. ')
+        name = name.replace('\\', '-')
+        name = name.replace('/', '-')
+        name = name.replace(':', '-')
+        name = name.replace('?', '')
+        name = name.replace('*', '')
+        name = name.replace('<', '(')
+        name = name.replace('>', ')')
+        name = name.replace('|', '-')
+        name = name.replace('"', '')
+        name = name.replace('\n', ' ')
+        name = name.replace('\r', ' ')
+        name = name.rstrip('. ')
 
         return name
 
