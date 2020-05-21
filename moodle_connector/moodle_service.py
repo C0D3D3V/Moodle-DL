@@ -97,14 +97,17 @@ class MoodleService:
         print('Please log into Moodle on this computer and then visit' +
               ' the following address in your web browser: ')
 
-        print('https://' + moodle_domain + moodle_path +
-              'admin/tool/mobile/launch.php?service=' +
-              'moodle_mobile_app&passport=12345&' +
-              'urlscheme=http%3A%2F%2Flocalhost')
-
         if do_automatic:
+            print('https://' + moodle_domain + moodle_path +
+                  'admin/tool/mobile/launch.php?service=' +
+                  'moodle_mobile_app&passport=12345&' +
+                  'urlscheme=http%3A%2F%2Flocalhost')
             moodle_token = sso_token_receiver.receive_token()
         else:
+            print('https://' + moodle_domain + moodle_path +
+                  'admin/tool/mobile/launch.php?service=' +
+                  'moodle_mobile_app&passport=12345')
+
             print('If you open the link in the browser, no web page should' +
                   ' load, instead an error will occur. Open the' +
                   ' developer console (press F12) and go to the Network Tab,' +
