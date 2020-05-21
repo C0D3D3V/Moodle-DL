@@ -117,6 +117,11 @@ class MoodleService:
                   ' loaded (right click, then click on Copy, then click' +
                   ' on copy link address).')
 
+            print('The script expects a URL that looks something like this:' +
+                  '`moodlemobile://token=$apptoken`.' +
+                  ' Where $apptoken looks random. In reality it is a Base64' +
+                  ' encoded hash and the token we need to access moodle.')
+
             token_address = input('Then insert the address here:   ')
 
             moodle_token = sso_token_receiver.extract_token(token_address)
