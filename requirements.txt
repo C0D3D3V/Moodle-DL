@@ -1,3 +1,4 @@
 sentry_sdk>=0.13.5
 colorama>=0.4.3
 readchar>=2.0.1
+youtube_dl>=2020.5.29

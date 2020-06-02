@@ -188,6 +188,11 @@ class DownloadService:
                 i, self.thread_report[i]['percentage'])
             threads_total_downloaded += self.thread_report[i]['total']
 
+            extra_totalsize = self.thread_report[i]['extra_totalsize']
+            if(extra_totalsize is not None and extra_totalsize != -1):
+                self.total_to_download += extra_totalsize
+                self.thread_report[i]['extra_totalsize'] = -1
+
         percentage = 100
         if (self.total_to_download != 0):
             percentage = int(threads_total_downloaded *

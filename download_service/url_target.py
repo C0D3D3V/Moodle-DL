@@ -3,9 +3,13 @@ import ssl
 import time
 import shutil
 import urllib
+import random
+import string
+import posixpath
 import traceback
 import threading
 import contextlib
+import youtube_dl
 
 from pathlib import Path
 import urllib.parse as urlparse
@@ -51,6 +55,8 @@ class URLTarget(object):
 
         # Total downloaded.
         self.downloaded = 0
+
+        self.tmp_filename = ""
 
     def add_progress(self, count: int, block_size: int, total_size: int):
         """
@@ -170,6 +176,183 @@ class URLTarget(object):
 
         self.lock.release()
         return True
+
+    class YtLogger(object):
+        """
+        Just a logger for Youtube-DL
+        """
+
+        def debug(self, msg):
+            pass
+
+        def warning(self, msg):
+            pass
+
+        def error(self, msg):
+            print("")
+            print('It follows an error from youtube-dl,' +
+                  ' Don\'t worry, this usually just means' +
+                  ' that no video was found on this website.')
+            print(msg)
+
+    def yt_hook(self, d):
+        downloaded_bytes = d.get('downloaded_bytes', 0)
+        total_bytes_estimate = d.get('total_bytes_estimate', 0)
+        total_bytes = d.get('total_bytes', 0)
+
+        difference = (downloaded_bytes - self.downloaded)
+        self.thread_report[self.thread_id]['total'] += difference
+        self.downloaded += difference
+
+        if(total_bytes_estimate <= 0):
+            total_bytes_estimate = total_bytes
+
+        if(total_bytes_estimate <= 0):
+            total_bytes_estimate = self.file.content_filesize
+
+        # Update status information
+        if(self.thread_report[self.thread_id]['extra_totalsize'] is None
+           and total_bytes_estimate > 0):
+            self.thread_report[self.thread_id]['extra_totalsize'] = \
+                total_bytes_estimate
+            self.thread_report[self.thread_id]['old_extra_totalsize'] = \
+                total_bytes_estimate
+
+        if(self.thread_report[self.thread_id]['extra_totalsize'] == -1
+           and total_bytes_estimate >
+           self.thread_report[self.thread_id]['old_extra_totalsize']):
+
+            self.thread_report[self.thread_id]['extra_totalsize'] = \
+                total_bytes_estimate - \
+                self.thread_report[self.thread_id]['old_extra_totalsize']
+
+            self.thread_report[self.thread_id]['old_extra_totalsize'] = \
+                total_bytes_estimate
+
+        percent = 100
+        if(total_bytes_estimate != 0):
+            percent = int(100 * downloaded_bytes / total_bytes_estimate)
+
+        self.thread_report[self.thread_id]['percentage'] = percent
+
+        if d['status'] == 'finished':
+            self.downloaded = 0
+            self.thread_report[self.thread_id]['percentage'] = 100
+            self.thread_report[self.thread_id]['extra_totalsize'] = None
+
+    def move_tmp_file(self, tmp_file: str):
+        """
+        Moves temporary files to there correct locations.
+        This tries to move every file that beginns with the tmp_file string
+        to its new locations.
+        @params tmp_file: Is a path + the basename 
+                          (without the extension) of the tmp_file
+        """
+        destination = os.path.dirname(tmp_file)
+        content_filename = os.path.basename(tmp_file)
+
+        for filename in os.listdir(destination):
+            if filename.startswith(content_filename + "."):
+                one_tmp_file = os.path.join(destination, filename)
+
+                content_filename = os.path.basename(one_tmp_file)
+                filename, file_extension = os.path.splitext(
+                    content_filename)
+
+                new_path = str(
+                    Path(self.destination) / self.filename) + file_extension
+
+                count = 1
+                content_filename = os.path.basename(new_path)
+                destination = os.path.dirname(new_path)
+
+                self.lock.acquire()
+                while os.path.exists(new_path):
+                    count += 1
+
+                    filename, file_extension = os.path.splitext(
+                        content_filename)
+
+                    new_filename = "%s_%02d%s" % (
+                        filename, count, file_extension)
+
+                    new_path = str(Path(destination) / new_filename)
+
+                self.file.saved_to = new_path
+                try:
+                    shutil.move(one_tmp_file, self.file.saved_to)
+                except Exception:
+                    pass
+                self.lock.release()
+
+                self.file.time_stamp = int(time.time())
+
+    def try_download_link(self) -> bool:
+        """
+        This function should only be used for shortcut/URL files.
+        It tests whether a URL refers to a file, that is not an HTML web page.
+        Then downloads it.
+        Otherwise an attempt will be made to download an HTML video
+        from the website.
+        When a file is downloaded True is returned.
+        """
+
+        isHTML = False
+        new_filename = ""
+        total_bytes_estimate = -1
+        with contextlib.closing(
+            urllib.request.urlopen(self.file.content_fileurl,
+                                   context=self.ssl_context)) as fp:
+            headers = fp.info()
+
+            content_type = headers.get_content_type()
+            if(content_type == 'text/html' or content_type == 'text/plain'):
+                isHTML = True
+            else:
+                url_parsed = urlparse.urlsplit(self.file.content_fileurl)
+                new_filename = posixpath.basename(url_parsed.path)
+                new_filename = headers.get_filename(new_filename)
+                total_bytes_estimate = int(headers.get("Content-Length", -1))
+
+        if(not isHTML):
+            if(self.filename != new_filename):
+                self.filename = new_filename
+                self.set_path()
+
+            if(total_bytes_estimate != -1):
+                self.thread_report[self.thread_id]['extra_totalsize'] = \
+                    total_bytes_estimate
+
+            self.urlretrieve(self.file.content_fileurl,
+                             self.file.saved_to, context=self.ssl_context,
+                             reporthook=self.add_progress)
+
+            self.file.time_stamp = int(time.time())
+
+            self.success = True
+            return True
+
+        else:
+
+            tmp_filename = ''.join(random.choices(
+                string.ascii_uppercase + string.digits, k=10))
+            tmp_file = str(Path(self.destination) / tmp_filename)
+            ydl_opts = {
+                'logger': self.YtLogger(),
+                'progress_hooks': [self.yt_hook],
+                'outtmpl': (tmp_file + '.%(ext)s')
+            }
+            with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+                try:
+                    ydl_results = ydl.download([self.file.content_fileurl])
+                    if(ydl_results == 1):
+                        return False
+                    else:
+                        self.move_tmp_file(tmp_file)
+                        self.success = True
+                        return True
+                except Exception:
+                    return False
 
     def create_shortcut(self):
         """
@@ -303,6 +486,7 @@ class URLTarget(object):
         # reset download status
         self.downloaded = 0
         self.thread_report[self.thread_id]['percentage'] = 0
+        self.thread_report[self.thread_id]['extra_totalsize'] = None
 
         try:
             self._create_dir(self.destination)
@@ -330,6 +514,7 @@ class URLTarget(object):
             # instead of downloading it
             if (self.file.module_modname == 'url'):
                 self.create_shortcut()
+                self.try_download_link()
                 return self.success
 
             self.urlretrieve(self._add_token_to_url(
@@ -362,7 +547,7 @@ class URLTarget(object):
 
         return self.success
 
-    @staticmethod
+    @ staticmethod
     def urlretrieve(url: str, filename: str,
                     context: ssl.SSLContext, reporthook=None):
         """
@@ -400,9 +585,7 @@ class URLTarget(object):
                 blocknum = 0
 
                 # guess size
-                size = -1
-                if "content-length" in headers:
-                    size = int(headers["Content-Length"])
+                size = int(headers.get("Content-Length", -1))
 
                 if reporthook:
                     reporthook(blocknum, bs, size)
