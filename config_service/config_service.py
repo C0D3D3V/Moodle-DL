@@ -269,16 +269,16 @@ class ConfigService:
         download_linked_files = self.config_helper.get_download_linked_files()
 
         print('')
-        print('In Moodle courses the teacher can also link to external files.' +
-              ' That could be audio, video, text or something diffrent.' +
-              ' Especially the teacher can link youtube videos.' +
+        print('In Moodle courses the teacher can also link to external' +
+              ' files. That could be audio, video, text or something' +
+              ' diffrent. Especially the teacher can link youtube videos.' +
               ' These files can make the download volume extensively bigger.' +
               ' If you want to filter the external links by there domain,' +
               ' you can manually set a whitelist and blacklist (' +
-              'see https://github.com/c0d3d3v ' +
+              'see https://github.com/c0d3d3v/Moodle_Downloader_2 ' +
               ' for more details). Please note, that the sizes of the' +
-              ' external files, will be determined while downloading the files,'
-              ' thats why the total size to download will change' +
+              ' external files, will be determined while downloading' +
+              ' the files, thats why the total size to download will change' +
               ' while downloading.')
         print('')
 
