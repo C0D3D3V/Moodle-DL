@@ -43,6 +43,7 @@ class ConfigService:
         self._set_options_of_courses(courses)
         self._select_should_download_submissions()
         self._select_should_download_descriptions()
+        self._select_should_download_linked_files()
 
     def _select_courses_to_download(self, courses: [Course]):
         """
@@ -254,9 +255,37 @@ class ConfigService:
         print('')
 
         download_descriptions = cutie.prompt_yes_or_no(
-            'Would you like to download descriptions of the courses you' +
+            'Would you like to download descriptions of the courses you have' +
             ' selected?',
             default_is_yes=download_descriptions)
 
         self.config_helper.set_property('download_descriptions',
                                         download_descriptions)
+
+    def _select_should_download_linked_files(self):
+        """
+        Asks the user if linked files should be downloaded
+        """
+        download_linked_files = self.config_helper.get_download_linked_files()
+
+        print('')
+        print('In Moodle courses the teacher can also link to external files.' +
+              ' That could be audio, video, text or something diffrent.' +
+              ' Especially the teacher can link youtube videos.' +
+              ' These files can make the download volume extensively bigger.' +
+              ' If you want to filter the external links by there domain,' +
+              ' you can manually set a whitelist and blacklist (' +
+              'see https://github.com/c0d3d3v ' +
+              ' for more details). Please note, that the sizes of the' +
+              ' external files, will be determined while downloading the files,'
+              ' thats why the total size to download will change' +
+              ' while downloading.')
+        print('')
+
+        download_linked_files = cutie.prompt_yes_or_no(
+            'Would you like to download linked files of the courses you have' +
+            ' selected?',
+            default_is_yes=download_linked_files)
+
+        self.config_helper.set_property('download_linked_files',
+                                        download_linked_files)

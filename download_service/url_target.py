@@ -27,7 +27,7 @@ class URLTarget(object):
 
     def __init__(self, file: File, course: Course, destination: str,
                  token: str, thread_report: [], lock: threading.Lock,
-                 ssl_context: ssl.SSLContext):
+                 ssl_context: ssl.SSLContext, options: {}):
         """
         Initiating an URL target.
         """
@@ -38,6 +38,7 @@ class URLTarget(object):
         self.token = token
         self.lock = lock
         self.ssl_context = ssl_context
+        self.options = options
 
         # get valid filename
         self.filename = StringTools.to_valid_name(self.file.content_filename)
@@ -55,8 +56,6 @@ class URLTarget(object):
 
         # Total downloaded.
         self.downloaded = 0
-
-        self.tmp_filename = ""
 
     def add_progress(self, count: int, block_size: int, total_size: int):
         """
@@ -189,11 +188,7 @@ class URLTarget(object):
             pass
 
         def error(self, msg):
-            print("")
-            print('It follows an error from youtube-dl,' +
-                  ' Don\'t worry, this usually just means' +
-                  ' that no video was found on this website.')
-            print(msg)
+            pass
 
     def yt_hook(self, d):
         downloaded_bytes = d.get('downloaded_bytes', 0)
@@ -245,7 +240,7 @@ class URLTarget(object):
         Moves temporary files to there correct locations.
         This tries to move every file that beginns with the tmp_file string
         to its new locations.
-        @params tmp_file: Is a path + the basename 
+        @params tmp_file: Is a path + the basename
                           (without the extension) of the tmp_file
         """
         destination = os.path.dirname(tmp_file)
@@ -513,7 +508,8 @@ class URLTarget(object):
             # if it is a URL we have to create a shortcut
             # instead of downloading it
             if (self.file.module_modname == 'url'):
-                self.create_shortcut()
+                if(self.options.get('download_linked_files', False)):
+                    self.create_shortcut()
                 self.try_download_link()
                 return self.success
 
@@ -547,7 +543,7 @@ class URLTarget(object):
 
         return self.success
 
-    @ staticmethod
+    @staticmethod
     def urlretrieve(url: str, filename: str,
                     context: ssl.SSLContext, reporthook=None):
         """

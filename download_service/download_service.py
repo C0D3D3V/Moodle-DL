@@ -56,10 +56,15 @@ class DownloadService:
         # reading file system
         self.lock2 = threading.Lock()
 
+        # Sets the download options
+        self.options = moodle_service.config_helper.get_download_options()
+
         # report is used to collect successful and failed downloads
         self.report = {'success': [], 'failure': []}
         # thread_report is used to get live reports from the threads
-        self.thread_report = [{'total': 0, 'percentage': 0}
+        self.thread_report = [{'total': 0, 'percentage': 0,
+                               'old_extra_totalsize': None,
+                               'extra_totalsize': None}
                               for i in range(self.thread_count)]
         # Collects the total size of the files that needs to be downloaded.
         self.total_to_download = 0
@@ -83,7 +88,8 @@ class DownloadService:
 
                     self.queue.put(URLTarget(
                         file, course, save_destination, self.token,
-                        self.thread_report, self.lock2, self.ssl_context))
+                        self.thread_report, self.lock2, self.ssl_context,
+                        self.options))
 
     @staticmethod
     def genPath(storage_path: str, course: Course, file: File):

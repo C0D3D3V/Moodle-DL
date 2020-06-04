@@ -107,3 +107,31 @@ class ConfigHelper:
             return self.get_property('dont_download_course_ids')
         except ValueError:
             return []
+
+    def get_download_linked_files(self) -> {}:
+        # returns if linked files should be downloaded
+        try:
+            return self.get_property('download_linked_files')
+        except ValueError:
+            return False
+
+    def get_download_options(self) -> {}:
+        # returns the option dictionary for downloading files
+        options = {}
+        try:
+            options.update('download_linked_files',
+                           self.get_property('download_linked_files'))
+        except ValueError:
+            options.update('download_linked_files', False)
+
+        try:
+            options.update('download_domains_whitelist',
+                           self.get_property('download_domains_whitelist'))
+        except ValueError:
+            options.update('download_domains_whitelist', [])
+
+        try:
+            options.update('download_domains_blacklist',
+                           self.get_property('download_domains_blacklist'))
+        except ValueError:
+            options.update('download_domains_blacklist', [])
