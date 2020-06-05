@@ -269,17 +269,16 @@ class ConfigService:
         download_linked_files = self.config_helper.get_download_linked_files()
 
         print('')
-        print('In Moodle courses the teacher can also link to external' +
-              ' files. That could be audio, video, text or something' +
-              ' diffrent. Especially the teacher can link youtube videos.' +
-              ' These files can make the download volume extensively bigger.' +
-              ' If you want to filter the external links by there domain,' +
-              ' you can manually set a whitelist and blacklist (' +
-              'see https://github.com/c0d3d3v/Moodle_Downloader_2 ' +
-              ' for more details). Please note, that the sizes of the' +
-              ' external files, will be determined while downloading' +
-              ' the files, thats why the total size to download will change' +
-              ' while downloading.')
+        print('In Moodle courses the teacher can also link to external files.' +
+              ' This can be audio, video, text or anything else.' +
+              ' In particular, the teacher can link to Youtube videos.' +
+              ' These files can increase the download volume considerably.' +
+              ' If you want to filter the external links by their domain,' +
+              ' you can manually set a whitelist and a blacklist' +
+              ' ( https://github.com/c0d3d3v/Moodle_Downloader_2' +
+              ' for more details). Please note that the size of the external' +
+              ' files is determined during the download, so the total size' +
+              ' changes during the download.')
         print('')
 
         download_linked_files = cutie.prompt_yes_or_no(
