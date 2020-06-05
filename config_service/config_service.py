@@ -269,8 +269,8 @@ class ConfigService:
         download_linked_files = self.config_helper.get_download_linked_files()
 
         print('')
-        print('In Moodle courses the teacher can also link to external files.' +
-              ' This can be audio, video, text or anything else.' +
+        print('In Moodle courses the teacher can also link to external' +
+              ' files. This can be audio, video, text or anything else.' +
               ' In particular, the teacher can link to Youtube videos.' +
               ' These files can increase the download volume considerably.' +
               ' If you want to filter the external links by their domain,' +
