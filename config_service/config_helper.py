@@ -135,3 +135,5 @@ class ConfigHelper:
                             self.get_property('download_domains_blacklist')})
         except ValueError:
             options.update({'download_domains_blacklist': []})
+
+        return options
