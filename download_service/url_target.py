@@ -378,7 +378,7 @@ class URLTarget(object):
                 inWhitelist = True
                 break
 
-        return (inWhitelist and not inBlacklist)
+        return (not inWhitelist or inBlacklist)
 
     def create_shortcut(self):
         """
