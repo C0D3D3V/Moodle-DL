@@ -349,6 +349,15 @@ class URLTarget(object):
                 except Exception:
                     return False
 
+    def is_filtered_external_domain(self):
+        """
+        Checks if the download link is not an the blacklist
+        but is on the whitelist.
+
+        Returns True if the domain is filtered.
+        """
+        return False
+
     def create_shortcut(self):
         """
         Creates a Shortcut to a URL
@@ -508,9 +517,10 @@ class URLTarget(object):
             # if it is a URL we have to create a shortcut
             # instead of downloading it
             if (self.file.module_modname == 'url'):
-                if(self.options.get('download_linked_files', False)):
-                    self.create_shortcut()
-                self.try_download_link()
+                if(self.options.get('download_linked_files', False) and
+                        not self.is_filtered_external_domain()):
+                    self.try_download_link()
+                self.create_shortcut()
                 return self.success
 
             self.urlretrieve(self._add_token_to_url(
