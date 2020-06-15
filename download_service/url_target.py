@@ -351,12 +351,33 @@ class URLTarget(object):
 
     def is_filtered_external_domain(self):
         """
-        Checks if the download link is not an the blacklist
+        Checks if the domain of the download link is not an the blacklist
         but is on the whitelist.
 
         Returns True if the domain is filtered.
         """
-        return False
+
+        url_parsed = urlparse.urlparse(self.file.content_fileurl)
+        domain = url_parsed.netloc
+
+        blacklist = self.options.get('download_domains_blacklist', [])
+        whitelist = self.options.get('download_domains_whitelist', [])
+
+        inBlacklist = False
+
+        for entry in blacklist:
+            if(domain == entry or entry.endswith('.' + domain)):
+                inBlacklist = True
+                break
+
+        inWhitelist = (len(whitelist) == 0)
+
+        for entry in whitelist:
+            if(domain == entry or entry.endswith('.' + domain)):
+                inWhitelist = True
+                break
+
+        return (inWhitelist and not inBlacklist)
 
     def create_shortcut(self):
         """
