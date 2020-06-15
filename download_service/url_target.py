@@ -359,7 +359,7 @@ class URLTarget(object):
         """
 
         url_parsed = urlparse.urlparse(self.file.content_fileurl)
-        domain = url_parsed.netloc
+        domain = url_parsed.netloc.split(':')[0]
 
         blacklist = self.options.get('download_domains_blacklist', [])
         whitelist = self.options.get('download_domains_whitelist', [])
@@ -367,14 +367,14 @@ class URLTarget(object):
         inBlacklist = False
 
         for entry in blacklist:
-            if(domain == entry or entry.endswith('.' + domain)):
+            if(domain == entry or domain.endswith('.' + entry)):
                 inBlacklist = True
                 break
 
         inWhitelist = (len(whitelist) == 0)
 
         for entry in whitelist:
-            if(domain == entry or entry.endswith('.' + domain)):
+            if(domain == entry or domain.endswith('.' + entry)):
                 inWhitelist = True
                 break
 
