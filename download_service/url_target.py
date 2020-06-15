@@ -351,8 +351,9 @@ class URLTarget(object):
 
     def is_filtered_external_domain(self):
         """
-        Checks if the domain of the download link is not an the blacklist
-        but is on the whitelist.
+        This function is used for external linked files.
+        It checks if the domain of the download link is on the blacklist
+        or is not on the whitelist.
 
         Returns True if the domain is filtered.
         """
