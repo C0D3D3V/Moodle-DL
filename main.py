@@ -8,6 +8,8 @@ import argparse
 import traceback
 import sentry_sdk
 
+import utils.process_lock as process_lock
+
 try:
     # In unix readline needs to be loaded so that
     # arrowkeys work in input
@@ -187,6 +189,14 @@ def run_main(storage_path, skip_cert_verify=False,
         Log.error('Error while trying to load the Configuration!')
         sys.exit(-1)
 
+    try:
+        process_lock.lock(storage_path)
+    except Exception as e:
+        logging.error('Error while trying to create the lock! ' +
+                      'Exiting...', extra={'exception': e})
+        Log.error(str(e))
+        sys.exit(-1)
+
     r_client = False
     try:
         sentry_dsn = config.get_property('sentry_dsn')
@@ -235,9 +245,13 @@ def run_main(storage_path, skip_cert_verify=False,
             logging.info('No changes found for the configured Moodle-Account.')
             Log.warning('No changes found for the configured Moodle-Account.')
 
+        process_lock.unlock(storage_path)
+
         logging.debug('All done. Exiting...')
         Log.success('All done. Exiting..')
     except BaseException as e:
+        process_lock.unlock(storage_path)
+
         error_formatted = traceback.format_exc()
         logging.error(error_formatted, extra={'exception': e})
 
