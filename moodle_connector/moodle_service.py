@@ -86,7 +86,8 @@ class MoodleService:
         if (version > 3.8):
             print('Between version 3.81 and 3.82 a change was added to' +
                   ' Moodle so that automatic copying of the SSO token' +
-                  ' might not work. You can still try it, your version is: ' +
+                  ' might not work.' +
+                  '\nYou can still try it, your version is: ' +
                   str(version))
 
         print(' If you want to copy the login-token manual,' +
