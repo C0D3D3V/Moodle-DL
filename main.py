@@ -124,9 +124,9 @@ def run_new_token(storage_path, use_sso=False, skip_cert_verify=False):
                            skip_cert_verify)
 
     if (use_sso):
-        moodle.interactively_acquire_sso_token()
+        moodle.interactively_acquire_sso_token(use_stored_url=True)
     else:
-        moodle.interactively_acquire_token()
+        moodle.interactively_acquire_token(use_stored_url=True)
 
     print('New Token successfully saved!')
 

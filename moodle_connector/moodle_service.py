@@ -25,7 +25,7 @@ class MoodleService:
             Path(storage_path) / 'moodle_state.db')
         self.skip_cert_verify = skip_cert_verify
 
-    def interactively_acquire_token(self) -> str:
+    def interactively_acquire_token(self, use_stored_url: bool = False) -> str:
         """
         Walks the user through executing a login into the Moodle-System to get
         the Token and saves it.
@@ -36,13 +36,20 @@ class MoodleService:
 
         moodle_token = None
         while moodle_token is None:
-            moodle_url = input('URL of Moodle:   ')
+
+            if(not use_stored_url):
+                moodle_url = input('URL of Moodle:   ')
+
+                moodle_uri = urlparse(moodle_url)
+
+                moodle_domain, moodle_path = self._split_moodle_uri(moodle_uri)
+
+            else:
+                moodle_domain = self.config_helper.get_moodle_domain()
+                moodle_path = self.config_helper.get_moodle_path()
+
             moodle_username = input('Username for Moodle:   ')
             moodle_password = getpass('Password for Moodle [no output]:   ')
-
-            moodle_uri = urlparse(moodle_url)
-
-            moodle_domain, moodle_path = self._split_moodle_uri(moodle_uri)
 
             try:
                 moodle_token = login_helper.obtain_login_token(
@@ -66,18 +73,24 @@ class MoodleService:
 
         return moodle_token
 
-    def interactively_acquire_sso_token(self) -> str:
+    def interactively_acquire_sso_token(self,
+                                        use_stored_url: bool = False) -> str:
         """
         Walks the user through the receiving of a SSO token for the
         Moodle-System and saves it.
         @return: The Token for Moodle.
         """
+        if(not use_stored_url):
 
-        moodle_url = input('URL of Moodle:   ')
+            moodle_url = input('URL of Moodle:   ')
 
-        moodle_uri = urlparse(moodle_url)
+            moodle_uri = urlparse(moodle_url)
 
-        moodle_domain, moodle_path = self._split_moodle_uri(moodle_uri)
+            moodle_domain, moodle_path = self._split_moodle_uri(moodle_uri)
+
+        else:
+            moodle_domain = self.config_helper.get_moodle_domain()
+            moodle_path = self.config_helper.get_moodle_path()
 
         version = RequestHelper(moodle_domain, moodle_path, '',
                                 self.skip_cert_verify
