@@ -19,8 +19,8 @@ class Downloader(threading.Thread):
         Initiates a downloader thread.
         """
         threading.Thread.__init__(self)
+        self.daemon = True
 
-        self.running = True
         self.queue = queue
         self.report = report
         self.thread_id = thread_id
@@ -32,7 +32,7 @@ class Downloader(threading.Thread):
         """
         Work the queue until it is empty.
         """
-        while self.queue.empty() is False and self.running:
+        while self.queue.empty() is False:
             try:
                 # raise condition
                 url_target = self.queue.get(False)
