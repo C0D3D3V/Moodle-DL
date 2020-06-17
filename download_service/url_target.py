@@ -185,10 +185,14 @@ class URLTarget(object):
             pass
 
         def warning(self, msg):
-            pass
+            if(msg.find("Falling back") >= 0):
+                return
+            print("\nyoutube-dl: " + msg + "\n")
 
         def error(self, msg):
-            pass
+            if(msg.find("Unsupported URL") >= 0):
+                return
+            print("\nyoutube-dl: " + msg + "\n")
 
     def yt_hook(self, d):
         downloaded_bytes = d.get('downloaded_bytes', 0)
@@ -335,7 +339,8 @@ class URLTarget(object):
             ydl_opts = {
                 'logger': self.YtLogger(),
                 'progress_hooks': [self.yt_hook],
-                'outtmpl': (tmp_file + '.%(ext)s')
+                'outtmpl': (tmp_file + '.%(ext)s'),
+                'nocheckcertificate': True
             }
             with youtube_dl.YoutubeDL(ydl_opts) as ydl:
                 try:
