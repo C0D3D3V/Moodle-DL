@@ -4,6 +4,7 @@ import sys
 import time
 import shutil
 import logging
+import certifi
 import threading
 
 from queue import Queue
@@ -75,7 +76,8 @@ class DownloadService:
         if skip_cert_verify:
             self.ssl_context = ssl._create_unverified_context()
         else:
-            self.ssl_context = ssl._create_default_https_context()
+            self.ssl_context = ssl.create_default_context(
+                cafile=certifi.where())
 
         # Prepopulate queue with any files that were given
         for course in self.courses:

@@ -1,7 +1,9 @@
+import re
+import ssl
 import json
 import urllib
-import ssl
-import re
+import certifi
+
 from http.client import HTTPSConnection
 
 
@@ -19,7 +21,7 @@ class RequestHelper:
         if skip_cert_verify:
             context = ssl._create_unverified_context()
         else:
-            context = ssl._create_default_https_context()
+            context = ssl.create_default_context(cafile=certifi.where())
         self.connection = HTTPSConnection(moodle_domain, context=context)
 
         self.token = token
