@@ -544,10 +544,12 @@ class URLTarget(object):
             # if it is a URL we have to create a shortcut
             # instead of downloading it
             if (self.file.module_modname == 'url'):
+                self.create_shortcut()
                 if(self.options.get('download_linked_files', False) and
                         not self.is_filtered_external_domain()):
                     self.try_download_link()
-                self.create_shortcut()
+                    # Warning: try_download_link overwrites saved_to and
+                    # time_stamp in move_tmp_file
                 return self.success
 
             self.urlretrieve(self._add_token_to_url(
