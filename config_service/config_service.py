@@ -275,7 +275,8 @@ class ConfigService:
               ' These files can increase the download volume considerably.' +
               ' If you want to filter the external links by their domain,' +
               ' you can manually set a whitelist and a blacklist' +
-              ' ( https://github.com/c0d3d3v/Moodle_Downloader_2' +
+              ' ( https://github.com/C0D3D3V/Moodle-Downloader-2/' +
+              'wiki/Download-(external)-linked-files' +
               ' for more details). Please note that the size of the external' +
               ' files is determined during the download, so the total size' +
               ' changes during the download.')
