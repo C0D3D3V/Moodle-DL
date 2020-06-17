@@ -339,7 +339,7 @@ def prompt_yes_or_no(
         elif keypress in DefaultKeys.tab:
             if is_selected:
                 current_message = yes_text if is_yes else no_text
-        else:
+        elif keypress is not None:
             current_message += keypress
             match_yes = yes_text
             match_no = no_text
