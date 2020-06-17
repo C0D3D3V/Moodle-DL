@@ -187,6 +187,9 @@ class URLTarget(object):
         def warning(self, msg):
             if(msg.find("Falling back") >= 0):
                 return
+            if(msg.find("Requested formats are incompatible for merge") >= 0):
+                return
+
             print("\nyoutube-dl: " + msg + "\n")
 
         def error(self, msg):
