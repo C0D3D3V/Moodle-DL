@@ -138,13 +138,22 @@ class DownloadService:
         """
         self._create_downloader_threads()
 
-        while (not self._downloader_complete()):
-            time.sleep(0.1)
+        try:
+            while (not self._downloader_complete()):
+                time.sleep(0.1)
 
-            sys.stdout.write(self._get_status_message())
-            sys.stdout.flush()
+                sys.stdout.write(self._get_status_message())
+                sys.stdout.flush()
+
+            pass
+        except Exception:
+            self._kill_all_threads()
 
         self._log_failures()
+
+    def _kill_all_threads(self):
+        for thread in self.threads:
+            thread.running = False
 
     def _create_downloader_threads(self):
         """
