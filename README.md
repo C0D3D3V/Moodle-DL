@@ -15,7 +15,7 @@
 2. Install [Python](https://www.python.org/) >=3.6
 3. Verify that `python --version` shows a version equal to or higher then 3.6
     Otherwise use [pyenv](https://github.com/pyenv/pyenv#installation) to install the newest version
-4. `pip install -r requirements.txt` (Linux users should first check if the requirements are available via there package manager)
+4. `pip install --user -r requirements.txt`
 5. run `python main.py --init`  
 
 On some operating systems the program has to run with `python3` instead of `python`, try it yourself. The same applies to `pip3`.
