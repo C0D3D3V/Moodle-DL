@@ -272,6 +272,7 @@ class ConfigService:
         print('In Moodle courses the teacher can also link to external' +
               ' files. This can be audio, video, text or anything else.' +
               ' In particular, the teacher can link to Youtube videos.' +
+              ' To download videos correctly you have to install ffmpeg. '
               ' These files can increase the download volume considerably.' +
               ' If you want to filter the external links by their domain,' +
               ' you can manually set a whitelist and a blacklist' +
