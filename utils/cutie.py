@@ -41,6 +41,7 @@ class DefaultKeys:
     delete: List[str] = [readchar.key.BACKSPACE]
     down: List[str] = [readchar.key.DOWN, 'j']
     up: List[str] = [readchar.key.UP, 'k']
+    tab: List[str] = ['\t']
 
 
 def get_number(
@@ -335,7 +336,7 @@ def prompt_yes_or_no(
         elif keypress in DefaultKeys.confirm:
             if is_selected:
                 break
-        elif keypress in '\t':
+        elif keypress in DefaultKeys.tab:
             if is_selected:
                 current_message = yes_text if is_yes else no_text
         else:
