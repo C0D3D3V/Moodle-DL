@@ -240,6 +240,21 @@ class ResultsHandler:
 
                     result.append(file)
 
+        for plugin in plugins:
+            editorfields = plugin.get('editorfields', [])
+
+            for editorfield in editorfields:
+
+                filename = editorfield.get("description", "")
+                description = editorfield.get("text", "")
+                if (filename != "" and description != ""):
+                    description_file = {
+                        "filename": filename,
+                        "description": description,
+                        'type': 'description'
+                    }
+                    result.append(description_file)
+
         return result
 
     @staticmethod
@@ -356,7 +371,14 @@ class ResultsHandler:
             if(content_fileurl == "" and module_modname == "url"):
                 continue
 
-            files.append(File(
+            hash_description = None
+            if(content_type == "description"):
+                content_description = content.get("description", "")
+                m = hashlib.sha1()
+                m.update(content_description.encode('utf-8'))
+                hash_description = m.hexdigest()
+
+            new_file = File(
                 module_id=module_id,
                 section_name=section_name,
                 module_name=module_name,
@@ -367,8 +389,13 @@ class ResultsHandler:
                 content_timemodified=content_timemodified,
                 module_modname=module_modname,
                 content_type=content_type,
-                content_isexternalfile=content_isexternalfile)
-            )
+                content_isexternalfile=content_isexternalfile,
+                hash=hash_description)
+
+            if(content_type == "description"):
+                new_file.text_content = content_description
+
+            files.append(new_file)
         return files
 
     @staticmethod
