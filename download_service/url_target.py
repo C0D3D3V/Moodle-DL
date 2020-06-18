@@ -345,6 +345,9 @@ class URLTarget(object):
                 'outtmpl': (tmp_file + '.%(ext)s'),
                 'nocheckcertificate': True
             }
+            if(shutil.which("ffmpeg") is None):
+                ydl_opts.update({"format": "best"})
+
             with youtube_dl.YoutubeDL(ydl_opts) as ydl:
                 try:
                     ydl_results = ydl.download([self.file.content_fileurl])
