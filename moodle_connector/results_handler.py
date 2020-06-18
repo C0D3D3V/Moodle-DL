@@ -111,8 +111,6 @@ class ResultsHandler:
                 assign_files += course_assign_obj.get("introfiles", [])
                 assign_files += course_assign_obj.get("introattachments", [])
 
-                assign_description = course_assign_obj.get("intro", None)
-
                 # normalize
                 for assign_file in assign_files:
                     file_type = assign_file.get("type", "")
@@ -121,8 +119,7 @@ class ResultsHandler:
 
                 course_assigns.update({
                     assign_id: {'id': assign_rid,
-                                'files': assign_files,
-                                'description': assign_description}
+                                'files': assign_files}
                 })
 
             result.update({course_id: course_assigns})
@@ -323,18 +320,6 @@ class ResultsHandler:
                 # find assign with same module_id
                 assign = assignments.get(module_id, {})
                 assign_files = assign.get('files', [])
-                assign_description = assign.get('description', None)
-                if(assign_description == ''):
-                    assign_description = None
-
-                if (assign_description is not None and
-                        download_descriptions is True):
-                    files += ResultsHandler.\
-                        _handle_description(section_name,
-                                            module_name,
-                                            module_modname,
-                                            module_id,
-                                            assign_description)
 
                 files += ResultsHandler._handle_files(section_name,
                                                       module_name,
