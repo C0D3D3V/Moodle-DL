@@ -39,7 +39,7 @@ If you run the program on Windows, please use [Powershell or CMD](https://www.is
     - You can rename each course individually and decide if a folder structure should be created.
     - You can set whether submissions (files uploaded to Assignments by yourself or a teacher) should be downloaded.
     - You can choose to download descriptions of Moodle courses. 
-    - You can set if external linked files should be downloaded (files like youtube videos). To download videos correctly you have to install [ffmpeg](http://blog.gregzaal.com/how-to-install-ffmpeg-on-windows/).
+    - You can set if external linked files should be downloaded (files like youtube videos). To download videos correctly and in high quality you have to install [ffmpeg](http://blog.gregzaal.com/how-to-install-ffmpeg-on-windows/).
     - It does not fetch the current state of your Moodle-Account.
 - `python main.py --new-token`
     - Overrides the login-token with a newly obtained one.
