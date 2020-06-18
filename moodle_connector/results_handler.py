@@ -111,15 +111,19 @@ class ResultsHandler:
                 assign_files += course_assign_obj.get("introfiles", [])
                 assign_files += course_assign_obj.get("introattachments", [])
 
+                assign_description = course_assign_obj.get("intro", None)
+
                 # normalize
                 for assign_file in assign_files:
                     file_type = assign_file.get("type", "")
                     if (file_type is None or file_type == ""):
                         assign_file.update({'type': 'assign_file'})
 
-                course_assigns.update({assign_id: {'id': assign_rid,
-                                                   'files': assign_files}
-                                       })
+                course_assigns.update({
+                    assign_id: {'id': assign_rid,
+                                'files': assign_files,
+                                'description': assign_description}
+                })
 
             result.update({course_id: course_assigns})
 
@@ -212,14 +216,14 @@ class ResultsHandler:
         # get teachers feedback
         feedback = submission.get('feedback', {})
 
-        result += ResultsHandler._get_files_of_pllugins(l_submission)
-        result += ResultsHandler._get_files_of_pllugins(l_teamsubmission)
-        result += ResultsHandler._get_files_of_pllugins(feedback)
+        result += ResultsHandler._get_files_of_plugins(l_submission)
+        result += ResultsHandler._get_files_of_plugins(l_teamsubmission)
+        result += ResultsHandler._get_files_of_plugins(feedback)
 
         return result
 
     @staticmethod
-    def _get_files_of_pllugins(obj: {}) -> []:
+    def _get_files_of_plugins(obj: {}) -> []:
         result = []
         plugins = obj.get('plugins', [])
 
@@ -304,6 +308,18 @@ class ResultsHandler:
                 # find assign with same module_id
                 assign = assignments.get(module_id, {})
                 assign_files = assign.get('files', [])
+                assign_description = assign.get('description', None)
+                if(assign_description == ''):
+                    assign_description = None
+
+                if (assign_description is not None and
+                        download_descriptions is True):
+                    files += ResultsHandler.\
+                        _handle_description(section_name,
+                                            module_name,
+                                            module_modname,
+                                            module_id,
+                                            assign_description)
 
                 files += ResultsHandler._handle_files(section_name,
                                                       module_name,
