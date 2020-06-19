@@ -270,11 +270,21 @@ class ResultsHandler:
         for section in course_sections:
             section_name = section.get("name", "")
             section_modules = section.get("modules", [])
+            section_summary = section.get("summary", "")
+            if(section_summary is not None and section_summary != ""):
+                files += ResultsHandler.\
+                    _handle_description(section_name,
+                                        "Section summary",
+                                        "section_summary",
+                                        0,
+                                        section_summary)
+
             files += ResultsHandler._get_files_in_modules(
                 section_name,
                 section_modules,
                 assignments,
                 download_descriptions)
+
         return files
 
     @staticmethod
