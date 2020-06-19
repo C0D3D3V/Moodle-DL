@@ -1,3 +1,4 @@
+import re
 import sys
 import logging
 import hashlib
@@ -340,6 +341,17 @@ class ResultsHandler:
         return files
 
     @staticmethod
+    def _filter_changing_attributes(description: str) -> str:
+        """
+        Tries to filter ids and stuff,
+        that is knowing to change over time in descriptions.
+        """
+
+        description = re.sub(r'id="[^"]*"', "", description)
+        description = re.sub(r"id='[^']*'", "", description)
+        return description
+
+    @staticmethod
     def _handle_files(section_name: str, module_name: str,
                       module_modname: str, module_id: str,
                       module_contents: []) -> [File]:
@@ -369,8 +381,10 @@ class ResultsHandler:
             hash_description = None
             if(content_type == "description"):
                 content_description = content.get("description", "")
+                hashable_description = ResultsHandler.\
+                    _filter_changing_attributes(content_description)
                 m = hashlib.sha1()
-                m.update(content_description.encode('utf-8'))
+                m.update(hashable_description.encode('utf-8'))
                 hash_description = m.hexdigest()
 
             new_file = File(
@@ -393,7 +407,7 @@ class ResultsHandler:
             files.append(new_file)
         return files
 
-    @staticmethod
+    @ staticmethod
     def _handle_description(section_name: str, module_name: str,
                             module_modname: str, module_id: str,
                             module_description: str) -> [File]:
@@ -413,7 +427,9 @@ class ResultsHandler:
         content_isexternalfile = False
 
         m = hashlib.sha1()
-        m.update(module_description.encode('utf-8'))
+        hashable_description = ResultsHandler.\
+            _filter_changing_attributes(module_description)
+        m.update(hashable_description.encode('utf-8'))
         hash_description = m.hexdigest()
 
         if(module_modname == 'url'):
