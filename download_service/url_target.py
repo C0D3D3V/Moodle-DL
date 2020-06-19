@@ -8,13 +8,13 @@ import string
 import posixpath
 import traceback
 import threading
+import html2text
 import contextlib
 import youtube_dl
 
 from pathlib import Path
 import urllib.parse as urlparse
 
-from utils import tomd
 from utils.string_tools import StringTools
 from state_recorder.course import Course
 from state_recorder.file import File
@@ -449,7 +449,7 @@ class URLTarget(object):
         description = open(self.file.saved_to, 'w+', encoding='utf-8')
         to_save = ""
         if(self.file.text_content is not None):
-            to_save = tomd.convert(
+            to_save = html2text.html2text(
                 self.file.text_content).strip()
             # to_save could also be html.unescape(),
             # but this could destroy the md file
