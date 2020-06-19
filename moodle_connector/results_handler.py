@@ -308,7 +308,7 @@ class ResultsHandler:
                                                             module_id,
                                                             module_description)
 
-            if (module_modname in ["resource", "folder", "url"]):
+            if (module_modname in ["resource", "folder", "url", "page"]):
                 files += ResultsHandler._handle_files(section_name,
                                                       module_name,
                                                       module_modname,
