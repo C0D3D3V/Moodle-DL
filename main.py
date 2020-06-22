@@ -197,19 +197,13 @@ def run_main(storage_path, skip_cert_verify=False,
     except BaseException:
         pass
 
-    try:
-        process_lock.lock(storage_path)
-    except Exception as e:
-        logging.error('Error while trying to create the lock! ' +
-                      'Exiting...', extra={'exception': e})
-        Log.error(str(e))
-        sys.exit(-1)
-
     mail_service = MailService(config)
     tg_service = TelegramService(config)
     console_service = ConsoleService(config)
 
     try:
+        process_lock.lock(storage_path)
+
         moodle = MoodleService(config, storage_path, skip_cert_verify)
 
         logging.debug(
