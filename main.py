@@ -9,6 +9,7 @@ import traceback
 import sentry_sdk
 
 import utils.process_lock as process_lock
+from logging.handlers import RotatingFileHandler
 
 try:
     # In unix readline needs to be loaded so that
@@ -161,12 +162,20 @@ def run_change_notification_telegram(storage_path):
 
 def run_main(storage_path, skip_cert_verify=False,
              without_downloading_files=False):
-    logging.basicConfig(
-        filename=os.path.join(storage_path, 'MoodleDownloader.log'),
-        level=logging.DEBUG,
-        format='%(asctime)s  %(levelname)s  {%(module)s}  %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
-    )
+
+    log_formatter = logging.Formatter(
+        '%(asctime)s  %(levelname)s  {%(module)s}  %(message)s',
+        '%Y-%m-%d %H:%M:%S')
+    log_file = os.path.join(storage_path, 'MoodleDownloader.log')
+    log_handler = RotatingFileHandler(log_file, mode='a', maxBytes=1*1024*1024,
+                                      backupCount=2, encoding=None, delay=0)
+
+    log_handler.setFormatter(log_formatter)
+    log_handler.setLevel(logging.DEBUG)
+
+    app_log = logging.getLogger()
+    app_log.setLevel(logging.DEBUG)
+    app_log.addHandler(log_handler)
 
     logging.info('--- main started ---------------------')
     Log.info('Moodle Downloader starting...')
