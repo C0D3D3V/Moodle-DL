@@ -13,6 +13,9 @@ from state_recorder.state_recorder import StateRecorder
 from moodle_connector import login_helper
 from moodle_connector import sso_token_receiver
 from moodle_connector.results_handler import ResultsHandler
+from moodle_connector.databases_handler import DatabasesHandler
+from moodle_connector.assignments_handler import AssignmentsHandler
+from moodle_connector.first_contact_handler import FirstContactHandler
 from moodle_connector.request_helper import RequestRejectedError, RequestHelper
 
 
@@ -164,6 +167,7 @@ class MoodleService:
 
         request_helper = RequestHelper(moodle_domain, moodle_path, token,
                                        self.skip_cert_verify)
+        first_contact_handler = FirstContactHandler(request_helper)
         results_handler = ResultsHandler(request_helper)
 
         download_course_ids = self.config_helper.get_download_course_ids()
@@ -177,13 +181,15 @@ class MoodleService:
         filtered_courses = []
         try:
 
-            sys.stdout.write('\rDownload account information')
+            sys.stdout.write('\rDownloading account information')
             sys.stdout.flush()
 
-            userid, version = results_handler.fetch_userid_and_version()
+            userid, version = first_contact_handler.fetch_userid_and_version()
+            assignments_handler = AssignmentsHandler(request_helper, version)
+            databases_handler = DatabasesHandler(request_helper, version)
             results_handler.setVersion(version)
 
-            courses_list = results_handler.fetch_courses(userid)
+            courses_list = first_contact_handler.fetch_courses(userid)
             courses = []
             # Filter unselected courses
             for course in courses_list:
@@ -192,15 +198,15 @@ class MoodleService:
                         dont_download_course_ids)):
                     courses.append(course)
 
-            assignments = results_handler.fetch_assignments(courses)
+            assignments = assignments_handler.fetch_assignments(courses)
 
             databases = {}
             if(download_databases):
-                databases = results_handler.fetch_databases(courses)
-                databases = results_handler.fetch_database_files(databases)
+                databases = databases_handler.fetch_databases(courses)
+                databases = databases_handler.fetch_database_files(databases)
 
             if(download_submissions):
-                assignments = results_handler.fetch_submissions(
+                assignments = assignments_handler.fetch_submissions(
                     userid, assignments)
 
             index = 0
@@ -214,7 +220,7 @@ class MoodleService:
                 if (len(course.fullname) > 17):
                     shorted_course_name = course.fullname[:15] + '..'
 
-                into = '\rDownload course information'
+                into = '\rDownloading course information'
 
                 status_message = (into + ' %3d/%3d [%17s|%6s]'
                                   % (index, len(courses),
