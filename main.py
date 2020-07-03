@@ -254,7 +254,8 @@ def run_main(storage_path, skip_cert_verify=False,
         logging.debug('All done. Exiting...')
         Log.success('All done. Exiting..')
     except BaseException as e:
-        process_lock.unlock(storage_path)
+        if(not isinstance(e, process_lock.LockError)):
+            process_lock.unlock(storage_path)
 
         error_formatted = traceback.format_exc()
         logging.error(error_formatted, extra={'exception': e})
