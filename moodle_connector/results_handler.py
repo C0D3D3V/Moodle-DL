@@ -22,6 +22,18 @@ class ResultsHandler:
         logging.debug('Detected moodle version: %d' % (version))
 
     @staticmethod
+    def _should_download_course(course_id: int, download_course_ids: [int],
+                                dont_download_course_ids: [int]) -> bool:
+        """
+        Checks if a course is in White-list and not in Blacklist
+        """
+        inBlacklist = (course_id in dont_download_course_ids)
+        inWhitelist = (course_id in download_course_ids or
+                       len(download_course_ids) == 0)
+
+        return (inWhitelist and not inBlacklist)
+
+    @staticmethod
     def _get_files_in_sections(course_sections: [],
                                assignments: {int: {}},
                                download_descriptions: bool) -> [File]:
