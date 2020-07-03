@@ -193,6 +193,8 @@ class MoodleService:
 
             assignments = results_handler.fetch_assignments(courses)
 
+            databases = results_handler.fetch_databases(courses)
+
             if(download_submissions):
                 assignments = results_handler.fetch_submissions(
                     userid, assignments, download_course_ids,

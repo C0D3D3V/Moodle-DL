@@ -80,13 +80,10 @@ class ResultsHandler:
         if (self.version < 2012120300):
             return {}
 
-        # we could add courseids[0],... to the request to download
-        # only the assignments of a special course, but we can also
-        # just request all assignments at once
-
         sys.stdout.write('\rDownload assignments information')
         sys.stdout.flush()
 
+        # We create a dictionary with all the courses we want to request.
         extra_data = {}
         courseids = {}
         for index, course in enumerate(courses):
@@ -124,6 +121,66 @@ class ResultsHandler:
                 })
 
             result.update({course_id: course_assigns})
+
+        return result
+
+    def fetch_databases(self, courses: [Course]) -> {int: {int: {}}}:
+        """
+        Fetches the Databases List for all courses from the
+        Moodle system
+        @return: A Dictionary of all databases,
+                 indexed by courses, then databases
+        """
+        # do this only if version is greater then 2.9
+        # because mod_data_get_databases_by_courses will fail
+        if (self.version < 2015051100):
+            return {}
+
+        sys.stdout.write('\rDownload databases information')
+        sys.stdout.flush()
+
+        # We create a dictionary with all the courses we want to request.
+        extra_data = {}
+        courseids = {}
+        for index, course in enumerate(courses):
+            courseids.update({str(index): course.id})
+
+        extra_data.update({'courseids': courseids})
+
+        databases_result = self.request_helper.post_REST(
+            'mod_data_get_databases_by_courses', extra_data)
+
+        databases = databases_result.get('databases', [])
+
+        result = {}
+        for database in databases:
+            database_id = database.get("id", 0)
+            database_name = database.get("name", "db")
+            database_intro = database.get("intro", "")
+            database_coursemodule = database.get("coursemodule", 0)
+            course_id = database.get("course", 0)
+
+            database_introfiles = database.get("introfiles", [])
+
+            # normalize
+            for db_file in database_introfiles:
+                file_type = db_file.get("type", "")
+                if (file_type is None or file_type == ""):
+                    db_file.update({'type': 'database_introfile'})
+
+            database_entry = {
+                database_id: {
+                    'coursemodule': database_coursemodule,
+                    'name': database_name,
+                    'intro': database_intro
+
+                }
+            }
+            course_dic = result.get(course_id, {})
+
+            course_dic.update(database_entry)
+
+            result.update({course_id: course_dic})
 
         return result
 
