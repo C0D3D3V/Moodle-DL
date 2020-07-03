@@ -327,6 +327,20 @@ class ResultsHandler:
     def _get_files_of_db_entries(entries: {}) -> []:
         result = []
 
+        entries_list = entries.get('entries', [])
+
+        for entry in entries_list:
+            entry_contents = entries.get('contents', [])
+
+            for entry_content in entry_contents:
+                entry_files = entry_content.get('files', [])
+
+                for entry_file in entry_files:
+                    filename = entry_file.get('filename', "")
+                    if(filename.startswith("thumb_")):
+                        continue
+                    result.append(entry_file)
+
         return result
 
     @staticmethod
