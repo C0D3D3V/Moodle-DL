@@ -154,6 +154,7 @@ class ResultsHandler:
 
         result = {}
         for database in databases:
+            # this is the instance id, not really importend for us
             database_id = database.get("id", 0)
             database_name = database.get("name", "db")
             database_intro = database.get("intro", "")
@@ -169,8 +170,8 @@ class ResultsHandler:
                     db_file.update({'type': 'database_introfile'})
 
             database_entry = {
-                database_id: {
-                    'coursemodule': database_coursemodule,
+                database_coursemodule: {
+                    'id': database_id,
                     'name': database_name,
                     'intro': database_intro
 
