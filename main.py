@@ -211,7 +211,8 @@ def run_main(storage_path, skip_cert_verify=False,
     console_service = ConsoleService(config)
 
     try:
-        process_lock.lock(storage_path)
+        if not IS_DEBUG:
+            process_lock.lock(storage_path)
 
         moodle = MoodleService(config, storage_path, skip_cert_verify)
 
