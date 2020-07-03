@@ -171,6 +171,7 @@ class MoodleService:
             .get_dont_download_course_ids()
         download_submissions = self.config_helper.get_download_submissions()
         download_descriptions = self.config_helper.get_download_descriptions()
+        download_databases = self.config_helper.get_download_databases()
 
         courses = []
         filtered_courses = []
@@ -193,7 +194,10 @@ class MoodleService:
 
             assignments = results_handler.fetch_assignments(courses)
 
-            databases = results_handler.fetch_databases(courses)
+            databases = {}
+            if(download_databases):
+                databases = results_handler.fetch_databases(courses)
+                databases = results_handler.fetch_database_files(databases)
 
             if(download_submissions):
                 assignments = results_handler.fetch_submissions(

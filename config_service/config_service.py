@@ -43,6 +43,7 @@ class ConfigService:
         self._set_options_of_courses(courses)
         self._select_should_download_submissions()
         self._select_should_download_descriptions()
+        self._select_should_download_databases()
         self._select_should_download_linked_files()
 
     def _select_courses_to_download(self, courses: [Course]):
@@ -236,6 +237,29 @@ class ConfigService:
 
         self.config_helper.set_property('download_submissions',
                                         download_submissions)
+
+    def _select_should_download_databases(self):
+        """
+        Asks the user if databases should be downloaded
+        """
+        download_databases = self.config_helper.get_download_databases()
+
+        print('')
+        print('In the database module of Moodle data can be stored' +
+              ' structured with information. Often it is also' +
+              ' possible for students to upload data there.  Because' +
+              ' the implementation of the downloader has not yet been' +
+              ' optimized at this point, it is optional to download the' +
+              ' databases. Currently only files are downloaded, thumbails' +
+              ' are ignored.')
+        print('')
+
+        download_databases = cutie.prompt_yes_or_no(
+            'Do you want to download databases of your courses?',
+            default_is_yes=download_databases)
+
+        self.config_helper.set_property('download_databases',
+                                        download_databases)
 
     def _select_should_download_descriptions(self):
         """

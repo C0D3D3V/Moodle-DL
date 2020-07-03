@@ -66,6 +66,13 @@ class ConfigHelper:
         except ValueError:
             return False
 
+    def get_download_databases(self) -> bool:
+        # returns a stored boolean if databases should be downloaded
+        try:
+            return self.get_property('download_databases')
+        except ValueError:
+            return False
+
     def get_download_course_ids(self) -> str:
         # returns a stored list of course ids hat should be downloaded
         try:
