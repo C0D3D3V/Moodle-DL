@@ -1,14 +1,6 @@
 # Moodle: Structural Documentation
-
-## Important links
-1. [Obtain Token](https://docs.moodle.org/dev/Creating_a_web_service_client)
-2. [Use API Function](https://docs.moodle.org/dev/Web_service_API_functions)
-3. [Reference to the implemented methods](https://github.com/moodle/moodle/blob/f9db5892ec0fb8c1de22d19177879a876ec35d2b/lib/db/services.php)
-  [More reference to the implemented methods](https://github.com/moodle/moodle/blob/6153be6850869cdc3a6ae925dcf6e688ac481333/mod/assign/db/services.php)
-  The source code can be useful to find out which parameters are allowed on the interfaces.
-4. [Moodle Android App (Working in Chromium)](https://mobileapp.moodledemo.net/)
-    The Web App can be used to find out how the Android App makes the requests
-5. [Moodle Versions](https://docs.moodle.org/dev/Releases)
+ 
+ [Also check out the Wiki](https://github.com/C0D3D3V/Moodle-Downloader-2/wiki)
 
 ## Usage
 
