@@ -143,7 +143,7 @@ class DatabasesHandler:
         entries_list = entries.get('entries', [])
 
         for entry in entries_list:
-            entry_contents = entries.get('contents', [])
+            entry_contents = entry.get('contents', [])
 
             for entry_content in entry_contents:
                 entry_files = entry_content.get('files', [])
