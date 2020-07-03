@@ -2,6 +2,7 @@ from utils import cutie
 from state_recorder.course import Course
 from config_service.config_helper import ConfigHelper
 from moodle_connector.results_handler import ResultsHandler
+from moodle_connector.first_contact_handler import FirstContactHandler
 from moodle_connector.request_helper import RequestRejectedError, RequestHelper
 
 
@@ -24,15 +25,14 @@ class ConfigService:
 
         request_helper = RequestHelper(moodle_domain, moodle_path, token,
                                        self.skip_cert_verify)
-        results_handler = ResultsHandler(request_helper)
+        first_contact_handler = FirstContactHandler(request_helper)
 
         courses = []
         try:
 
-            userid, version = results_handler.fetch_userid_and_version()
-            results_handler.setVersion(version)
+            userid, version = first_contact_handler.fetch_userid_and_version()
 
-            courses = results_handler.fetch_courses(userid)
+            courses = first_contact_handler.fetch_courses(userid)
 
         except (RequestRejectedError, ValueError, RuntimeError) as error:
             raise RuntimeError(
