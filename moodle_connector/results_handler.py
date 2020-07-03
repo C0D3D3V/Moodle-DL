@@ -80,7 +80,7 @@ class ResultsHandler:
         if (self.version < 2012120300):
             return {}
 
-        sys.stdout.write('\rDownload assignments information')
+        sys.stdout.write('\rDownloading assignments information')
         sys.stdout.flush()
 
         # We create a dictionary with all the courses we want to request.
@@ -136,7 +136,7 @@ class ResultsHandler:
         if (self.version < 2015051100):
             return {}
 
-        sys.stdout.write('\rDownload databases information')
+        sys.stdout.write('\rDownloading databases information')
         sys.stdout.flush()
 
         # We create a dictionary with all the courses we want to request.
@@ -154,14 +154,13 @@ class ResultsHandler:
 
         result = {}
         for database in databases:
-            # this is the instance id, not really importend for us
+            # This is the instance id with which we can make the API queries.
             database_id = database.get("id", 0)
             database_name = database.get("name", "db")
             database_intro = database.get("intro", "")
             database_coursemodule = database.get("coursemodule", 0)
-            course_id = database.get("course", 0)
-
             database_introfiles = database.get("introfiles", [])
+            course_id = database.get("course", 0)
 
             # normalize
             for db_file in database_introfiles:
@@ -173,10 +172,11 @@ class ResultsHandler:
                 database_coursemodule: {
                     'id': database_id,
                     'name': database_name,
-                    'intro': database_intro
-
+                    'intro': database_intro,
+                    'files': database_introfiles
                 }
             }
+
             course_dic = result.get(course_id, {})
 
             course_dic.update(database_entry)
@@ -185,20 +185,73 @@ class ResultsHandler:
 
         return result
 
+    def fetch_database_files(self,
+                             databases: {int: {int: {}}}) -> {int: {int: {}}}:
+        """
+        Fetches for the databases list of all courses the additionally
+        entries. This is kind of waste of resources, because there
+        is no API to get all entries at once
+        @param databases: the dictionary of databases of all courses.
+        @param download_course_ids: ids of courses for that should
+                                    be downloaded
+        @return: A Dictionary of all databases,
+                 indexed by courses, then databases
+        """
+        # do this only if version is greater then 3.3
+        # because mod_data_get_entries will fail
+        if (self.version < 2017051500):
+            return databases
+
+        intro = '\rDownloading information of the database records'
+
+        counter = 0
+        total = 0
+
+        # count total assignments for nice console output
+        for course_id in databases:
+            for database_id in databases[course_id]:
+                total += 1
+
+        for course_id in databases:
+            for database_id in databases[course_id]:
+                counter += 1
+                real_id = databases[course_id][database_id].get('id', 0)
+                data = {
+                    'databaseid': real_id
+                }
+
+                if(False):
+                    sys.stdout.write(intro + ' %3d/%3d [%6s|%6s]' % (counter,
+                                                                     total,
+                                                                     course_id,
+                                                                     real_id))
+                    sys.stdout.flush()
+
+                access = self.request_helper.post_REST(
+                    'mod_data_get_data_access_information', data)
+
+                if(not access.get("timeavailable", False)):
+                    continue
+
+                data.update({'returncontents': 1})
+
+                entries = self.request_helper.post_REST(
+                    'mod_data_get_entries', data)
+
+                database_files = self._get_files_of_db_entries(entries)
+                databases[course_id][database_id]['files'] += (
+                    database_files)
+
+        return databases
+
     def fetch_submissions(self, userid: int,
-                          assignments: {int: {int: {}}},
-                          download_course_ids: [int],
-                          dont_download_course_ids: [int]) -> {int: {int: {}}}:
+                          assignments: {int: {int: {}}}) -> {int: {int: {}}}:
         """
         Fetches for the assignments list of all courses the additionally
         submissions. This is kind of waste of resources, because there
         is no API to get all submissions at once
         @param userid: the user id.
         @param assignments: the dictionary of assignments of all courses.
-        @param download_course_ids: ids of courses for that should
-                                    be downloaded
-        @param dont_download_course_ids: ids of courses for that should
-                                         not be downloaded
         @return: A Dictionary of all assignments,
                  indexed by courses, then assignment
         """
@@ -207,25 +260,17 @@ class ResultsHandler:
         if (self.version < 2016052300):
             return assignments
 
-        intro = '\rDownload submission information'
+        intro = '\rDownloading submission information'
 
         counter = 0
         total = 0
 
         # count total assignments for nice console output
         for course_id in assignments:
-            if (not self._should_download_course(
-                course_id, download_course_ids,
-                    dont_download_course_ids)):
-                continue
             for assignment_id in assignments[course_id]:
                 total += 1
 
         for course_id in assignments:
-            if (not self._should_download_course(
-                course_id, download_course_ids,
-                    dont_download_course_ids)):
-                continue
             for assignment_id in assignments[course_id]:
                 counter += 1
                 real_id = assignments[course_id][assignment_id].get('id', 0)
@@ -275,6 +320,12 @@ class ResultsHandler:
         result += ResultsHandler._get_files_of_plugins(l_submission)
         result += ResultsHandler._get_files_of_plugins(l_teamsubmission)
         result += ResultsHandler._get_files_of_plugins(feedback)
+
+        return result
+
+    @staticmethod
+    def _get_files_of_db_entries(entries: {}) -> []:
+        result = []
 
         return result
 

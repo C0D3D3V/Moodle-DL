@@ -201,8 +201,7 @@ class MoodleService:
 
             if(download_submissions):
                 assignments = results_handler.fetch_submissions(
-                    userid, assignments, download_course_ids,
-                    dont_download_course_ids)
+                    userid, assignments)
 
             index = 0
             for course in courses:
