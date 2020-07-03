@@ -103,6 +103,17 @@ class ResultsHandler:
                                             module_modname,
                                             module_id,
                                             assign_files)
+            elif (module_modname == "data"):
+
+                # find database with same module_id
+                database = self.course_databases.get(module_id, {})
+                database_files = database.get('files', [])
+
+                files += self._handle_files(section_name,
+                                            module_name,
+                                            module_modname,
+                                            module_id,
+                                            database_files)
 
         return files
 
