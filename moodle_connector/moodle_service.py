@@ -234,8 +234,11 @@ class MoodleService:
                 sys.stdout.flush()
 
                 course_assignments = assignments.get(course.id, [])
-                course.files = results_handler.fetch_files(
-                    course.id, course_assignments, download_descriptions)
+                course_databases = databases.get(course.id, [])
+                results_handler.set_fetch_addons(course_assignments,
+                                                 course_databases)
+                results_handler.set_fetch_options(download_descriptions)
+                course.files = results_handler.fetch_files(course.id)
 
                 filtered_courses.append(course)
             print("")
