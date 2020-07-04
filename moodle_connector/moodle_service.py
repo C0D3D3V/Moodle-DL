@@ -233,8 +233,8 @@ class MoodleService:
                 sys.stdout.write(status_message)
                 sys.stdout.flush()
 
-                course_assignments = assignments.get(course.id, [])
-                course_databases = databases.get(course.id, [])
+                course_assignments = assignments.get(course.id, {})
+                course_databases = databases.get(course.id, {})
                 results_handler.set_fetch_addons(course_assignments,
                                                  course_databases)
                 results_handler.set_fetch_options(download_descriptions)
