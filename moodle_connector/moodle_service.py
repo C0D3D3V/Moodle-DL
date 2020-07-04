@@ -201,8 +201,8 @@ class MoodleService:
             assignments = assignments_handler.fetch_assignments(courses)
 
             databases = {}
+            databases = databases_handler.fetch_databases(courses)
             if(download_databases):
-                databases = databases_handler.fetch_databases(courses)
                 databases = databases_handler.fetch_database_files(databases)
 
             if(download_submissions):
@@ -255,7 +255,8 @@ class MoodleService:
         changes = self._filter_courses(changes, download_course_ids,
                                        dont_download_course_ids,
                                        download_submissions,
-                                       download_descriptions)
+                                       download_descriptions,
+                                       download_databases)
 
         changes = self.add_options_to_courses(changes)
 
@@ -281,7 +282,8 @@ class MoodleService:
                         download_course_ids: [int],
                         dont_download_course_ids: [int],
                         download_submissions: bool,
-                        download_descriptions: bool) -> [Course]:
+                        download_descriptions: bool,
+                        download_databases: bool) -> [Course]:
         """
         Filters the changes course list from courses that
         should not get downloaded
@@ -293,6 +295,7 @@ class MoodleService:
                                     should be downloaded
         @param download_descriptions: boolean if descriptions
                                     should be downloaded
+        @param download_databases: boolean if databases should be downloaded
         @return: filtered changes course list
         """
 
@@ -310,6 +313,13 @@ class MoodleService:
                 course_files = []
                 for file in course.files:
                     if (file.content_type != "description"):
+                        course_files.append(file)
+                course.files = course_files
+
+            if (not download_databases):
+                course_files = []
+                for file in course.files:
+                    if (file.content_type != "database_file"):
                         course_files.append(file)
                 course.files = course_files
 

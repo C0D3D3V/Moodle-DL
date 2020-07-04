@@ -152,6 +152,9 @@ class DatabasesHandler:
                     filename = entry_file.get('filename', "")
                     if(filename.startswith("thumb_")):
                         continue
+                    file_type = entry_file.get("type", "")
+                    if (file_type is None or file_type == ""):
+                        entry_file.update({'type': 'database_file'})
                     result.append(entry_file)
 
         return result
