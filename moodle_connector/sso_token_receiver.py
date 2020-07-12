@@ -1,3 +1,4 @@
+import re
 import base64
 
 from utils.logger import Log
@@ -8,6 +9,7 @@ class TransferServer(BaseHTTPRequestHandler):
     """
     Transfer server is an HTTP-server that waits for an incoming SSO token.
     """
+
     received_token = ''
 
     def do_GET(self):
@@ -24,9 +26,7 @@ class TransferServer(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
         self.end_headers()
-        self.wfile.write(("Moodle Downloader - " +
-                          "Token was successfully transferred."
-                          ).encode('utf-8'))
+        self.wfile.write(("Moodle Downloader - " + "Token was successfully transferred.").encode('utf-8'))
 
     def log_message(self, format, *args):
         return
@@ -38,16 +38,18 @@ def extract_token(address: str) -> str:
     """
     splitted = address.split('token=')
 
-    if (len(splitted) < 2):
+    if len(splitted) < 2:
         return None
 
     decoded = str(base64.b64decode(splitted[1]))
 
     splitted = decoded.split(':::')
-    if (len(splitted) < 2):
+    if len(splitted) < 2:
         return None
 
-    return splitted[1]
+    token = re.sub(r'[^A-Za-z0-9]+', '', splitted[1])
+
+    return token
 
 
 def receive_token() -> str:
@@ -59,9 +61,11 @@ def receive_token() -> str:
     try:
         httpd = HTTPServer(server_address, TransferServer)
     except PermissionError:
-        Log.error('Permission denied: Please start the' +
-                  ' downloader once with administrator rights, so that it' +
-                  ' can wait on port 80 for the token.')
+        Log.error(
+            'Permission denied: Please start the'
+            + ' downloader once with administrator rights, so that it'
+            + ' can wait on port 80 for the token.'
+        )
         exit(1)
 
     extracted_token = None
