@@ -26,6 +26,6 @@ def unlock(dir_path: str):
     """Remove a lock in a directory."""
     path = Path(dir_path) / "running.lock"
     try:
-        Path(path).unlink(missing_ok=True)
+        Path(path).unlink()
     except Exception:
         pass
