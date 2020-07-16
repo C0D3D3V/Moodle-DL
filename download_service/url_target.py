@@ -127,7 +127,7 @@ class URLTarget(object):
 
             filename, file_extension = os.path.splitext(content_filename)
 
-            new_filename = "%s_%02d%s" % (filename, count, file_extension)
+            new_filename = '%s_%02d%s' % (filename, count, file_extension)
 
             new_path = str(Path(destination) / new_filename)
 
@@ -152,7 +152,7 @@ class URLTarget(object):
         count = 1
         content_filename = os.path.basename(old_path)
         filename, file_extension = os.path.splitext(content_filename)
-        content_filename = "%s_old%s" % (filename, file_extension)
+        content_filename = '%s_old%s' % (filename, file_extension)
 
         destination = os.path.dirname(old_path)
         new_path = str(Path(destination) / content_filename)
@@ -166,7 +166,7 @@ class URLTarget(object):
 
             filename, file_extension = os.path.splitext(content_filename)
 
-            new_filename = "%s_%02d%s" % (filename, count, file_extension)
+            new_filename = '%s_%02d%s' % (filename, count, file_extension)
 
             new_path = str(Path(destination) / new_filename)
 
@@ -189,17 +189,17 @@ class URLTarget(object):
             pass
 
         def warning(self, msg):
-            if msg.find("Falling back") >= 0:
+            if msg.find('Falling back') >= 0:
                 return
-            if msg.find("Requested formats are incompatible for merge") >= 0:
+            if msg.find('Requested formats are incompatible for merge') >= 0:
                 return
 
-            print("\nyoutube-dl: " + msg + "\n")
+            print('\nyoutube-dl: ' + msg + '\n')
 
         def error(self, msg):
-            if msg.find("Unsupported URL") >= 0:
+            if msg.find('Unsupported URL') >= 0:
                 return
-            print("\nyoutube-dl: " + msg + "\n")
+            print('\nyoutube-dl: ' + msg + '\n')
 
     def yt_hook(self, d):
         downloaded_bytes = d.get('downloaded_bytes', 0)
@@ -255,7 +255,7 @@ class URLTarget(object):
         content_filename = os.path.basename(tmp_file)
 
         for filename in os.listdir(destination):
-            if filename.startswith(content_filename + "."):
+            if filename.startswith(content_filename + '.'):
                 one_tmp_file = os.path.join(destination, filename)
 
                 content_filename = os.path.basename(one_tmp_file)
@@ -273,7 +273,7 @@ class URLTarget(object):
 
                     filename, file_extension = os.path.splitext(content_filename)
 
-                    new_filename = "%s_%02d%s" % (filename, count, file_extension)
+                    new_filename = '%s_%02d%s' % (filename, count, file_extension)
 
                     new_path = str(Path(destination) / new_filename)
 
@@ -310,7 +310,7 @@ class URLTarget(object):
                 url_parsed = urlparse.urlsplit(self.file.content_fileurl)
                 new_filename = posixpath.basename(url_parsed.path)
                 new_filename = headers.get_filename(new_filename)
-                total_bytes_estimate = int(headers.get("Content-Length", -1))
+                total_bytes_estimate = int(headers.get('Content-Length', -1))
 
         if not isHTML:
             if self.filename != new_filename:
@@ -391,17 +391,17 @@ class URLTarget(object):
         """
 
         with open(self.file.saved_to, 'w+', encoding='utf-8') as shortcut:
-            if os.name == "nt":
-                shortcut.write("[InternetShortcut]" + os.linesep)
-                shortcut.write("URL=" + self.file.content_fileurl + os.linesep)
+            if os.name == 'nt':
+                shortcut.write('[InternetShortcut]' + os.linesep)
+                shortcut.write('URL=' + self.file.content_fileurl + os.linesep)
             else:
-                shortcut.write("[Desktop Entry]" + os.linesep)
-                shortcut.write("Encoding=UTF-8" + os.linesep)
-                shortcut.write("Name=" + self.filename + os.linesep)
-                shortcut.write("Type=Link" + os.linesep)
-                shortcut.write("URL=" + self.file.content_fileurl + os.linesep)
-                shortcut.write("Icon=text-html" + os.linesep)
-                shortcut.write("Name[en_US]=" + self.filename + os.linesep)
+                shortcut.write('[Desktop Entry]' + os.linesep)
+                shortcut.write('Encoding=UTF-8' + os.linesep)
+                shortcut.write('Name=' + self.filename + os.linesep)
+                shortcut.write('Type=Link' + os.linesep)
+                shortcut.write('URL=' + self.file.content_fileurl + os.linesep)
+                shortcut.write('Icon=text-html' + os.linesep)
+                shortcut.write('Name[en_US]=' + self.filename + os.linesep)
 
         self.file.time_stamp = int(time.time())
 
@@ -415,14 +415,14 @@ class URLTarget(object):
         """
 
         if self.file.content_type == 'description':
-            self.file.saved_to = str(Path(self.destination) / (self.filename + ".md"))
+            self.file.saved_to = str(Path(self.destination) / (self.filename + '.md'))
 
             self.file.saved_to = self._rename_if_exists(self.file.saved_to)
 
         elif self.file.module_modname == 'url':
-            self.file.saved_to = str(Path(self.destination) / (self.filename + ".desktop"))
-            if os.name == "nt":
-                self.file.saved_to = str(Path(self.destination) / (self.filename + ".URL"))
+            self.file.saved_to = str(Path(self.destination) / (self.filename + '.desktop'))
+            if os.name == 'nt':
+                self.file.saved_to = str(Path(self.destination) / (self.filename + '.URL'))
 
             self.file.saved_to = self._rename_if_exists(self.file.saved_to)
 
@@ -441,12 +441,12 @@ class URLTarget(object):
             to_save = html2text.html2text(self.file.text_content).strip()
             # to_save could also be html.unescape(),
             # but this could destroy the md file
-            if to_save != "":
+            if to_save != '':
                 description.write(to_save)
 
         description.close()
 
-        if to_save == "":
+        if to_save == '':
             try:
                 os.remove(self.file.saved_to)
 
@@ -454,7 +454,7 @@ class URLTarget(object):
 
                 self.success = True
             except Exception as e:
-                self.error = traceback.format_exc() + "\nError:" + str(e)
+                self.error = traceback.format_exc() + '\nError:' + str(e)
         else:
             self.file.time_stamp = int(time.time())
 
@@ -555,7 +555,7 @@ class URLTarget(object):
             self.success = True
 
         except Exception as e:
-            self.error = traceback.format_exc() + "\nError:" + str(e)
+            self.error = traceback.format_exc() + '\nError:' + str(e)
             filesize = 0
             try:
                 filesize = os.path.getsize(self.file.saved_to)
@@ -591,13 +591,13 @@ class URLTarget(object):
         with contextlib.closing(urllib.request.urlopen(request, context=context)) as fp:
             headers = fp.info()
 
-            # Just return the local path and the "headers" for file://
+            # Just return the local path and the 'headers' for file://
             # URLs. No sense in performing a copy unless requested.
-            if url_parsed.scheme == "file" and not filename:
+            if url_parsed.scheme == 'file' and not filename:
                 return os.path.normpath(url_parsed.path), headers
 
             if not filename:
-                raise RuntimeError("No filename specified!")
+                raise RuntimeError('No filename specified!')
 
             tfp = open(filename, 'wb')
 
@@ -612,7 +612,7 @@ class URLTarget(object):
                 blocknum = 0
 
                 # guess size
-                size = int(headers.get("Content-Length", -1))
+                size = int(headers.get('Content-Length', -1))
 
                 if reporthook:
                     reporthook(blocknum, bs, size)
@@ -629,7 +629,7 @@ class URLTarget(object):
 
         if size >= 0 and read < size:
             raise urllib.ContentTooShortError(
-                "retrieval incomplete: got only %i out of %i bytes" % (read, size), result
+                'retrieval incomplete: got only %i out of %i bytes' % (read, size), result
             )
 
         return result

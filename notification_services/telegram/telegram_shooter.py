@@ -23,7 +23,7 @@ class TelegramShooter:
         self.telegram_token = telegram_token
         self.telegram_chatid = telegram_chatid
 
-        self.connection = HTTPSConnection("api.telegram.org")
+        self.connection = HTTPSConnection('api.telegram.org')
 
     def send(self, message: str):
         payload = {'chat_id': self.telegram_chatid, 'text': message, 'parse_mode': 'HTML'}

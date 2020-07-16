@@ -7,18 +7,18 @@ from notification_services.notification_service import NotificationService
 
 class ConsoleService(NotificationService):
     def interactively_configure(self) -> None:
-        raise RuntimeError("Not yet implemendet!")
+        raise RuntimeError('Not yet implemendet!')
 
     def notify_about_changes_in_moodle(self, changes: [Course]) -> None:
         """
         Creates a terminal output about the downloaded changes.
         @param changes: A list of changed courses with changed files.
         """
-        RESET_SEQ = "\033[0m"
-        COLOR_SEQ = "\033[1;%dm"
+        RESET_SEQ = '\033[0m'
+        COLOR_SEQ = '\033[1;%dm'
 
         BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = range(30, 38)
-        print("\n")
+        print('\n')
 
         diff_count = 0
         for course in changes:
@@ -48,7 +48,7 @@ class ConsoleService(NotificationService):
                                 file.saved_to
                                 + RESET_SEQ
                                 + COLOR_SEQ % GREEN
-                                + " ==> "
+                                + ' ==> '
                                 + file.new_file.saved_to
                                 + RESET_SEQ
                             )
@@ -61,7 +61,7 @@ class ConsoleService(NotificationService):
 
                 else:
                     print(COLOR_SEQ % GREEN + '+\t' + file.saved_to + RESET_SEQ)
-            print("\n")
+            print('\n')
 
     def notify_about_error(self, error_description: str):
-        raise RuntimeError("Not yet implemented!")
+        raise RuntimeError('Not yet implemented!')

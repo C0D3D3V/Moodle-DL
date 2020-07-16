@@ -12,7 +12,7 @@ class File:
         module_modname: str,
         content_type: str,
         content_isexternalfile: bool,
-        saved_to: str = "",
+        saved_to: str = '',
         time_stamp: int = 0,
         modified: int = 0,
         moved: int = 0,
@@ -148,7 +148,7 @@ class File:
             """
 
     def __str__(self):
-        message = "File ("
+        message = 'File ('
 
         message += 'module_id: %s' % (self.module_id)
         message += ', section_name: %s' % (self.section_name)
@@ -169,5 +169,5 @@ class File:
         message += ', notified: %s' % (self.notified)
         message += ', hash: %s' % (self.hash)
 
-        message += ")"
+        message += ')'
         return message

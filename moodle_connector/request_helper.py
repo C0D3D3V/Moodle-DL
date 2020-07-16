@@ -69,7 +69,7 @@ class RequestHelper:
         @params: The necessary parameters for a REST URL
         @return: A formatted URL
         """
-        url = ('%swebservice/rest/server.php?moodlewsrestformat=json&' % (moodle_path)) + ('wsfunction=%s' % (function))
+        url = '%swebservice/rest/server.php?moodlewsrestformat=json&wsfunction=%s' % (moodle_path, function)
 
         return url
 
@@ -136,7 +136,7 @@ class RequestHelper:
         changelog = str(response.read()).split('\\n')
         version_string = '1'
         for line in changelog:
-            match = re.match(r"^===\s*([\d\.]+)\s*===$", line)
+            match = re.match(r'^===\s*([\d\.]+)\s*===$', line)
             if match:
                 version_string = match.group(1)
                 break
@@ -167,12 +167,12 @@ class RequestHelper:
                 + ' response: %s.\nError: %s' % (response.read(), error)
             )
         # Check for known errors
-        if "error" in response_extracted:
-            error = response_extracted.get("error", "")
-            errorcode = response_extracted.get("errorcode", "")
-            stacktrace = response_extracted.get("stacktrace", "")
-            debuginfo = response_extracted.get("debuginfo", "")
-            reproductionlink = response_extracted.get("reproductionlink", "")
+        if 'error' in response_extracted:
+            error = response_extracted.get('error', '')
+            errorcode = response_extracted.get('errorcode', '')
+            stacktrace = response_extracted.get('stacktrace', '')
+            debuginfo = response_extracted.get('debuginfo', '')
+            reproductionlink = response_extracted.get('reproductionlink', '')
 
             raise RequestRejectedError(
                 'The Moodle System rejected the Request.'
@@ -180,10 +180,10 @@ class RequestHelper:
                 + ('Stacktrace: %s, Debuginfo: %s, Reproductionlink: %s)' % (stacktrace, debuginfo, reproductionlink))
             )
 
-        if "exception" in response_extracted:
-            exception = response_extracted.get("exception", "")
-            errorcode = response_extracted.get("errorcode", "")
-            message = response_extracted.get("message", "")
+        if 'exception' in response_extracted:
+            exception = response_extracted.get('exception', '')
+            errorcode = response_extracted.get('errorcode', '')
+            message = response_extracted.get('message', '')
 
             raise RequestRejectedError(
                 'The Moodle System rejected the Request.'
@@ -211,9 +211,9 @@ class RequestHelper:
                     if len(new_base) > 1:
                         first = urllib.parse.quote(new_base.pop(0))
                         rest = map(lambda x: urllib.parse.quote(x), new_base)
-                        new_pair = "%s[%s]=%s" % (first, ']['.join(rest), urllib.parse.quote(str(value)))
+                        new_pair = '%s[%s]=%s' % (first, ']['.join(rest), urllib.parse.quote(str(value)))
                     else:
-                        new_pair = "%s=%s" % (urllib.parse.quote(str(key)), urllib.parse.quote(str(value)))
+                        new_pair = '%s=%s' % (urllib.parse.quote(str(key)), urllib.parse.quote(str(value)))
                     pairs.append(new_pair)
             return pairs
 

@@ -85,7 +85,7 @@ class StateRecorder:
                 """
                 c.execute(sql_create_moved_column)
 
-                c.execute("PRAGMA user_version = 2;")
+                c.execute('PRAGMA user_version = 2;')
                 current_version = 2
                 conn.commit()
 
@@ -97,7 +97,7 @@ class StateRecorder:
                 """
                 c.execute(sql_remove_modified_entries)
 
-                c.execute("PRAGMA user_version = 3;")
+                c.execute('PRAGMA user_version = 3;')
                 current_version = 3
 
                 conn.commit()
@@ -154,7 +154,7 @@ class StateRecorder:
                 c.execute(sql_create_new_files_table_3)
                 c.execute(sql_create_new_files_table_4)
 
-                c.execute("PRAGMA user_version = 4;")
+                c.execute('PRAGMA user_version = 4;')
                 current_version = 4
 
                 conn.commit()
@@ -195,12 +195,12 @@ class StateRecorder:
         if file1.content_fileurl != file2.content_fileurl or file1.content_filesize != file2.content_filesize:
             return True
         if (
-            file1.content_type == "description"
+            file1.content_type == 'description'
             and file1.content_type == file2.content_type
             and file1.hash != file2.hash
         ):
             return True
-        # if (file1.module_modname != "folder" and
+        # if (file1.module_modname != 'folder' and
         #         file1.content_timemodified != file2.content_timemodified):
         #     return True
         return False

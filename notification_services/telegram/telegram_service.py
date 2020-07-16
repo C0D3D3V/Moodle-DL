@@ -30,7 +30,7 @@ class TelegramService(NotificationService):
 
                 try:
                     telegram_shooter = TelegramShooter(telegram_token, telegram_chatID)
-                    telegram_shooter.send("This is a Testmessage from Moodle Downloader!")
+                    telegram_shooter.send('This is a Testmessage from Moodle Downloader!')
                 except BaseException as e:
                     print('Error while sending the test message: %s' % (str(e)))
 
@@ -97,7 +97,7 @@ class TelegramService(NotificationService):
         for course in changes:
             diff_count += len(course.files)
 
-        self._send_message(("%s new Changes in the Moodle courses!\r\n" % (diff_count)) + message_content)
+        self._send_message(('%s new Changes in the Moodle courses!\r\n' % (diff_count)) + message_content)
 
     def notify_about_error(self, error_description: str):
         """

@@ -243,7 +243,7 @@ def run_main(storage_path, skip_cert_verify=False, without_downloading_files=Fal
         if r_client:
             sentry_sdk.capture_exception(e)
 
-        short_error = "%s\r\n%s" % (str(e), traceback.format_exc(limit=1))
+        short_error = '%s\r\n%s' % (str(e), traceback.format_exc(limit=1))
         mail_service.notify_about_error(short_error)
         tg_service.notify_about_error(short_error)
 
@@ -258,9 +258,7 @@ def _dir_path(path):
     if os.path.isdir(path):
         return path
     else:
-        raise argparse.ArgumentTypeError(
-            ("'%s' is not a valid path." % (str(path)) + " Make sure the directory exists.")
-        )
+        raise argparse.ArgumentTypeError('"%s" is not a valid path. Make sure the directory exists.' % (str(path)))
 
 
 # --- called at the program invocation: -------------------------------------

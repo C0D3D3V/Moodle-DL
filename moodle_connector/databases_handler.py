@@ -45,17 +45,17 @@ class DatabasesHandler:
         result = {}
         for database in databases:
             # This is the instance id with which we can make the API queries.
-            database_id = database.get("id", 0)
-            database_name = database.get("name", "db")
-            database_intro = database.get("intro", "")
-            database_coursemodule = database.get("coursemodule", 0)
-            database_introfiles = database.get("introfiles", [])
-            course_id = database.get("course", 0)
+            database_id = database.get('id', 0)
+            database_name = database.get('name', 'db')
+            database_intro = database.get('intro', '')
+            database_coursemodule = database.get('coursemodule', 0)
+            database_introfiles = database.get('introfiles', [])
+            course_id = database.get('course', 0)
 
             # normalize
             for db_file in database_introfiles:
-                file_type = db_file.get("type", "")
-                if file_type is None or file_type == "":
+                file_type = db_file.get('type', '')
+                if file_type is None or file_type == '':
                     db_file.update({'type': 'database_introfile'})
 
             database_entry = {
@@ -113,7 +113,7 @@ class DatabasesHandler:
 
                 access = self.request_helper.post_REST('mod_data_get_data_access_information', data)
 
-                if not access.get("timeavailable", False):
+                if not access.get('timeavailable', False):
                     continue
 
                 data.update({'returncontents': 1})
@@ -138,11 +138,11 @@ class DatabasesHandler:
                 entry_files = entry_content.get('files', [])
 
                 for entry_file in entry_files:
-                    filename = entry_file.get('filename', "")
-                    if filename.startswith("thumb_"):
+                    filename = entry_file.get('filename', '')
+                    if filename.startswith('thumb_'):
                         continue
-                    file_type = entry_file.get("type", "")
-                    if file_type is None or file_type == "":
+                    file_type = entry_file.get('type', '')
+                    if file_type is None or file_type == '':
                         entry_file.update({'type': 'database_file'})
                     result.append(entry_file)
 

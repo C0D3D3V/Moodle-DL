@@ -116,9 +116,9 @@ class DownloadService:
         # If the file is located in a folder or in an assignment,
         # it should be saved in a sub-folder
         # (with the name of the module).
-        if file.module_modname in ["assign", "folder", "data"]:
+        if file.module_modname in ['assign', 'folder', 'data']:
             file_path = file.content_filepath
-            if file.content_type == "submission_file":
+            if file.content_type == 'submission_file':
                 file_path = os.path.join('/submissions/', file_path.strip('/'))
 
             return StringTools.path_of_file_in_module(
@@ -200,7 +200,7 @@ class DownloadService:
 
         # The overall progress also includes the total size that needs to be
         # downloaded and the size that has already been downloaded.
-        progressmessage += "Total: %3s%% %12s/%12skb" % (
+        progressmessage += 'Total: %3s%% %12s/%12skb' % (
             percentage,
             int(threads_total_downloaded / 1000.0),
             int(self.total_to_download / 1000.0),
@@ -219,9 +219,9 @@ class DownloadService:
         """
         print('')
         if len(self.report['failure']) > 0:
-            Log.warning('Error while trying to download files,' + ' look at the log for more details.')
+            Log.warning('Error while trying to download files, look at the log for more details.')
 
         for url_target in self.report['failure']:
-            logging.error('Error while trying to download file:' + ' %s' % (url_target))
+            logging.error('Error while trying to download file: %s' % (url_target))
             Log.error('%s\t%s' % (url_target.file.content_filename, url_target.error))
 

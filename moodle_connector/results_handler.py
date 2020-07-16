@@ -40,12 +40,12 @@ class ResultsHandler:
         """
         files = []
         for section in course_sections:
-            section_name = section.get("name", "")
-            section_modules = section.get("modules", [])
-            section_summary = section.get("summary", "")
-            if section_summary is not None and section_summary != "":
+            section_name = section.get('name', '')
+            section_modules = section.get('modules', [])
+            section_summary = section.get('summary', '')
+            if section_summary is not None and section_summary != '':
                 files += self._handle_description(
-                    section_name, "Section summary", "section_summary", 0, section_summary
+                    section_name, 'Section summary', 'section_summary', 0, section_summary
                 )
 
             files += self._get_files_in_modules(section_name, section_modules)
@@ -61,30 +61,30 @@ class ResultsHandler:
         """
         files = []
         for module in section_modules:
-            module_name = module.get("name", "")
-            module_modname = module.get("modname", "")
-            module_id = module.get("id", 0)
+            module_name = module.get('name', '')
+            module_modname = module.get('modname', '')
+            module_id = module.get('id', 0)
 
-            module_contents = module.get("contents", [])
+            module_contents = module.get('contents', [])
 
-            module_description = module.get("description", None)
+            module_description = module.get('description', None)
 
             if module_description is not None and self.download_descriptions is True:
                 files += self._handle_description(
                     section_name, module_name, module_modname, module_id, module_description
                 )
 
-            if module_modname in ["resource", "folder", "url", "page"]:
+            if module_modname in ['resource', 'folder', 'url', 'page']:
                 files += self._handle_files(section_name, module_name, module_modname, module_id, module_contents)
 
-            elif module_modname == "assign":
+            elif module_modname == 'assign':
 
                 # find assign with same module_id
                 assign = self.course_assignments.get(module_id, {})
                 assign_files = assign.get('files', [])
 
                 files += self._handle_files(section_name, module_name, module_modname, module_id, assign_files)
-            elif module_modname == "data":
+            elif module_modname == 'data':
 
                 # find database with same module_id
                 database = self.course_databases.get(module_id, {})
@@ -119,22 +119,22 @@ class ResultsHandler:
         """
         files = []
         for content in module_contents:
-            content_type = content.get("type", "")
-            content_filename = content.get("filename", "")
-            content_filepath = content.get("filepath", "/")
+            content_type = content.get('type', '')
+            content_filename = content.get('filename', '')
+            content_filepath = content.get('filepath', '/')
             if content_filepath is None:
                 content_filepath = '/'
-            content_filesize = content.get("filesize", 0)
-            content_fileurl = content.get("fileurl", "")
-            content_timemodified = content.get("timemodified", 0)
-            content_isexternalfile = content.get("isexternalfile", False)
+            content_filesize = content.get('filesize', 0)
+            content_fileurl = content.get('fileurl', '')
+            content_timemodified = content.get('timemodified', 0)
+            content_isexternalfile = content.get('isexternalfile', False)
 
-            if content_fileurl == "" and module_modname == "url":
+            if content_fileurl == '' and module_modname == 'url':
                 continue
 
             hash_description = None
-            if content_type == "description":
-                content_description = content.get("description", "")
+            if content_type == 'description':
+                content_description = content.get('description', '')
                 hashable_description = ResultsHandler._filter_changing_attributes(content_description)
                 m = hashlib.sha1()
                 m.update(hashable_description.encode('utf-8'))
@@ -155,7 +155,7 @@ class ResultsHandler:
                 hash=hash_description,
             )
 
-            if content_type == "description":
+            if content_type == 'description':
                 new_file.text_content = content_description
 
             files.append(new_file)
@@ -172,11 +172,11 @@ class ResultsHandler:
         @return: A list of files that exist in a module.
         """
         files = []
-        content_type = "description"
+        content_type = 'description'
         content_filename = module_name
-        content_filepath = "/"
+        content_filepath = '/'
         content_filesize = len(module_description)
-        content_fileurl = ""
+        content_fileurl = ''
         content_timemodified = 0
         content_isexternalfile = False
 

@@ -44,21 +44,21 @@ class AssignmentsHandler:
 
         result = {}
         for assign_course in assign_courses:
-            course_id = assign_course.get("id", 0)
+            course_id = assign_course.get('id', 0)
             course_assigns = {}
             course_assign_objs = assign_course.get('assignments', [])
 
             for course_assign_obj in course_assign_objs:
-                assign_id = course_assign_obj.get("cmid", 0)
-                assign_rid = course_assign_obj.get("id", 0)
+                assign_id = course_assign_obj.get('cmid', 0)
+                assign_rid = course_assign_obj.get('id', 0)
                 assign_files = []
-                assign_files += course_assign_obj.get("introfiles", [])
-                assign_files += course_assign_obj.get("introattachments", [])
+                assign_files += course_assign_obj.get('introfiles', [])
+                assign_files += course_assign_obj.get('introattachments', [])
 
                 # normalize
                 for assign_file in assign_files:
-                    file_type = assign_file.get("type", "")
-                    if file_type is None or file_type == "":
+                    file_type = assign_file.get('type', '')
+                    if file_type is None or file_type == '':
                         assign_file.update({'type': 'assign_file'})
 
                 course_assigns.update({assign_id: {'id': assign_rid, 'files': assign_files}})
@@ -137,8 +137,8 @@ class AssignmentsHandler:
                 files = filearea.get('files', [])
 
                 for file in files:
-                    file_type = file.get("type", "")
-                    if file_type is None or file_type == "":
+                    file_type = file.get('type', '')
+                    if file_type is None or file_type == '':
                         file.update({'type': 'submission_file'})
 
                     result.append(file)
@@ -148,10 +148,10 @@ class AssignmentsHandler:
 
             for editorfield in editorfields:
 
-                filename = editorfield.get("description", "")
-                description = editorfield.get("text", "")
-                if filename != "" and description != "":
-                    description_file = {"filename": filename, "description": description, 'type': 'description'}
+                filename = editorfield.get('description', '')
+                description = editorfield.get('text', '')
+                if filename != '' and description != '':
+                    description_file = {'filename': filename, 'description': description, 'type': 'description'}
                     result.append(description_file)
 
         return result

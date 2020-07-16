@@ -11,7 +11,7 @@ class Course:
         self.create_directory_structure = True
 
     def __str__(self):
-        message = "Course ("
+        message = 'Course ('
 
         message += 'id: %s' % (self.id)
         message += ', fullname: %s' % (self.fullname)
@@ -22,5 +22,5 @@ class Course:
         for i, file in enumerate(self.files):
             message += ', file[%i]: %s' % (i, file)
 
-        message += ")"
+        message += ')'
         return message

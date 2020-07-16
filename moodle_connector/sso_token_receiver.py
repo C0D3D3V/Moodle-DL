@@ -26,7 +26,7 @@ class TransferServer(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
         self.end_headers()
-        self.wfile.write(("Moodle Downloader - " + "Token was successfully transferred.").encode('utf-8'))
+        self.wfile.write(('Moodle Downloader - Token was successfully transferred.').encode('utf-8'))
 
     def log_message(self, format, *args):
         return

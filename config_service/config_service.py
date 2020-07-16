@@ -52,8 +52,7 @@ class ConfigService:
 
         print('')
         print(
-            'To avoid downloading all the Moodle courses you are'
-            + ' enrolled in, you can select which ones you want'
+            'To avoid downloading all the Moodle courses you are enrolled in, you can select which ones you want'
             + ' to download here. '
         )
         print('')
@@ -67,7 +66,7 @@ class ConfigService:
                 defaults.append(i)
 
         print('Which of the courses should be downloaded?')
-        print('[You can select with the space bar and confirm' + ' your selection with the enter key]')
+        print('[You can select with the space bar and confirm your selection with the enter key]')
         print('')
         selected_courses = cutie.select_multiple(options=choices, ticked_indices=defaults)
 
@@ -138,7 +137,7 @@ class ConfigService:
                     choices_courses.append(course)
 
             print('')
-            print('For which of the following course do you want to change' + ' the settings?')
+            print('For which of the following course do you want to change the settings?')
             print('[Confirm your selection with the Enter key]')
             print('')
 
@@ -262,7 +261,7 @@ class ConfigService:
         print('')
 
         download_descriptions = cutie.prompt_yes_or_no(
-            'Would you like to download descriptions of the courses you have' + ' selected?',
+            'Would you like to download descriptions of the courses you have selected?',
             default_is_yes=download_descriptions,
         )
 
@@ -292,7 +291,7 @@ class ConfigService:
         print('')
 
         download_linked_files = cutie.prompt_yes_or_no(
-            'Would you like to download linked files of the courses you have' + ' selected?',
+            'Would you like to download linked files of the courses you have selected?',
             default_is_yes=download_linked_files,
         )
 

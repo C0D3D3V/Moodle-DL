@@ -15,8 +15,8 @@ class OfflineService:
         self.state_recorder = StateRecorder(Path(storage_path) / 'moodle_state.db')
 
     def interactively_manage_database(self):
-        RESET_SEQ = "\033[0m"
-        COLOR_SEQ = "\033[1;%dm"
+        RESET_SEQ = '\033[0m'
+        COLOR_SEQ = '\033[1;%dm'
 
         BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = range(30, 38)
 
@@ -35,9 +35,9 @@ class OfflineService:
             return
 
         print(
-            "This management tool will navigate you through a menu to"
-            + " selectively remove file entries from the database so"
-            + " that these files can be downloaded again."
+            'This management tool will navigate you through a menu to'
+            + ' selectively remove file entries from the database so'
+            + ' that these files can be downloaded again.'
         )
 
         course_options = []

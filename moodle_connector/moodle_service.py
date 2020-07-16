@@ -59,7 +59,7 @@ class MoodleService:
             except RequestRejectedError as error:
                 print('Login Failed! (%s) Please try again.' % (error))
             except (ValueError, RuntimeError) as error:
-                print('Error while communicating with the Moodle System!' + ' (%s) Please try again.' % (error))
+                print('Error while communicating with the Moodle System! (%s) Please try again.' % (error))
 
         # Saves the created token and the successful Moodle parameters.
         self.config_helper.set_property('token', moodle_token)
@@ -97,10 +97,10 @@ class MoodleService:
                 + str(version)
             )
 
-        print(' If you want to copy the login-token manual,' + ' you will be guided through the manual copy process.')
+        print(' If you want to copy the login-token manual, you will be guided through the manual copy process.')
         do_automatic = cutie.prompt_yes_or_no('Do you want to try to receive the SSO token automatically?')
 
-        print('Please log into Moodle on this computer and then visit' + ' the following address in your web browser: ')
+        print('Please log into Moodle on this computer and then visit the following address in your web browser: ')
 
         if do_automatic:
             print(
@@ -234,7 +234,7 @@ class MoodleService:
                 course.files = results_handler.fetch_files(course.id)
 
                 filtered_courses.append(course)
-            print("")
+            print('')
 
         except (RequestRejectedError, ValueError, RuntimeError) as error:
             raise RuntimeError('Error while communicating with the Moodle System! (%s)' % (error))
@@ -299,21 +299,21 @@ class MoodleService:
             if not download_submissions:
                 course_files = []
                 for file in course.files:
-                    if file.content_type != "submission_file":
+                    if file.content_type != 'submission_file':
                         course_files.append(file)
                 course.files = course_files
 
             if not download_descriptions:
                 course_files = []
                 for file in course.files:
-                    if file.content_type != "description":
+                    if file.content_type != 'description':
                         course_files.append(file)
                 course.files = course_files
 
             if not download_databases:
                 course_files = []
                 for file in course.files:
-                    if file.content_type != "database_file":
+                    if file.content_type != 'database_file':
                         course_files.append(file)
                 course.files = course_files
 
@@ -335,7 +335,7 @@ class MoodleService:
         moodle_domain = moodle_uri.netloc
         moodle_path = moodle_uri.path
         if not moodle_path.endswith('/'):
-            moodle_path = moodle_path + "/"
+            moodle_path = moodle_path + '/'
 
         if moodle_path == '':
             moodle_path = '/'
