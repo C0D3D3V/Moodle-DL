@@ -25,9 +25,17 @@ class URLTarget(object):
     URLTarget is responsible to download a special file.
     """
 
-    def __init__(self, file: File, course: Course, destination: str,
-                 token: str, thread_report: [], lock: threading.Lock,
-                 ssl_context: ssl.SSLContext, options: {}):
+    def __init__(
+        self,
+        file: File,
+        course: Course,
+        destination: str,
+        token: str,
+        thread_report: [],
+        lock: threading.Lock,
+        ssl_context: ssl.SSLContext,
+        options: {},
+    ):
         """
         Initiating an URL target.
         """
@@ -67,11 +75,11 @@ class URLTarget(object):
 
         # if urlretrieve cannot determine the actual download size,
         # use that of moodle.
-        if(total_size == -1):
+        if total_size == -1:
             total_size = self.file.content_filesize
 
         percent = 100
-        if(total_size != 0):
+        if total_size != 0:
             percent = int(self.downloaded * 100 / total_size)
 
         self.thread_report[self.thread_id]['percentage'] = percent
@@ -91,7 +99,7 @@ class URLTarget(object):
     @staticmethod
     def _create_dir(path: str):
         # Creates the folders of a path if they do not exist.
-        if(not os.path.exists(path)):
+        if not os.path.exists(path):
             try:
                 # raise condition
                 os.makedirs(path)
@@ -116,11 +124,9 @@ class URLTarget(object):
         while os.path.exists(new_path):
             count += 1
 
-            filename, file_extension = os.path.splitext(
-                content_filename)
+            filename, file_extension = os.path.splitext(content_filename)
 
-            new_filename = "%s_%02d%s" % (
-                filename, count, file_extension)
+            new_filename = "%s_%02d%s" % (filename, count, file_extension)
 
             new_path = str(Path(destination) / new_filename)
 
@@ -135,17 +141,16 @@ class URLTarget(object):
         It will add the file name extension '_old' if possible.
         On success it returns True
         """
-        if (self.file.old_file is None):
+        if self.file.old_file is None:
             return False
 
         old_path = self.file.old_file.saved_to
-        if (not os.path.exists(old_path)):
+        if not os.path.exists(old_path):
             return False
 
         count = 1
         content_filename = os.path.basename(old_path)
-        filename, file_extension = os.path.splitext(
-            content_filename)
+        filename, file_extension = os.path.splitext(content_filename)
         content_filename = "%s_old%s" % (filename, file_extension)
 
         destination = os.path.dirname(old_path)
@@ -158,11 +163,9 @@ class URLTarget(object):
         while os.path.exists(new_path):
             count += 1
 
-            filename, file_extension = os.path.splitext(
-                content_filename)
+            filename, file_extension = os.path.splitext(content_filename)
 
-            new_filename = "%s_%02d%s" % (
-                filename, count, file_extension)
+            new_filename = "%s_%02d%s" % (filename, count, file_extension)
 
             new_path = str(Path(destination) / new_filename)
 
@@ -185,15 +188,15 @@ class URLTarget(object):
             pass
 
         def warning(self, msg):
-            if(msg.find("Falling back") >= 0):
+            if msg.find("Falling back") >= 0:
                 return
-            if(msg.find("Requested formats are incompatible for merge") >= 0):
+            if msg.find("Requested formats are incompatible for merge") >= 0:
                 return
 
             print("\nyoutube-dl: " + msg + "\n")
 
         def error(self, msg):
-            if(msg.find("Unsupported URL") >= 0):
+            if msg.find("Unsupported URL") >= 0:
                 return
             print("\nyoutube-dl: " + msg + "\n")
 
@@ -202,37 +205,34 @@ class URLTarget(object):
         total_bytes_estimate = d.get('total_bytes_estimate', 0)
         total_bytes = d.get('total_bytes', 0)
 
-        difference = (downloaded_bytes - self.downloaded)
+        difference = downloaded_bytes - self.downloaded
         self.thread_report[self.thread_id]['total'] += difference
         self.downloaded += difference
 
-        if(total_bytes_estimate <= 0):
+        if total_bytes_estimate <= 0:
             total_bytes_estimate = total_bytes
 
-        if(total_bytes_estimate <= 0):
+        if total_bytes_estimate <= 0:
             total_bytes_estimate = self.file.content_filesize
 
         # Update status information
-        if(self.thread_report[self.thread_id]['extra_totalsize'] is None
-           and total_bytes_estimate > 0):
-            self.thread_report[self.thread_id]['extra_totalsize'] = \
-                total_bytes_estimate
-            self.thread_report[self.thread_id]['old_extra_totalsize'] = \
-                total_bytes_estimate
+        if self.thread_report[self.thread_id]['extra_totalsize'] is None and total_bytes_estimate > 0:
+            self.thread_report[self.thread_id]['extra_totalsize'] = total_bytes_estimate
+            self.thread_report[self.thread_id]['old_extra_totalsize'] = total_bytes_estimate
 
-        if(self.thread_report[self.thread_id]['extra_totalsize'] == -1
-           and total_bytes_estimate >
-           self.thread_report[self.thread_id]['old_extra_totalsize']):
+        if (
+            self.thread_report[self.thread_id]['extra_totalsize'] == -1
+            and total_bytes_estimate > self.thread_report[self.thread_id]['old_extra_totalsize']
+        ):
 
-            self.thread_report[self.thread_id]['extra_totalsize'] = \
-                total_bytes_estimate - \
-                self.thread_report[self.thread_id]['old_extra_totalsize']
+            self.thread_report[self.thread_id]['extra_totalsize'] = (
+                total_bytes_estimate - self.thread_report[self.thread_id]['old_extra_totalsize']
+            )
 
-            self.thread_report[self.thread_id]['old_extra_totalsize'] = \
-                total_bytes_estimate
+            self.thread_report[self.thread_id]['old_extra_totalsize'] = total_bytes_estimate
 
         percent = 100
-        if(total_bytes_estimate != 0):
+        if total_bytes_estimate != 0:
             percent = int(100 * downloaded_bytes / total_bytes_estimate)
 
         self.thread_report[self.thread_id]['percentage'] = percent
@@ -258,11 +258,9 @@ class URLTarget(object):
                 one_tmp_file = os.path.join(destination, filename)
 
                 content_filename = os.path.basename(one_tmp_file)
-                filename, file_extension = os.path.splitext(
-                    content_filename)
+                filename, file_extension = os.path.splitext(content_filename)
 
-                new_path = str(
-                    Path(self.destination) / self.filename) + file_extension
+                new_path = str(Path(self.destination) / self.filename) + file_extension
 
                 count = 1
                 content_filename = os.path.basename(new_path)
@@ -272,11 +270,9 @@ class URLTarget(object):
                 while os.path.exists(new_path):
                     count += 1
 
-                    filename, file_extension = os.path.splitext(
-                        content_filename)
+                    filename, file_extension = os.path.splitext(content_filename)
 
-                    new_filename = "%s_%02d%s" % (
-                        filename, count, file_extension)
+                    new_filename = "%s_%02d%s" % (filename, count, file_extension)
 
                     new_path = str(Path(destination) / new_filename)
 
@@ -302,13 +298,11 @@ class URLTarget(object):
         isHTML = False
         new_filename = ""
         total_bytes_estimate = -1
-        with contextlib.closing(
-            urllib.request.urlopen(self.file.content_fileurl,
-                                   context=self.ssl_context)) as fp:
+        with contextlib.closing(urllib.request.urlopen(self.file.content_fileurl, context=self.ssl_context)) as fp:
             headers = fp.info()
 
             content_type = headers.get_content_type()
-            if(content_type == 'text/html' or content_type == 'text/plain'):
+            if content_type == 'text/html' or content_type == 'text/plain':
                 isHTML = True
             else:
                 url_parsed = urlparse.urlsplit(self.file.content_fileurl)
@@ -316,18 +310,17 @@ class URLTarget(object):
                 new_filename = headers.get_filename(new_filename)
                 total_bytes_estimate = int(headers.get("Content-Length", -1))
 
-        if(not isHTML):
-            if(self.filename != new_filename):
+        if not isHTML:
+            if self.filename != new_filename:
                 self.filename = new_filename
                 self.set_path()
 
-            if(total_bytes_estimate != -1):
-                self.thread_report[self.thread_id]['extra_totalsize'] = \
-                    total_bytes_estimate
+            if total_bytes_estimate != -1:
+                self.thread_report[self.thread_id]['extra_totalsize'] = total_bytes_estimate
 
-            self.urlretrieve(self.file.content_fileurl,
-                             self.file.saved_to, context=self.ssl_context,
-                             reporthook=self.add_progress)
+            self.urlretrieve(
+                self.file.content_fileurl, self.file.saved_to, context=self.ssl_context, reporthook=self.add_progress
+            )
 
             self.file.time_stamp = int(time.time())
 
@@ -336,20 +329,19 @@ class URLTarget(object):
 
         else:
 
-            tmp_filename = ''.join(random.choices(
-                string.ascii_uppercase + string.digits, k=10))
+            tmp_filename = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
             tmp_file = str(Path(self.destination) / tmp_filename)
             ydl_opts = {
                 'logger': self.YtLogger(),
                 'progress_hooks': [self.yt_hook],
                 'outtmpl': (tmp_file + '.%(ext)s'),
-                'nocheckcertificate': True
+                'nocheckcertificate': True,
             }
 
             with youtube_dl.YoutubeDL(ydl_opts) as ydl:
                 try:
                     ydl_results = ydl.download([self.file.content_fileurl])
-                    if(ydl_results == 1):
+                    if ydl_results == 1:
                         return False
                     else:
                         self.move_tmp_file(tmp_file)
@@ -376,18 +368,18 @@ class URLTarget(object):
         inBlacklist = False
 
         for entry in blacklist:
-            if(domain == entry or domain.endswith('.' + entry)):
+            if domain == entry or domain.endswith('.' + entry):
                 inBlacklist = True
                 break
 
-        inWhitelist = (len(whitelist) == 0)
+        inWhitelist = len(whitelist) == 0
 
         for entry in whitelist:
-            if(domain == entry or domain.endswith('.' + entry)):
+            if domain == entry or domain.endswith('.' + entry):
                 inWhitelist = True
                 break
 
-        return (not inWhitelist or inBlacklist)
+        return not inWhitelist or inBlacklist
 
     def create_shortcut(self):
         """
@@ -403,13 +395,11 @@ class URLTarget(object):
             else:
                 shortcut.write("[Desktop Entry]" + os.linesep)
                 shortcut.write("Encoding=UTF-8" + os.linesep)
-                shortcut.write("Name=" + self.filename +
-                               os.linesep)
+                shortcut.write("Name=" + self.filename + os.linesep)
                 shortcut.write("Type=Link" + os.linesep)
                 shortcut.write("URL=" + self.file.content_fileurl + os.linesep)
                 shortcut.write("Icon=text-html" + os.linesep)
-                shortcut.write("Name[en_US]=" + self.filename +
-                               os.linesep)
+                shortcut.write("Name[en_US]=" + self.filename + os.linesep)
 
         self.file.time_stamp = int(time.time())
 
@@ -422,22 +412,19 @@ class URLTarget(object):
         An empty temporary file is created which may need to be cleaned up.
         """
 
-        if (self.file.content_type == 'description'):
-            self.file.saved_to = str(Path(
-                self.destination) / (self.filename + ".md"))
+        if self.file.content_type == 'description':
+            self.file.saved_to = str(Path(self.destination) / (self.filename + ".md"))
 
             self.file.saved_to = self._rename_if_exists(self.file.saved_to)
 
-        elif (self.file.module_modname == 'url'):
-            self.file.saved_to = str(Path(
-                self.destination) / (self.filename + ".desktop"))
+        elif self.file.module_modname == 'url':
+            self.file.saved_to = str(Path(self.destination) / (self.filename + ".desktop"))
             if os.name == "nt":
-                self.file.saved_to = str(Path(
-                    self.destination) / (self.filename + ".URL"))
+                self.file.saved_to = str(Path(self.destination) / (self.filename + ".URL"))
 
             self.file.saved_to = self._rename_if_exists(self.file.saved_to)
 
-        else:   # normal path
+        else:  # normal path
             self.file.saved_to = str(Path(self.destination) / self.filename)
 
             self.file.saved_to = self._rename_if_exists(self.file.saved_to)
@@ -448,17 +435,16 @@ class URLTarget(object):
         """
         description = open(self.file.saved_to, 'w+', encoding='utf-8')
         to_save = ""
-        if(self.file.text_content is not None):
-            to_save = html2text.html2text(
-                self.file.text_content).strip()
+        if self.file.text_content is not None:
+            to_save = html2text.html2text(self.file.text_content).strip()
             # to_save could also be html.unescape(),
             # but this could destroy the md file
-            if (to_save != ""):
+            if to_save != "":
                 description.write(to_save)
 
         description.close()
 
-        if(to_save == ""):
+        if to_save == "":
             try:
                 os.remove(self.file.saved_to)
 
@@ -478,11 +464,11 @@ class URLTarget(object):
         If it worked it returns True. Else the file needs to be redownloaded.
         """
 
-        if (self.file.old_file is None):
+        if self.file.old_file is None:
             return False
 
         old_path = self.file.old_file.saved_to
-        if (not os.path.exists(old_path)):
+        if not os.path.exists(old_path):
             return False
 
         try:
@@ -528,38 +514,39 @@ class URLTarget(object):
 
             # if file was modified try rename the old file,
             # before create new one
-            if (self.file.modified):
+            if self.file.modified:
                 self.try_rename_old_file()
 
             # create a empty destination file
             self.set_path()
 
             # Try to move the old file if it still exists
-            if (self.file.moved):
-                if(self.try_move_file()):
+            if self.file.moved:
+                if self.try_move_file():
                     return self.success
 
             # if it is a Description we have to create a descripton file
             # instead of downloading it
-            if (self.file.content_type == 'description'):
+            if self.file.content_type == 'description':
                 self.create_description()
                 return self.success
 
             # if it is a URL we have to create a shortcut
             # instead of downloading it
-            if (self.file.module_modname == 'url'):
+            if self.file.module_modname == 'url':
                 self.create_shortcut()
-                if(self.options.get('download_linked_files', False) and
-                        not self.is_filtered_external_domain()):
+                if self.options.get('download_linked_files', False) and not self.is_filtered_external_domain():
                     self.try_download_link()
                     # Warning: try_download_link overwrites saved_to and
                     # time_stamp in move_tmp_file
                 return self.success
 
-            self.urlretrieve(self._add_token_to_url(
-                self.file.content_fileurl),
-                self.file.saved_to, context=self.ssl_context,
-                reporthook=self.add_progress)
+            self.urlretrieve(
+                self._add_token_to_url(self.file.content_fileurl),
+                self.file.saved_to,
+                context=self.ssl_context,
+                reporthook=self.add_progress,
+            )
 
             self.file.time_stamp = int(time.time())
 
@@ -573,7 +560,7 @@ class URLTarget(object):
             except Exception:
                 pass
 
-            if (self.downloaded == 0 and filesize == 0):
+            if self.downloaded == 0 and filesize == 0:
                 try:
                     # remove touched file
                     os.remove(self.file.saved_to)
@@ -587,8 +574,7 @@ class URLTarget(object):
         return self.success
 
     @staticmethod
-    def urlretrieve(url: str, filename: str,
-                    context: ssl.SSLContext, reporthook=None):
+    def urlretrieve(url: str, filename: str, context: ssl.SSLContext, reporthook=None):
         """
         original source:
         https://github.com/python/cpython/blob/
@@ -599,8 +585,7 @@ class URLTarget(object):
         """
         url_parsed = urlparse.urlparse(url)
 
-        with contextlib.closing(urllib.request.urlopen(url,
-                                                       context=context)) as fp:
+        with contextlib.closing(urllib.request.urlopen(url, context=context)) as fp:
             headers = fp.info()
 
             # Just return the local path and the "headers" for file://
@@ -641,8 +626,8 @@ class URLTarget(object):
 
         if size >= 0 and read < size:
             raise urllib.ContentTooShortError(
-                "retrieval incomplete: got only %i out of %i bytes"
-                % (read, size), result)
+                "retrieval incomplete: got only %i out of %i bytes" % (read, size), result
+            )
 
         return result
 
@@ -650,4 +635,7 @@ class URLTarget(object):
         # URLTarget to string
         return 'URLTarget (%(file)s, %(success)s, %(error)s)' % {
             'file': self.file,
-            'success': self.success, 'error': self.error}
+            'success': self.success,
+            'error': self.error,
+        }
+
