@@ -97,6 +97,8 @@ Options can be combined with all the actions mentioned above.
 ### Contributing
 I'm open for all forks, feedback and Pull Requests ;)
 
+I am happy about every contribution to the project. 
+Because my studies are slowly coming to an end, I am looking for a new Contributor/Maintainer for this project. So if someone is interested in continuing the project or adding a lot new features, please feel free to contact me by mail. 
 
 ### License
 This project is licensed under the terms of the *GNU General Public License v3.0*. For further information, please look [here](http://choosealicense.com/licenses/gpl-3.0/) or [here<sup>(DE)</sup>](http://www.gnu.org/licenses/gpl-3.0.de.html).
