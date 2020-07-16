@@ -15,9 +15,10 @@ import youtube_dl
 from pathlib import Path
 import urllib.parse as urlparse
 
-from utils.string_tools import StringTools
-from state_recorder.course import Course
 from state_recorder.file import File
+from state_recorder.course import Course
+from utils.string_tools import StringTools
+from moodle_connector.request_helper import RequestHelper
 
 
 class URLTarget(object):
@@ -298,7 +299,8 @@ class URLTarget(object):
         isHTML = False
         new_filename = ""
         total_bytes_estimate = -1
-        with contextlib.closing(urllib.request.urlopen(self.file.content_fileurl, context=self.ssl_context)) as fp:
+        request = urllib.request.Request(url=self.file.content_fileurl, headers=RequestHelper.stdHeader)
+        with contextlib.closing(urllib.request.urlopen(request, context=self.ssl_context)) as fp:
             headers = fp.info()
 
             content_type = headers.get_content_type()
@@ -585,7 +587,8 @@ class URLTarget(object):
         """
         url_parsed = urlparse.urlparse(url)
 
-        with contextlib.closing(urllib.request.urlopen(url, context=context)) as fp:
+        request = urllib.request.Request(url=url, headers=RequestHelper.stdHeader)
+        with contextlib.closing(urllib.request.urlopen(request, context=context)) as fp:
             headers = fp.info()
 
             # Just return the local path and the "headers" for file://
