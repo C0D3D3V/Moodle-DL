@@ -1,4 +1,3 @@
-
 import sys
 
 from moodle_connector.request_helper import RequestHelper
@@ -25,7 +24,7 @@ class AssignmentsHandler:
         """
         # do this only if version is greater then 2.4
         # because mod_assign_get_assignments will fail
-        if (self.version < 2012120300):
+        if self.version < 2012120300:
             return {}
 
         sys.stdout.write('\rDownloading assignments information')
@@ -39,8 +38,7 @@ class AssignmentsHandler:
 
         extra_data.update({'courseids': courseids})
 
-        assign_result = self.request_helper.post_REST(
-            'mod_assign_get_assignments', extra_data)
+        assign_result = self.request_helper.post_REST('mod_assign_get_assignments', extra_data)
 
         assign_courses = assign_result.get('courses', [])
 
@@ -60,20 +58,16 @@ class AssignmentsHandler:
                 # normalize
                 for assign_file in assign_files:
                     file_type = assign_file.get("type", "")
-                    if (file_type is None or file_type == ""):
+                    if file_type is None or file_type == "":
                         assign_file.update({'type': 'assign_file'})
 
-                course_assigns.update({
-                    assign_id: {'id': assign_rid,
-                                'files': assign_files}
-                })
+                course_assigns.update({assign_id: {'id': assign_rid, 'files': assign_files}})
 
             result.update({course_id: course_assigns})
 
         return result
 
-    def fetch_submissions(self, userid: int,
-                          assignments: {int: {int: {}}}) -> {int: {int: {}}}:
+    def fetch_submissions(self, userid: int, assignments: {int: {int: {}}}) -> {int: {int: {}}}:
         """
         Fetches for the assignments list of all courses the additionally
         submissions. This is kind of waste of resources, because there
@@ -85,7 +79,7 @@ class AssignmentsHandler:
         """
         # do this only if version is greater then 3.1
         # because mod_assign_get_submission_status will fail
-        if (self.version < 2016052300):
+        if self.version < 2016052300:
             return assignments
 
         intro = '\rDownloading submission information'
@@ -102,23 +96,15 @@ class AssignmentsHandler:
             for assignment_id in assignments[course_id]:
                 counter += 1
                 real_id = assignments[course_id][assignment_id].get('id', 0)
-                data = {
-                    'userid': userid,
-                    'assignid': real_id
-                }
+                data = {'userid': userid, 'assignid': real_id}
 
-                sys.stdout.write(intro + ' %3d/%3d [%6s|%6s]' % (counter,
-                                                                 total,
-                                                                 course_id,
-                                                                 real_id))
+                sys.stdout.write(intro + ' %3d/%3d [%6s|%6s]' % (counter, total, course_id, real_id))
                 sys.stdout.flush()
 
-                submission = self.request_helper.post_REST(
-                    'mod_assign_get_submission_status', data)
+                submission = self.request_helper.post_REST('mod_assign_get_submission_status', data)
 
                 submission_files = self._get_files_of_submission(submission)
-                assignments[course_id][assignment_id]['files'] += (
-                    submission_files)
+                assignments[course_id][assignment_id]['files'] += submission_files
 
         return assignments
 
@@ -152,7 +138,7 @@ class AssignmentsHandler:
 
                 for file in files:
                     file_type = file.get("type", "")
-                    if (file_type is None or file_type == ""):
+                    if file_type is None or file_type == "":
                         file.update({'type': 'submission_file'})
 
                     result.append(file)
@@ -164,12 +150,8 @@ class AssignmentsHandler:
 
                 filename = editorfield.get("description", "")
                 description = editorfield.get("text", "")
-                if (filename != "" and description != ""):
-                    description_file = {
-                        "filename": filename,
-                        "description": description,
-                        'type': 'description'
-                    }
+                if filename != "" and description != "":
+                    description_file = {"filename": filename, "description": description, 'type': 'description'}
                     result.append(description_file)
 
         return result

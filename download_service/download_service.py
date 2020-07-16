@@ -25,8 +25,9 @@ class DownloadService:
     and errors.
     """
 
-    def __init__(self, courses: [Course], moodle_service: MoodleService,
-                 storage_path: str, skip_cert_verify: bool = False):
+    def __init__(
+        self, courses: [Course], moodle_service: MoodleService, storage_path: str, skip_cert_verify: bool = False
+    ):
         """
         Initiates the DownloadService with all files that
         need to be downloaded. A URLTarget is created for each file.
@@ -63,10 +64,10 @@ class DownloadService:
         # report is used to collect successful and failed downloads
         self.report = {'success': [], 'failure': []}
         # thread_report is used to get live reports from the threads
-        self.thread_report = [{'total': 0, 'percentage': 0,
-                               'old_extra_totalsize': None,
-                               'extra_totalsize': None}
-                              for i in range(self.thread_count)]
+        self.thread_report = [
+            {'total': 0, 'percentage': 0, 'old_extra_totalsize': None, 'extra_totalsize': None}
+            for i in range(self.thread_count)
+        ]
         # Collects the total size of the files that needs to be downloaded.
         self.total_to_download = 0
 
@@ -76,22 +77,28 @@ class DownloadService:
         if skip_cert_verify:
             self.ssl_context = ssl._create_unverified_context()
         else:
-            self.ssl_context = ssl.create_default_context(
-                cafile=certifi.where())
+            self.ssl_context = ssl.create_default_context(cafile=certifi.where())
 
         # Prepopulate queue with any files that were given
         for course in self.courses:
             for file in course.files:
-                if(file.deleted is False):
+                if file.deleted is False:
                     self.total_to_download += file.content_filesize
 
-                    save_destination = self.genPath(
-                        self.storage_path, course, file)
+                    save_destination = self.genPath(self.storage_path, course, file)
 
-                    self.queue.put(URLTarget(
-                        file, course, save_destination, self.token,
-                        self.thread_report, self.lock2, self.ssl_context,
-                        self.options))
+                    self.queue.put(
+                        URLTarget(
+                            file,
+                            course,
+                            save_destination,
+                            self.token,
+                            self.thread_report,
+                            self.lock2,
+                            self.ssl_context,
+                            self.options,
+                        )
+                    )
 
     @staticmethod
     def genPath(storage_path: str, course: Course, file: File):
@@ -99,36 +106,26 @@ class DownloadService:
         Generates the directory path where a file should be stored
         """
         course_name = course.fullname
-        if (course.overwrite_name_with is not None):
+        if course.overwrite_name_with is not None:
             course_name = course.overwrite_name_with
 
         # if a flat path is requested
-        if (not course.create_directory_structure):
-            return StringTools.flat_path_of_file(
-                storage_path, course_name,
-                file.content_filepath
-            )
+        if not course.create_directory_structure:
+            return StringTools.flat_path_of_file(storage_path, course_name, file.content_filepath)
 
         # If the file is located in a folder or in an assignment,
         # it should be saved in a sub-folder
         # (with the name of the module).
-        if (file.module_modname in ["assign", "folder", "data"]):
+        if file.module_modname in ["assign", "folder", "data"]:
             file_path = file.content_filepath
-            if (file.content_type == "submission_file"):
-                file_path = os.path.join('/submissions/',
-                                         file_path.strip('/'))
+            if file.content_type == "submission_file":
+                file_path = os.path.join('/submissions/', file_path.strip('/'))
 
             return StringTools.path_of_file_in_module(
-                storage_path, course_name,
-                file.section_name, file.module_name,
-                file_path
+                storage_path, course_name, file.section_name, file.module_name, file_path
             )
         else:
-            return StringTools.path_of_file(
-                storage_path, course_name,
-                file.section_name,
-                file.content_filepath
-            )
+            return StringTools.path_of_file(storage_path, course_name, file.section_name, file.content_filepath)
 
     def run(self):
         """
@@ -137,7 +134,7 @@ class DownloadService:
         """
         self._create_downloader_threads()
 
-        while (not self._downloader_complete()):
+        while not self._downloader_complete():
             time.sleep(0.1)
 
             sys.stdout.write(self._get_status_message())
@@ -151,9 +148,7 @@ class DownloadService:
         with the queue and starts them.
         """
         for i in range(self.thread_count):
-            thread = Downloader(self.queue, self.report,
-                                self.state_recorder, i,
-                                self.lock, self.url_tries)
+            thread = Downloader(self.queue, self.report, self.state_recorder, i, self.lock, self.url_tries)
             thread.start()
             self.threads.append(thread)
 
@@ -191,30 +186,30 @@ class DownloadService:
         for i in range(self.thread_count):
             # A thread status contains it id and the progress
             # of the current file
-            threads_status_message += " T%i: %3i%%" % (
-                i, self.thread_report[i]['percentage'])
+            threads_status_message += " T%i: %3i%%" % (i, self.thread_report[i]['percentage'])
             threads_total_downloaded += self.thread_report[i]['total']
 
             extra_totalsize = self.thread_report[i]['extra_totalsize']
-            if(extra_totalsize is not None and extra_totalsize != -1):
+            if extra_totalsize is not None and extra_totalsize != -1:
                 self.total_to_download += extra_totalsize
                 self.thread_report[i]['extra_totalsize'] = -1
 
         percentage = 100
-        if (self.total_to_download != 0):
-            percentage = int(threads_total_downloaded *
-                             100 / self.total_to_download)
+        if self.total_to_download != 0:
+            percentage = int(threads_total_downloaded * 100 / self.total_to_download)
 
         # The overall progress also includes the total size that needs to be
         # downloaded and the size that has already been downloaded.
         progressmessage += "Total: %3s%% %12s/%12skb" % (
-            percentage, int(threads_total_downloaded / 1000.0),
-            int(self.total_to_download / 1000.0))
+            percentage,
+            int(threads_total_downloaded / 1000.0),
+            int(self.total_to_download / 1000.0),
+        )
 
         progressmessage += threads_status_message
 
-        if (len(progressmessage) > limits.columns):
-            progressmessage = progressmessage[0:limits.columns]
+        if len(progressmessage) > limits.columns:
+            progressmessage = progressmessage[0 : limits.columns]
 
         return progressmessage
 
@@ -223,13 +218,10 @@ class DownloadService:
         Logs errors if any have occurred.
         """
         print('')
-        if (len(self.report['failure']) > 0):
-            Log.warning(
-                'Error while trying to download files,' +
-                ' look at the log for more details.')
+        if len(self.report['failure']) > 0:
+            Log.warning('Error while trying to download files,' + ' look at the log for more details.')
 
         for url_target in self.report['failure']:
-            logging.error('Error while trying to download file:' +
-                          ' %s' % (url_target))
-            Log.error('%s\t%s' % (url_target.file.content_filename,
-                                  url_target.error))
+            logging.error('Error while trying to download file:' + ' %s' % (url_target))
+            Log.error('%s\t%s' % (url_target.file.content_filename, url_target.error))
+

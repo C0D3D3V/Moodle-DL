@@ -13,7 +13,8 @@ Encapsulates the formatting of the various notification-mails.
 # No, I personally don't want to write them with these ugly table layouts and
 # inline styles. But the mail clients leave me no other choice...
 
-main_wrapper = Template('''
+main_wrapper = Template(
+    '''
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
     <html xmlns="http://www.w3.org/1999/xhtml">
@@ -46,9 +47,11 @@ main_wrapper = Template('''
         </div>
     </body>
 </html>
-''')
+'''
+)
 
-error_message_box = Template('''
+error_message_box = Template(
+    '''
     <table style="width: 100%; background-color: #ff3860; color: #fff;
     margin-bottom: 15px;">
         <tr>
@@ -59,9 +62,11 @@ error_message_box = Template('''
             </td>
         </tr>
     </table>
-''')
+'''
+)
 
-info_message_box = Template('''
+info_message_box = Template(
+    '''
     <table style="width: 100%; background-color: #23d160; color: #fff;
     margin-bottom: 15px; padding: 10px;">
         <tr>
@@ -74,9 +79,11 @@ info_message_box = Template('''
             </td>
         </tr>
     </table>
-''')
+'''
+)
 
-moodle_main_box = Template('''
+moodle_main_box = Template(
+    '''
     <p style="padding-bottom: 10px; color: #7d878d; font-size: 20px;
     font-family: 'Segoe UI', 'Calibri', 'Lucida Grande', Arial,
     sans-serif;">
@@ -91,7 +98,8 @@ moodle_main_box = Template('''
             ${content}
         </tbody>
     </table>
-''')
+'''
+)
 
 """
 Optional open Moodle Link
@@ -112,7 +120,8 @@ Optional open Moodle Link
             </tr>
 """
 
-moodle_added_box = Template('''
+moodle_added_box = Template(
+    '''
     <tr>
         <td style="padding-bottom: 10px; color: #7d878d; font-size: 14px;
         font-family: 'Segoe UI', 'Calibri', 'Lucida Grande', Arial,
@@ -125,9 +134,11 @@ moodle_added_box = Template('''
             ${file_name}
         </td>
     </tr>
-''')
+'''
+)
 
-moodle_modified_box = Template('''
+moodle_modified_box = Template(
+    '''
     <tr>
         <td style="padding-bottom: 10px; color: #7d878d; font-size: 14px;
         font-family: 'Segoe UI', 'Calibri', 'Lucida Grande', Arial,
@@ -140,9 +151,11 @@ moodle_modified_box = Template('''
             ${file_name}
         </td>
     </tr>
-''')
+'''
+)
 
-moodle_moved_box = Template('''
+moodle_moved_box = Template(
+    '''
     <tr>
         <td style="padding-bottom: 10px; color: #7d878d; font-size: 14px;
         font-family: 'Segoe UI', 'Calibri', 'Lucida Grande', Arial,
@@ -155,9 +168,11 @@ moodle_moved_box = Template('''
             ${file_name}
         </td>
     </tr>
-''')
+'''
+)
 
-moodle_deleted_box = Template('''
+moodle_deleted_box = Template(
+    '''
     <tr>
         <td style="padding-bottom: 10px; color: #7d878d; font-size: 14px;
         font-family: 'Segoe UI', 'Calibri', 'Lucida Grande', Arial,
@@ -170,7 +185,8 @@ moodle_deleted_box = Template('''
             ${file_name}
         </td>
     </tr>
-''')
+'''
+)
 
 
 """
@@ -191,8 +207,7 @@ Additionaly Text in the Table?
 """
 
 
-def _finish_with_main_wrapper(content: str, introduction: str) -> (str,
-                                                                   {str: str}):
+def _finish_with_main_wrapper(content: str, introduction: str) -> (str, {str: str}):
     """
     All emails use the main wrapper. This contains the normal html structure
     @return: A sendable mail object, with the content and the attachments
@@ -202,8 +217,7 @@ def _finish_with_main_wrapper(content: str, introduction: str) -> (str,
     extender_cid = make_msgid()
 
     full_content = main_wrapper.substitute(
-        content=content, introduction_text=introduction,
-        header_cid=header_cid[1:-1], extender_cid=extender_cid[1:-1]
+        content=content, introduction_text=introduction, header_cid=header_cid[1:-1], extender_cid=extender_cid[1:-1]
     )
 
     cids_and_filenames = {}
@@ -213,8 +227,7 @@ def _finish_with_main_wrapper(content: str, introduction: str) -> (str,
     return (full_content, cids_and_filenames)
 
 
-def create_full_moodle_diff_mail(changed_courses: [Course]) -> (str,
-                                                                {str: str}):
+def create_full_moodle_diff_mail(changed_courses: [Course]) -> (str, {str: str}):
     """
     Creates an email with all changed files. This includes new, modified
     and deleted files. Files that have changed since the last email.
@@ -227,38 +240,27 @@ def create_full_moodle_diff_mail(changed_courses: [Course]) -> (str,
         for file in course.files:
 
             if file.modified:
-                inner_content += moodle_modified_box.substitute(
-                    file_name=file.saved_to
-                )
+                inner_content += moodle_modified_box.substitute(file_name=file.saved_to)
             elif file.moved:
-                if(file.new_file is not None):
+                if file.new_file is not None:
                     inner_content += moodle_moved_box.substitute(
-                        file_name=(file.saved_to + " ==> " +
-                                   file.new_file.saved_to)
+                        file_name=(file.saved_to + " ==> " + file.new_file.saved_to)
                     )
                 else:
-                    inner_content += moodle_moved_box.substitute(
-                        file_name=file.saved_to
-                    )
+                    inner_content += moodle_moved_box.substitute(file_name=file.saved_to)
 
             elif file.deleted:
-                inner_content += moodle_deleted_box.substitute(
-                    file_name=file.saved_to
-                )
+                inner_content += moodle_deleted_box.substitute(file_name=file.saved_to)
             else:
-                inner_content += moodle_added_box.substitute(
-                    file_name=file.saved_to
-                )
+                inner_content += moodle_added_box.substitute(file_name=file.saved_to)
 
-        full_content += moodle_main_box.substitute(
-            content=inner_content, course_name=course.fullname)
+        full_content += moodle_main_box.substitute(content=inner_content, course_name=course.fullname)
 
     count = len(changed_courses)
 
     full_content = _finish_with_main_wrapper(
         full_content,
-        'Changes were found in %s courses:' % (count) if count > 1 else
-        'Changes were noted in the following course:'
+        'Changes were found in %s courses:' % (count) if count > 1 else 'Changes were noted in the following course:',
     )
 
     return full_content
@@ -281,7 +283,6 @@ def create_full_error_mail(details) -> (str, {str: str}):
     """
     content = error_message_box.substitute(details=details)
 
-    full_content = _finish_with_main_wrapper(
-        content, 'The following error occurred during execution:')
+    full_content = _finish_with_main_wrapper(content, 'The following error occurred during execution:')
 
     return full_content

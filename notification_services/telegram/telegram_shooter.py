@@ -11,10 +11,12 @@ class TelegramShooter:
     """
 
     stdHeader = {
-        'User-Agent': ('Mozilla/5.0 (X11; Linux x86_64)' +
-                       ' AppleWebKit/537.36 (KHTML, like Gecko)' +
-                       ' Chrome/78.0.3904.108 Safari/537.36'),
-        'Content-Type': 'application/x-www-form-urlencoded'
+        'User-Agent': (
+            'Mozilla/5.0 (X11; Linux x86_64)'
+            + ' AppleWebKit/537.36 (KHTML, like Gecko)'
+            + ' Chrome/78.0.3904.108 Safari/537.36'
+        ),
+        'Content-Type': 'application/x-www-form-urlencoded',
     }
 
     def __init__(self, telegram_token: str, telegram_chatid: str):
@@ -24,18 +26,12 @@ class TelegramShooter:
         self.connection = HTTPSConnection("api.telegram.org")
 
     def send(self, message: str):
-        payload = {'chat_id': self.telegram_chatid,
-                   'text': message, 'parse_mode': 'HTML'}
+        payload = {'chat_id': self.telegram_chatid, 'text': message, 'parse_mode': 'HTML'}
 
         url = '/bot%s/sendMessage' % (self.telegram_token)
         data_urlencoded = urllib.parse.urlencode(payload)
 
-        self.connection.request(
-            'POST',
-            url,
-            body=data_urlencoded,
-            headers=self.stdHeader
-        )
+        self.connection.request('POST', url, body=data_urlencoded, headers=self.stdHeader)
 
         response = self.connection.getresponse()
         self._check_errors(response)
@@ -43,13 +39,14 @@ class TelegramShooter:
     @staticmethod
     def _check_response_code(response):
         # Normally Telegram answer with response 200
-        if (response.getcode() != 200):
+        if response.getcode() != 200:
             raise RuntimeError(
-                'An Unexpected Error happened on side of the' +
-                ' Telegram System!' +
-                (' Status-Code: %s' % str(response.getcode())) +
-                ('\nHeader: %s' % (response.getheaders())) +
-                ('\nResponse: %s' % (response.read())))
+                'An Unexpected Error happened on side of the'
+                + ' Telegram System!'
+                + (' Status-Code: %s' % str(response.getcode()))
+                + ('\nHeader: %s' % (response.getheaders()))
+                + ('\nResponse: %s' % (response.read()))
+            )
 
     def _check_errors(self, response) -> object:
         """
@@ -65,19 +62,19 @@ class TelegramShooter:
         try:
             response_extracted = json.loads(response.read())
         except ValueError as error:
-            raise RuntimeError('An Unexpected Error occurred while trying' +
-                               ' to parse the json response! Telegram' +
-                               ' response: %s.\nError: %s' % (
-                                   response.read(), error))
+            raise RuntimeError(
+                'An Unexpected Error occurred while trying'
+                + ' to parse the json response! Telegram'
+                + ' response: %s.\nError: %s' % (response.read(), error)
+            )
         # Check for known errors
-        if ("ok" in response_extracted):
+        if "ok" in response_extracted:
             ok = response_extracted.get("ok", False)
 
-            if(not ok):
+            if not ok:
                 raise RequestRejectedError(
-                    'The Telegram System rejected the Request.' +
-                    (' Details: %s ' % (pprint.pformat(response_extracted,
-                                                       indent=4)), )
+                    'The Telegram System rejected the Request.'
+                    + (' Details: %s ' % (pprint.pformat(response_extracted, indent=4)),)
                 )
 
         return response_extracted
@@ -86,4 +83,5 @@ class TelegramShooter:
 class RequestRejectedError(Exception):
     """An Exception which gets thrown if the Telegram-System answered with an
     Error to our Request"""
+
     pass

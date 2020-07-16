@@ -35,6 +35,7 @@ class DefaultKeys:
         down(List[str]): Keys that select the element below.
         up(List[str]): Keys that select the element above.
     """
+
     interrupt: List[str] = [readchar.key.CTRL_C, readchar.key.CTRL_D]
     select: List[str] = [readchar.key.SPACE]
     confirm: List[str] = [readchar.key.ENTER]
@@ -45,10 +46,8 @@ class DefaultKeys:
 
 
 def get_number(
-        prompt: str,
-        min_value: Optional[float] = None,
-        max_value: Optional[float] = None,
-        allow_float: bool = True) -> float:
+    prompt: str, min_value: Optional[float] = None, max_value: Optional[float] = None, allow_float: bool = True
+) -> float:
     """Get a number from user input.
     If an invalid number is entered the user will be prompted again.
     Args:
@@ -72,8 +71,7 @@ def get_number(
                 return_value = None
         if min_value is not None and return_value is not None:
             if return_value < min_value:
-                print(f'Has to be at least {min_value}.\033[K\033[1A\r\033[K',
-                      end='')
+                print(f'Has to be at least {min_value}.\033[K\033[1A\r\033[K', end='')
                 return_value = None
         if max_value is not None and return_value is not None:
             if return_value > max_value:
@@ -98,13 +96,14 @@ def secure_input(prompt: str) -> str:
 
 
 def select(
-        options: List[str],
-        caption_indices: Optional[List[int]] = None,
-        deselected_prefix: str = '\033[1m[ ]\033[0m ',
-        selected_prefix: str = '\033[1m[\033[32;1mx\033[0;1m]\033[0m ',
-        caption_prefix: str = '',
-        selected_index: int = 0,
-        confirm_on_select: bool = True) -> int:
+    options: List[str],
+    caption_indices: Optional[List[int]] = None,
+    deselected_prefix: str = '\033[1m[ ]\033[0m ',
+    selected_prefix: str = '\033[1m[\033[32;1mx\033[0;1m]\033[0m ',
+    caption_prefix: str = '',
+    selected_index: int = 0,
+    confirm_on_select: bool = True,
+) -> int:
     """Select an option from a list.
     Args:
         options (List[str]): The options to select from.
@@ -128,13 +127,12 @@ def select(
         for i, option in enumerate(options):
             printable_option = option.expandtabs()
             if len(printable_option) > console_columns:
-                printable_option = (
-                    printable_option[:(console_columns - 2)] + '..')
+                printable_option = printable_option[: (console_columns - 2)] + '..'
 
             if i not in caption_indices:
-                print('\033[K{}{}'.format(
-                    selected_prefix if i == selected_index else
-                    deselected_prefix, printable_option))
+                print(
+                    '\033[K{}{}'.format(selected_prefix if i == selected_index else deselected_prefix, printable_option)
+                )
             elif i in caption_indices:
                 print('\033[K{}{}'.format(caption_prefix, printable_option))
 
@@ -153,8 +151,7 @@ def select(
                 if new_index not in caption_indices:
                     selected_index = new_index
                     break
-        elif keypress in DefaultKeys.confirm or \
-                confirm_on_select and keypress in DefaultKeys.select:
+        elif keypress in DefaultKeys.confirm or confirm_on_select and keypress in DefaultKeys.select:
             break
         elif keypress in DefaultKeys.interrupt:
             raise KeyboardInterrupt
@@ -162,20 +159,20 @@ def select(
 
 
 def select_multiple(
-        options: List[str],
-        caption_indices: Optional[List[int]] = None,
-        deselected_unticked_prefix: str = '\033[1m( )\033[0m ',
-        deselected_ticked_prefix: str = '\033[1m(\033[32mx\033[0;1m)\033[0m ',
-        selected_unticked_prefix: str = '\033[32;1m{ }\033[0m ',
-        selected_ticked_prefix: str = '\033[32;1m{x}\033[0m ',
-        caption_prefix: str = '',
-        ticked_indices: Optional[List[int]] = None,
-        cursor_index: int = 0,
-        minimal_count: int = 0,
-        maximal_count: Optional[int] = None,
-        hide_confirm: bool = False,
-        deselected_confirm_label: str = '\033[1m(( confirm ))\033[0m',
-        selected_confirm_label: str = '\033[1;32m{{ confirm }}\033[0m',
+    options: List[str],
+    caption_indices: Optional[List[int]] = None,
+    deselected_unticked_prefix: str = '\033[1m( )\033[0m ',
+    deselected_ticked_prefix: str = '\033[1m(\033[32mx\033[0;1m)\033[0m ',
+    selected_unticked_prefix: str = '\033[32;1m{ }\033[0m ',
+    selected_ticked_prefix: str = '\033[32;1m{x}\033[0m ',
+    caption_prefix: str = '',
+    ticked_indices: Optional[List[int]] = None,
+    cursor_index: int = 0,
+    minimal_count: int = 0,
+    maximal_count: Optional[int] = None,
+    hide_confirm: bool = False,
+    deselected_confirm_label: str = '\033[1m(( confirm ))\033[0m',
+    selected_confirm_label: str = '\033[1;32m{{ confirm }}\033[0m',
 ) -> List[int]:
     """Select multiple options from a list.
     Args:
@@ -220,8 +217,7 @@ def select_multiple(
             console_columns = shutil.get_terminal_size().columns - 4
             printable_option = option.expandtabs()
             if len(printable_option) > console_columns:
-                printable_option = (
-                    printable_option[:(console_columns - 2)] + '..')
+                printable_option = printable_option[: (console_columns - 2)] + '..'
 
             prefix = ''
             if i in caption_indices:
@@ -271,12 +267,9 @@ def select_multiple(
                 ticked_indices.append(cursor_index)
         elif keypress in DefaultKeys.confirm:
             if minimal_count > len(ticked_indices):
-                error_message = \
-                    f'Must select at least {minimal_count} options'
-            elif maximal_count is not None and\
-                    maximal_count < len(ticked_indices):
-                error_message = \
-                    f'Must select at most {maximal_count} options'
+                error_message = f'Must select at least {minimal_count} options'
+            elif maximal_count is not None and maximal_count < len(ticked_indices):
+                error_message = f'Must select at most {maximal_count} options'
             else:
                 break
         elif keypress in DefaultKeys.interrupt:
@@ -286,15 +279,16 @@ def select_multiple(
 
 
 def prompt_yes_or_no(
-        question: str,
-        yes_text: str = 'Yes',
-        no_text: str = 'No',
-        has_to_match_case: bool = False,
-        enter_empty_confirms: bool = True,
-        default_is_yes: bool = False,
-        deselected_prefix: str = '  ',
-        selected_prefix: str = '\033[31m>\033[0m ',
-        char_prompt: bool = True) -> Optional[bool]:
+    question: str,
+    yes_text: str = 'Yes',
+    no_text: str = 'No',
+    has_to_match_case: bool = False,
+    enter_empty_confirms: bool = True,
+    default_is_yes: bool = False,
+    deselected_prefix: str = '  ',
+    selected_prefix: str = '\033[31m>\033[0m ',
+    char_prompt: bool = True,
+) -> Optional[bool]:
     """Prompt the user to input yes or no.
     Args:
         question (str): The prompt asking the user to input.
@@ -317,12 +311,9 @@ def prompt_yes_or_no(
     while True:
         yes = is_yes and is_selected
         no = not is_yes and is_selected
-        print('\033[K'
-              f'{selected_prefix if yes else deselected_prefix}{yes_text}')
-        print('\033[K'
-              f'{selected_prefix if no else deselected_prefix}{no_text}')
-        print('\033[3A\r\033[K'
-              f'{question}{yn_prompt}{current_message}', end='', flush=True)
+        print('\033[K' f'{selected_prefix if yes else deselected_prefix}{yes_text}')
+        print('\033[K' f'{selected_prefix if no else deselected_prefix}{no_text}')
+        print('\033[3A\r\033[K' f'{question}{yn_prompt}{current_message}', end='', flush=True)
         keypress = readchar.readkey()
         if keypress in DefaultKeys.down or keypress in DefaultKeys.up:
             is_yes = not is_yes

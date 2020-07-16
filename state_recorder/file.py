@@ -1,14 +1,27 @@
 class File:
-    def __init__(self, module_id: int, section_name: str, module_name: str,
-                 content_filepath: str, content_filename: str,
-                 content_fileurl: str, content_filesize: int,
-                 content_timemodified: int, module_modname: str,
-                 content_type: str, content_isexternalfile: bool,
-                 saved_to: str = "", time_stamp: int = 0,
-                 modified: int = 0, moved: int = 0, deleted: int = 0,
-                 notified: int = 0,
-                 hash: str = None, file_id: int = None,
-                 old_file_id: int = None):
+    def __init__(
+        self,
+        module_id: int,
+        section_name: str,
+        module_name: str,
+        content_filepath: str,
+        content_filename: str,
+        content_fileurl: str,
+        content_filesize: int,
+        content_timemodified: int,
+        module_modname: str,
+        content_type: str,
+        content_isexternalfile: bool,
+        saved_to: str = "",
+        time_stamp: int = 0,
+        modified: int = 0,
+        moved: int = 0,
+        deleted: int = 0,
+        notified: int = 0,
+        hash: str = None,
+        file_id: int = None,
+        old_file_id: int = None,
+    ):
 
         self.file_id = file_id
 
@@ -25,10 +38,10 @@ class File:
         self.module_modname = module_modname
         self.content_type = content_type
 
-        if(isinstance(content_isexternalfile, bool)):
+        if isinstance(content_isexternalfile, bool):
             self.content_isexternalfile = content_isexternalfile
         else:
-            if (content_isexternalfile == 1):
+            if content_isexternalfile == 1:
                 self.content_isexternalfile = True
             else:
                 self.content_isexternalfile = False
@@ -37,22 +50,22 @@ class File:
 
         self.time_stamp = time_stamp
 
-        if (modified == 1):
+        if modified == 1:
             self.modified = True
         else:
             self.modified = False
 
-        if (moved == 1):
+        if moved == 1:
             self.moved = True
         else:
             self.moved = False
 
-        if (deleted == 1):
+        if deleted == 1:
             self.deleted = True
         else:
             self.deleted = False
 
-        if (notified == 1):
+        if notified == 1:
             self.notified = True
         else:
             self.notified = False
@@ -89,7 +102,7 @@ class File:
             'deleted': 1 if self.deleted else 0,
             'notified': 1 if self.notified else 0,
             'hash': self.hash,
-            'old_file_id': self.old_file_id
+            'old_file_id': self.old_file_id,
         }
 
     @staticmethod
@@ -115,7 +128,7 @@ class File:
             deleted=row['deleted'],
             notified=row['notified'],
             hash=row['hash'],
-            old_file_id=row['old_file_id']
+            old_file_id=row['old_file_id'],
         )
 
     INSERT = """INSERT INTO files
@@ -146,8 +159,7 @@ class File:
         message += ', content_filesize: %s' % (self.content_filesize)
         message += ', content_timemodified: %s' % (self.content_timemodified)
         message += ', module_modname: %s' % (self.module_modname)
-        message += ', content_isexternalfile: %s' % (
-            self.content_isexternalfile)
+        message += ', content_isexternalfile: %s' % (self.content_isexternalfile)
 
         message += ', saved_to: %s' % (self.saved_to)
         message += ', time_stamp: %s' % (self.time_stamp)

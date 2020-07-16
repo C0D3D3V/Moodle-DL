@@ -15,8 +15,7 @@ class FakeDownloadService:
     can be created without actually downloading the files.
     """
 
-    def __init__(self, courses: [Course], moodle_service: MoodleService,
-                 storage_path: str):
+    def __init__(self, courses: [Course], moodle_service: MoodleService, storage_path: str):
         """
         Initiates the FakeDownloadService with all files that
         need to be downloaded (saved in the database).
@@ -36,28 +35,23 @@ class FakeDownloadService:
         # Prepopulate queue with any files that were given
         for course in self.courses:
             for file in course.files:
-                if(file.deleted is False):
+                if file.deleted is False:
 
-                    save_destination = DownloadService.genPath(
-                        self.storage_path, course, file)
+                    save_destination = DownloadService.genPath(self.storage_path, course, file)
 
                     filename = StringTools.to_valid_name(file.content_filename)
 
                     file.saved_to = str(Path(save_destination) / filename)
 
-                    if (file.module_modname == 'url'):
-                        file.saved_to = str(Path(
-                            save_destination) / (filename + ".desktop"))
+                    if file.module_modname == 'url':
+                        file.saved_to = str(Path(save_destination) / (filename + ".desktop"))
                         if os.name == "nt":
-                            file.saved_to = str(Path(
-                                save_destination) / (filename + ".URL"))
+                            file.saved_to = str(Path(save_destination) / (filename + ".URL"))
 
-                    if (file.content_type == 'description'):
-                        file.saved_to = str(Path(
-                            save_destination) / (filename + ".md"))
+                    if file.content_type == 'description':
+                        file.saved_to = str(Path(save_destination) / (filename + ".md"))
 
-                    self.state_recorder.save_file(
-                        file, course.id, course.fullname)
+                    self.state_recorder.save_file(file, course.id, course.fullname)
 
     def run(self):
         Log.success('All files stored in the Database!')

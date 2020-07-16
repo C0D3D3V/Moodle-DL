@@ -16,8 +16,7 @@ class Course:
         message += 'id: %s' % (self.id)
         message += ', fullname: %s' % (self.fullname)
         message += ', overwrite_name_with: %s' % (self.overwrite_name_with)
-        message += ', create_directory_structure: %s' % (
-            self.create_directory_structure)
+        message += ', create_directory_structure: %s' % (self.create_directory_structure)
         message += ', files: %s' % (len(self.files))
 
         for i, file in enumerate(self.files):

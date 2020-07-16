@@ -19,9 +19,8 @@ class FirstContactHandler:
         """
         result = self.request_helper.post_REST('core_webservice_get_site_info')
 
-        if ("userid" not in result):
-            raise RuntimeError(
-                'Error could not receive your user ID!')
+        if "userid" not in result:
+            raise RuntimeError('Error could not receive your user ID!')
         userid = result.get("userid", "")
 
         version = result.get("version", "2011120500")
@@ -29,9 +28,7 @@ class FirstContactHandler:
         try:
             version = int(version.split(".")[0])
         except Exception as e:
-            raise RuntimeError(
-                'Error could not parse version string: ' +
-                '"%s" Error: %s' % (version, e))
+            raise RuntimeError('Error could not parse version string: ' + '"%s" Error: %s' % (version, e))
 
         return userid, version
 
@@ -42,17 +39,11 @@ class FirstContactHandler:
         @param userid: the user id
         @return: A list of courses
         """
-        data = {
-            'userid': userid
-        }
+        data = {'userid': userid}
 
-        result = self.request_helper.post_REST(
-            'core_enrol_get_users_courses', data)
+        result = self.request_helper.post_REST('core_enrol_get_users_courses', data)
 
         results = []
         for course in result:
-            results.append(
-                Course(course.get("id", 0),
-                       course.get("fullname", ""), [])
-            )
+            results.append(Course(course.get("id", 0), course.get("fullname", ""), []))
         return results

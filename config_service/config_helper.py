@@ -126,20 +126,17 @@ class ConfigHelper:
         # returns the option dictionary for downloading files
         options = {}
         try:
-            options.update({'download_linked_files':
-                            self.get_property('download_linked_files')})
+            options.update({'download_linked_files': self.get_property('download_linked_files')})
         except ValueError:
             options.update({'download_linked_files': False})
 
         try:
-            options.update({'download_domains_whitelist':
-                            self.get_property('download_domains_whitelist')})
+            options.update({'download_domains_whitelist': self.get_property('download_domains_whitelist')})
         except ValueError:
             options.update({'download_domains_whitelist': []})
 
         try:
-            options.update({'download_domains_blacklist':
-                            self.get_property('download_domains_blacklist')})
+            options.update({'download_domains_blacklist': self.get_property('download_domains_blacklist')})
         except ValueError:
             options.update({'download_domains_blacklist': []})
 

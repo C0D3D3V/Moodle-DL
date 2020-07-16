@@ -1,4 +1,3 @@
-
 import sys
 
 from moodle_connector.request_helper import RequestHelper
@@ -25,7 +24,7 @@ class DatabasesHandler:
         """
         # do this only if version is greater then 2.9
         # because mod_data_get_databases_by_courses will fail
-        if (self.version < 2015051100):
+        if self.version < 2015051100:
             return {}
 
         sys.stdout.write('\rDownloading databases information')
@@ -39,8 +38,7 @@ class DatabasesHandler:
 
         extra_data.update({'courseids': courseids})
 
-        databases_result = self.request_helper.post_REST(
-            'mod_data_get_databases_by_courses', extra_data)
+        databases_result = self.request_helper.post_REST('mod_data_get_databases_by_courses', extra_data)
 
         databases = databases_result.get('databases', [])
 
@@ -57,7 +55,7 @@ class DatabasesHandler:
             # normalize
             for db_file in database_introfiles:
                 file_type = db_file.get("type", "")
-                if (file_type is None or file_type == ""):
+                if file_type is None or file_type == "":
                     db_file.update({'type': 'database_introfile'})
 
             database_entry = {
@@ -65,7 +63,7 @@ class DatabasesHandler:
                     'id': database_id,
                     'name': database_name,
                     'intro': database_intro,
-                    'files': database_introfiles
+                    'files': database_introfiles,
                 }
             }
 
@@ -77,8 +75,7 @@ class DatabasesHandler:
 
         return result
 
-    def fetch_database_files(self,
-                             databases: {int: {int: {}}}) -> {int: {int: {}}}:
+    def fetch_database_files(self, databases: {int: {int: {}}}) -> {int: {int: {}}}:
         """
         Fetches for the databases list of all courses the additionally
         entries. This is kind of waste of resources, because there
@@ -91,7 +88,7 @@ class DatabasesHandler:
         """
         # do this only if version is greater then 3.3
         # because mod_data_get_entries will fail
-        if (self.version < 2017051500):
+        if self.version < 2017051500:
             return databases
 
         intro = '\rDownloading information of the database records'
@@ -108,31 +105,23 @@ class DatabasesHandler:
             for database_id in databases[course_id]:
                 counter += 1
                 real_id = databases[course_id][database_id].get('id', 0)
-                data = {
-                    'databaseid': real_id
-                }
+                data = {'databaseid': real_id}
 
-                if(False):
-                    sys.stdout.write(intro + ' %3d/%3d [%6s|%6s]' % (counter,
-                                                                     total,
-                                                                     course_id,
-                                                                     real_id))
+                if False:
+                    sys.stdout.write(intro + ' %3d/%3d [%6s|%6s]' % (counter, total, course_id, real_id))
                     sys.stdout.flush()
 
-                access = self.request_helper.post_REST(
-                    'mod_data_get_data_access_information', data)
+                access = self.request_helper.post_REST('mod_data_get_data_access_information', data)
 
-                if(not access.get("timeavailable", False)):
+                if not access.get("timeavailable", False):
                     continue
 
                 data.update({'returncontents': 1})
 
-                entries = self.request_helper.post_REST(
-                    'mod_data_get_entries', data)
+                entries = self.request_helper.post_REST('mod_data_get_entries', data)
 
                 database_files = self._get_files_of_db_entries(entries)
-                databases[course_id][database_id]['files'] += (
-                    database_files)
+                databases[course_id][database_id]['files'] += database_files
 
         return databases
 
@@ -150,10 +139,10 @@ class DatabasesHandler:
 
                 for entry_file in entry_files:
                     filename = entry_file.get('filename', "")
-                    if(filename.startswith("thumb_")):
+                    if filename.startswith("thumb_"):
                         continue
                     file_type = entry_file.get("type", "")
-                    if (file_type is None or file_type == ""):
+                    if file_type is None or file_type == "":
                         entry_file.update({'type': 'database_file'})
                     result.append(entry_file)
 

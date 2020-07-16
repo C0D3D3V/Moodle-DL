@@ -4,11 +4,12 @@ COLOR_SEQ = "\033[1;%dm"
 # BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE
 
 
-class Log():
+class Log:
     """
     Logs string to output with colors
     :param logString: the string that should be logged
     """
+
     @staticmethod
     def info(logString: str):
         print(COLOR_SEQ % 37 + logString + RESET_SEQ)
