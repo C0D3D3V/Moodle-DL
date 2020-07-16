@@ -17,6 +17,6 @@ def obtain_login_token(
     if 'token' not in response:
         # = we didn't get an error page (checked by the RequestHelper) but
         # somehow we don't have the needed token
-        raise RuntimeError('Invalid response received from the Moodle' + ' System!  No token was received.')
+        raise RuntimeError('Invalid response received from the Moodle System!  No token was received.')
 
     return response.get('token', '')

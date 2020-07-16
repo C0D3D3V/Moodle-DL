@@ -56,7 +56,7 @@ class MailService(NotificationService):
 
                 raw_send_error_msg = ''
                 while raw_send_error_msg not in ['y', 'n']:
-                    raw_send_error_msg = input('Do you want to also get error reports sent by mail?' + ' [y/n]   ')
+                    raw_send_error_msg = input('Do you want to also get error reports sent by mail? [y/n]   ')
                 do_send_error_msg = raw_send_error_msg == 'y'
 
                 mail_cfg = {

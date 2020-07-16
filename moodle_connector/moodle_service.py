@@ -32,7 +32,7 @@ class MoodleService:
         the Token and saves it.
         @return: The Token for Moodle.
         """
-        print('[The following Credentials are not saved, it is only used' + ' temporarily to generate a login token.]')
+        print('[The following Credentials are not saved, it is only used temporarily to generate a login token.]')
 
         moodle_token = None
         while moodle_token is None:

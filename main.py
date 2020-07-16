@@ -90,7 +90,7 @@ def run_init(storage_path, use_sso=False, skip_cert_verify=False):
 
     print('')
 
-    print('You can always do the additional configuration later' + ' with the --config option.')
+    print('You can always do the additional configuration later with the --config option.')
 
     do_config = cutie.prompt_yes_or_no('Do you want to make additional configurations now?')
 
@@ -170,7 +170,7 @@ def run_main(storage_path, skip_cert_verify=False, without_downloading_files=Fal
     logging.info('--- main started ---------------------')
     Log.info('Moodle Downloader starting...')
     if IS_DEBUG:
-        logging.info('Debug-Mode detected. Errors will not be logged but instead' + ' re-risen.')
+        logging.info('Debug-Mode detected. Errors will not be logged but instead re-risen.')
         debug_logger = logging.getLogger()
         debug_logger.setLevel(logging.ERROR)
         debug_logger.addHandler(ReRaiseOnError())
@@ -181,7 +181,7 @@ def run_main(storage_path, skip_cert_verify=False, without_downloading_files=Fal
         config = ConfigHelper(storage_path)
         config.load()
     except BaseException as e:
-        logging.error('Error while trying to load the Configuration! ' + 'Exiting...', extra={'exception': e})
+        logging.error('Error while trying to load the Configuration! Exiting...', extra={'exception': e})
         Log.error('Error while trying to load the Configuration!')
         sys.exit(-1)
 
@@ -269,7 +269,7 @@ if 'pydevd' in sys.modules:
     print('[RUNNING IN DEBUG-MODE!]')
 
 parser = argparse.ArgumentParser(
-    description=('Moodle Downloader 2 helps you download all the course' + ' files  of your Moodle account.')
+    description=('Moodle Downloader 2 helps you download all the course files  of your Moodle account.')
 )
 group = parser.add_mutually_exclusive_group()
 group.add_argument(

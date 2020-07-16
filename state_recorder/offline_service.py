@@ -64,7 +64,7 @@ class OfflineService:
                 sections.append(course_file.section_name)
 
         print('From which sections you want to select files.')
-        print('[You can select with the space bar and confirm' + ' your selection with the enter key]')
+        print('[You can select with the space bar and confirm your selection with the enter key]')
         print('')
 
         selected_sections_ids = cutie.select_multiple(options=section_options, minimal_count=1)
@@ -80,8 +80,8 @@ class OfflineService:
                 file_options.append(COLOR_SEQ % CYAN + course_file.content_filename + RESET_SEQ)
                 files.append(course_file)
 
-        print('Which of the files should be removed form the database,' + ' so that they will be redownloaded?')
-        print('[You can select with the space bar and confirm' + ' your selection with the enter key]')
+        print('Which of the files should be removed form the database, so that they will be redownloaded?')
+        print('[You can select with the space bar and confirm your selection with the enter key]')
         print('')
         selected_files = cutie.select_multiple(options=file_options)
 
