@@ -1,6 +1,6 @@
-/.vscode
 /.idea
 /test
+/debugging-moodle
 __pycache__
 
 config.json
