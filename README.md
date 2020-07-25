@@ -24,11 +24,11 @@ If you run the program on Windows, please use [Powershell or CMD](https://www.is
 
 
 ### Alternative Setup (Run with Docker)
-1. Install [Git](https://git-scm.com/download/win) and [clone](https://docs.github.com/en/enterprise/2.13/user/articles/cloning-a-repository) the master branch.
-2. Install [Docker](https://docs.docker.com/get-docker/).
+1. Install [Git](https://git-scm.com/download/win) and [clone](https://docs.github.com/en/enterprise/2.13/user/articles/cloning-a-repository) the master branch
+2. Install [Docker](https://docs.docker.com/get-docker/)
 3. Open a terminal in the cloned project and execute:  `docker build -t md .`
-4. Create a configuration file (`config.json`) in a folder where you want to download your Moodle. Use [the wiki](https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Configuration) for this.
-5. Open a terminal in this folder and execute: `docker run --rm -it --net=host -v $(pwd):/files:Z md`. Or if you use bash: `docker run --rm -it -v $(pwd)/files:/files md`.
+4. Create a configuration file (`config.json`) in a folder where you want to download your Moodle, use [the wiki](https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Configuration) for this
+5. Open a terminal in this folder and execute: `docker run --rm -it --net=host -v $(pwd):/files:Z md` or if you use bash: `docker run --rm -it -v $(pwd)/files:/files md`
 
 
 
