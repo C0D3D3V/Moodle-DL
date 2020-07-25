@@ -11,7 +11,7 @@
 
 
 ### Setup
-1. You can take the [latest release from here](https://github.com/C0D3D3V/Moodle-Downloader-2/releases) or clone the master branch directly.
+1. You can take the [latest release from here](https://github.com/C0D3D3V/Moodle-Downloader-2/releases) or [clone](https://docs.github.com/en/enterprise/2.13/user/articles/cloning-a-repository) the master branch directly.
 2. Install [Python](https://www.python.org/) >=3.6
 3. Verify that `python --version` shows a version equal to or higher then 3.6
     Otherwise install the newest [Python](https://www.python.org/) version
@@ -21,6 +21,16 @@
 On some operating systems the program has to run with `python3` instead of `python`, try it yourself. The same applies to `pip3`.
 
 If you run the program on Windows, please use [Powershell or CMD](https://www.isunshare.com/windows-10/5-ways-to-open-windows-powershell-in-windows-10.html). Please do not use a mintty like MINGW or similar (in MINGW python must be executed as `winpty python`).
+
+
+### Alternative Setup (Run with Docker)
+1. Install [Git](https://git-scm.com/download/win) and [clone](https://docs.github.com/en/enterprise/2.13/user/articles/cloning-a-repository) the master branch.
+2. Install [Docker](https://docs.docker.com/get-docker/).
+3. Open a terminal in the cloned project and execute:  `docker build -t md .`
+4. Create a configuration file (`config.json`) in a folder where you want to download your Moodle. Use [the wiki](https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Configuration) for this.
+5. Open a terminal in this folder and execute: `docker run --rm -it --net=host -v $(pwd):/files:Z md`. Or if you use bash: `docker run --rm -it -v $(pwd)/files:/files md`.
+
+
 
 ### Usage
 - `python main.py`
