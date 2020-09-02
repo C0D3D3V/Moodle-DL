@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 from utils.logger import Log
 from state_recorder.course import Course
-from utils.string_tools import StringTools
+from download_service.path_tools import PathTools
 from moodle_connector.moodle_service import MoodleService
 from download_service.download_service import DownloadService
 
@@ -39,7 +39,7 @@ class FakeDownloadService:
 
                     save_destination = DownloadService.genPath(self.storage_path, course, file)
 
-                    filename = StringTools.to_valid_name(file.content_filename)
+                    filename = PathTools.to_valid_name(file.content_filename)
 
                     file.saved_to = str(Path(save_destination) / filename)
 

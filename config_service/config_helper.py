@@ -28,7 +28,7 @@ class ConfigHelper:
 
     def _save(self):
         # Saves the JSON object back to file
-        with open(self.config_path, 'w+') as f:
+        with open(self.config_path, 'w+', encoding='utf-8') as f:
             config_formatted = json.dumps(self._whole_config, indent=4)
             f.write(config_formatted)
 
@@ -49,6 +49,16 @@ class ConfigHelper:
         self._whole_config.pop(key, None)
         #                           ^ behavior if the key is not present
         self._save()
+
+    def set_default_filename_character_map(self, default_windows_map: bool):
+        # Sets the default filename_character_map for Windows or Empty
+        if default_windows_map:
+            windows_map = {'\\': '＼', '/': '／', ':': '꞉', '?': '？', '*': '＊', '<': '＜', '>': '＞', '|': '｜', '"': '＂'}
+
+            self.set_property("filename_character_map", windows_map)
+        else:
+            linux_map = {'/': '|'}
+            self.set_property("filename_character_map", linux_map)
 
     # ---------------------------- GETTERS ------------------------------------
 
@@ -141,3 +151,11 @@ class ConfigHelper:
             options.update({'download_domains_blacklist': []})
 
         return options
+
+    def get_filename_character_map(self) -> {}:
+        # returns the filename_character_map for PathTools
+        try:
+            return self.get_property('filename_character_map')
+        except ValueError:
+            self.set_default_filename_character_map(True)
+            return self.get_property('filename_character_map')

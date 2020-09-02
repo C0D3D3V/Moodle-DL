@@ -11,7 +11,7 @@ from queue import Queue
 
 from utils.logger import Log
 from state_recorder.course import Course, File
-from utils.string_tools import StringTools
+from download_service.path_tools import PathTools
 from download_service.url_target import URLTarget
 from download_service.downloader import Downloader
 from moodle_connector.moodle_service import MoodleService
@@ -111,7 +111,7 @@ class DownloadService:
 
         # if a flat path is requested
         if not course.create_directory_structure:
-            return StringTools.flat_path_of_file(storage_path, course_name, file.content_filepath)
+            return PathTools.flat_path_of_file(storage_path, course_name, file.content_filepath)
 
         # If the file is located in a folder or in an assignment,
         # it should be saved in a sub-folder
@@ -121,11 +121,11 @@ class DownloadService:
             if file.content_type == 'submission_file':
                 file_path = os.path.join('/submissions/', file_path.strip('/'))
 
-            return StringTools.path_of_file_in_module(
+            return PathTools.path_of_file_in_module(
                 storage_path, course_name, file.section_name, file.module_name, file_path
             )
         else:
-            return StringTools.path_of_file(storage_path, course_name, file.section_name, file.content_filepath)
+            return PathTools.path_of_file(storage_path, course_name, file.section_name, file.content_filepath)
 
     def run(self):
         """

@@ -5,29 +5,34 @@ from sys import platform
 from pathlib import Path
 
 
-class StringTools:
+class PathTools:
+    """A set of methodes to create correct paths."""
+
+    filename_character_map = {}
+
     @staticmethod
     def to_valid_name(name: str) -> str:
-        """
-        @param name: The String that should be filtered
-        @return: A filtered String, that can be used as a filename.
-        """
+        """Generate filenames and path.
 
+        Args:
+            name (str): The string that will go through the filtering
+
+        Returns:
+            str: The filtered string, that can be used as a filename.
+        """
         # Moodle saves the title of a section in HTML-Format,
         # so we need to unescape the string
-
         name = html.unescape(name)
+
         # Forward and Backward Slashes are not good for filenames
-        name = name.replace(os.path.sep, '|')
-        name = name.replace('\\', '＼')
-        name = name.replace('/', '／')
-        name = name.replace(':', '꞉')
-        name = name.replace('?', '？')
-        name = name.replace('*', '＊')
-        name = name.replace('<', '＜')
-        name = name.replace('>', '＞')
-        name = name.replace('|', '｜')
-        name = name.replace('"', '＂')
+
+        for char in PathTools.filename_character_map:
+            replacement = PathTools.filename_character_map[char]
+            name = name.replace(char, replacement)
+
+        if os.path.sep not in PathTools.filename_character_map:
+            name = name.replace(os.path.sep, '／')
+
         name = name.replace('\n', ' ')
         name = name.replace('\r', ' ')
         name = name.rstrip('. ')
@@ -51,9 +56,9 @@ class StringTools:
         """
         path = (
             Path(storage_path)
-            / StringTools.to_valid_name(course_fullname)
-            / StringTools.to_valid_name(file_section_name)
-            / StringTools.to_valid_name(file_module_name)
+            / PathTools.to_valid_name(course_fullname)
+            / PathTools.to_valid_name(file_section_name)
+            / PathTools.to_valid_name(file_module_name)
             / file_path.strip('/')
         )
         return path
@@ -72,8 +77,8 @@ class StringTools:
         path = (
             Path(storage_path)
             / storage_path
-            / StringTools.to_valid_name(course_fullname)
-            / StringTools.to_valid_name(file_section_name)
+            / PathTools.to_valid_name(course_fullname)
+            / PathTools.to_valid_name(file_section_name)
             / file_path.strip('/')
         )
         return path
@@ -87,5 +92,5 @@ class StringTools:
         @param file_path: The additional path of a file (subdirectory).
         @return: A path where the file should be saved.
         """
-        path = Path(storage_path) / storage_path / StringTools.to_valid_name(course_fullname) / file_path.strip('/')
+        path = Path(storage_path) / storage_path / PathTools.to_valid_name(course_fullname) / file_path.strip('/')
         return path

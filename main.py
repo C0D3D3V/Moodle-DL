@@ -20,6 +20,7 @@ except ImportError:
 
 from utils import cutie
 from utils.logger import Log
+from download_service.path_tools import PathTools
 from config_service.config_helper import ConfigHelper
 from config_service.config_service import ConfigService
 from state_recorder.offline_service import OfflineService
@@ -68,25 +69,43 @@ def run_init(storage_path, use_sso=False, skip_cert_verify=False):
     else:
         moodle.interactively_acquire_token()
 
+    if os.name != 'nt':
+        print(
+            'On Windows many characters are forbidden in filenames and paths, if you want, these characters can be'
+            + ' automatically removed from filenames. If you want to view the downloaded files'
+            + ' on Windows this is important!'
+        )
+
+        default_windows_map = cutie.prompt_yes_or_no(
+            'Do you want to load the default filename character map for windows?'
+        )
+        if default_windows_map:
+            config.set_default_filename_character_map(True)
+        else:
+            config.set_default_filename_character_map(False)
+    else:
+        config.set_default_filename_character_map(True)
+
     print('Configuration finished and saved!')
 
-    if storage_path == '.':
-        print(
-            '  To set a cron-job for this program on your Unix-System:\n'
-            + '    1. `crontab -e`\n'
-            + '    2. Add `*/15 * * * * cd %s && python3 %smain.py`\n'
-            % (os.getcwd(), os.path.join(os.path.dirname(os.path.realpath(__file__)), ''))
-            + '    3. Save and you\'re done!'
-        )
-    else:
-        print(
-            '  To set a cron-job for this program on your Unix-System:\n'
-            + '    1. `crontab -e`\n'
-            + '    2. Add `*/15 * * * *'
-            + ' cd %s && python3 %smain.py --path %s`\n'
-            % (os.getcwd(), os.path.join(os.path.dirname(os.path.realpath(__file__)), ''), storage_path)
-            + '    3. Save and you\'re done!'
-        )
+    if os.name != 'nt':
+        if storage_path == '.':
+            print(
+                '  To set a cron-job for this program on your Unix-System:\n'
+                + '    1. `crontab -e`\n'
+                + '    2. Add `*/15 * * * * cd %s && python3 %smain.py`\n'
+                % (os.getcwd(), os.path.join(os.path.dirname(os.path.realpath(__file__)), ''))
+                + '    3. Save and you\'re done!'
+            )
+        else:
+            print(
+                '  To set a cron-job for this program on your Unix-System:\n'
+                + '    1. `crontab -e`\n'
+                + '    2. Add `*/15 * * * *'
+                + ' cd %s && python3 %smain.py --path %s`\n'
+                % (os.getcwd(), os.path.join(os.path.dirname(os.path.realpath(__file__)), ''), storage_path)
+                + '    3. Save and you\'re done!'
+            )
 
     print('')
 
@@ -196,6 +215,8 @@ def run_main(storage_path, skip_cert_verify=False, without_downloading_files=Fal
     mail_service = MailService(config)
     tg_service = TelegramService(config)
     console_service = ConsoleService(config)
+
+    PathTools.filename_character_map = config.get_filename_character_map()
 
     try:
         if not IS_DEBUG:

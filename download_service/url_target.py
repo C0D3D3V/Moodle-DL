@@ -17,7 +17,7 @@ import urllib.parse as urlparse
 
 from state_recorder.file import File
 from state_recorder.course import Course
-from utils.string_tools import StringTools
+from download_service.path_tools import PathTools
 from moodle_connector.request_helper import RequestHelper
 
 
@@ -50,7 +50,7 @@ class URLTarget(object):
         self.options = options
 
         # get valid filename
-        self.filename = StringTools.to_valid_name(self.file.content_filename)
+        self.filename = PathTools.to_valid_name(self.file.content_filename)
 
         # Counts the download attempts
         self.url_tried = 0
