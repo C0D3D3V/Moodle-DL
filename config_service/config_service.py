@@ -1,4 +1,5 @@
 from utils import cutie
+from utils.logger import Log
 from state_recorder.course import Course
 from config_service.config_helper import ConfigHelper
 from moodle_connector.results_handler import ResultsHandler
@@ -51,7 +52,7 @@ class ConfigService:
         dont_download_course_ids = self.config_helper.get_dont_download_course_ids()
 
         print('')
-        print(
+        Log.info(
             'To avoid downloading all the Moodle courses you are enrolled in, you can select which ones you want'
             + ' to download here. '
         )
@@ -65,8 +66,8 @@ class ConfigService:
             if ResultsHandler._should_download_course(course.id, download_course_ids, dont_download_course_ids):
                 defaults.append(i)
 
-        print('Which of the courses should be downloaded?')
-        print('[You can select with the space bar and confirm your selection with the enter key]')
+        Log.special('Which of the courses should be downloaded?')
+        Log.info('[You can select with the space bar and confirm your selection with the enter key]')
         print('')
         selected_courses = cutie.select_multiple(options=choices, ticked_indices=defaults)
 
@@ -87,8 +88,8 @@ class ConfigService:
         dont_download_course_ids = self.config_helper.get_dont_download_course_ids()
 
         print('')
-        print(
-            'You can set special settings for every single course.'
+        Log.info(
+            'You can set special settings for every single course.\n'
             + ' You can set these options:\n'
             + '- A different name for the course\n'
             + '- If a directory structure should be created for the course'
@@ -137,7 +138,7 @@ class ConfigService:
                     choices_courses.append(course)
 
             print('')
-            print('For which of the following course do you want to change the settings?')
+            Log.special('For which of the following course do you want to change the settings?')
             print('[Confirm your selection with the Enter key]')
             print('')
 
@@ -167,7 +168,7 @@ class ConfigService:
 
         # Ask for new name
         overwrite_name_with = input(
-            ('Enter a new name for this Course [leave blank for "%s"]:   ' % (course.fullname,))
+            Log.special_str('Enter a new name for this Course [leave blank for "%s"]:   ' % (course.fullname,))
         )
 
         if overwrite_name_with == '':
@@ -184,7 +185,8 @@ class ConfigService:
         create_directory_structure = current_course_settings.get('create_directory_structure', True)
 
         create_directory_structure = cutie.prompt_yes_or_no(
-            'Should a directory structure be created for this course?', default_is_yes=create_directory_structure
+            Log.special_str('Should a directory structure be created for this course?'),
+            default_is_yes=create_directory_structure,
         )
 
         if create_directory_structure is not current_course_settings.get('create_directory_structure', True):
@@ -202,17 +204,18 @@ class ConfigService:
         download_submissions = self.config_helper.get_download_submissions()
 
         print('')
-        print(
+        Log.info(
             'Submissions are files that you or a teacher have uploaded'
             + ' to your assignments. Moodle does not provide an'
             + ' interface for downloading information from all'
-            + ' submissions to a course at once. Therefore, it'
-            + ' may be slow to monitor changes to submissions.'
+            + ' submissions to a course at once.'
         )
+        Log.warning('Therefore, it may be slow to monitor changes to submissions.')
         print('')
 
         download_submissions = cutie.prompt_yes_or_no(
-            'Do you want to download submissions of your assignments?', default_is_yes=download_submissions
+            Log.special_str('Do you want to download submissions of your assignments?'),
+            default_is_yes=download_submissions,
         )
 
         self.config_helper.set_property('download_submissions', download_submissions)
@@ -224,7 +227,7 @@ class ConfigService:
         download_databases = self.config_helper.get_download_databases()
 
         print('')
-        print(
+        Log.info(
             'In the database module of Moodle data can be stored'
             + ' structured with information. Often it is also'
             + ' possible for students to upload data there.  Because'
@@ -236,7 +239,7 @@ class ConfigService:
         print('')
 
         download_databases = cutie.prompt_yes_or_no(
-            'Do you want to download databases of your courses?', default_is_yes=download_databases
+            Log.special_str('Do you want to download databases of your courses?'), default_is_yes=download_databases
         )
 
         self.config_helper.set_property('download_databases', download_databases)
@@ -248,7 +251,7 @@ class ConfigService:
         download_descriptions = self.config_helper.get_download_descriptions()
 
         print('')
-        print(
+        Log.info(
             'In Moodle courses, descriptions can be added to all kinds'
             + ' of resources, such as files, tasks, assignments or simply'
             + ' free text. These descriptions are usually unnecessary to'
@@ -258,10 +261,15 @@ class ConfigService:
             + ' descriptions are created as Markdown files and can be'
             + ' deleted as desired.'
         )
+        Log.debug(
+            'Creating the description files does not take extra time, but they can be annoying'
+            + ' if they only contain unnecessary information.'
+        )
+
         print('')
 
         download_descriptions = cutie.prompt_yes_or_no(
-            'Would you like to download descriptions of the courses you have selected?',
+            Log.special_str('Would you like to download descriptions of the courses you have selected?'),
             default_is_yes=download_descriptions,
         )
 
@@ -274,18 +282,24 @@ class ConfigService:
         download_linked_files = self.config_helper.get_download_linked_files()
 
         print('')
-        print(
+        Log.info(
             'In Moodle courses the teacher can also link to external'
             + ' files. This can be audio, video, text or anything else.'
             + ' In particular, the teacher can link to Youtube videos.'
-            + ' To download videos correctly you have to install ffmpeg. '
-            ' These files can increase the download volume considerably.'
-            + ' If you want to filter the external links by their domain,'
+        )
+        Log.debug('To download videos correctly you have to install ffmpeg. ')
+
+        Log.error('These files can increase the download volume considerably.')
+
+        Log.info(
+            'If you want to filter the external links by their domain,'
             + ' you can manually set a whitelist and a blacklist'
-            + ' ( https://github.com/C0D3D3V/Moodle-Downloader-2/'
+            + ' (https://github.com/C0D3D3V/Moodle-Downloader-2/'
             + 'wiki/Download-(external)-linked-files'
-            + ' for more details). Please note that the size of the external'
-            + ' files is determined during the download, so the total size'
+            + ' for more details).'
+        )
+        Log.warning(
+            'Please note that the size of the external files is determined during the download, so the total size'
             + ' changes during the download.'
         )
         print('')

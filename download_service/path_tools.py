@@ -12,7 +12,7 @@ class PathTools:
 
     @staticmethod
     def to_valid_name(name: str) -> str:
-        """Generate filenames and path.
+        """Filtering invalide characters in filenames and paths.
 
         Args:
             name (str): The string that will go through the filtering
@@ -25,7 +25,6 @@ class PathTools:
         name = html.unescape(name)
 
         # Forward and Backward Slashes are not good for filenames
-
         for char in PathTools.filename_character_map:
             replacement = PathTools.filename_character_map[char]
             name = name.replace(char, replacement)

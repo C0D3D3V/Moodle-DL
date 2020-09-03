@@ -49,7 +49,7 @@ def run_init(storage_path, use_sso=False, skip_cert_verify=False):
     config = ConfigHelper(storage_path)
 
     if config.is_present():
-        do_override_input = cutie.prompt_yes_or_no('Do you want to override the existing config?')
+        do_override_input = cutie.prompt_yes_or_no(Log.error_str('Do you want to override the existing config?'))
 
         if not do_override_input:
             sys.exit(0)
@@ -70,11 +70,12 @@ def run_init(storage_path, use_sso=False, skip_cert_verify=False):
         moodle.interactively_acquire_token()
 
     if os.name != 'nt':
-        print(
+        Log.info(
             'On Windows many characters are forbidden in filenames and paths, if you want, these characters can be'
-            + ' automatically removed from filenames. If you want to view the downloaded files'
-            + ' on Windows this is important!'
+            + ' automatically removed from filenames.'
         )
+
+        Log.warning('If you want to view the downloaded files on Windows this is important!')
 
         default_windows_map = cutie.prompt_yes_or_no(
             'Do you want to load the default filename character map for windows?'
@@ -86,11 +87,11 @@ def run_init(storage_path, use_sso=False, skip_cert_verify=False):
     else:
         config.set_default_filename_character_map(True)
 
-    print('Configuration finished and saved!')
+    Log.success('Configuration finished and saved!')
 
     if os.name != 'nt':
         if storage_path == '.':
-            print(
+            Log.info(
                 '  To set a cron-job for this program on your Unix-System:\n'
                 + '    1. `crontab -e`\n'
                 + '    2. Add `*/15 * * * * cd %s && python3 %smain.py`\n'
@@ -98,7 +99,7 @@ def run_init(storage_path, use_sso=False, skip_cert_verify=False):
                 + '    3. Save and you\'re done!'
             )
         else:
-            print(
+            Log.info(
                 '  To set a cron-job for this program on your Unix-System:\n'
                 + '    1. `crontab -e`\n'
                 + '    2. Add `*/15 * * * *'
@@ -109,7 +110,7 @@ def run_init(storage_path, use_sso=False, skip_cert_verify=False):
 
     print('')
 
-    print('You can always do the additional configuration later with the --config option.')
+    Log.info('You can always do the additional configuration later with the --config option.')
 
     do_config = cutie.prompt_yes_or_no('Do you want to make additional configurations now?')
 
@@ -117,7 +118,7 @@ def run_init(storage_path, use_sso=False, skip_cert_verify=False):
         run_configure(storage_path, skip_cert_verify)
 
     print('')
-    print('All set and ready to go!')
+    Log.success('All set and ready to go!')
 
 
 def run_configure(storage_path, skip_cert_verify=False):
@@ -126,7 +127,7 @@ def run_configure(storage_path, skip_cert_verify=False):
 
     ConfigService(config, storage_path, skip_cert_verify).interactively_acquire_config()
 
-    print('Configuration successfully updated!')
+    Log.success('Configuration successfully updated!')
 
 
 def run_new_token(storage_path, use_sso=False, skip_cert_verify=False):
@@ -140,7 +141,7 @@ def run_new_token(storage_path, use_sso=False, skip_cert_verify=False):
     else:
         moodle.interactively_acquire_token(use_stored_url=True)
 
-    print('New Token successfully saved!')
+    Log.success('New Token successfully saved!')
 
 
 def run_manage_database(storage_path):
@@ -150,7 +151,7 @@ def run_manage_database(storage_path):
     offline_service = OfflineService(config, storage_path)
     offline_service.interactively_manage_database()
 
-    print('All done.')
+    Log.success('All done.')
 
 
 def run_change_notification_mail(storage_path):
@@ -159,7 +160,7 @@ def run_change_notification_mail(storage_path):
 
     MailService(config).interactively_configure()
 
-    print('Configuration successfully updated!')
+    Log.success('Configuration successfully updated!')
 
 
 def run_change_notification_telegram(storage_path):
@@ -168,7 +169,7 @@ def run_change_notification_telegram(storage_path):
 
     TelegramService(config).interactively_configure()
 
-    print('Telegram Configuration successfully updated!')
+    Log.success('Telegram Configuration successfully updated!')
 
 
 def run_main(storage_path, skip_cert_verify=False, without_downloading_files=False):
@@ -287,7 +288,7 @@ IS_DEBUG = False
 
 if 'pydevd' in sys.modules:
     IS_DEBUG = True
-    print('[RUNNING IN DEBUG-MODE!]')
+    Log.debug('[RUNNING IN DEBUG-MODE!]')
 
 parser = argparse.ArgumentParser(
     description=('Moodle Downloader 2 helps you download all the course files  of your Moodle account.')
