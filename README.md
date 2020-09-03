@@ -93,7 +93,7 @@ Options can be combined with all the actions mentioned above.
 ### Notes
 - Use a separate E-Mail - Account for sending out the notifications, as its login data is saved in cleartext.
 - The Login-Information for your Moodle-Account is secure, it isn't saved in any way. Only a Login-Token is saved.
-
+- Your Moodle token is stored in the configuration file (`config.json`). Be careful that no unauthorized person reads this file, especially the token must not be given to an unauthorized person, this can cause a lot of trouble.
 
 ---
 
