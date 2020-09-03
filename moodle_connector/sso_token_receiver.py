@@ -49,7 +49,11 @@ def extract_token(address: str) -> str:
 
     token = re.sub(r'[^A-Za-z0-9]+', '', splitted[1])
 
-    return token
+    if len(splitted) < 3:
+        return token, None
+    else:
+        secret_token = re.sub(r'[^A-Za-z0-9]+', '', splitted[2])
+        return token, secret_token
 
 
 def receive_token() -> str:

@@ -19,4 +19,8 @@ def obtain_login_token(
         # somehow we don't have the needed token
         raise RuntimeError('Invalid response received from the Moodle System!  No token was received.')
 
-    return response.get('token', '')
+    if 'privatetoken' not in response:
+        return response.get('token', ''), None
+    else:
+        return response.get('token', ''), response.get('privatetoken', '')
+

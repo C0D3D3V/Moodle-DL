@@ -52,7 +52,7 @@ class MoodleService:
             moodle_password = getpass('Password for Moodle [no output]:   ')
 
             try:
-                moodle_token = login_helper.obtain_login_token(
+                moodle_token, moodle_privatetoken = login_helper.obtain_login_token(
                     moodle_username, moodle_password, moodle_domain, moodle_path, self.skip_cert_verify
                 )
 
@@ -63,6 +63,8 @@ class MoodleService:
 
         # Saves the created token and the successful Moodle parameters.
         self.config_helper.set_property('token', moodle_token)
+        if moodle_privatetoken is not None:
+            self.config_helper.set_property('privatetoken', moodle_privatetoken)
         self.config_helper.set_property('moodle_domain', moodle_domain)
         self.config_helper.set_property('moodle_path', moodle_path)
 
@@ -143,12 +145,14 @@ class MoodleService:
 
             token_address = input('Then insert the address here:   ')
 
-            moodle_token = sso_token_receiver.extract_token(token_address)
+            moodle_token, moodle_privatetoken = sso_token_receiver.extract_token(token_address)
             if moodle_token is None:
                 raise ValueError('Invalid URL!')
 
         # Saves the created token and the successful Moodle parameters.
         self.config_helper.set_property('token', moodle_token)
+        if moodle_privatetoken is not None:
+            self.config_helper.set_property('privatetoken', moodle_privatetoken)
         self.config_helper.set_property('moodle_domain', moodle_domain)
         self.config_helper.set_property('moodle_path', moodle_path)
 
