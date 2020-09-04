@@ -4,6 +4,6 @@ ADD . /md
 
 WORKDIR /md
 
-RUN pip3 install -r requirements.txt
+RUN pip3 install .
 
-ENTRYPOINT ["python3", "main.py", "--path", "/files"]
+ENTRYPOINT ["moodle-dl", "--path", "/files"]
