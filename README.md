@@ -14,7 +14,7 @@
 1. Install [Python](https://www.python.org/) >=3.6
 2. Run `pip install moodle-dl`  
     <sup>(To upgrade from an older Version use `pip install -U moodle-dl` instead)</sup>
-3. Run `moodle-dl --init`  
+3. Run `moodle-dl --init` in the desired download directory.
 
 
 <sub>If you run the program on *Windows*, please use [Powershell or CMD](https://www.isunshare.com/windows-10/5-ways-to-open-windows-powershell-in-windows-10.html). Please do not use a mintty like MINGW or similar (in MINGW python must be executed as `winpty python`).</sub>
