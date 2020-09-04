@@ -17,7 +17,7 @@
 3. Run `moodle-dl --init` in the desired download directory.
 
 
-<sub>If you run the program on *Windows*, please use [Powershell or CMD](https://www.isunshare.com/windows-10/5-ways-to-open-windows-powershell-in-windows-10.html). Please do not use a mintty like MINGW or similar (in MINGW python must be executed as `winpty python`).</sub>
+If you run the program on **Windows**, please use [Powershell or CMD](https://www.isunshare.com/windows-10/5-ways-to-open-windows-powershell-in-windows-10.html). Please do not use a mintty like MINGW or similar.
 
 <sup>[Click here for an alternative setup with Docker](https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Run-with-Docker)</sup>
 
