@@ -11,33 +11,30 @@
 
 
 ### Setup
-1. You can take the [latest release from here](https://github.com/C0D3D3V/Moodle-Downloader-2/releases) or [clone](https://docs.github.com/en/enterprise/2.13/user/articles/cloning-a-repository) the master branch directly.
-2. Install [Python](https://www.python.org/) >=3.6
-3. Verify that `python --version` shows a version equal to or higher then 3.6
-    Otherwise install the newest [Python](https://www.python.org/) version
-4. `pip install --user -r requirements.txt`
-5. run `python main.py --init`  
+1. Install [Python](https://www.python.org/) >=3.6
+2. Run `pip install moodle-dl`  
+    <sup>(To upgrade from an older Version use `pip install -U moodle-dl` instead)</sup>
+3. Run `moodle-dl --init`  
 
-On some operating systems the program has to run with `python3` instead of `python`, try it yourself. The same applies to `pip3`.
 
-If you run the program on Windows, please use [Powershell or CMD](https://www.isunshare.com/windows-10/5-ways-to-open-windows-powershell-in-windows-10.html). Please do not use a mintty like MINGW or similar (in MINGW python must be executed as `winpty python`).
+<sub>If you run the program on *Windows*, please use [Powershell or CMD](https://www.isunshare.com/windows-10/5-ways-to-open-windows-powershell-in-windows-10.html). Please do not use a mintty like MINGW or similar (in MINGW python must be executed as `winpty python`).</sub>
 
-[Click here for an alternative setup with Docker](https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Run-with-Docker)
+<sup>[Click here for an alternative setup with Docker](https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Run-with-Docker)</sup>
 
 
 
 ### Usage
-- `python main.py`
+- `moodle-dl`
     - Fetches the current state of your Moodle Account, saves it and detects any changes.
     - If configured, it also sends out a mail-notification.
     - It prints the current status into the console 
 	- It writes a more detailed log into `MoodleDownloader.log` for debug purpose.
-- `python main.py --init`
+- `moodle-dl --init`
     - Guides you trough the configuration of the software, including the activation of mail-notifications and obtainment of a login-token for your Moodle-Account.
     - After the necessary configuration, further additional configurations can be made. 
 	- It does not fetch the current state of your Moodle-Account.
     - If you have to log in with Single Sign On (SSO), you can set the option `--sso` additionally.
-- `python main.py --config`
+- `moodle-dl --config`
     - Guides you through the additional configuration of the software.
     - This includes the selection of the courses to be downloaded and various configuration options for these courses.
     - You can rename each course individually and decide if a folder structure should be created.
@@ -46,22 +43,22 @@ If you run the program on Windows, please use [Powershell or CMD](https://www.is
     - You can choose to download databases of Moodle courses. 
     - You can set if external linked files should be downloaded (files like youtube videos). To download videos correctly and in high quality you have to install [ffmpeg](http://blog.gregzaal.com/how-to-install-ffmpeg-on-windows/).
     - It does not fetch the current state of your Moodle-Account.
-- `python main.py --new-token`
+- `moodle-dl --new-token`
     - Overrides the login-token with a newly obtained one.
     - It does not fetch the current state of your Moodle-Account.
     - Use it if at any point in time, for whatever reason, the saved token gets rejected by Moodle.
     - It does not affect the rest of the config.
     - It prints all information into the console.
-- `python main.py --change-notification-mail`
+- `moodle-dl --change-notification-mail`
     - Activate/deactivate/change the settings for receiving notifications via e-mail.
     - It does not affect the rest of the config.
     - It prints all information into the console.
-- `python main.py --change-notification-telegram`
+- `moodle-dl --change-notification-telegram`
     - Activate/deactivate/change the settings for receiving notifications via Telegram.
     - It does not affect the rest of the config.
     - It prints all information into the console.
     - Help with setting up Notifications via Telegram will be here soon
-- `python main.py --manage-database`
+- `moodle-dl --manage-database`
     - To manage the offline database.
     - It allows you to delete entries from the database that are no longer available locally so that they can be downloaded again.
 
