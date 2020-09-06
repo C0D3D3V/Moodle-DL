@@ -137,8 +137,7 @@ class DownloadService:
         while not self._downloader_complete():
             time.sleep(0.1)
 
-            sys.stdout.write(self._get_status_message())
-            sys.stdout.flush()
+            print(self._get_status_message() + '\033[K', end='')
 
         self._log_failures()
 

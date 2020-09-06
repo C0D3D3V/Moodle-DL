@@ -445,6 +445,3 @@ def main(args=None):
     else:
         run_main(storage_path, skip_cert_verify, without_downloading_files)
 
-
-if __name__ == "__main__":
-    main()

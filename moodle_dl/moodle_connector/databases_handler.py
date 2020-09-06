@@ -27,8 +27,7 @@ class DatabasesHandler:
         if self.version < 2015051100:
             return {}
 
-        sys.stdout.write('\rDownloading databases information')
-        sys.stdout.flush()
+        print('\rDownloading databases information\033[K', end='')
 
         # We create a dictionary with all the courses we want to request.
         extra_data = {}
@@ -108,8 +107,7 @@ class DatabasesHandler:
                 data = {'databaseid': real_id}
 
                 if False:
-                    sys.stdout.write(intro + ' %3d/%3d [%6s|%6s]' % (counter, total, course_id, real_id))
-                    sys.stdout.flush()
+                    print(intro + ' %3d/%3d [%6s|%6s]\033[K' % (counter, total, course_id, real_id), end='')
 
                 access = self.request_helper.post_REST('mod_data_get_data_access_information', data)
 

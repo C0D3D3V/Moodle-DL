@@ -27,8 +27,7 @@ class AssignmentsHandler:
         if self.version < 2012120300:
             return {}
 
-        sys.stdout.write('\rDownloading assignments information')
-        sys.stdout.flush()
+        print('\rDownloading assignments information\033[K', end='')
 
         # We create a dictionary with all the courses we want to request.
         extra_data = {}
@@ -98,8 +97,7 @@ class AssignmentsHandler:
                 real_id = assignments[course_id][assignment_id].get('id', 0)
                 data = {'userid': userid, 'assignid': real_id}
 
-                sys.stdout.write(intro + ' %3d/%3d [%6s|%6s]' % (counter, total, course_id, real_id))
-                sys.stdout.flush()
+                print(intro + ' %3d/%3d [%6s|%6s]\033[K' % (counter, total, course_id, real_id), end='')
 
                 submission = self.request_helper.post_REST('mod_assign_get_submission_status', data)
 

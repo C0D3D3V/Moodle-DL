@@ -30,7 +30,7 @@ If you run the program on **Windows**, please use [Powershell or CMD](https://ww
     - It prints the current status into the console 
 	- It writes a more detailed log into `MoodleDownloader.log` for debug purpose.
 - `moodle-dl --init`
-    - Guides you trough the configuration of the software, including the activation of mail-notifications and obtainment of a login-token for your Moodle-Account.
+    - Guides you trough the configuration of the software, including the activation of notifications and obtainment of a login-token for your Moodle-Account.
     - After the necessary configuration, further additional configurations can be made. 
 	- It does not fetch the current state of your Moodle-Account.
     - If you have to log in with Single Sign On (SSO), you can set the option `--sso` additionally.

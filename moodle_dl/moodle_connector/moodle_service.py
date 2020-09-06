@@ -12,6 +12,7 @@ from moodle_dl.state_recorder.course import Course
 from moodle_dl.state_recorder.state_recorder import StateRecorder
 from moodle_dl.moodle_connector import login_helper
 from moodle_dl.moodle_connector import sso_token_receiver
+from moodle_dl.moodle_connector.cookie_handler import CookieHandler
 from moodle_dl.moodle_connector.results_handler import ResultsHandler
 from moodle_dl.moodle_connector.databases_handler import DatabasesHandler
 from moodle_dl.moodle_connector.assignments_handler import AssignmentsHandler
@@ -168,6 +169,7 @@ class MoodleService:
         logging.debug('Fetching current Moodle State...')
 
         token = self.config_helper.get_token()
+        privatetoken = self.config_helper.get_privatetoken()
         moodle_domain = self.config_helper.get_moodle_domain()
         moodle_path = self.config_helper.get_moodle_path()
 
@@ -185,13 +187,15 @@ class MoodleService:
         filtered_courses = []
         try:
 
-            sys.stdout.write('\rDownloading account information')
-            sys.stdout.flush()
+            print('\rDownloading account information\033[K', end='')
 
             userid, version = first_contact_handler.fetch_userid_and_version()
             assignments_handler = AssignmentsHandler(request_helper, version)
             databases_handler = DatabasesHandler(request_helper, version)
             results_handler.setVersion(version)
+
+            # cookie_handler = CookieHandler(request_helper, version)
+            # cookie_handler.fetch_cookies(privatetoken, userid)
 
             courses_list = first_contact_handler.fetch_courses(userid)
             courses = []
@@ -228,8 +232,7 @@ class MoodleService:
                 if len(status_message) > limits.columns:
                     status_message = status_message[0 : limits.columns]
 
-                sys.stdout.write(status_message)
-                sys.stdout.flush()
+                print(status_message + '\033[K', end='')
 
                 course_assignments = assignments.get(course.id, {})
                 course_databases = databases.get(course.id, {})

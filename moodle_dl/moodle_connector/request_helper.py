@@ -4,7 +4,7 @@ import json
 import urllib
 import certifi
 
-from http.client import HTTPSConnection
+from http.client import HTTPSConnection, HTTPResponse
 
 
 class RequestHelper:
@@ -34,6 +34,21 @@ class RequestHelper:
         self.token = token
         self.moodle_domain = moodle_domain
         self.moodle_path = moodle_path
+
+    def post_URL(self, url: str, data: {str: str} = None) -> HTTPResponse:
+        """
+        Sends a POST request to a specific URL of the Moodle system
+        @param url: The url to which the request is sent.
+        @param data: The optional data is added to the POST body.
+        @return: The resulting HTTPResponse object.
+        """
+
+        data_urlencoded = RequestHelper.recursive_urlencode(data)
+
+        self.connection.request('POST', url, body=data_urlencoded, headers=self.stdHeader)
+
+        response = self.connection.getresponse()
+        return response
 
     def post_REST(self, function: str, data: {str: str} = None) -> object:
         """

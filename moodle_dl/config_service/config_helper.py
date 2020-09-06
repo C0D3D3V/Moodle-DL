@@ -96,6 +96,13 @@ class ConfigHelper:
         except ValueError:
             raise ValueError('Not yet configured!')
 
+    def get_privatetoken(self) -> str:
+        # returns a stored privatetoken
+        try:
+            return self.get_property('privatetoken')
+        except ValueError:
+            raise ValueError('Not yet configured!')
+
     def get_moodle_domain(self) -> str:
         # returns a stored moodle_domain
         try:
