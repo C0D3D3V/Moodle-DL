@@ -43,4 +43,6 @@ class CookieHandler:
 
         cookies = cookies_response.getheader('Set-Cookie')
 
-        return cookies
+        moodle_url = cookies_response.getheader('Location')
+
+        return cookies, moodle_url
