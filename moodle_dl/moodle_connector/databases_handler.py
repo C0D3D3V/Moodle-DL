@@ -11,8 +11,6 @@ class DatabasesHandler:
 
     def __init__(self, request_helper: RequestHelper, version: int):
         self.request_helper = request_helper
-        # oldest supported Moodle version
-        self.version = 2011120500
         self.version = version
 
     def fetch_databases(self, courses: [Course]) -> {int: {int: {}}}:
