@@ -29,10 +29,12 @@ class CookieHandler:
             autologin_key_result = self.request_helper.post_REST('tool_mobile_get_autologin_key', extra_data)
             return autologin_key_result
         except RequestRejectedError as e:
-            logging.debug("Cookie lockout: {}".format(e)) # , extra={'exception': e}
+            logging.debug("Cookie lockout: {}".format(e))  # , extra={'exception': e}
             return None
 
-    def fetch_cookies(self, privatetoken: str, userid: str):
+    def fetch_cookies(self, privatetoken: str, userid: str, cookies: {}):
+        if cookies is not None:
+            return cookies
 
         if privatetoken is None:
             error_msg = 'Moodle Cookies are not retrieved because no private token is set. To set a private token, use the `--new-token` option.'

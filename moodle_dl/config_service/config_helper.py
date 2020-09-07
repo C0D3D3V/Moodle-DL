@@ -103,6 +103,13 @@ class ConfigHelper:
         except ValueError:
             return None
 
+    def get_cookies(self) -> str:
+        # returns the stored cookies
+        try:
+            return self.get_property('cookies')
+        except ValueError:
+            return None
+
     def get_moodle_domain(self) -> str:
         # returns a stored moodle_domain
         try:

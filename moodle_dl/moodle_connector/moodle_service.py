@@ -170,6 +170,7 @@ class MoodleService:
 
         token = self.config_helper.get_token()
         privatetoken = self.config_helper.get_privatetoken()
+        cookies = self.config_helper.get_cookies()
         moodle_domain = self.config_helper.get_moodle_domain()
         moodle_path = self.config_helper.get_moodle_path()
 
@@ -194,8 +195,11 @@ class MoodleService:
             databases_handler = DatabasesHandler(request_helper, version)
             results_handler.setVersion(version)
 
-            # cookie_handler = CookieHandler(request_helper, version)
-            # cookie_handler.fetch_cookies(privatetoken, userid)
+            # generate a new cookie if necessary 
+            cookie_handler = CookieHandler(request_helper, version)
+            cookies = cookie_handler.fetch_cookies(privatetoken, userid, cookies)
+            if cookies is not None:
+                self.config_helper.set_property('cookies', cookies)
 
             courses_list = first_contact_handler.fetch_courses(userid)
             courses = []
