@@ -3,8 +3,8 @@ import ssl
 import json
 import urllib
 import certifi
-
-from http.client import HTTPSConnection, HTTPResponse
+import logging
+import requests
 
 
 class RequestHelper:
@@ -22,33 +22,42 @@ class RequestHelper:
     }
 
     def __init__(self, moodle_domain: str, moodle_path: str = '/', token: str = '', skip_cert_verify=False):
-        """
-        Opens a connection to the Moodle system
-        """
-        if skip_cert_verify:
-            context = ssl._create_unverified_context()
-        else:
-            context = ssl.create_default_context(cafile=certifi.where())
-        self.connection = HTTPSConnection(moodle_domain, context=context)
-
         self.token = token
         self.moodle_domain = moodle_domain
         self.moodle_path = moodle_path
 
-    def post_URL(self, url: str, data: {str: str} = None) -> HTTPResponse:
+        self.verify = not skip_cert_verify
+        self.url_base = 'https://' + moodle_domain + moodle_path
+
+        logging.getLogger("requests").setLevel(logging.WARNING)
+
+    def post_URL(self, url: str, data: {str: str} = None):
         """
-        Sends a POST request to a specific URL of the Moodle system
-        @param url: The url to which the request is sent.
+        Sends a POST request to a specific URL 
+        @param url: The url to which the request is sent. (the moodle base url is not added to the given URL)
         @param data: The optional data is added to the POST body.
-        @return: The resulting HTTPResponse object.
+        @return: The resulting response object and the session object.
         """
 
-        data_urlencoded = RequestHelper.recursive_urlencode(data)
+        data_urlencoded = ""
+        if data is not None:
+            data_urlencoded = RequestHelper.recursive_urlencode(data)
 
-        self.connection.request('POST', url, body=data_urlencoded, headers=self.stdHeader)
+        session = requests.Session()
+        response = session.post(url, data=data_urlencoded, headers=self.stdHeader, verify=self.verify)
+        return response, session
 
-        response = self.connection.getresponse()
-        return response
+    def get_URL_WC(self, url: str, cookie_dic: {str: str} = None):
+        """
+        Sends a GET request to a specific URL of the Moodle system, including additional cookies
+        @param url: The url to which the request is sent. (the moodle base url is not added to the given URL)
+        @param cookie_dic: The optional cookies to add to the request
+        @return: The resulting Response object.
+        """
+
+        session = requests.Session()
+        response = session.get(url, headers=self.stdHeader, cookies=cookie_dic, verify=self.verify)
+        return response, session
 
     def post_REST(self, function: str, data: {str: str} = None) -> object:
         """
@@ -63,27 +72,20 @@ class RequestHelper:
             raise ValueError('The required Token is not set!')
 
         data_urlencoded = self._get_POST_DATA(function, self.token, data)
-        url = self._get_REST_POST_URL(self.moodle_path, function)
+        url = self._get_REST_POST_URL(self.url_base, function)
 
-        # uncomment this print to debug requested post-urls
-        # print(url)
+        response = requests.post(url, data=data_urlencoded, headers=self.stdHeader, verify=self.verify)
 
-        # uncomment this print to debug posted data
-        # print(data_urlencoded)
-
-        self.connection.request('POST', url, body=data_urlencoded, headers=self.stdHeader)
-
-        response = self.connection.getresponse()
         return self._initial_parse(response)
 
     @staticmethod
-    def _get_REST_POST_URL(moodle_path: str, function: str) -> str:
+    def _get_REST_POST_URL(url_base: str, function: str) -> str:
         """
         Generates an URL for a REST-POST request
         @params: The necessary parameters for a REST URL
         @return: A formatted URL
         """
-        url = '%swebservice/rest/server.php?moodlewsrestformat=json&wsfunction=%s' % (moodle_path, function)
+        url = '%swebservice/rest/server.php?moodlewsrestformat=json&wsfunction=%s' % (url_base, function)
 
         return url
 
@@ -113,17 +115,19 @@ class RequestHelper:
         checked for errors.
         """
 
-        self.connection.request(
-            'POST', '%slogin/token.php' % (self.moodle_path), body=urllib.parse.urlencode(data), headers=self.stdHeader
+        response = requests.post(
+            '%slogin/token.php' % (self.url_base),
+            data=urllib.parse.urlencode(data),
+            headers=self.stdHeader,
+            verify=self.verify,
         )
 
-        response = self.connection.getresponse()
         return self._initial_parse(response)
 
     @staticmethod
     def _check_response_code(response):
         # Normally Moodle answer with response 200
-        if response.getcode() != 200:
+        if response.status_code != 200:
             raise RuntimeError(
                 'An Unexpected Error happened on side of the Moodle System!'
                 + (' Status-Code: %s' % str(response.getcode()))
@@ -135,8 +139,6 @@ class RequestHelper:
         """
         Query the version by looking up the change-log (/lib/upgrade.txt)
         of the Moodle
-        @param moodle_domain: the domain of the Moodle instance
-        @param moodle_path: the path of the Moodle installation
         @return: a float number representing the newest version
                  parsed from the change-log
         """
@@ -173,8 +175,8 @@ class RequestHelper:
 
         # Try to parse the JSON
         try:
-            response_extracted = json.loads(response.read())
-        except ValueError as error:
+            response_extracted = response.json()
+        except Exception as error:
             raise RuntimeError(
                 'An Unexpected Error occurred while trying'
                 + ' to parse the json response! Moodle'

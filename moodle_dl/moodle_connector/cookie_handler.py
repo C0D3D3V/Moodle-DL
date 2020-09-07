@@ -1,8 +1,6 @@
 import sys
 import logging
 
-from http.cookies import SimpleCookie
-
 from moodle_dl.utils.logger import Log
 from moodle_dl.moodle_connector.request_helper import RequestHelper, RequestRejectedError
 
@@ -36,7 +34,18 @@ class CookieHandler:
 
     def fetch_cookies(self, privatetoken: str, userid: str, cookies: {}):
         if cookies is not None:
-            return cookies
+            # test if still logged in.
+            cookie_dic = cookies.get('dict', {})
+            response, session = self.request_helper.get_URL_WC(cookies.get('moodle_url', ''), cookie_dic)
+
+            response_text = response.text
+
+            if response_text.find('login/logout.php') >= 0:
+                return cookies
+
+            warning_msg = 'Moodle cookie has expired, new cookie is tried to be generated.'
+            logging.warning(warning_msg)
+            Log.warning('\r' + warning_msg + '\033[K')
 
         if privatetoken is None:
             error_msg = 'Moodle Cookies are not retrieved because no private token is set. To set a private token, use the `--new-token` option.'
@@ -57,18 +66,14 @@ class CookieHandler:
 
         post_data = {'key': autologin_key.get('key', ''), 'userid': userid}
 
-        cookies_response = self.request_helper.post_URL(autologin_key.get('autologinurl', ''), post_data)
+        cookies_response, cookies_session = self.request_helper.post_URL(
+            autologin_key.get('autologinurl', ''), post_data
+        )
 
-        response_text = cookies_response.read()
+        cookies = cookies_session.cookies.get_dict()
 
-        cookies_str = cookies_response.getheader('Set-Cookie')
-        simple_cookies = SimpleCookie()
-        simple_cookies.load(cookies_str)
+        moodle_url = cookies_response.url
 
-        cookies = {key: value.value for key, value in simple_cookies.items()}
-
-        moodle_url = cookies_response.getheader('Location')
-
-        result = {'list': cookies, 'moodle_url': moodle_url}
+        result = {'dict': cookies, 'moodle_url': moodle_url}
 
         return result

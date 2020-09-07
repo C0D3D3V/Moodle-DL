@@ -27,6 +27,7 @@ setup(
         'youtube_dl>=2020.5.29',
         'certifi>=2020.4.5.2',
         'html2text>=2020.1.16',
+        'requests>=2.24.0',
     ],
     classifiers=[
         'Development Status :: 4 - Beta',
