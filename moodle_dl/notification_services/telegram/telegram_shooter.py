@@ -1,8 +1,7 @@
 import json
 import pprint
 import urllib
-
-from http.client import HTTPSConnection
+import requests
 
 
 class TelegramShooter:
@@ -23,23 +22,19 @@ class TelegramShooter:
         self.telegram_token = telegram_token
         self.telegram_chatid = telegram_chatid
 
-        self.connection = HTTPSConnection('api.telegram.org')
-
     def send(self, message: str):
         payload = {'chat_id': self.telegram_chatid, 'text': message, 'parse_mode': 'HTML'}
 
-        url = '/bot%s/sendMessage' % (self.telegram_token)
+        url = 'https://api.telegram.org/bot%s/sendMessage' % (self.telegram_token)
         data_urlencoded = urllib.parse.urlencode(payload)
 
-        self.connection.request('POST', url, body=data_urlencoded, headers=self.stdHeader)
-
-        response = self.connection.getresponse()
+        response = requests.post(url, data=data_urlencoded, headers=self.stdHeader)
         self._check_errors(response)
 
     @staticmethod
     def _check_response_code(response):
         # Normally Telegram answer with response 200
-        if response.getcode() != 200:
+        if response.status_code != 200:
             raise RuntimeError(
                 'An Unexpected Error happened on side of the'
                 + ' Telegram System!'
@@ -60,8 +55,8 @@ class TelegramShooter:
 
         # Try to parse the JSON
         try:
-            response_extracted = json.loads(response.read())
-        except ValueError as error:
+            response_extracted = response.json()
+        except Exception as error:
             raise RuntimeError(
                 'An Unexpected Error occurred while trying'
                 + ' to parse the json response! Telegram'
