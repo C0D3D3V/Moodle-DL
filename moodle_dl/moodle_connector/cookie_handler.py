@@ -29,7 +29,7 @@ class CookieHandler:
             autologin_key_result = self.request_helper.post_REST('tool_mobile_get_autologin_key', extra_data)
             return autologin_key_result
         except RequestRejectedError as e:
-            logging.debug("Cookie lockout: {}".format(e))
+            logging.debug("Cookie lockout: {}".format(e)) # , extra={'exception': e}
             return None
 
     def fetch_cookies(self, privatetoken: str, userid: str):
@@ -54,6 +54,8 @@ class CookieHandler:
         post_data = {'key': autologin_key.get('key', ''), 'userid': userid}
 
         cookies_response = self.request_helper.post_URL(autologin_key.get('autologinurl', ''), post_data)
+
+        response_text = cookies_response.read()
 
         cookies = cookies_response.getheader('Set-Cookie')
 

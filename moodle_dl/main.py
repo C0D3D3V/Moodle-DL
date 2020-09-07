@@ -45,8 +45,6 @@ class ReRaiseOnError(logging.StreamHandler):
     def emit(self, record):
         if hasattr(record, 'exception'):
             raise record.exception
-        else:
-            raise RuntimeError(record.msg)
 
 
 def run_init(storage_path, use_sso=False, skip_cert_verify=False):
@@ -195,9 +193,7 @@ def run_main(storage_path, skip_cert_verify=False, without_downloading_files=Fal
     Log.info('Moodle Downloader starting...')
     if IS_DEBUG:
         logging.info('Debug-Mode detected. Errors will not be logged but instead re-risen.')
-        debug_logger = logging.getLogger()
-        debug_logger.setLevel(logging.ERROR)
-        debug_logger.addHandler(ReRaiseOnError())
+        app_log.addHandler(ReRaiseOnError())
 
     try:
         logging.debug('Loading config...')
@@ -205,7 +201,7 @@ def run_main(storage_path, skip_cert_verify=False, without_downloading_files=Fal
         config = ConfigHelper(storage_path)
         config.load()
     except BaseException as e:
-        logging.error('Error while trying to load the Configuration! Exiting...', extra={'exception': e})
+        logging.error('Error while trying to load the Configuration! {} Exiting...'.format(e), extra={'exception': e})
         Log.error('Error while trying to load the Configuration!')
         sys.exit(-1)
 
@@ -273,7 +269,7 @@ def run_main(storage_path, skip_cert_verify=False, without_downloading_files=Fal
         mail_service.notify_about_error(short_error)
         tg_service.notify_about_error(short_error)
 
-        logging.debug('Exception-Handling completed. Exiting...', extra={'exception': e})
+        logging.debug('Exception-Handling completed. Exiting...')
         Log.critical('Exception:\n%s' % (error_formatted))
         Log.error('The following error occurred during execution: %s' % (str(e)))
 
