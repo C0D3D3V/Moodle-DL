@@ -1,6 +1,8 @@
 import sys
 import logging
 
+from http.cookies import SimpleCookie
+
 from moodle_dl.utils.logger import Log
 from moodle_dl.moodle_connector.request_helper import RequestHelper, RequestRejectedError
 
@@ -59,10 +61,14 @@ class CookieHandler:
 
         response_text = cookies_response.read()
 
-        cookies = cookies_response.getheader('Set-Cookie')
+        cookies_str = cookies_response.getheader('Set-Cookie')
+        simple_cookies = SimpleCookie()
+        simple_cookies.load(cookies_str)
+
+        cookies = {key: value.value for key, value in simple_cookies.items()}
 
         moodle_url = cookies_response.getheader('Location')
 
-        result = {'cookies': cookies, 'moodle_url': moodle_url}
+        result = {'list': cookies, 'moodle_url': moodle_url}
 
         return result
