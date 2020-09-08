@@ -349,12 +349,12 @@ class URLTarget(object):
 
             with youtube_dl.YoutubeDL(ydl_opts) as ydl:
                 try:
+                    if delete_if_video:
+                        os.remove(self.file.saved_to)
                     ydl_results = ydl.download([urlToDownload])
                     if ydl_results == 1:
                         return False
                     else:
-                        if delete_if_video:
-                            os.remove(self.file.saved_to)
                         self.move_tmp_file(tmp_file)
                         self.success = True
                         return True
