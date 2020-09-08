@@ -21,11 +21,21 @@ from moodle_dl.moodle_connector.request_helper import RequestRejectedError, Requ
 
 
 class MoodleService:
-    def __init__(self, config_helper: ConfigHelper, storage_path: str, skip_cert_verify: bool = False):
+    def __init__(
+        self,
+        config_helper: ConfigHelper,
+        storage_path: str,
+        skip_cert_verify: bool = False,
+        log_responses: bool = False,
+    ):
         self.config_helper = config_helper
         self.storage_path = storage_path
         self.recorder = StateRecorder(Path(storage_path) / 'moodle_state.db')
         self.skip_cert_verify = skip_cert_verify
+
+        self.log_responses_to = None
+        if log_responses:
+            self.log_responses_to = str(Path(storage_path) / 'responses.log')
 
     def interactively_acquire_token(self, use_stored_url: bool = False) -> str:
         """
@@ -174,7 +184,7 @@ class MoodleService:
         moodle_domain = self.config_helper.get_moodle_domain()
         moodle_path = self.config_helper.get_moodle_path()
 
-        request_helper = RequestHelper(moodle_domain, moodle_path, token, self.skip_cert_verify)
+        request_helper = RequestHelper(moodle_domain, moodle_path, token, self.skip_cert_verify, self.log_responses_to)
         first_contact_handler = FirstContactHandler(request_helper)
         results_handler = ResultsHandler(request_helper)
 
@@ -195,7 +205,7 @@ class MoodleService:
             databases_handler = DatabasesHandler(request_helper, version)
             results_handler.setVersion(version)
 
-            # generate a new cookie if necessary 
+            # generate a new cookie if necessary
             cookie_handler = CookieHandler(request_helper, version)
             cookies = cookie_handler.fetch_cookies(privatetoken, userid, cookies)
             if cookies is not None:

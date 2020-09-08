@@ -21,13 +21,28 @@ class RequestHelper:
         'Content-Type': 'application/x-www-form-urlencoded',
     }
 
-    def __init__(self, moodle_domain: str, moodle_path: str = '/', token: str = '', skip_cert_verify=False):
+    def __init__(
+        self,
+        moodle_domain: str,
+        moodle_path: str = '/',
+        token: str = '',
+        skip_cert_verify: bool = False,
+        log_responses_to: str = None,
+    ):
         self.token = token
         self.moodle_domain = moodle_domain
         self.moodle_path = moodle_path
 
         self.verify = not skip_cert_verify
         self.url_base = 'https://' + moodle_domain + moodle_path
+
+        self.log_responses_to = log_responses_to
+        self.log_responses = False
+
+        if log_responses_to is not None:
+            self.log_responses = True
+            with open(self.log_responses_to, 'w') as response_log_file:
+                response_log_file.write('JSON Log:\n\n')
 
         logging.getLogger("requests").setLevel(logging.WARNING)
         logging.getLogger("urllib3").setLevel(logging.WARNING)
@@ -77,7 +92,16 @@ class RequestHelper:
 
         response = requests.post(url, data=data_urlencoded, headers=self.stdHeader, verify=self.verify)
 
-        return self._initial_parse(response)
+        json_result = self._initial_parse(response)
+        if self.log_responses:
+            with open(self.log_responses_to, 'a') as response_log_file:
+                response_log_file.write('URL: {}\n'.format(response.url))
+                response_log_file.write('Function: {}\n\n'.format(function))
+                response_log_file.write('Data: {}\n\n'.format(data))
+                response_log_file.write(json.dumps(json_result, indent=4, ensure_ascii=False))
+                response_log_file.write('\n\n\n')
+
+        return json_result
 
     @staticmethod
     def _get_REST_POST_URL(url_base: str, function: str) -> str:

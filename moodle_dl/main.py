@@ -174,7 +174,7 @@ def run_change_notification_telegram(storage_path):
     Log.success('Telegram Configuration successfully updated!')
 
 
-def run_main(storage_path, skip_cert_verify=False, without_downloading_files=False):
+def run_main(storage_path, skip_cert_verify=False, without_downloading_files=False, log_responses=False):
 
     log_formatter = logging.Formatter('%(asctime)s  %(levelname)s  {%(module)s}  %(message)s', '%Y-%m-%d %H:%M:%S')
     log_file = os.path.join(storage_path, 'MoodleDownloader.log')
@@ -223,7 +223,7 @@ def run_main(storage_path, skip_cert_verify=False, without_downloading_files=Fal
         if not IS_DEBUG:
             process_lock.lock(storage_path)
 
-        moodle = MoodleService(config, storage_path, skip_cert_verify)
+        moodle = MoodleService(config, storage_path, skip_cert_verify, log_responses)
 
         logging.debug('Checking for changes for the configured Moodle-Account....')
         Log.debug('Checking for changes for the configured Moodle-Account...')
@@ -408,6 +408,14 @@ def get_parser():
         + 'initialization.',
     )
 
+    parser.add_argument(
+        '--log-responses',
+        default=False,
+        action='store_true',
+        help='If this flag is set, a responses.log file is created'
+        + ' in which all JSON responses from Moodles are logged'
+        + ' along with the requested URL.',
+    )
     return parser
 
 
@@ -424,6 +432,7 @@ def main(args=None):
     storage_path = args.path
     skip_cert_verify = args.skip_cert_verify
     without_downloading_files = args.without_downloading_files
+    log_responses = args.log_responses
 
     if args.init:
         run_init(storage_path, use_sso, skip_cert_verify)
@@ -439,5 +448,5 @@ def main(args=None):
     elif args.manage_database:
         run_manage_database(storage_path)
     else:
-        run_main(storage_path, skip_cert_verify, without_downloading_files)
+        run_main(storage_path, skip_cert_verify, without_downloading_files, log_responses)
 
