@@ -43,7 +43,7 @@ class CookieHandler:
             if response_text.find('login/logout.php') >= 0:
                 return cookies
 
-            warning_msg = 'Moodle cookie has expired, new cookie is tried to be generated.'
+            warning_msg = 'Moodle cookie has expired, an attempt is made to generate a new cookie.'
             logging.warning(warning_msg)
             Log.warning('\r' + warning_msg + '\033[K')
 

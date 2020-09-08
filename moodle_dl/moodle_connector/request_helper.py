@@ -3,8 +3,8 @@ import ssl
 import json
 import urllib
 import certifi
-import logging
 import requests
+import logging
 
 
 class RequestHelper:
@@ -30,6 +30,7 @@ class RequestHelper:
         self.url_base = 'https://' + moodle_domain + moodle_path
 
         logging.getLogger("requests").setLevel(logging.WARNING)
+        logging.getLogger("urllib3").setLevel(logging.WARNING)
 
     def post_URL(self, url: str, data: {str: str} = None):
         """
