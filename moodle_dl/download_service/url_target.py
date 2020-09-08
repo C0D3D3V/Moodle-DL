@@ -286,20 +286,28 @@ class URLTarget(object):
 
                 self.file.time_stamp = int(time.time())
 
-    def try_download_link(self) -> bool:
-        """
-        This function should only be used for shortcut/URL files.
+    def try_download_link(self, add_token: bool = False, delete_if_video: bool = False) -> bool:
+        """This function should only be used for shortcut/URL files.
         It tests whether a URL refers to a file, that is not an HTML web page.
-        Then downloads it.
-        Otherwise an attempt will be made to download an HTML video
+        Then downloads it. Otherwise an attempt will be made to download an HTML video
         from the website.
-        When a file is downloaded True is returned.
+
+        Args:
+            add_token (bool, optional): Adds the ws-token to the url. Defaults to False.
+            delete_if_video (bool, optional): deletes the tmp file if youtube-dl was successfull. Defaults to False.
+
+        Returns:
+            bool: If it was successfull.
         """
+
+        urlToDownload = self.file.content_fileurl
+        if add_token:
+            urlToDownload = self._add_token_to_url(self.file.content_fileurl)
 
         isHTML = False
         new_filename = ""
         total_bytes_estimate = -1
-        request = urllib.request.Request(url=self.file.content_fileurl, headers=RequestHelper.stdHeader)
+        request = urllib.request.Request(url=urlToDownload, headers=RequestHelper.stdHeader)
         with contextlib.closing(urllib.request.urlopen(request, context=self.ssl_context)) as fp:
             headers = fp.info()
 
@@ -307,7 +315,7 @@ class URLTarget(object):
             if content_type == 'text/html' or content_type == 'text/plain':
                 isHTML = True
             else:
-                url_parsed = urlparse.urlsplit(self.file.content_fileurl)
+                url_parsed = urlparse.urlsplit(urlToDownload)
                 new_filename = posixpath.basename(url_parsed.path)
                 new_filename = headers.get_filename(new_filename)
                 total_bytes_estimate = int(headers.get('Content-Length', -1))
@@ -315,14 +323,14 @@ class URLTarget(object):
         if not isHTML:
             if self.filename != new_filename:
                 self.filename = new_filename
-                self.set_path()
+
+            self.file.module_modname = 'url-resource'
+            self.set_path()
 
             if total_bytes_estimate != -1:
                 self.thread_report[self.thread_id]['extra_totalsize'] = total_bytes_estimate
 
-            self.urlretrieve(
-                self.file.content_fileurl, self.file.saved_to, context=self.ssl_context, reporthook=self.add_progress
-            )
+            self.urlretrieve(urlToDownload, self.file.saved_to, context=self.ssl_context, reporthook=self.add_progress)
 
             self.file.time_stamp = int(time.time())
 
@@ -342,10 +350,12 @@ class URLTarget(object):
 
             with youtube_dl.YoutubeDL(ydl_opts) as ydl:
                 try:
-                    ydl_results = ydl.download([self.file.content_fileurl])
+                    ydl_results = ydl.download([urlToDownload])
                     if ydl_results == 1:
                         return False
                     else:
+                        if delete_if_video:
+                            os.remove(self.file.saved_to)
                         self.move_tmp_file(tmp_file)
                         self.success = True
                         return True
@@ -533,12 +543,16 @@ class URLTarget(object):
                 self.create_description()
                 return self.success
 
+            if self.file.module_modname == 'index_mod':
+                self.try_download_link(True, True)
+                return self.success
+
             # if it is a URL we have to create a shortcut
             # instead of downloading it
             if self.file.module_modname == 'url':
                 self.create_shortcut()
                 if self.options.get('download_linked_files', False) and not self.is_filtered_external_domain():
-                    self.try_download_link()
+                    self.try_download_link(False, False)
                     # Warning: try_download_link overwrites saved_to and
                     # time_stamp in move_tmp_file
                 return self.success

@@ -69,12 +69,16 @@ class ResultsHandler:
 
             module_description = module.get('description', None)
 
+            # handle not supported modules that results in an index.html special
+            if module_modname in ['moodecvideo']:
+                module_modname = 'index_mod'
+
             if module_description is not None and self.download_descriptions is True:
                 files += self._handle_description(
                     section_name, module_name, module_modname, module_id, module_description
                 )
 
-            if module_modname in ['resource', 'folder', 'url', 'page']:
+            if module_modname in ['resource', 'folder', 'url', 'page', 'index_mod']:
                 files += self._handle_files(section_name, module_name, module_modname, module_id, module_contents)
 
             elif module_modname == 'assign':
@@ -132,6 +136,9 @@ class ResultsHandler:
             if content_fileurl == '' and module_modname == 'url':
                 continue
 
+            if module_modname in ['index_mod']:
+                content_filename = module_name
+
             hash_description = None
             if content_type == 'description':
                 content_description = content.get('description', '')
@@ -185,7 +192,7 @@ class ResultsHandler:
         m.update(hashable_description.encode('utf-8'))
         hash_description = m.hexdigest()
 
-        if module_modname == 'url':
+        if module_modname in ['url', 'index_mod']:
             module_modname = 'url_description'
 
         description = File(

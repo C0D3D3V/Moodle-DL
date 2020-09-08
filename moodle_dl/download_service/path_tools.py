@@ -34,7 +34,9 @@ class PathTools:
 
         name = name.replace('\n', ' ')
         name = name.replace('\r', ' ')
-        name = name.rstrip('. ')
+        name = name.replace('\t', ' ')
+        name = name.strip('.')
+        name = name.strip()
 
         return name
 
