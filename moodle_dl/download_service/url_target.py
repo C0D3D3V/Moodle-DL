@@ -324,8 +324,7 @@ class URLTarget(object):
             if self.filename != new_filename:
                 self.filename = new_filename
 
-            self.file.module_modname = 'url-resource'
-            self.set_path()
+            self.set_path(True)
 
             if total_bytes_estimate != -1:
                 self.thread_report[self.thread_id]['extra_totalsize'] = total_bytes_estimate
@@ -417,19 +416,21 @@ class URLTarget(object):
 
         self.success = True
 
-    def set_path(self):
-        """
-        Sets the path where a file should be created.
+    def set_path(self, ignore_attributes: bool = False):
+        """Sets the path where a file should be created.
         It takes into account which file type is involved.
         An empty temporary file is created which may need to be cleaned up.
+
+        Args:
+            ignore_attributes (bool, optional): If the file attributes should be ignored. Defaults to False.
         """
 
-        if self.file.content_type == 'description':
+        if self.file.content_type == 'description' and not ignore_attributes:
             self.file.saved_to = str(Path(self.destination) / (self.filename + '.md'))
 
             self.file.saved_to = self._rename_if_exists(self.file.saved_to)
 
-        elif self.file.module_modname == 'url':
+        elif self.file.module_modname == 'url' and not ignore_attributes:
             self.file.saved_to = str(Path(self.destination) / (self.filename + '.desktop'))
             if os.name == 'nt':
                 self.file.saved_to = str(Path(self.destination) / (self.filename + '.URL'))
