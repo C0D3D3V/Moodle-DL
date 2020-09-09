@@ -1,7 +1,6 @@
 import re
 import logging
 import hashlib
-import html2text
 
 from moodle_dl.state_recorder.file import File
 from moodle_dl.moodle_connector.request_helper import RequestHelper
@@ -126,15 +125,26 @@ class ResultsHandler:
         Returns:
             [File]: A list of created file entries.
         """
-        h2t_handler = html2text.HTML2Text()
-        to_parse = h2t_handler.handle(description).strip().replace('\n', '')
-
-        find_url_re = 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
-        urls = re.findall(find_url_re, to_parse)
-        # get unique urls
-        urls = set(urls)
-
+        
+        urls = list(set(re.findall(r'href=[\'"]?([^\'" >]+)', description)))
+        
         result = []
+        for url in urls:
+            new_file = File(
+                module_id=module_id,
+                section_name=section_name,
+                module_name=module_name,
+                content_filepath='/',
+                content_filename=url,
+                content_fileurl=url,
+                content_filesize=0,
+                content_timemodified=0,
+                module_modname='url',
+                content_type='description-url',
+                content_isexternalfile=False,
+                hash=None,
+            )
+            result.append(new_file)
         return result
 
     @staticmethod
