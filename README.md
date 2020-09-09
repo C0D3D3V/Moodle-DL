@@ -84,6 +84,10 @@ Options can be combined with all the actions mentioned above.
     - This flag is used to indicate that a Single Sign On (SSO) login to your Moodle is required. 
     - Can be combined with `--init` and `--new-token`.
 
+- `--log-responses`
+    - If this flag is set, a `responses.log` file is created in which all JSON responses from Moodles are logged along with the requested URL
+    - This is for development and debugging purposes only. The log file may contain private data.
+
 
 
 
