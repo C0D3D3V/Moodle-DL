@@ -1,6 +1,7 @@
 import re
 import logging
 import hashlib
+import urllib.parse as urlparse
 
 from moodle_dl.state_recorder.file import File
 from moodle_dl.moodle_connector.request_helper import RequestHelper
@@ -11,10 +12,12 @@ class ResultsHandler:
     Fetches and parses the various endpoints in Moodle.
     """
 
-    def __init__(self, request_helper: RequestHelper):
+    def __init__(self, request_helper: RequestHelper, moodle_domain: str, moodle_path: str):
         self.request_helper = request_helper
         # oldest supported Moodle version
         self.version = 2011120500
+        self.moodle_domain = moodle_domain
+        self.moodle_path = moodle_path
 
     def setVersion(self, version: int):
         self.version = version
@@ -109,9 +112,8 @@ class ResultsHandler:
         description = re.sub(r"id='[^']*'", "", description)
         return description
 
-    @staticmethod
     def _find_all_urls_in_description(
-        section_name: str, module_name: str, module_modname: str, module_id: str, description: str
+        self, section_name: str, module_name: str, module_modname: str, module_id: str, description: str
     ) -> [File]:
         """Parses a description to find all urls in it. Then it creates for every url a file entry.
 
@@ -125,11 +127,17 @@ class ResultsHandler:
         Returns:
             [File]: A list of created file entries.
         """
-        
+
         urls = list(set(re.findall(r'href=[\'"]?([^\'" >]+)', description)))
-        
+
         result = []
         for url in urls:
+            module_modname = 'url'
+
+            url_parts = urlparse.urlparse(url)
+            if url_parts.hostname == self.moodle_domain and url_parts.path.find('webservice') >= 0:
+                module_modname = 'index_mod'
+
             new_file = File(
                 module_id=module_id,
                 section_name=section_name,
@@ -139,7 +147,7 @@ class ResultsHandler:
                 content_fileurl=url,
                 content_filesize=0,
                 content_timemodified=0,
-                module_modname='url',
+                module_modname=module_modname,
                 content_type='description-url',
                 content_isexternalfile=False,
                 hash=None,
@@ -147,9 +155,8 @@ class ResultsHandler:
             result.append(new_file)
         return result
 
-    @staticmethod
     def _handle_files(
-        section_name: str, module_name: str, module_modname: str, module_id: str, module_contents: []
+        self, section_name: str, module_name: str, module_modname: str, module_id: str, module_contents: []
     ) -> [File]:
         """
         Iterates over all files that are in a module or assignment and
@@ -202,16 +209,15 @@ class ResultsHandler:
 
             if content_type == 'description':
                 new_file.text_content = content_description
-                files += ResultsHandler._find_all_urls_in_description(
+                files += self._find_all_urls_in_description(
                     section_name, module_name, module_modname, module_id, content_description
                 )
 
             files.append(new_file)
         return files
 
-    @staticmethod
     def _handle_description(
-        section_name: str, module_name: str, module_modname: str, module_id: str, module_description: str
+        self, section_name: str, module_name: str, module_modname: str, module_id: str, module_description: str
     ) -> [File]:
         """
         Creates a description file
@@ -252,7 +258,7 @@ class ResultsHandler:
         )
 
         description.text_content = module_description
-        files += ResultsHandler._find_all_urls_in_description(
+        files += self._find_all_urls_in_description(
             section_name, module_name, module_modname, module_id, module_description
         )
 

@@ -186,7 +186,7 @@ class MoodleService:
 
         request_helper = RequestHelper(moodle_domain, moodle_path, token, self.skip_cert_verify, self.log_responses_to)
         first_contact_handler = FirstContactHandler(request_helper)
-        results_handler = ResultsHandler(request_helper)
+        results_handler = ResultsHandler(request_helper, moodle_domain, moodle_path)
 
         download_course_ids = self.config_helper.get_download_course_ids()
         dont_download_course_ids = self.config_helper.get_dont_download_course_ids()
