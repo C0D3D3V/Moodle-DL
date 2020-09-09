@@ -449,7 +449,8 @@ class URLTarget(object):
         description = open(self.file.saved_to, 'w+', encoding='utf-8')
         to_save = ""
         if self.file.text_content is not None:
-            to_save = html2text.html2text(self.file.text_content).strip()
+            h2t_handler = html2text.HTML2Text()
+            to_save = h2t_handler.handle(self.file.text_content).strip()
             # to_save could also be html.unescape(),
             # but this could destroy the md file
             if to_save != '':

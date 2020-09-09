@@ -1,6 +1,7 @@
 import re
 import logging
 import hashlib
+import html2text
 
 from moodle_dl.state_recorder.file import File
 from moodle_dl.moodle_connector.request_helper import RequestHelper
@@ -110,6 +111,33 @@ class ResultsHandler:
         return description
 
     @staticmethod
+    def _find_all_urls_in_description(
+        section_name: str, module_name: str, module_modname: str, module_id: str, description: str
+    ) -> [File]:
+        """Parses a description to find all urls in it. Then it creates for every url a file entry.
+
+        Args:
+            section_name (str): The name of the course section
+            module_name (str): Name of the Module
+            module_modname (str): Type of the Module
+            module_id (str): Module Id
+            description (str): The descrption string
+
+        Returns:
+            [File]: A list of created file entries.
+        """
+        h2t_handler = html2text.HTML2Text()
+        to_parse = h2t_handler.handle(description).strip().replace('\n', '')
+
+        find_url_re = 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
+        urls = re.findall(find_url_re, to_parse)
+        # get unique urls
+        urls = set(urls)
+
+        result = []
+        return result
+
+    @staticmethod
     def _handle_files(
         section_name: str, module_name: str, module_modname: str, module_id: str, module_contents: []
     ) -> [File]:
@@ -164,6 +192,9 @@ class ResultsHandler:
 
             if content_type == 'description':
                 new_file.text_content = content_description
+                files += ResultsHandler._find_all_urls_in_description(
+                    section_name, module_name, module_modname, module_id, content_description
+                )
 
             files.append(new_file)
         return files
@@ -211,6 +242,9 @@ class ResultsHandler:
         )
 
         description.text_content = module_description
+        files += ResultsHandler._find_all_urls_in_description(
+            section_name, module_name, module_modname, module_id, module_description
+        )
 
         files.append(description)
 
