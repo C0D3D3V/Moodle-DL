@@ -48,7 +48,10 @@ class CookieHandler:
             Log.warning('\r' + warning_msg + '\033[K')
 
         if privatetoken is None:
-            error_msg = 'Moodle Cookies are not retrieved because no private token is set. To set a private token, use the `--new-token` option.'
+            error_msg = (
+                'Moodle Cookies are not retrieved because no private token is set.'
+                + ' To set a private token, use the `--new-token` option (if necessary also with `--sso`).'
+            )
             logging.warning(error_msg)
             Log.error('\r' + error_msg + '\033[K')
             return None

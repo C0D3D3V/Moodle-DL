@@ -1,3 +1,6 @@
+import os
+import shutil
+
 from moodle_dl.utils import cutie
 from moodle_dl.utils.logger import Log
 from moodle_dl.state_recorder.course import Course
@@ -42,6 +45,7 @@ class ConfigService:
         self._select_should_download_descriptions()
         self._select_should_download_databases()
         self._select_should_download_linked_files()
+        self._select_should_load_default_filename_character_map()
 
     def _select_courses_to_download(self, courses: [Course]):
         """
@@ -87,12 +91,12 @@ class ConfigService:
         download_course_ids = self.config_helper.get_download_course_ids()
         dont_download_course_ids = self.config_helper.get_dont_download_course_ids()
 
-        print('')
+        self.section_seperator()
         Log.info(
             'You can set special settings for every single course.\n'
-            + ' You can set these options:\n'
-            + '- A different name for the course\n'
-            + '- If a directory structure should be created for the course'
+            + 'You can set these options:\n'
+            + ' - A different name for the course\n'
+            + ' - If a directory structure should be created for the course'
             + ' [create_directory_structure (cfs)].'
         )
         print('')
@@ -203,7 +207,7 @@ class ConfigService:
         """
         download_submissions = self.config_helper.get_download_submissions()
 
-        print('')
+        self.section_seperator()
         Log.info(
             'Submissions are files that you or a teacher have uploaded'
             + ' to your assignments. Moodle does not provide an'
@@ -226,7 +230,7 @@ class ConfigService:
         """
         download_databases = self.config_helper.get_download_databases()
 
-        print('')
+        self.section_seperator()
         Log.info(
             'In the database module of Moodle data can be stored'
             + ' structured with information. Often it is also'
@@ -250,7 +254,7 @@ class ConfigService:
         """
         download_descriptions = self.config_helper.get_download_descriptions()
 
-        print('')
+        self.section_seperator()
         Log.info(
             'In Moodle courses, descriptions can be added to all kinds'
             + ' of resources, such as files, tasks, assignments or simply'
@@ -281,7 +285,7 @@ class ConfigService:
         """
         download_linked_files = self.config_helper.get_download_linked_files()
 
-        print('')
+        self.section_seperator()
         Log.info(
             'In Moodle courses the teacher can also link to external'
             + ' files. This can be audio, video, text or anything else.'
@@ -311,3 +315,44 @@ class ConfigService:
 
         self.config_helper.set_property('download_linked_files', download_linked_files)
 
+    def _select_should_load_default_filename_character_map(self):
+        """
+        Asks the user if the default filename character map should be loaded
+        """
+        filename_character_map = self.config_helper.get_filename_character_map()
+
+        if os.name != 'nt':
+            self.section_seperator()
+
+            Log.info(
+                'On Windows many characters are forbidden in filenames and paths, if you want, these characters can be'
+                + ' automatically removed from filenames.'
+            )
+
+            Log.warning('If you want to view the downloaded files on Windows this is important!')
+
+            print('Current filename character map: {}'.format(filename_character_map))
+            Log.special('Do you want to load the default filename character map for windows?')
+
+            choices = [
+                'No, leave it as it was.',
+                'No, load the default linux filename character map.',
+                'Yes, load the default windows filename character map.',
+            ]
+
+            print('[Confirm your selection with the Enter key]')
+            print('')
+
+            selected_map = cutie.select(options=choices)
+
+            if selected_map == 0:
+                return
+            elif selected_map == 1:
+                self.config_helper.set_default_filename_character_map(False)
+            elif selected_map == 2:
+                self.config_helper.set_default_filename_character_map(True)
+
+    def section_seperator(self):
+        """Print a seperator line.
+        """
+        print('\n' + '-' * shutil.get_terminal_size().columns + '\n')
