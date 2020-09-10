@@ -66,6 +66,7 @@ class ResultsHandler:
         for module in section_modules:
             module_name = module.get('name', '')
             module_modname = module.get('modname', '')
+            module_url = module.get('url', '')
             module_id = module.get('id', 0)
 
             module_contents = module.get('contents', [])
@@ -75,6 +76,10 @@ class ResultsHandler:
             # handle not supported modules that results in an index.html special
             if module_modname in ['moodecvideo']:
                 module_modname = 'index_mod'
+
+            if module_modname in ['kalvidres']:
+                module_modname = 'cookie_mod'
+                files += self._handle_cookie_mod(section_name, module_name, module_modname, module_id, module_url)
 
             if module_description is not None and self.download_descriptions is True:
                 files += self._handle_description(
@@ -135,8 +140,11 @@ class ResultsHandler:
             module_modname = 'url'
 
             url_parts = urlparse.urlparse(url)
-            if url_parts.hostname == self.moodle_domain and url_parts.path.find('webservice') >= 0:
+            if url_parts.hostname == self.moodle_domain and url_parts.path.find('/webservice/') >= 0:
                 module_modname = 'index_mod'
+
+            elif url_parts.hostname == self.moodle_domain and url_parts.path.find('/mod/') >= 0:
+                module_modname = 'cookie_mod'
 
             new_file = File(
                 module_id=module_id,
@@ -149,11 +157,40 @@ class ResultsHandler:
                 content_timemodified=0,
                 module_modname=module_modname,
                 content_type='description-url',
-                content_isexternalfile=False,
+                content_isexternalfile=True,
                 hash=None,
             )
             result.append(new_file)
         return result
+
+    def _handle_cookie_mod(
+        self, section_name: str, module_name: str, module_modname: str, module_id: str, module_url: str
+    ) -> [File]:
+        """
+        Creates a list of files out of a cookie module
+        @param module_url: The url to the cookie module.
+        @params: All necessary parameters to create a file.
+        @return: A list of files that were created out of the module.
+        """
+        files = []
+
+        new_file = File(
+            module_id=module_id,
+            section_name=section_name,
+            module_name=module_name,
+            content_filepath='/',
+            content_filename=module_name,
+            content_fileurl=module_url,
+            content_filesize=0,
+            content_timemodified=0,
+            module_modname=module_modname,
+            content_type='cookie_mod',
+            content_isexternalfile=True,
+            hash=None,
+        )
+
+        files.append(new_file)
+        return files
 
     def _handle_files(
         self, section_name: str, module_name: str, module_modname: str, module_id: str, module_contents: []

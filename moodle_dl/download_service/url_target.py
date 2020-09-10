@@ -11,6 +11,7 @@ import threading
 import html2text
 import contextlib
 import youtube_dl
+import youtube_dl.utils
 
 from pathlib import Path
 import urllib.parse as urlparse
@@ -286,7 +287,9 @@ class URLTarget(object):
 
                 self.file.time_stamp = int(time.time())
 
-    def try_download_link(self, add_token: bool = False, delete_if_video: bool = False) -> bool:
+    def try_download_link(
+        self, add_token: bool = False, delete_if_video: bool = False, use_cookies: bool = False
+    ) -> bool:
         """This function should only be used for shortcut/URL files.
         It tests whether a URL refers to a file, that is not an HTML web page.
         Then downloads it. Otherwise an attempt will be made to download an HTML video
@@ -294,7 +297,8 @@ class URLTarget(object):
 
         Args:
             add_token (bool, optional): Adds the ws-token to the url. Defaults to False.
-            delete_if_video (bool, optional): deletes the tmp file if youtube-dl was successfull. Defaults to False.
+            delete_if_video (bool, optional): Deletes the tmp file if youtube-dl is used. Defaults to False.
+            use_cookies (bool, optional): Adds the cookies to the requests. Defaults to False.
 
         Returns:
             bool: If it was successfull.
@@ -304,10 +308,18 @@ class URLTarget(object):
         if add_token:
             urlToDownload = self._add_token_to_url(self.file.content_fileurl)
 
+        cookies = self.options.get('cookies', {}).get('dict', {})
+        cookie_str = None
+        if use_cookies:
+            cookie_str = "; ".join([str(x) + "=" + str(y) for x, y in cookies.items()])
+
         isHTML = False
         new_filename = ""
         total_bytes_estimate = -1
         request = urllib.request.Request(url=urlToDownload, headers=RequestHelper.stdHeader)
+        if use_cookies:
+            request.add_header('Cookie', cookie_str)
+
         with contextlib.closing(urllib.request.urlopen(request, context=self.ssl_context)) as fp:
             headers = fp.info()
 
@@ -329,7 +341,13 @@ class URLTarget(object):
             if total_bytes_estimate != -1:
                 self.thread_report[self.thread_id]['extra_totalsize'] = total_bytes_estimate
 
-            self.urlretrieve(urlToDownload, self.file.saved_to, context=self.ssl_context, reporthook=self.add_progress)
+            self.urlretrieve(
+                urlToDownload,
+                self.file.saved_to,
+                context=self.ssl_context,
+                reporthook=self.add_progress,
+                cookie_str=cookie_str,
+            )
 
             self.file.time_stamp = int(time.time())
 
@@ -346,6 +364,9 @@ class URLTarget(object):
                 'outtmpl': (tmp_file + '.%(ext)s'),
                 'nocheckcertificate': True,
             }
+            youtube_dl.utils.std_headers = RequestHelper.stdHeader.copy()
+            if use_cookies:
+                youtube_dl.utils.std_headers.update({'Cookie': cookie_str})
 
             with youtube_dl.YoutubeDL(ydl_opts) as ydl:
                 try:
@@ -546,7 +567,11 @@ class URLTarget(object):
                 return self.success
 
             if self.file.module_modname == 'index_mod':
-                self.try_download_link(True, True)
+                self.try_download_link(True, True, False)
+                return self.success
+
+            if self.file.module_modname == 'cookie_mod':
+                self.try_download_link(True, True, True)
                 return self.success
 
             # if it is a URL we have to create a shortcut
@@ -554,7 +579,7 @@ class URLTarget(object):
             if self.file.module_modname == 'url':
                 self.create_shortcut()
                 if self.options.get('download_linked_files', False) and not self.is_filtered_external_domain():
-                    self.try_download_link(False, False)
+                    self.try_download_link(False, False, False)
                     # Warning: try_download_link overwrites saved_to and
                     # time_stamp in move_tmp_file
                 return self.success
@@ -564,6 +589,7 @@ class URLTarget(object):
                 self.file.saved_to,
                 context=self.ssl_context,
                 reporthook=self.add_progress,
+                cookie_str=None,
             )
 
             self.file.time_stamp = int(time.time())
@@ -592,7 +618,7 @@ class URLTarget(object):
         return self.success
 
     @staticmethod
-    def urlretrieve(url: str, filename: str, context: ssl.SSLContext, reporthook=None):
+    def urlretrieve(url: str, filename: str, context: ssl.SSLContext, reporthook=None, cookie_str=None):
         """
         original source:
         https://github.com/python/cpython/blob/
@@ -604,6 +630,9 @@ class URLTarget(object):
         url_parsed = urlparse.urlparse(url)
 
         request = urllib.request.Request(url=url, headers=RequestHelper.stdHeader)
+        if cookie_str is not None:
+            request.add_header('Cookie', cookie_str)
+
         with contextlib.closing(urllib.request.urlopen(request, context=context)) as fp:
             headers = fp.info()
 

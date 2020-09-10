@@ -19,6 +19,10 @@ class RequestHelper:
             + ' (KHTML, like Gecko) Version/4.0 Chrome/71.0.3578.99 Mobile Safari/537.36 MoodleMobile'
         ),
         'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.7',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Encoding': 'gzip, deflate',
+        'Accept-Language': 'en-us,en;q=0.5',
     }
 
     def __init__(

@@ -163,6 +163,11 @@ class ConfigHelper:
         except ValueError:
             options.update({'download_domains_blacklist': []})
 
+        try:
+            options.update({'cookies': self.get_property('cookies')})
+        except ValueError:
+            options.update({'cookies': None})
+
         return options
 
     def get_filename_character_map(self) -> {}:
