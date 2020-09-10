@@ -172,13 +172,12 @@ class RequestHelper:
                  parsed from the change-log
         """
 
-        self.connection.request('GET', '%slib/upgrade.txt' % (self.moodle_path), headers=self.stdHeader)
-
-        response = self.connection.getresponse()
+        url = '%slib/upgrade.txt' % (self.url_base)
+        response = requests.get(url, headers=self.stdHeader, verify=self.verify)
 
         self._check_response_code(response)
 
-        changelog = str(response.read()).split('\\n')
+        changelog = str(response.text).split('\n')
         version_string = '1'
         for line in changelog:
             match = re.match(r'^===\s*([\d\.]+)\s*===$', line)
