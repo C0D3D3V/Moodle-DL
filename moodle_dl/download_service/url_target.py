@@ -364,9 +364,10 @@ class URLTarget(object):
                 'outtmpl': (tmp_file + '.%(ext)s'),
                 'nocheckcertificate': True,
             }
-            youtube_dl.utils.std_headers = RequestHelper.stdHeader.copy()
             if use_cookies:
                 youtube_dl.utils.std_headers.update({'Cookie': cookie_str})
+            else:
+                youtube_dl.utils.std_headers.pop('Cookie', None)
 
             with youtube_dl.YoutubeDL(ydl_opts) as ydl:
                 try:
