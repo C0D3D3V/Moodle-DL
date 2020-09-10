@@ -210,6 +210,8 @@ class MoodleService:
             cookies = cookie_handler.fetch_cookies(privatetoken, userid, cookies)
             if cookies is not None:
                 self.config_helper.set_property('cookies', cookies)
+            else:
+                self.config_helper.remove_property('cookies')
 
             courses_list = first_contact_handler.fetch_courses(userid)
             courses = []

@@ -32,15 +32,31 @@ class CookieHandler:
             logging.debug("Cookie lockout: {}".format(e))  # , extra={'exception': e}
             return None
 
+    def test_cookies(self, moodle_url: str, cookie_dic: {}) -> bool:
+        """Test if cookies are valide
+
+        Args:
+            moodle_url (str): URL to test
+            cookie_dic ([type]): cookies
+
+        Returns:
+            bool: True if valide
+        """
+        response, session = self.request_helper.get_URL_WC(moodle_url, cookie_dic)
+
+        response_text = response.text
+
+        if response_text.find('login/logout.php') >= 0:
+            return True
+        return False
+
     def fetch_cookies(self, privatetoken: str, userid: str, cookies: {}):
         if cookies is not None:
             # test if still logged in.
+            moodle_url = cookies.get('moodle_url', '')
             cookie_dic = cookies.get('dict', {})
-            response, session = self.request_helper.get_URL_WC(cookies.get('moodle_url', ''), cookie_dic)
 
-            response_text = response.text
-
-            if response_text.find('login/logout.php') >= 0:
+            if self.test_cookies(moodle_url, cookie_dic):
                 return cookies
 
             warning_msg = 'Moodle cookie has expired, an attempt is made to generate a new cookie.'
@@ -73,10 +89,17 @@ class CookieHandler:
             autologin_key.get('autologinurl', ''), post_data
         )
 
-        cookies = cookies_session.cookies.get_dict()
+        cookie_dic = cookies_session.cookies.get_dict()
 
         moodle_url = cookies_response.url
 
-        result = {'dict': cookies, 'moodle_url': moodle_url}
+        result = {'dict': cookie_dic, 'moodle_url': moodle_url}
 
-        return result
+        if self.test_cookies(moodle_url, cookie_dic):
+            return result
+        else:
+            error_msg = 'Failed to generate cookies!'
+            logging.debug(error_msg)
+            print('')
+            Log.error(error_msg)
+            return None

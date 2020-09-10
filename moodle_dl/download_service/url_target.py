@@ -308,9 +308,19 @@ class URLTarget(object):
         if add_token:
             urlToDownload = self._add_token_to_url(self.file.content_fileurl)
 
-        cookies = self.options.get('cookies', {}).get('dict', {})
+        cookies_opt = self.options.get('cookies', None)
+        if use_cookies and cookies_opt is None:
+            try:
+                os.remove(self.file.saved_to)
+            except Exception:
+                pass
+            self.success = False
+            self.error = 'Moodle cookie is missing.'
+            return False
+
         cookie_str = None
         if use_cookies:
+            cookies = cookies_opt.get('dict', {})
             cookie_str = "; ".join([str(x) + "=" + str(y) for x, y in cookies.items()])
 
         isHTML = False
@@ -372,7 +382,10 @@ class URLTarget(object):
             with youtube_dl.YoutubeDL(ydl_opts) as ydl:
                 try:
                     if delete_if_video:
-                        os.remove(self.file.saved_to)
+                        try:
+                            os.remove(self.file.saved_to)
+                        except Exception:
+                            pass
                     ydl_results = ydl.download([urlToDownload])
                     if ydl_results == 1:
                         return False
