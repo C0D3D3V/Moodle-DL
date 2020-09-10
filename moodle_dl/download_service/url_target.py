@@ -451,7 +451,7 @@ class URLTarget(object):
 
             self.file.saved_to = self._rename_if_exists(self.file.saved_to)
 
-        elif self.file.module_modname == 'url' and not ignore_attributes:
+        elif self.file.module_modname in ['url', 'cookie_mod'] and not ignore_attributes:
             self.file.saved_to = str(Path(self.destination) / (self.filename + '.desktop'))
             if os.name == 'nt':
                 self.file.saved_to = str(Path(self.destination) / (self.filename + '.URL'))
@@ -571,7 +571,8 @@ class URLTarget(object):
                 return self.success
 
             if self.file.module_modname == 'cookie_mod':
-                self.try_download_link(True, True, True)
+                self.create_shortcut()
+                self.try_download_link(False, False, True)
                 return self.success
 
             # if it is a URL we have to create a shortcut
