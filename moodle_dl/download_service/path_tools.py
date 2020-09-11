@@ -29,8 +29,11 @@ class PathTools:
             replacement = PathTools.filename_character_map[char]
             name = name.replace(char, replacement)
 
-        if os.path.sep not in PathTools.filename_character_map:
-            name = name.replace(os.path.sep, '／')
+        if os.name != 'nt' and '/' not in PathTools.filename_character_map:
+            name = name.replace('/', '／')
+
+        if os.name == 'nt' and '\\' not in PathTools.filename_character_map:
+            name = name.replace('\\', '／')
 
         name = name.replace('\n', ' ')
         name = name.replace('\r', ' ')

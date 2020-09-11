@@ -9,6 +9,9 @@ class ConfigHelper:
     Handles the saving, formatting and loading of the local configuration.
     """
 
+    windows_map = {'\\': '＼', '/': '／', ':': '꞉', '?': '？', '*': '＊', '<': '＜', '>': '＞', '|': '｜', '"': '＂'}
+    linux_map = {'/': '|'}
+
     def __init__(self, storage_path: str):
         self._whole_config = {}
         self.config_path = str(Path(storage_path) / 'config.json')
@@ -53,11 +56,9 @@ class ConfigHelper:
     def set_default_filename_character_map(self, default_windows_map: bool):
         # Sets the default filename_character_map for Windows or Empty
         if default_windows_map:
-            windows_map = {'\\': '＼', '/': '／', ':': '꞉', '?': '？', '*': '＊', '<': '＜', '>': '＞', '|': '｜', '"': '＂'}
-            self.set_property("filename_character_map", windows_map)
+            self.set_property("filename_character_map", ConfigHelper.windows_map)
         else:
-            linux_map = {'/': '|'}
-            self.set_property("filename_character_map", linux_map)
+            self.set_property("filename_character_map", ConfigHelper.linux_map)
 
     # ---------------------------- GETTERS ------------------------------------
 

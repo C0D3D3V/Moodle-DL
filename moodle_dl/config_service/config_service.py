@@ -309,7 +309,7 @@ class ConfigService:
         print('')
 
         download_linked_files = cutie.prompt_yes_or_no(
-            'Would you like to download linked files of the courses you have selected?',
+            Log.special_str('Would you like to download linked files of the courses you have selected?'),
             default_is_yes=download_linked_files,
         )
 
@@ -332,7 +332,7 @@ class ConfigService:
             Log.warning('If you want to view the downloaded files on Windows this is important!')
 
             print('Current filename character map: {}'.format(filename_character_map))
-            Log.special('Do you want to load the default filename character map for windows?')
+            Log.special('Do you want to load the default filename character map for Windows?')
 
             choices = [
                 'No, leave it as it was.',
@@ -351,6 +351,19 @@ class ConfigService:
                 self.config_helper.set_default_filename_character_map(False)
             elif selected_map == 2:
                 self.config_helper.set_default_filename_character_map(True)
+        else:
+            if filename_character_map != ConfigHelper.windows_map:
+
+                Log.warning(
+                    'Warning: Your current filename character map does not match the standard Windows filename character map!'
+                )
+                print('Current filename character map: {}'.format(filename_character_map))
+                load_default_map = cutie.prompt_yes_or_no(
+                    Log.special_str('Do you want to load the default filename character map for Windows?'), default_is_yes=False
+                )
+                if load_default_map:
+                    self.config_helper.set_default_filename_character_map(True)
+
 
     def section_seperator(self):
         """Print a seperator line.
