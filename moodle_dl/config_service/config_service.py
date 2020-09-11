@@ -354,6 +354,7 @@ class ConfigService:
         else:
             if filename_character_map != ConfigHelper.windows_map:
 
+                self.section_seperator()
                 Log.warning(
                     'Warning: Your current filename character map does not match the standard Windows filename character map!'
                 )
