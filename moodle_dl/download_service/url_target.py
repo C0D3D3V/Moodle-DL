@@ -14,6 +14,7 @@ import youtube_dl
 import youtube_dl.utils
 
 from pathlib import Path
+from http.cookiejar import MozillaCookieJar
 import urllib.parse as urlparse
 
 from moodle_dl.state_recorder.file import File
@@ -308,27 +309,26 @@ class URLTarget(object):
         if add_token:
             urlToDownload = self._add_token_to_url(self.file.content_fileurl)
 
-        cookies_opt = self.options.get('cookies', None)
-        if use_cookies and cookies_opt is None:
-            try:
-                os.remove(self.file.saved_to)
-            except Exception:
-                pass
-            self.success = False
-            self.error = 'Moodle cookie is missing.'
-            return False
-
-        cookie_str = None
+        cookies_path = None
         if use_cookies:
-            cookies = cookies_opt.get('dict', {})
-            cookie_str = "; ".join([str(x) + "=" + str(y) for x, y in cookies.items()])
+            cookies_path = self.options.get('cookies_path', None)
+            if cookies_path is None:
+                try:
+                    os.remove(self.file.saved_to)
+                except Exception:
+                    pass
+                self.success = False
+                self.error = 'Moodle Cookies are missing.'
+                return False
 
         isHTML = False
         new_filename = ""
         total_bytes_estimate = -1
         request = urllib.request.Request(url=urlToDownload, headers=RequestHelper.stdHeader)
         if use_cookies:
-            request.add_header('Cookie', cookie_str)
+            cookie_jar = MozillaCookieJar(cookies_path)
+            cookie_jar.load(ignore_discard=True, ignore_expires=True)
+            cookie_jar.add_cookie_header(request)
 
         with contextlib.closing(urllib.request.urlopen(request, context=self.ssl_context)) as fp:
             headers = fp.info()
@@ -356,7 +356,7 @@ class URLTarget(object):
                 self.file.saved_to,
                 context=self.ssl_context,
                 reporthook=self.add_progress,
-                cookie_str=cookie_str,
+                cookies_path=cookies_path,
             )
 
             self.file.time_stamp = int(time.time())
@@ -604,7 +604,7 @@ class URLTarget(object):
                 self.file.saved_to,
                 context=self.ssl_context,
                 reporthook=self.add_progress,
-                cookie_str=None,
+                cookies_path=None,
             )
 
             self.file.time_stamp = int(time.time())
@@ -633,7 +633,7 @@ class URLTarget(object):
         return self.success
 
     @staticmethod
-    def urlretrieve(url: str, filename: str, context: ssl.SSLContext, reporthook=None, cookie_str=None):
+    def urlretrieve(url: str, filename: str, context: ssl.SSLContext, reporthook=None, cookies_path=None):
         """
         original source:
         https://github.com/python/cpython/blob/
@@ -645,8 +645,10 @@ class URLTarget(object):
         url_parsed = urlparse.urlparse(url)
 
         request = urllib.request.Request(url=url, headers=RequestHelper.stdHeader)
-        if cookie_str is not None:
-            request.add_header('Cookie', cookie_str)
+        if cookies_path is not None:
+            cookie_jar = MozillaCookieJar(cookies_path)
+            cookie_jar.load(ignore_discard=True, ignore_expires=True)
+            cookie_jar.add_cookie_header(request)
 
         with contextlib.closing(urllib.request.urlopen(request, context=context)) as fp:
             headers = fp.info()

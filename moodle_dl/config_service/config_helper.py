@@ -14,6 +14,7 @@ class ConfigHelper:
 
     def __init__(self, storage_path: str):
         self._whole_config = {}
+        self.storage_path = storage_path
         self.config_path = str(Path(storage_path) / 'config.json')
 
     def is_present(self) -> bool:
@@ -156,6 +157,12 @@ class ConfigHelper:
             options.update({'download_domains_blacklist': self.get_property('download_domains_blacklist')})
         except ValueError:
             options.update({'download_domains_blacklist': []})
+
+        cookie_path = str(Path(self.storage_path) / 'Cookies.txt')
+        if os.path.exists(cookie_path):
+            options.update({'cookies_path': cookie_path})
+        else:
+            options.update({'cookies_path': None})
 
         return options
 
