@@ -579,12 +579,11 @@ class URLTarget(object):
                 return self.success
 
             if self.file.module_modname == 'index_mod':
-                self.try_download_link(True, True, False)
-                return self.success
+                if self.try_download_link(True, True, False):
+                    return self.success
 
             if self.file.module_modname == 'cookie_mod':
-                self.create_shortcut()
-                self.try_download_link(False, False, True)
+                self.try_download_link(False, True, True)
                 return self.success
 
             # if it is a URL we have to create a shortcut

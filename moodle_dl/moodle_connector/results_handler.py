@@ -74,7 +74,7 @@ class ResultsHandler:
             module_description = module.get('description', None)
 
             # handle not supported modules that results in an index.html special
-            if module_modname in ['moodecvideo']:
+            if module_modname in ['moodecvideo', 'page']:
                 module_modname = 'index_mod'
 
             if module_modname in ['kalvidres']:
@@ -86,7 +86,7 @@ class ResultsHandler:
                     section_name, module_name, module_modname, module_id, module_description
                 )
 
-            if module_modname in ['resource', 'folder', 'url', 'page', 'index_mod']:
+            if module_modname in ['resource', 'folder', 'url', 'index_mod']:
                 files += self._handle_files(section_name, module_name, module_modname, module_id, module_contents)
 
             elif module_modname == 'assign':
