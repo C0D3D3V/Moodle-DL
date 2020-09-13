@@ -375,9 +375,7 @@ class URLTarget(object):
                 'nocheckcertificate': True,
             }
             if use_cookies:
-                youtube_dl.utils.std_headers.update({'Cookie': cookie_str})
-            else:
-                youtube_dl.utils.std_headers.pop('Cookie', None)
+                ydl_opts.update({'cookiefile': cookies_path})
 
             with youtube_dl.YoutubeDL(ydl_opts) as ydl:
                 try:
