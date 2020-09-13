@@ -158,9 +158,9 @@ class ConfigHelper:
         except ValueError:
             options.update({'download_domains_blacklist': []})
 
-        cookie_path = str(Path(self.storage_path) / 'Cookies.txt')
-        if os.path.exists(cookie_path):
-            options.update({'cookies_path': cookie_path})
+        cookies_path = str(Path(self.storage_path) / 'Cookies.txt')
+        if os.path.exists(cookies_path):
+            options.update({'cookies_path': cookies_path})
         else:
             options.update({'cookies_path': None})
 

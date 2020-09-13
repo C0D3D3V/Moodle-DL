@@ -21,7 +21,7 @@ class CookieHandler:
         self.storage_path = storage_path
         self.moodle_domain = moodle_domain
         self.moodle_path = moodle_path
-        self.cookie_path = str(Path(storage_path) / 'Cookies.txt')
+        self.cookies_path = str(Path(storage_path) / 'Cookies.txt')
         self.moodle_test_url = 'https://' + moodle_domain + moodle_path
 
     def fetch_autologin_key(self, privatetoken: str) -> {str: str}:
@@ -51,7 +51,7 @@ class CookieHandler:
         Returns:
             bool: True if valide
         """
-        response, session = self.request_helper.get_URL(moodle_test_url, self.cookie_path)
+        response, session = self.request_helper.get_URL(moodle_test_url, self.cookies_path)
 
         response_text = response.text
 
@@ -61,13 +61,13 @@ class CookieHandler:
 
     def delete_cookie_file(self):
         try:
-            # os.remove(self.cookie_path)
+            os.remove(self.cookies_path)
             pass
         except OSError:
             pass
 
     def check_and_fetch_cookies(self, privatetoken: str, userid: str) -> bool:
-        if os.path.exists(self.cookie_path):
+        if os.path.exists(self.cookies_path):
             # test if still logged in.
 
             if self.test_cookies(self.moodle_test_url):
@@ -102,7 +102,7 @@ class CookieHandler:
         post_data = {'key': autologin_key.get('key', ''), 'userid': userid}
         url = autologin_key.get('autologinurl', '')
 
-        cookies_response, cookies_session = self.request_helper.post_URL(url, post_data, self.cookie_path)
+        cookies_response, cookies_session = self.request_helper.post_URL(url, post_data, self.cookies_path)
 
         moodle_test_url = cookies_response.url
 
