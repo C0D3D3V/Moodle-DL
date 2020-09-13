@@ -463,7 +463,7 @@ class URLTarget(object):
 
             self.file.saved_to = self._rename_if_exists(self.file.saved_to)
 
-        elif self.file.module_modname in ['url', 'cookie_mod'] and not ignore_attributes:
+        elif self.file.module_modname in ['url'] and not ignore_attributes:
             self.file.saved_to = str(Path(self.destination) / (self.filename + '.desktop'))
             if os.name == 'nt':
                 self.file.saved_to = str(Path(self.destination) / (self.filename + '.URL'))
