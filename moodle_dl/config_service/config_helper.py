@@ -104,13 +104,6 @@ class ConfigHelper:
         except ValueError:
             return None
 
-    def get_cookies(self) -> str:
-        # returns the stored cookies
-        try:
-            return self.get_property('cookies')
-        except ValueError:
-            return None
-
     def get_moodle_domain(self) -> str:
         # returns a stored moodle_domain
         try:
@@ -163,11 +156,6 @@ class ConfigHelper:
             options.update({'download_domains_blacklist': self.get_property('download_domains_blacklist')})
         except ValueError:
             options.update({'download_domains_blacklist': []})
-
-        try:
-            options.update({'cookies': self.get_property('cookies')})
-        except ValueError:
-            options.update({'cookies': None})
 
         return options
 

@@ -95,6 +95,7 @@ Options can be combined with all the actions mentioned above.
 - Use a separate E-Mail - Account for sending out the notifications, as its login data is saved in cleartext.
 - The Login-Information for your Moodle-Account is secure, it isn't saved in any way. Only a Login-Token is saved.
 - Your Moodle token is stored in the configuration file (`config.json`). Be careful that no unauthorized person reads this file, especially the token must not be given to an unauthorized person, this can cause a lot of trouble.
+- The `privatetoken` can be used to create a cookie for your Moodle account. A Cookie is what is used to tell Moodle that you are logged in. The `cookie.txt` always keeps a valid cookie for you, take great care of this file, if it falls into the wrong hands someone can take over your entire Moodle account. This feature is only important for Moodles with plugins installed that are not supported by the Moodle app. If you do not want to generate cookies, remove the `privatetoken` from the `config.json`.
 
 ---
 

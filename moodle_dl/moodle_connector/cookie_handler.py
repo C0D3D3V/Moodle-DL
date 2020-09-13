@@ -1,5 +1,8 @@
+import os
 import sys
 import logging
+
+from pathlib import Path
 
 from moodle_dl.utils.logger import Log
 from moodle_dl.moodle_connector.request_helper import RequestHelper, RequestRejectedError
@@ -10,9 +13,16 @@ class CookieHandler:
     Fetches and saves the cookies of Moodle.
     """
 
-    def __init__(self, request_helper: RequestHelper, version: int):
+    def __init__(
+        self, request_helper: RequestHelper, version: int, storage_path: str, moodle_domain: str, moodle_path: str
+    ):
         self.request_helper = request_helper
         self.version = version
+        self.storage_path = storage_path
+        self.moodle_domain = moodle_domain
+        self.moodle_path = moodle_path
+        self.cookie_path = str(Path(storage_path) / 'Cookies.txt')
+        self.moodle_test_url = 'https://' + moodle_domain + moodle_path
 
     def fetch_autologin_key(self, privatetoken: str) -> {str: str}:
 
@@ -32,17 +42,16 @@ class CookieHandler:
             logging.debug("Cookie lockout: {}".format(e))  # , extra={'exception': e}
             return None
 
-    def test_cookies(self, moodle_url: str, cookie_dic: {}) -> bool:
+    def test_cookies(self, moodle_test_url: str) -> bool:
         """Test if cookies are valide
 
         Args:
-            moodle_url (str): URL to test
-            cookie_dic ([type]): cookies
+            moodle_test_url (str): URL to test
 
         Returns:
             bool: True if valide
         """
-        response, session = self.request_helper.get_URL_WC(moodle_url, cookie_dic)
+        response, session = self.request_helper.get_URL(moodle_test_url, self.cookie_path)
 
         response_text = response.text
 
@@ -50,14 +59,19 @@ class CookieHandler:
             return True
         return False
 
-    def fetch_cookies(self, privatetoken: str, userid: str, cookies: {}):
-        if cookies is not None:
-            # test if still logged in.
-            moodle_url = cookies.get('moodle_url', '')
-            cookie_dic = cookies.get('dict', {})
+    def delete_cookie_file(self):
+        try:
+            # os.remove(self.cookie_path)
+            pass
+        except OSError:
+            pass
 
-            if self.test_cookies(moodle_url, cookie_dic):
-                return cookies
+    def check_and_fetch_cookies(self, privatetoken: str, userid: str) -> bool:
+        if os.path.exists(self.cookie_path):
+            # test if still logged in.
+
+            if self.test_cookies(self.moodle_test_url):
+                return True
 
             warning_msg = 'Moodle cookie has expired, an attempt is made to generate a new cookie.'
             logging.warning(warning_msg)
@@ -70,7 +84,8 @@ class CookieHandler:
             )
             logging.warning(error_msg)
             Log.error('\r' + error_msg + '\033[K')
-            return None
+            self.delete_cookie_file()
+            return False
 
         autologin_key = self.fetch_autologin_key(privatetoken)
 
@@ -79,27 +94,24 @@ class CookieHandler:
             logging.debug(error_msg)
             print('')
             Log.error(error_msg)
-            return None
+            self.delete_cookie_file()
+            return False
 
         print('\rDownloading cookies\033[K', end='')
 
         post_data = {'key': autologin_key.get('key', ''), 'userid': userid}
+        url = autologin_key.get('autologinurl', '')
 
-        cookies_response, cookies_session = self.request_helper.post_URL(
-            autologin_key.get('autologinurl', ''), post_data
-        )
+        cookies_response, cookies_session = self.request_helper.post_URL(url, post_data, self.cookie_path)
 
-        cookie_dic = cookies_session.cookies.get_dict()
+        moodle_test_url = cookies_response.url
 
-        moodle_url = cookies_response.url
-
-        result = {'dict': cookie_dic, 'moodle_url': moodle_url}
-
-        if self.test_cookies(moodle_url, cookie_dic):
-            return result
+        if self.test_cookies(moodle_test_url):
+            return True
         else:
             error_msg = 'Failed to generate cookies!'
             logging.debug(error_msg)
             print('')
             Log.error(error_msg)
-            return None
+            self.delete_cookie_file()
+            return False

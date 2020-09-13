@@ -1,10 +1,13 @@
 import re
+import os
 import ssl
 import json
 import urllib
 import certifi
 import requests
 import logging
+
+from http.cookiejar import MozillaCookieJar
 
 
 class RequestHelper:
@@ -51,11 +54,12 @@ class RequestHelper:
         logging.getLogger("requests").setLevel(logging.WARNING)
         logging.getLogger("urllib3").setLevel(logging.WARNING)
 
-    def post_URL(self, url: str, data: {str: str} = None):
+    def post_URL(self, url: str, data: {str: str} = None, cookie_jar_path: str = None):
         """
-        Sends a POST request to a specific URL 
+        Sends a POST request to a specific URL, including saving of cookies in cookie jar.
         @param url: The url to which the request is sent. (the moodle base url is not added to the given URL)
         @param data: The optional data is added to the POST body.
+        @param cookie_jar_path: Path to the cookies file.
         @return: The resulting response object and the session object.
         """
 
@@ -64,19 +68,42 @@ class RequestHelper:
             data_urlencoded = RequestHelper.recursive_urlencode(data)
 
         session = requests.Session()
+
+        if cookie_jar_path is not None:
+            session.cookies = MozillaCookieJar(cookie_jar_path)
+
+            if os.path.exists(cookie_jar_path):
+                session.cookies.load(ignore_discard=True, ignore_expires=True)
+
         response = session.post(url, data=data_urlencoded, headers=self.stdHeader, verify=self.verify)
+
+        if cookie_jar_path is not None:
+            session.cookies.save(ignore_discard=True, ignore_expires=True)
+
         return response, session
 
-    def get_URL_WC(self, url: str, cookie_dic: {str: str} = None):
+    def get_URL(self, url: str, cookie_jar_path: str = None):
         """
         Sends a GET request to a specific URL of the Moodle system, including additional cookies
+        (cookies are updated after the request)
         @param url: The url to which the request is sent. (the moodle base url is not added to the given URL)
-        @param cookie_dic: The optional cookies to add to the request
+        @param cookie_jar_path: The optional cookies to add to the request
         @return: The resulting Response object.
         """
 
         session = requests.Session()
-        response = session.get(url, headers=self.stdHeader, cookies=cookie_dic, verify=self.verify)
+
+        if cookie_jar_path is not None:
+            session.cookies = MozillaCookieJar(cookie_jar_path)
+
+            if os.path.exists(cookie_jar_path):
+                session.cookies.load(ignore_discard=True, ignore_expires=True)
+
+        response = session.get(url, headers=self.stdHeader, verify=self.verify)
+
+        if cookie_jar_path is not None:
+            session.cookies.save(ignore_discard=True, ignore_expires=True)
+
         return response, session
 
     def post_REST(self, function: str, data: {str: str} = None) -> object:

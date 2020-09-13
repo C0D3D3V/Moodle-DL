@@ -180,7 +180,6 @@ class MoodleService:
 
         token = self.config_helper.get_token()
         privatetoken = self.config_helper.get_privatetoken()
-        cookies = self.config_helper.get_cookies()
         moodle_domain = self.config_helper.get_moodle_domain()
         moodle_path = self.config_helper.get_moodle_path()
 
@@ -206,12 +205,8 @@ class MoodleService:
             results_handler.setVersion(version)
 
             # generate a new cookie if necessary
-            cookie_handler = CookieHandler(request_helper, version)
-            cookies = cookie_handler.fetch_cookies(privatetoken, userid, cookies)
-            if cookies is not None:
-                self.config_helper.set_property('cookies', cookies)
-            else:
-                self.config_helper.remove_property('cookies')
+            cookie_handler = CookieHandler(request_helper, version, self.storage_path, moodle_domain, moodle_path)
+            cookie_handler.check_and_fetch_cookies(privatetoken, userid)
 
             courses_list = first_contact_handler.fetch_courses(userid)
             courses = []
