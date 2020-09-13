@@ -131,7 +131,7 @@ class MoodleService:
                 + moodle_domain
                 + moodle_path
                 + 'admin/tool/mobile/launch.php?service='
-                + 'moodle_mobile_app&passport=12345'
+                + 'moodle_mobile_app&passport=12345&urlscheme=moodledownloader'
             )
 
             print(
@@ -149,7 +149,7 @@ class MoodleService:
 
             print(
                 'The script expects a URL that looks something like this:'
-                + '`moodlemobile://token=$apptoken`.'
+                + '`moodledownloader://token=$apptoken`.'
                 + ' Where $apptoken looks random. In reality it is a Base64'
                 + ' encoded hash and the token we need to access moodle.'
             )
