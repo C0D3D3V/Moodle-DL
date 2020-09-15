@@ -75,10 +75,10 @@ class ResultsHandler:
 
             # handle not supported modules that results in an index.html special
             if module_modname in ['moodecvideo', 'page']:
-                module_modname = 'index_mod'
+                module_modname = 'index_mod-' + module_modname
 
             if module_modname in ['kalvidres']:
-                module_modname = 'cookie_mod'
+                module_modname = 'cookie_mod-' + module_modname
                 files += self._handle_cookie_mod(section_name, module_name, module_modname, module_id, module_url)
 
             if module_description is not None and self.download_descriptions is True:
@@ -86,7 +86,7 @@ class ResultsHandler:
                     section_name, module_name, module_modname, module_id, module_description
                 )
 
-            if module_modname in ['resource', 'folder', 'url', 'index_mod']:
+            if module_modname.startswith(('resource', 'folder', 'url', 'index_mod')):
                 files += self._handle_files(section_name, module_name, module_modname, module_id, module_contents)
 
             elif module_modname == 'assign':
@@ -137,14 +137,17 @@ class ResultsHandler:
 
         result = []
         for url in urls:
-            module_modname = 'url'
+            if url == '':
+                continue
+
+            module_modname = 'url-description'
 
             url_parts = urlparse.urlparse(url)
             if url_parts.hostname == self.moodle_domain and url_parts.path.find('/webservice/') >= 0:
-                module_modname = 'index_mod'
+                module_modname = 'index_mod-description'
 
             elif url_parts.hostname == self.moodle_domain and url_parts.path.find('/mod/') >= 0:
-                module_modname = 'cookie_mod'
+                module_modname = 'cookie_mod-description'
 
             new_file = File(
                 module_id=module_id,
@@ -215,10 +218,10 @@ class ResultsHandler:
             content_timemodified = content.get('timemodified', 0)
             content_isexternalfile = content.get('isexternalfile', False)
 
-            if content_fileurl == '' and module_modname == 'url':
+            if content_fileurl == '' and module_modname.startswith(('url', 'index_mod', 'cookie_mod')):
                 continue
 
-            if module_modname in ['index_mod']:
+            if module_modname.startswith('index_mod'):
                 content_filename = module_name
 
             hash_description = None
@@ -276,7 +279,7 @@ class ResultsHandler:
         m.update(hashable_description.encode('utf-8'))
         hash_description = m.hexdigest()
 
-        if module_modname in ['url', 'index_mod']:
+        if module_modname.startswith(('url', 'index_mod')):
             module_modname = 'url_description'
 
         description = File(

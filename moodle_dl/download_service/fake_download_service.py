@@ -44,7 +44,7 @@ class FakeDownloadService:
 
                     file.saved_to = str(Path(save_destination) / filename)
 
-                    if file.module_modname == 'url':
+                    if file.module_modname.startswith('url'):
                         file.saved_to = str(Path(save_destination) / (filename + '.desktop'))
                         if os.name == 'nt':
                             file.saved_to = str(Path(save_destination) / (filename + '.URL'))

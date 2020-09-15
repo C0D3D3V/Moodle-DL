@@ -159,6 +159,7 @@ class File:
         message += ', content_filesize: %s' % (self.content_filesize)
         message += ', content_timemodified: %s' % (self.content_timemodified)
         message += ', module_modname: %s' % (self.module_modname)
+        message += ', content_type: %s' % (self.content_type)
         message += ', content_isexternalfile: %s' % (self.content_isexternalfile)
 
         message += ', saved_to: %s' % (self.saved_to)
@@ -168,6 +169,8 @@ class File:
         message += ', deleted: %s' % (self.deleted)
         message += ', notified: %s' % (self.notified)
         message += ', hash: %s' % (self.hash)
+        message += ', file_id: %s' % (self.file_id)
+        message += ', old_file_id: %s' % (self.old_file_id)
 
         message += ')'
         return message

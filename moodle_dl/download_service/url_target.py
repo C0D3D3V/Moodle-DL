@@ -313,13 +313,8 @@ class URLTarget(object):
         if use_cookies:
             cookies_path = self.options.get('cookies_path', None)
             if cookies_path is None:
-                try:
-                    os.remove(self.file.saved_to)
-                except Exception:
-                    pass
                 self.success = False
-                self.error = 'Moodle Cookies are missing.'
-                return False
+                raise ValueError('Moodle Cookies are missing.')
 
         isHTML = False
         new_filename = ""
@@ -463,7 +458,7 @@ class URLTarget(object):
 
             self.file.saved_to = self._rename_if_exists(self.file.saved_to)
 
-        elif self.file.module_modname in ['url'] and not ignore_attributes:
+        elif self.file.module_modname.startswith('url') and not ignore_attributes:
             self.file.saved_to = str(Path(self.destination) / (self.filename + '.desktop'))
             if os.name == 'nt':
                 self.file.saved_to = str(Path(self.destination) / (self.filename + '.URL'))
@@ -578,17 +573,19 @@ class URLTarget(object):
                 self.create_description()
                 return self.success
 
-            if self.file.module_modname == 'index_mod':
+            if self.file.module_modname.startswith('index_mod'):
                 if self.try_download_link(True, True, False):
                     return self.success
 
-            if self.file.module_modname == 'cookie_mod':
-                self.try_download_link(False, True, True)
-                return self.success
+            cookies_path = None
+            if self.file.module_modname.startswith('cookie_mod'):
+                cookies_path = self.options.get('cookies_path', None)
+                if self.try_download_link(False, True, True):
+                    return self.success
 
             # if it is a URL we have to create a shortcut
             # instead of downloading it
-            if self.file.module_modname == 'url':
+            if self.file.module_modname.startswith('url'):
                 self.create_shortcut()
                 if self.options.get('download_linked_files', False) and not self.is_filtered_external_domain():
                     self.try_download_link(False, False, False)
@@ -601,7 +598,7 @@ class URLTarget(object):
                 self.file.saved_to,
                 context=self.ssl_context,
                 reporthook=self.add_progress,
-                cookies_path=None,
+                cookies_path=cookies_path,
             )
 
             self.file.time_stamp = int(time.time())
