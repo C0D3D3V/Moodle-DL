@@ -298,7 +298,7 @@ class URLTarget(object):
 
         Args:
             add_token (bool, optional): Adds the ws-token to the url. Defaults to False.
-            delete_if_video (bool, optional): Deletes the tmp file if youtube-dl is used. Defaults to False.
+            delete_if_video (bool, optional): Deletes the tmp file if youtube-dl was successfull. Defaults to False.
             use_cookies (bool, optional): Adds the cookies to the requests. Defaults to False.
 
         Returns:
@@ -374,15 +374,15 @@ class URLTarget(object):
 
             with youtube_dl.YoutubeDL(ydl_opts) as ydl:
                 try:
-                    if delete_if_video:
-                        try:
-                            os.remove(self.file.saved_to)
-                        except Exception:
-                            pass
                     ydl_results = ydl.download([urlToDownload])
                     if ydl_results == 1:
                         return False
                     else:
+                        if delete_if_video:
+                            try:
+                                os.remove(self.file.saved_to)
+                            except Exception:
+                                pass
                         self.move_tmp_file(tmp_file)
                         self.success = True
                         return True
@@ -573,28 +573,36 @@ class URLTarget(object):
                 self.create_description()
                 return self.success
 
+            add_token = True
             if self.file.module_modname.startswith('index_mod'):
-                if self.try_download_link(True, True, False):
+                add_token = True
+                if self.try_download_link(add_token, True, False):
                     return self.success
 
             cookies_path = None
             if self.file.module_modname.startswith('cookie_mod'):
+                add_token = False
                 cookies_path = self.options.get('cookies_path', None)
-                if self.try_download_link(False, True, True):
+                if self.try_download_link(add_token, True, True):
                     return self.success
 
             # if it is a URL we have to create a shortcut
             # instead of downloading it
             if self.file.module_modname.startswith('url'):
                 self.create_shortcut()
+                add_token = False
                 if self.options.get('download_linked_files', False) and not self.is_filtered_external_domain():
-                    self.try_download_link(False, False, False)
+                    self.try_download_link(add_token, False, False)
                     # Warning: try_download_link overwrites saved_to and
                     # time_stamp in move_tmp_file
                 return self.success
 
+            url_to_download = self.file.content_fileurl
+            if add_token:
+                url_to_download = self._add_token_to_url(self.file.content_fileurl)
+
             self.urlretrieve(
-                self._add_token_to_url(self.file.content_fileurl),
+                url_to_download,
                 self.file.saved_to,
                 context=self.ssl_context,
                 reporthook=self.add_progress,
