@@ -41,7 +41,7 @@ class DownloadService:
         DownloadService.thread_count = 5
         # How often should the downloader try to download
         # a file again if an error occurs.
-        DownloadService.url_tries = 3
+        DownloadService.url_tries = 1
 
         self.courses = courses
         self.state_recorder = moodle_service.recorder
