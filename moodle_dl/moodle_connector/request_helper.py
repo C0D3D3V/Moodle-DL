@@ -74,6 +74,9 @@ class RequestHelper:
         response = session.post(url, data=data_urlencoded, headers=self.stdHeader, verify=self.verify)
 
         if cookie_jar_path is not None:
+            for cookie in session.cookies:
+                cookie.expires = 2147483647
+
             session.cookies.save(ignore_discard=True, ignore_expires=True)
 
         return response, session
