@@ -81,7 +81,7 @@ class ResultsHandler:
                 module_modname = 'cookie_mod-' + module_modname
                 files += self._handle_cookie_mod(section_name, module_name, module_modname, module_id, module_url)
 
-            if module_description is not None and self.download_descriptions is True:
+            if module_description is not None:
                 files += self._handle_description(
                     section_name, module_name, module_modname, module_id, module_description
                 )
@@ -315,14 +315,6 @@ class ResultsHandler:
         """
         self.course_assignments = course_assignments
         self.course_databases = course_databases
-
-    def set_fetch_options(self, download_descriptions: bool):
-        """
-        Sets the possible options for a fetch operation.
-        @params download_descriptions: Sets whether descriptions
-                                       are to be downloaded.
-        """
-        self.download_descriptions = download_descriptions
 
     def fetch_files(self, course_id: str) -> [File]:
         """

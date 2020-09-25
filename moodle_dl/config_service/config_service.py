@@ -43,6 +43,7 @@ class ConfigService:
         self._set_options_of_courses(courses)
         self._select_should_download_submissions()
         self._select_should_download_descriptions()
+        self._select_should_download_links_in_descriptions()
         self._select_should_download_databases()
         self._select_should_download_linked_files()
         self._select_should_load_default_filename_character_map()
@@ -279,6 +280,25 @@ class ConfigService:
 
         self.config_helper.set_property('download_descriptions', download_descriptions)
 
+    def _select_should_download_links_in_descriptions(self):
+        """
+        Asks the user if links in descriptions should be downloaded
+        """
+        download_links_in_descriptions = self.config_helper.get_download_links_in_descriptions()
+
+        self.section_seperator()
+        Log.info(
+            'In the descriptions of files, sections, assignments or courses the teacher can add links to webpages,' +
+            ' files or videos. That links can pont to a internal page on moodle or to an external webpage.'
+        )
+        print('')
+
+        download_links_in_descriptions = cutie.prompt_yes_or_no(
+            Log.special_str('Would you like to download links in descriptions?'), default_is_yes=download_links_in_descriptions,
+        )
+
+        self.config_helper.set_property('download_links_in_descriptions', download_links_in_descriptions)
+
     def _select_should_download_linked_files(self):
         """
         Asks the user if linked files should be downloaded
@@ -360,11 +380,11 @@ class ConfigService:
                 )
                 print('Current filename character map: {}'.format(filename_character_map))
                 load_default_map = cutie.prompt_yes_or_no(
-                    Log.special_str('Do you want to load the default filename character map for Windows?'), default_is_yes=False
+                    Log.special_str('Do you want to load the default filename character map for Windows?'),
+                    default_is_yes=False,
                 )
                 if load_default_map:
                     self.config_helper.set_default_filename_character_map(True)
-
 
     def section_seperator(self):
         """Print a seperator line.

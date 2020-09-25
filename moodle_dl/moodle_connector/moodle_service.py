@@ -191,6 +191,7 @@ class MoodleService:
         dont_download_course_ids = self.config_helper.get_dont_download_course_ids()
         download_submissions = self.config_helper.get_download_submissions()
         download_descriptions = self.config_helper.get_download_descriptions()
+        download_links_in_descriptions = self.config_helper.get_download_links_in_descriptions()
         download_databases = self.config_helper.get_download_databases()
 
         courses = []
@@ -216,14 +217,12 @@ class MoodleService:
                     courses.append(course)
 
             assignments = assignments_handler.fetch_assignments(courses)
+            if download_submissions:
+                assignments = assignments_handler.fetch_submissions(userid, assignments)
 
-            databases = {}
             databases = databases_handler.fetch_databases(courses)
             if download_databases:
                 databases = databases_handler.fetch_database_files(databases)
-
-            if download_submissions:
-                assignments = assignments_handler.fetch_submissions(userid, assignments)
 
             index = 0
             for course in courses:
@@ -248,7 +247,6 @@ class MoodleService:
                 course_assignments = assignments.get(course.id, {})
                 course_databases = databases.get(course.id, {})
                 results_handler.set_fetch_addons(course_assignments, course_databases)
-                results_handler.set_fetch_options(download_descriptions)
                 course.files = results_handler.fetch_files(course.id)
 
                 filtered_courses.append(course)
@@ -267,6 +265,7 @@ class MoodleService:
             dont_download_course_ids,
             download_submissions,
             download_descriptions,
+            download_links_in_descriptions,
             download_databases,
         )
 
@@ -294,6 +293,7 @@ class MoodleService:
         dont_download_course_ids: [int],
         download_submissions: bool,
         download_descriptions: bool,
+        download_links_in_descriptions: bool,
         download_databases: bool,
     ) -> [Course]:
         """
@@ -307,6 +307,7 @@ class MoodleService:
                                     should be downloaded
         @param download_descriptions: boolean if descriptions
                                     should be downloaded
+        @param download_links_in_descriptions: boolean if links in descriptions should be downloaded 
         @param download_databases: boolean if databases should be downloaded
         @return: filtered changes course list
         """
@@ -325,6 +326,13 @@ class MoodleService:
                 course_files = []
                 for file in course.files:
                     if file.content_type != 'description':
+                        course_files.append(file)
+                course.files = course_files
+
+            if not download_links_in_descriptions:
+                course_files = []
+                for file in course.files:
+                    if not file.module_modname.endswith('-description'):
                         course_files.append(file)
                 course.files = course_files
 

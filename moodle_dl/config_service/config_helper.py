@@ -77,6 +77,13 @@ class ConfigHelper:
         except ValueError:
             return False
 
+    def get_download_links_in_descriptions(self) -> bool:
+        # returns a stored boolean if links in descriptions should be downloaded
+        try:
+            return self.get_property('download_links_in_descriptions')
+        except ValueError:
+            return False
+
     def get_download_databases(self) -> bool:
         # returns a stored boolean if databases should be downloaded
         try:
