@@ -299,6 +299,7 @@ def get_parser():
     )
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
+        '-i',
         '--init',
         action='store_true',
         help=(
@@ -312,6 +313,7 @@ def get_parser():
     )
 
     group.add_argument(
+        '-c',
         '--config',
         action='store_true',
         help=(
@@ -324,6 +326,7 @@ def get_parser():
     )
 
     group.add_argument(
+        '-nt',
         '--new-token',
         action='store_true',
         help=(
@@ -337,6 +340,7 @@ def get_parser():
     )
 
     group.add_argument(
+        '-cm',
         '--change-notification-mail',
         action='store_true',
         help=(
@@ -347,6 +351,7 @@ def get_parser():
     )
 
     group.add_argument(
+        '-ct',
         '--change-notification-telegram',
         action='store_true',
         help=(
@@ -357,6 +362,7 @@ def get_parser():
     )
 
     group.add_argument(
+        '-md',
         '--manage-database',
         action='store_true',
         help=(
@@ -368,6 +374,7 @@ def get_parser():
     )
 
     parser.add_argument(
+        '-p',
         '--path',
         default='.',
         type=_dir_path,
@@ -399,6 +406,7 @@ def get_parser():
     )
 
     parser.add_argument(
+        '-sso',
         '--sso',
         default=False,
         action='store_true',
