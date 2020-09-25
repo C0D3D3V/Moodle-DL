@@ -146,7 +146,7 @@ class ResultsHandler:
             if url_parts.hostname == self.moodle_domain and url_parts.path.find('/webservice/') >= 0:
                 module_modname = 'index_mod-description'
 
-            elif url_parts.hostname == self.moodle_domain and url_parts.path.find('/mod/') >= 0:
+            elif url_parts.hostname == self.moodle_domain:
                 module_modname = 'cookie_mod-description'
 
             new_file = File(
