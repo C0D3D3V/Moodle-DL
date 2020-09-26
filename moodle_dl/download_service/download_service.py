@@ -138,7 +138,7 @@ class DownloadService:
         """
         self._create_downloader_threads()
 
-        print('\n' * (len(self.threads)))
+        print('\n' * (len(self.threads)),  end='')
         old_status_message = ''
         while not self._downloader_complete():
             time.sleep(0.1)
@@ -148,6 +148,7 @@ class DownloadService:
                 print(new_status_message, end='')
                 old_status_message = new_status_message
 
+        self._clear_status_message()
         self._log_failures()
 
     def _create_downloader_threads(self):
@@ -225,7 +226,7 @@ class DownloadService:
 
         # The overall progress also includes the total size that needs to be
         # downloaded and the size that has already been downloaded.
-        progressmessage_line = 'Total: %3s%% %12s/%12skb' % (
+        progressmessage_line = '\033[KTotal: %3s%% %12s/%12skb' % (
             percentage,
             int(threads_total_downloaded / 1000.0),
             int(self.total_to_download / 1000.0),
@@ -237,6 +238,11 @@ class DownloadService:
         progressmessage += progressmessage_line
 
         return progressmessage
+
+    def _clear_status_message(self):
+        print(f'\033[{len(self.threads) + 1}A', end='')
+        print('\033[K\n' * len(self.threads), end='')
+        print(f'\033[{len(self.threads) + 1}A', end='')
 
     def _log_failures(self):
         """
