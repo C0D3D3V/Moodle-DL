@@ -7,6 +7,7 @@ from getpass import getpass
 from urllib.parse import urlparse
 
 from moodle_dl.utils import cutie
+from moodle_dl.utils.logger import Log
 from moodle_dl.config_service.config_helper import ConfigHelper
 from moodle_dl.state_recorder.course import Course
 from moodle_dl.state_recorder.state_recorder import StateRecorder
@@ -50,6 +51,10 @@ class MoodleService:
 
             if not use_stored_url:
                 moodle_url = input('URL of Moodle:   ')
+
+                if not moodle_url.startswith('http'):
+                    Log.error('The url of your moodle must start with `https://`')
+                    continue
 
                 moodle_uri = urlparse(moodle_url)
 
