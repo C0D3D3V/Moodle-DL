@@ -125,7 +125,7 @@ def select(
         console_columns = shutil.get_terminal_size().columns - 4
 
         for i, option in enumerate(options):
-            printable_option = option.expandtabs()
+            printable_option = option.expandtabs().replace('\n', ' ').replace('\r', ' ')
             if len(printable_option) > console_columns:
                 printable_option = printable_option[: (console_columns - 2)] + '..'
 
@@ -215,7 +215,7 @@ def select_multiple(
         print(f'\033[{len(options) + 2}A')
         for i, option in enumerate(options):
             console_columns = shutil.get_terminal_size().columns - 4
-            printable_option = option.expandtabs()
+            printable_option = option.expandtabs().replace('\n', ' ').replace('\r', ' ')
             if len(printable_option) > console_columns:
                 printable_option = printable_option[: (console_columns - 2)] + '..'
 
