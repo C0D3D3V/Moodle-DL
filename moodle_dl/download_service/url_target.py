@@ -289,7 +289,7 @@ class URLTarget(object):
                 self.file.time_stamp = int(time.time())
 
     def try_download_link(
-        self, add_token: bool = False, delete_if_video: bool = False, use_cookies: bool = False
+        self, add_token: bool = False, delete_if_successful: bool = False, use_cookies: bool = False
     ) -> bool:
         """This function should only be used for shortcut/URL files.
         It tests whether a URL refers to a file, that is not an HTML web page.
@@ -298,7 +298,7 @@ class URLTarget(object):
 
         Args:
             add_token (bool, optional): Adds the ws-token to the url. Defaults to False.
-            delete_if_video (bool, optional): Deletes the tmp file if youtube-dl was successfull. Defaults to False.
+            delete_if_successful (bool, optional): Deletes the tmp file if download was successfull. Defaults to False.
             use_cookies (bool, optional): Adds the cookies to the requests. Defaults to False.
 
         Returns:
@@ -331,36 +331,13 @@ class URLTarget(object):
             content_type = headers.get_content_type()
             if content_type == 'text/html' or content_type == 'text/plain':
                 isHTML = True
-            else:
-                url_parsed = urlparse.urlsplit(urlToDownload)
-                new_filename = posixpath.basename(url_parsed.path)
-                new_filename = headers.get_filename(new_filename)
-                total_bytes_estimate = int(headers.get('Content-Length', -1))
 
-        if not isHTML:
-            if self.filename != new_filename:
-                self.filename = new_filename
+            url_parsed = urlparse.urlsplit(urlToDownload)
+            new_filename = posixpath.basename(url_parsed.path)
+            new_filename = headers.get_filename(new_filename)
+            total_bytes_estimate = int(headers.get('Content-Length', -1))
 
-            self.set_path(True)
-
-            if total_bytes_estimate != -1:
-                self.thread_report[self.thread_id]['extra_totalsize'] = total_bytes_estimate
-
-            self.urlretrieve(
-                urlToDownload,
-                self.file.saved_to,
-                context=self.ssl_context,
-                reporthook=self.add_progress,
-                cookies_path=cookies_path,
-            )
-
-            self.file.time_stamp = int(time.time())
-
-            self.success = True
-            return True
-
-        else:
-
+        if isHTML:
             tmp_filename = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
             tmp_file = str(Path(self.destination) / tmp_filename)
             ydl_opts = {
@@ -376,9 +353,10 @@ class URLTarget(object):
                 try:
                     ydl_results = ydl.download([urlToDownload])
                     if ydl_results == 1:
-                        return False
+                        # return False
+                        pass
                     else:
-                        if delete_if_video:
+                        if delete_if_successful:
                             try:
                                 os.remove(self.file.saved_to)
                             except Exception:
@@ -387,7 +365,41 @@ class URLTarget(object):
                         self.success = True
                         return True
                 except Exception:
-                    return False
+                    # return False
+                    pass
+
+        # generate file extension for modules names
+        new_name, new_extension = os.path.splitext(new_filename)
+        if new_extension == '' and isHTML:
+            new_extension = '.html'
+        old_name, old_extension = os.path.splitext(self.filename)
+
+        if old_extension != new_extension:
+            self.filename = self.filename + new_extension
+
+        if delete_if_successful:
+            try:
+                os.remove(self.file.saved_to)
+            except Exception:
+                pass
+
+        self.set_path(True)
+
+        if total_bytes_estimate != -1:
+            self.thread_report[self.thread_id]['extra_totalsize'] = total_bytes_estimate
+
+        self.urlretrieve(
+            urlToDownload,
+            self.file.saved_to,
+            context=self.ssl_context,
+            reporthook=self.add_progress,
+            cookies_path=cookies_path,
+        )
+
+        self.file.time_stamp = int(time.time())
+
+        self.success = True
+        return True
 
     def is_filtered_external_domain(self):
         """
@@ -577,15 +589,15 @@ class URLTarget(object):
             add_token = True
             if self.file.module_modname.startswith('index_mod'):
                 add_token = True
-                if self.try_download_link(add_token, True, False):
-                    return self.success
+                self.try_download_link(add_token, True, False)
+                return self.success
 
             cookies_path = None
             if self.file.module_modname.startswith('cookie_mod'):
                 add_token = False
                 cookies_path = self.options.get('cookies_path', None)
-                if self.try_download_link(add_token, True, True):
-                    return self.success
+                self.try_download_link(add_token, True, True)
+                return self.success
 
             # if it is a URL we have to create a shortcut
             # instead of downloading it
