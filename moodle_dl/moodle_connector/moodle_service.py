@@ -52,7 +52,7 @@ class MoodleService:
             if not use_stored_url:
                 moodle_url = input('URL of Moodle:   ')
 
-                if not moodle_url.startswith('http'):
+                if not moodle_url.startswith('https://'):
                     Log.error('The url of your moodle must start with `https://`')
                     continue
 
