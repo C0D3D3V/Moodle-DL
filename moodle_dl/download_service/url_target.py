@@ -550,6 +550,7 @@ class URLTarget(object):
         self.downloaded = 0
         self.thread_report[self.thread_id]['percentage'] = 0
         self.thread_report[self.thread_id]['extra_totalsize'] = None
+        self.thread_report[self.thread_id]['current_url'] = self.file.content_fileurl
 
         try:
             self._create_dir(self.destination)

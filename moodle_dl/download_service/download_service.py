@@ -69,7 +69,7 @@ class DownloadService:
         self.report = {'success': [], 'failure': []}
         # thread_report is used to get live reports from the threads
         self.thread_report = [
-            {'total': 0, 'percentage': 0, 'old_extra_totalsize': None, 'extra_totalsize': None}
+            {'total': 0, 'percentage': 0, 'old_extra_totalsize': None, 'extra_totalsize': None, 'current_url': ''}
             for i in range(self.thread_count)
         ]
         # Collects the total size of the files that needs to be downloaded.
@@ -138,10 +138,15 @@ class DownloadService:
         """
         self._create_downloader_threads()
 
+        print('\n' * (len(self.threads)))
+        old_status_message = ''
         while not self._downloader_complete():
             time.sleep(0.1)
 
-            print(self._get_status_message() + '\033[K', end='')
+            new_status_message = self._get_status_message()
+            if old_status_message != new_status_message:
+                print(new_status_message, end='')
+                old_status_message = new_status_message
 
         self._log_failures()
 
@@ -182,14 +187,26 @@ class DownloadService:
         limits = shutil.get_terminal_size()
 
         # Starting with a carriage return to overwrite the last message
-        progressmessage = "\r"
+        progressmessage = f'\033[{len(self.threads) + 1}A'
 
-        threads_status_message = ""
+        threads_status_message = ''
         threads_total_downloaded = 0
-        for i in range(self.thread_count):
+        add_empty_line = 0
+        for thread in self.threads:
+            if not thread.is_alive():
+                add_empty_line += 1
+                continue
+
+            i = thread.thread_id
             # A thread status contains it id and the progress
             # of the current file
-            threads_status_message += " T%i: %3i%%" % (i, self.thread_report[i]['percentage'])
+            thread_percentage = self.thread_report[i]['percentage']
+            thread_current_url = self.thread_report[i]['current_url']
+            if len(thread_current_url) + 12 > limits.columns:
+                thread_current_url = thread_current_url[0 : limits.columns - 14] + '..'
+
+            threads_status_message += '\033[KT%2i: %3i%% - %s\n' % (i, thread_percentage, thread_current_url)
+
             threads_total_downloaded += self.thread_report[i]['total']
 
             extra_totalsize = self.thread_report[i]['extra_totalsize']
@@ -197,22 +214,27 @@ class DownloadService:
                 self.total_to_download += extra_totalsize
                 self.thread_report[i]['extra_totalsize'] = -1
 
+        if add_empty_line > 0:
+            threads_status_message = '\033[K\n' * add_empty_line + threads_status_message
+
+        progressmessage += threads_status_message
+
         percentage = 100
         if self.total_to_download != 0:
             percentage = int(threads_total_downloaded * 100 / self.total_to_download)
 
         # The overall progress also includes the total size that needs to be
         # downloaded and the size that has already been downloaded.
-        progressmessage += 'Total: %3s%% %12s/%12skb' % (
+        progressmessage_line = 'Total: %3s%% %12s/%12skb' % (
             percentage,
             int(threads_total_downloaded / 1000.0),
             int(self.total_to_download / 1000.0),
         )
 
-        progressmessage += threads_status_message
+        if len(progressmessage_line) > limits.columns:
+            progressmessage_line = progressmessage_line[0 : limits.columns]
 
-        if len(progressmessage) > limits.columns:
-            progressmessage = progressmessage[0 : limits.columns]
+        progressmessage += progressmessage_line
 
         return progressmessage
 
