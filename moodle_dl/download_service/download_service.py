@@ -138,7 +138,7 @@ class DownloadService:
         """
         self._create_downloader_threads()
 
-        print('\n' * (len(self.threads)),  end='')
+        print('\n' * (len(self.threads)), end='')
         old_status_message = ''
         while not self._downloader_complete():
             time.sleep(0.1)
@@ -188,7 +188,7 @@ class DownloadService:
         limits = shutil.get_terminal_size()
 
         # Starting with a carriage return to overwrite the last message
-        progressmessage = f'\033[{len(self.threads) + 1}A'
+        progressmessage = f'\033[{len(self.threads)}A\r'
 
         threads_status_message = ''
         threads_total_downloaded = 0
@@ -215,8 +215,8 @@ class DownloadService:
                 self.total_to_download += extra_totalsize
                 self.thread_report[i]['extra_totalsize'] = -1
 
-        if add_empty_line > 0:
-            threads_status_message = '\033[K\n' * add_empty_line + threads_status_message
+        for i in range(add_empty_line):
+            threads_status_message += '\033[K\n'
 
         progressmessage += threads_status_message
 
@@ -226,7 +226,7 @@ class DownloadService:
 
         # The overall progress also includes the total size that needs to be
         # downloaded and the size that has already been downloaded.
-        progressmessage_line = '\033[KTotal: %3s%% %12s/%12skb' % (
+        progressmessage_line = 'Total: %3s%% %12s/%12skb' % (
             percentage,
             int(threads_total_downloaded / 1000.0),
             int(self.total_to_download / 1000.0),
@@ -234,15 +234,19 @@ class DownloadService:
 
         if len(progressmessage_line) > limits.columns:
             progressmessage_line = progressmessage_line[0 : limits.columns]
+        progressmessage_line = '\033[K' + progressmessage_line
 
         progressmessage += progressmessage_line
 
         return progressmessage
 
     def _clear_status_message(self):
-        print(f'\033[{len(self.threads) + 1}A', end='')
-        print('\033[K\n' * len(self.threads), end='')
-        print(f'\033[{len(self.threads) + 1}A', end='')
+        print(f'\033[{len(self.threads)}A', end='')
+
+        print('\033[K\n' * (len(self.threads)), end='')
+        print('\033[K', end='')
+
+        print(f'\033[{len(self.threads)}A', end='')
 
     def _log_failures(self):
         """
