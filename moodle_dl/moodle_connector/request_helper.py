@@ -123,7 +123,7 @@ class RequestHelper:
         response = requests.post(url, data=data_urlencoded, headers=self.stdHeader, verify=self.verify)
 
         json_result = self._initial_parse(response)
-        if self.log_responses:
+        if self.log_responses and function not in ['tool_mobile_get_autologin_key']:
             with open(self.log_responses_to, 'a') as response_log_file:
                 response_log_file.write('URL: {}\n'.format(response.url))
                 response_log_file.write('Function: {}\n\n'.format(function))
