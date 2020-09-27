@@ -74,6 +74,7 @@ class DownloadService:
         ]
         # Collects the total size of the files that needs to be downloaded.
         self.total_to_download = 0
+        self.total_files = 0
 
         # delete files, that should be deleted
         self.state_recorder.batch_delete_files(self.courses)
@@ -103,6 +104,8 @@ class DownloadService:
                             self.options,
                         )
                     )
+
+                    self.total_files += 1
 
     @staticmethod
     def genPath(storage_path: str, course: Course, file: File):
@@ -231,6 +234,8 @@ class DownloadService:
             int(threads_total_downloaded / 1000.0),
             int(self.total_to_download / 1000.0),
         )
+
+        progressmessage_line += ' | Files: %5s/%5s' % (len(self.report['success']), self.total_files)
 
         if len(progressmessage_line) > limits.columns:
             progressmessage_line = progressmessage_line[0 : limits.columns]
