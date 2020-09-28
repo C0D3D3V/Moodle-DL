@@ -206,8 +206,8 @@ class DownloadService:
             # of the current file
             thread_percentage = self.thread_report[i]['percentage']
             thread_current_url = self.thread_report[i]['current_url']
-            if len(thread_current_url) + 12 > limits.columns:
-                thread_current_url = thread_current_url[0 : limits.columns - 14] + '..'
+            if len(thread_current_url) + 13 > limits.columns:
+                thread_current_url = thread_current_url[0 : limits.columns - 15] + '..'
 
             threads_status_message += '\033[KT%2i: %3i%% - %s\n' % (i, thread_percentage, thread_current_url)
 

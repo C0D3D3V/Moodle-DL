@@ -10,7 +10,7 @@ def readme():
 
 setup(
     name='moodle-dl',
-    version='2.0.1',
+    version='2.0.2',
     description='A Moodle downloader that downloads course content fast from Moodle (eg. lecture pdfs)',
     long_description=readme(),
     long_description_content_type='text/markdown',
