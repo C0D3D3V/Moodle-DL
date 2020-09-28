@@ -107,7 +107,7 @@ class URLTarget(object):
             try:
                 # raise condition
                 os.makedirs(path)
-            except FileExistsError:
+            except FileExistsError as e:
                 pass
 
     def _rename_if_exists(self, path: str) -> str:
@@ -282,8 +282,8 @@ class URLTarget(object):
                 self.file.saved_to = new_path
                 try:
                     shutil.move(one_tmp_file, self.file.saved_to)
-                except Exception:
-                    pass
+                except Exception as e:
+                    logging.warning('Failed to move the temporary video file {}!  Error: {}'.format(one_tmp_file, e))
                 self.lock.release()
 
                 self.file.time_stamp = int(time.time())
@@ -359,8 +359,12 @@ class URLTarget(object):
                         if delete_if_successful:
                             try:
                                 os.remove(self.file.saved_to)
-                            except Exception:
-                                pass
+                            except Exception as e:
+                                logging.warning(
+                                    'Could not delete {} after youtube-dl was successful. Error: {}'.format(
+                                        self.file.saved_to, e
+                                    )
+                                )
                         self.move_tmp_file(tmp_file)
                         self.success = True
                         return True
@@ -385,7 +389,9 @@ class URLTarget(object):
             try:
                 os.remove(self.file.saved_to)
             except Exception:
-                pass
+                logging.warning(
+                    'Could not delete {} before download is started. Error: {}'.format(self.file.saved_to, e)
+                )
 
         self.set_path(True)
 
@@ -546,12 +552,12 @@ class URLTarget(object):
 
                 self.lock.release()
                 return True
-            except Exception:
-                pass
+            except Exception as e:
+                logging.warning('Moving the old file {} failed!  Error: {}'.format(old_path, e))
 
             self.lock.release()
         except Exception:
-            pass
+            logging.warning('Moving the old file {} failed unexpectedly!  Error: {}'.format(old_path, e))
 
         return False
 
@@ -642,8 +648,8 @@ class URLTarget(object):
                 try:
                     # remove touched file
                     os.remove(self.file.saved_to)
-                except Exception:
-                    pass
+                except Exception as e:
+                    logging.warning('Could not delete {} after thread failed. Error: {}'.format(self.file.saved_to, e))
             else:
                 # Subtract the already downloaded content in case of an error.
                 self.thread_report[self.thread_id]['total'] -= self.downloaded
