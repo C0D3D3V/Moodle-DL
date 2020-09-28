@@ -5,6 +5,7 @@ import shutil
 import urllib
 import random
 import string
+import logging
 import posixpath
 import traceback
 import threading
@@ -195,13 +196,12 @@ class URLTarget(object):
                 return
             if msg.find('Requested formats are incompatible for merge') >= 0:
                 return
-
-            print('\nyoutube-dl: ' + msg + '\n')
+            logging.warning('youtube-dl: ' + msg)
 
         def error(self, msg):
             if msg.find('Unsupported URL') >= 0:
                 return
-            print('\nyoutube-dl: ' + msg + '\n')
+            logging.error('youtube-dl: ' + msg)
 
     def yt_hook(self, d):
         downloaded_bytes = d.get('downloaded_bytes', 0)
@@ -372,6 +372,10 @@ class URLTarget(object):
         new_name, new_extension = os.path.splitext(new_filename)
         if new_extension == '' and isHTML:
             new_extension = '.html'
+
+        # if self.filename.startswith(('https://', 'http://')):
+        #     self.filename = new_name + new_extension
+
         old_name, old_extension = os.path.splitext(self.filename)
 
         if old_extension != new_extension:
