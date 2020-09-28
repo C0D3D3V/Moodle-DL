@@ -179,7 +179,7 @@ def run_main(storage_path, skip_cert_verify=False, without_downloading_files=Fal
     log_formatter = logging.Formatter('%(asctime)s  %(levelname)s  {%(module)s}  %(message)s', '%Y-%m-%d %H:%M:%S')
     log_file = os.path.join(storage_path, 'MoodleDownloader.log')
     log_handler = RotatingFileHandler(
-        log_file, mode='a', maxBytes=1 * 1024 * 1024, backupCount=2, encoding=None, delay=0
+        log_file, mode='a', maxBytes=1 * 1024 * 1024, backupCount=2, encoding='utf-8', delay=0
     )
 
     log_handler.setFormatter(log_formatter)
