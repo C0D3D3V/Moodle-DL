@@ -8,6 +8,7 @@
         "--enable=W0611",
         "--disable=C0114",
         "--disable=raise-missing-from",
+        "--disable=unnecessary-pass",
         "--max-line-length=120"
     ],
     "python.linting.flake8Enabled": true,
