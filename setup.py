@@ -10,7 +10,7 @@ def readme():
 
 setup(
     name='moodle-dl',
-    version='2.0.2',
+    version='2.0.3',
     description='A Moodle downloader that downloads course content fast from Moodle (eg. lecture pdfs)',
     long_description=readme(),
     long_description_content_type='text/markdown',
@@ -18,7 +18,11 @@ setup(
     author='C0D3D3V',
     license='GPL-3.0',
     packages=find_packages(),
-    entry_points={'console_scripts': ['moodle-dl = moodle_dl.main:main',],},
+    entry_points={
+        'console_scripts': [
+            'moodle-dl = moodle_dl.main:main',
+        ],
+    },
     python_requires='>=3.6',
     install_requires=[
         'sentry_sdk>=0.13.5',
