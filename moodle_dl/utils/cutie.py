@@ -122,7 +122,7 @@ def select(
         caption_indices = []
     while True:
         print(f'\033[{len(options) + 1}A')
-        console_columns = shutil.get_terminal_size().columns - 4
+        console_columns = shutil.get_terminal_size().columns - 5
 
         for i, option in enumerate(options):
             printable_option = option.expandtabs().replace('\n', ' ').replace('\r', ' ')
@@ -214,7 +214,7 @@ def select_multiple(
     while True:
         print(f'\033[{len(options) + 2}A')
         for i, option in enumerate(options):
-            console_columns = shutil.get_terminal_size().columns - 4
+            console_columns = shutil.get_terminal_size().columns - 5
             printable_option = option.expandtabs().replace('\n', ' ').replace('\r', ' ')
             if len(printable_option) > console_columns:
                 printable_option = printable_option[: (console_columns - 2)] + '..'
