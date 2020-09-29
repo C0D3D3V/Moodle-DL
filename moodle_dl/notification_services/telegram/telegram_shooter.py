@@ -34,7 +34,7 @@ class TelegramShooter:
     @staticmethod
     def _check_response_code(response):
         # Normally Telegram answer with response 200
-        if response.status_code != 200:
+        if response.status_code not in [200, 400]:
             raise RuntimeError(
                 'An Unexpected Error happened on side of the'
                 + ' Telegram System!'
@@ -69,7 +69,7 @@ class TelegramShooter:
             if not ok:
                 raise RequestRejectedError(
                     'The Telegram System rejected the Request.'
-                    + (' Details: %s ' % (pprint.pformat(response_extracted, indent=4)),)
+                    + ' Details: {}'.format(response_extracted.get("description", 'None'))
                 )
 
         return response_extracted
