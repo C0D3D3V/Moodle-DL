@@ -12,10 +12,11 @@ License: MIT
 import os
 import shutil
 import getpass
-import readchar
 
-from colorama import init
 from typing import List, Optional
+from colorama import init
+
+import readchar
 
 
 terminal = os.getenv('TERM')

@@ -1,5 +1,3 @@
-import sys
-
 from moodle_dl.moodle_connector.request_helper import RequestHelper
 from moodle_dl.state_recorder.course import Course
 
@@ -88,8 +86,6 @@ class DatabasesHandler:
         if self.version < 2017051500:
             return databases
 
-        intro = '\rDownloading information of the database records'
-
         counter = 0
         total = 0
 
@@ -103,9 +99,6 @@ class DatabasesHandler:
                 counter += 1
                 real_id = databases[course_id][database_id].get('id', 0)
                 data = {'databaseid': real_id}
-
-                if False:
-                    print(intro + ' %3d/%3d [%6s|%6s]\033[K' % (counter, total, course_id, real_id), end='')
 
                 access = self.request_helper.post_REST('mod_data_get_data_access_information', data)
 

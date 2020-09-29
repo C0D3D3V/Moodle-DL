@@ -23,4 +23,3 @@ def obtain_login_token(
         return response.get('token', ''), None
     else:
         return response.get('token', ''), response.get('privatetoken', '')
-

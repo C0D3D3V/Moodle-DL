@@ -68,7 +68,7 @@ class ConfigService:
         for i, course in enumerate(courses):
             choices.append(('%5i\t%s' % (course.id, course.fullname)))
 
-            if ResultsHandler._should_download_course(course.id, download_course_ids, dont_download_course_ids):
+            if ResultsHandler.should_download_course(course.id, download_course_ids, dont_download_course_ids):
                 defaults.append(i)
 
         Log.special('Which of the courses should be downloaded?')
@@ -112,7 +112,7 @@ class ConfigService:
             choices.append('None')
 
             for course in courses:
-                if ResultsHandler._should_download_course(course.id, download_course_ids, dont_download_course_ids):
+                if ResultsHandler.should_download_course(course.id, download_course_ids, dont_download_course_ids):
 
                     current_course_settings = options_of_courses.get(str(course.id), None)
 
@@ -288,13 +288,14 @@ class ConfigService:
 
         self.section_seperator()
         Log.info(
-            'In the descriptions of files, sections, assignments or courses the teacher can add links to webpages,' +
-            ' files or videos. That links can pont to a internal page on moodle or to an external webpage.'
+            'In the descriptions of files, sections, assignments or courses the teacher can add links to webpages,'
+            + ' files or videos. That links can pont to a internal page on moodle or to an external webpage.'
         )
         print('')
 
         download_links_in_descriptions = cutie.prompt_yes_or_no(
-            Log.special_str('Would you like to download links in descriptions?'), default_is_yes=download_links_in_descriptions,
+            Log.special_str('Would you like to download links in descriptions?'),
+            default_is_yes=download_links_in_descriptions,
         )
 
         self.config_helper.set_property('download_links_in_descriptions', download_links_in_descriptions)
@@ -376,7 +377,8 @@ class ConfigService:
 
                 self.section_seperator()
                 Log.warning(
-                    'Warning: Your current filename character map does not match the standard Windows filename character map!'
+                    'Warning: Your current filename character map does not match the standard Windows'
+                    + ' filename character map!'
                 )
                 print('Current filename character map: {}'.format(filename_character_map))
                 load_default_map = cutie.prompt_yes_or_no(

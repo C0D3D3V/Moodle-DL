@@ -6,6 +6,9 @@ BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = range(30, 38)
 
 class Log:
     """
+    Logs a given string to output with colors
+    :param logString: the string that should be logged
+
     The string functions returns the strings that would be logged.
     """
 
@@ -37,11 +40,6 @@ class Log:
     def success_str(logString: str):
         return COLOR_SEQ % GREEN + logString + RESET_SEQ
 
-    """
-    Logs a given string to output with colors
-    :param logString: the string that should be logged
-    """
-
     @staticmethod
     def info(logString: str):
         print(Log.info_str(logString))
@@ -69,4 +67,3 @@ class Log:
     @staticmethod
     def success(logString: str):
         print(Log.success_str(logString))
-

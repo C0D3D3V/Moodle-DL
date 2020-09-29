@@ -1,5 +1,3 @@
-import json
-import pprint
 import urllib
 import requests
 
@@ -39,8 +37,8 @@ class TelegramShooter:
                 'An Unexpected Error happened on side of the'
                 + ' Telegram System!'
                 + (' Status-Code: %s' % str(response.status_code))
-                + ('\nHeader: %s' % (response.headers))
-                + ('\nResponse: %s' % (response.text))
+                + ('\nHeader: %s' % response.headers)
+                + ('\nResponse: %s' % response.text)
             )
 
     def _check_errors(self, response) -> object:

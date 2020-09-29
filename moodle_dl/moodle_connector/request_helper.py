@@ -1,9 +1,7 @@
 import re
 import os
-import ssl
 import json
 import urllib
-import certifi
 import requests
 import logging
 
@@ -186,8 +184,8 @@ class RequestHelper:
             raise RuntimeError(
                 'An Unexpected Error happened on side of the Moodle System!'
                 + (' Status-Code: %s' % str(response.status_code))
-                + ('\nHeader: %s' % (response.headers)
-                + ('\nResponse: %s' % (response.text))
+                + ('\nHeader: %s' % response.headers)
+                + ('\nResponse: %s' % response.text)
             )
 
     def get_simple_moodle_version(self) -> float:

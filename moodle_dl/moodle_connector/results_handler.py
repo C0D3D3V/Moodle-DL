@@ -18,6 +18,8 @@ class ResultsHandler:
         self.version = 2011120500
         self.moodle_domain = moodle_domain
         self.moodle_path = moodle_path
+        self.course_assignments = {}
+        self.course_databases = {}
 
     def setVersion(self, version: int):
         self.version = version
@@ -25,7 +27,7 @@ class ResultsHandler:
         logging.debug('Detected moodle version: %d' % (version))
 
     @staticmethod
-    def _should_download_course(course_id: int, download_course_ids: [int], dont_download_course_ids: [int]) -> bool:
+    def should_download_course(course_id: int, download_course_ids: [int], dont_download_course_ids: [int]) -> bool:
         """
         Checks if a course is in White-list and not in Blacklist
         """

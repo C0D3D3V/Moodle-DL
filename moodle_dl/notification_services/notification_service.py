@@ -16,13 +16,13 @@ class NotificationService:
     @abstractmethod
     def interactively_configure(self) -> None:
         """
-         Walks the User through the configuration of the Notification-Service
-         through an CLI. It also tests and persists the gathered config.
+        Walks the User through the configuration of the Notification-Service
+        through an CLI. It also tests and persists the gathered config.
         """
         pass
 
     @abstractmethod
-    def notify_about_changes_in_results(self, changes: [Course]) -> None:
+    def notify_about_changes_in_moodle(self, changes: [Course]) -> None:
         """
         Sends out a Notification to inform about detected changes for the
         Moodle-Account. The caller shouldn't care about if the sending was

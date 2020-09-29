@@ -4,10 +4,10 @@ import sys
 import time
 import shutil
 import logging
-import certifi
 import threading
-
 from queue import Queue
+import certifi
+
 
 from moodle_dl.utils.logger import Log
 from moodle_dl.state_recorder.course import Course, File
@@ -90,7 +90,7 @@ class DownloadService:
                 if file.deleted is False:
                     self.total_to_download += file.content_filesize
 
-                    save_destination = self.genPath(self.storage_path, course, file)
+                    save_destination = self.gen_path(self.storage_path, course, file)
 
                     self.queue.put(
                         URLTarget(
@@ -108,7 +108,7 @@ class DownloadService:
                     self.total_files += 1
 
     @staticmethod
-    def genPath(storage_path: str, course: Course, file: File):
+    def gen_path(storage_path: str, course: Course, file: File):
         """
         Generates the directory path where a file should be stored
         """
@@ -262,6 +262,5 @@ class DownloadService:
             Log.warning('Error while trying to download files, look at the log for more details.')
 
         for url_target in self.report['failure']:
-            logging.error('Error while trying to download file: %s' % (url_target))
+            logging.error('Error while trying to download file: %s', url_target)
             Log.error('%s\t%s' % (url_target.file.content_filename, url_target.error))
-

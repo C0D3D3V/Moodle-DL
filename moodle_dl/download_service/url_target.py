@@ -9,14 +9,16 @@ import logging
 import posixpath
 import traceback
 import threading
-import html2text
 import contextlib
-import youtube_dl
-import youtube_dl.utils
 
 from pathlib import Path
 from http.cookiejar import MozillaCookieJar
+from urllib.error import ContentTooShortError
 import urllib.parse as urlparse
+
+import html2text
+import youtube_dl
+import youtube_dl.utils
 
 from moodle_dl.state_recorder.file import File
 from moodle_dl.state_recorder.course import Course
@@ -107,7 +109,7 @@ class URLTarget(object):
             try:
                 # raise condition
                 os.makedirs(path)
-            except FileExistsError as e:
+            except FileExistsError:
                 pass
 
     def _rename_if_exists(self, path: str) -> str:
@@ -715,9 +717,7 @@ class URLTarget(object):
                         reporthook(blocknum, bs, size)
 
         if size >= 0 and read < size:
-            raise urllib.ContentTooShortError(
-                'retrieval incomplete: got only %i out of %i bytes' % (read, size), result
-            )
+            raise ContentTooShortError('retrieval incomplete: got only %i out of %i bytes' % (read, size), result)
 
         return result
 
@@ -728,4 +728,3 @@ class URLTarget(object):
             'success': self.success,
             'error': self.error,
         }
-

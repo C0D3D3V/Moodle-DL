@@ -1,5 +1,4 @@
 import os
-import sys
 import logging
 
 from pathlib import Path
@@ -62,7 +61,6 @@ class CookieHandler:
     def delete_cookie_file(self):
         try:
             os.remove(self.cookies_path)
-            pass
         except OSError:
             pass
 

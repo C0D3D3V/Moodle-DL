@@ -14,7 +14,7 @@ import moodle_dl.utils.process_lock as process_lock
 try:
     # In unix readline needs to be loaded so that
     # arrowkeys work in input
-    import readline  # noqa: F401
+    import readline  # pylint: disable=unused-import
 except ImportError:
     pass
 
@@ -457,4 +457,3 @@ def main(args=None):
         run_manage_database(storage_path)
     else:
         run_main(storage_path, skip_cert_verify, without_downloading_files, log_responses)
-

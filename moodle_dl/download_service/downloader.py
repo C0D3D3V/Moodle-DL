@@ -1,6 +1,6 @@
 import threading
 
-from queue import Queue
+from queue import Queue, Empty
 
 from moodle_dl.state_recorder.state_recorder import StateRecorder
 
@@ -41,7 +41,7 @@ class Downloader(threading.Thread):
             try:
                 # raise condition
                 url_target = self.queue.get(False)
-            except Queue.Empty:
+            except Empty:
                 break
 
             response = url_target.download(self.thread_id)

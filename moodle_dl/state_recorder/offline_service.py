@@ -30,7 +30,7 @@ class OfflineService:
         download_links_in_descriptions = self.config_helper.get_download_links_in_descriptions()
         download_databases = self.config_helper.get_download_databases()
 
-        stored_files = MoodleService._filter_courses(
+        stored_files = MoodleService.filter_courses(
             stored_files,
             download_course_ids,
             dont_download_course_ids,

@@ -1,4 +1,3 @@
-import sys
 import shutil
 import logging
 
@@ -218,7 +217,7 @@ class MoodleService:
             courses = []
             # Filter unselected courses
             for course in courses_list:
-                if ResultsHandler._should_download_course(course.id, download_course_ids, dont_download_course_ids):
+                if ResultsHandler.should_download_course(course.id, download_course_ids, dont_download_course_ids):
                     courses.append(course)
 
             assignments = assignments_handler.fetch_assignments(courses)
@@ -264,7 +263,7 @@ class MoodleService:
         changes = self.recorder.changes_of_new_version(filtered_courses)
 
         # Filter changes
-        changes = self._filter_courses(
+        changes = self.filter_courses(
             changes,
             download_course_ids,
             dont_download_course_ids,
@@ -292,7 +291,7 @@ class MoodleService:
         return courses
 
     @staticmethod
-    def _filter_courses(
+    def filter_courses(
         changes: [Course],
         download_course_ids: [int],
         dont_download_course_ids: [int],
@@ -312,7 +311,7 @@ class MoodleService:
                                     should be downloaded
         @param download_descriptions: boolean if descriptions
                                     should be downloaded
-        @param download_links_in_descriptions: boolean if links in descriptions should be downloaded 
+        @param download_links_in_descriptions: boolean if links in descriptions should be downloaded
         @param download_databases: boolean if databases should be downloaded
         @return: filtered changes course list
         """
@@ -349,7 +348,7 @@ class MoodleService:
                 course.files = course_files
 
             if (
-                ResultsHandler._should_download_course(course.id, download_course_ids, dont_download_course_ids)
+                ResultsHandler.should_download_course(course.id, download_course_ids, dont_download_course_ids)
                 and len(course.files) > 0
             ):
                 filtered_changes.append(course)

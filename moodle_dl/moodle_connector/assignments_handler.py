@@ -1,5 +1,3 @@
-import sys
-
 from moodle_dl.state_recorder.course import Course
 from moodle_dl.moodle_connector.request_helper import RequestHelper
 

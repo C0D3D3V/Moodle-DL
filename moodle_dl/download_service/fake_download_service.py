@@ -38,7 +38,7 @@ class FakeDownloadService:
             for file in course.files:
                 if file.deleted is False:
 
-                    save_destination = DownloadService.genPath(self.storage_path, course, file)
+                    save_destination = DownloadService.gen_path(self.storage_path, course, file)
 
                     filename = PathTools.to_valid_name(file.content_filename)
 
@@ -55,4 +55,6 @@ class FakeDownloadService:
                     self.state_recorder.save_file(file, course.id, course.fullname)
 
     def run(self):
+        """Dummy function
+        """
         Log.success('All files stored in the Database!')

@@ -1,7 +1,6 @@
 import os
 import html
 
-from sys import platform
 from pathlib import Path
 
 
