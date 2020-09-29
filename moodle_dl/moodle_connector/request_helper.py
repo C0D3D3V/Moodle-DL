@@ -185,9 +185,9 @@ class RequestHelper:
         if response.status_code != 200:
             raise RuntimeError(
                 'An Unexpected Error happened on side of the Moodle System!'
-                + (' Status-Code: %s' % str(response.getcode()))
-                + ('\nHeader: %s' % (response.getheaders()))
-                + ('\nResponse: %s' % (response.read()))
+                + (' Status-Code: %s' % str(response.status_code))
+                + ('\nHeader: %s' % (response.headers)
+                + ('\nResponse: %s' % (response.text))
             )
 
     def get_simple_moodle_version(self) -> float:

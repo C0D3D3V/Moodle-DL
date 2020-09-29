@@ -38,9 +38,9 @@ class TelegramShooter:
             raise RuntimeError(
                 'An Unexpected Error happened on side of the'
                 + ' Telegram System!'
-                + (' Status-Code: %s' % str(response.getcode()))
-                + ('\nHeader: %s' % (response.getheaders()))
-                + ('\nResponse: %s' % (response.read()))
+                + (' Status-Code: %s' % str(response.status_code))
+                + ('\nHeader: %s' % (response.headers))
+                + ('\nResponse: %s' % (response.text))
             )
 
     def _check_errors(self, response) -> object:
