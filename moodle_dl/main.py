@@ -193,6 +193,8 @@ def run_main(storage_path, skip_cert_verify=False, without_downloading_files=Fal
     logging.info('--- main started ---------------------')
     Log.info('Moodle Downloader starting...')
     logging.debug('moodle-dl version: ' + __version__)
+    logging.debug('python version: ' + ".".join(map(str, sys.version_info[:3])))
+
     if IS_DEBUG:
         logging.info('Debug-Mode detected. Errors will not be logged but instead re-risen.')
         app_log.addHandler(ReRaiseOnError())

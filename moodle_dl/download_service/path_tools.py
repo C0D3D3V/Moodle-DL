@@ -57,7 +57,7 @@ class PathTools:
         @param file_path: The additional path of a file (subdirectory).
         @return: A path where the file should be saved.
         """
-        path = (
+        path = str(
             Path(storage_path)
             / PathTools.to_valid_name(course_fullname)
             / PathTools.to_valid_name(file_section_name)
@@ -77,7 +77,7 @@ class PathTools:
         @param file_path: The additional path of a file (subdirectory).
         @return: A path where the file should be saved.
         """
-        path = (
+        path = str(
             Path(storage_path)
             / storage_path
             / PathTools.to_valid_name(course_fullname)
@@ -95,5 +95,5 @@ class PathTools:
         @param file_path: The additional path of a file (subdirectory).
         @return: A path where the file should be saved.
         """
-        path = Path(storage_path) / storage_path / PathTools.to_valid_name(course_fullname) / file_path.strip('/')
+        path = str(Path(storage_path) / storage_path / PathTools.to_valid_name(course_fullname) / file_path.strip('/'))
         return path
