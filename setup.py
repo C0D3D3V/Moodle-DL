@@ -2,6 +2,10 @@ from os import path
 from setuptools import setup, find_packages
 
 
+# Get the version from moodle_dl/version.py without importing the package
+exec(compile(open('moodle_dl/version.py').read(), 'moodle_dl/version.py', 'exec'))
+
+
 def readme():
     this_directory = path.abspath(path.dirname(__file__))
     with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
@@ -10,7 +14,7 @@ def readme():
 
 setup(
     name='moodle-dl',
-    version='2.0.4',
+    version=__version__,
     description='A Moodle downloader that downloads course content fast from Moodle (eg. lecture pdfs)',
     long_description=readme(),
     long_description_content_type='text/markdown',

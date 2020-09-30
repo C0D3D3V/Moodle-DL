@@ -22,6 +22,7 @@ from logging.handlers import RotatingFileHandler
 
 from moodle_dl.utils import cutie
 from moodle_dl.utils.logger import Log
+from moodle_dl.version import __version__
 from moodle_dl.download_service.path_tools import PathTools
 from moodle_dl.config_service.config_helper import ConfigHelper
 from moodle_dl.config_service.config_service import ConfigService
@@ -191,6 +192,7 @@ def run_main(storage_path, skip_cert_verify=False, without_downloading_files=Fal
 
     logging.info('--- main started ---------------------')
     Log.info('Moodle Downloader starting...')
+    logging.debug('moodle-dl version: ' + __version__)
     if IS_DEBUG:
         logging.info('Debug-Mode detected. Errors will not be logged but instead re-risen.')
         app_log.addHandler(ReRaiseOnError())
@@ -298,6 +300,10 @@ def get_parser():
         description=('Moodle Downloader 2 helps you download all the course files  of your Moodle account.')
     )
     group = parser.add_mutually_exclusive_group()
+    group.add_argument(
+        '-v', '--version', action='version', version='moodle-dl ' + __version__, help='Print program version and exit'
+    )
+
     group.add_argument(
         '-i',
         '--init',
