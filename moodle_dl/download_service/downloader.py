@@ -17,8 +17,7 @@ class Downloader(threading.Thread):
         report: [],
         state_recorder: StateRecorder,
         thread_id: int,
-        lock: threading.Lock,
-        url_tries: int,
+        db_lock: threading.Lock,
     ):
         """
         Initiates a downloader thread.
@@ -29,9 +28,8 @@ class Downloader(threading.Thread):
         self.queue = queue
         self.report = report
         self.thread_id = thread_id
-        self.lock = lock
+        self.db_lock = db_lock
         self.state_recorder = state_recorder
-        self.url_tries = url_tries
 
     def run(self):
         """
@@ -48,22 +46,15 @@ class Downloader(threading.Thread):
 
             # All information is still saved in url_target
 
-            # If a download fails but the maximum number of
-            # attempts is not reached, the URL target would
-            # be returned to the queue
-            if response is False and url_target.url_tried < self.url_tries:
-                self.queue.put(url_target)
-
-            # If a download fails but the maximum number of
-            # attempts is exhausted, add it to the error report.
-            elif response is False and url_target.url_tried == self.url_tries:
+            # If a download fails, add it to the error report.
+            if response is False:
                 self.report['failure'].append(url_target)
 
             # If a download was successful, store it in the database.
             elif response is True:
-                self.lock.acquire()
+                self.db_lock.acquire()
                 self.state_recorder.save_file(url_target.file, url_target.course.id, url_target.course.fullname)
-                self.lock.release()
+                self.db_lock.release()
                 self.report['success'].append(url_target)
 
             self.queue.task_done()

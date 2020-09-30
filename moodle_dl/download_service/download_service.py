@@ -3,7 +3,6 @@ import ssl
 import sys
 import time
 import shutil
-import logging
 import threading
 from queue import Queue
 import certifi
@@ -43,10 +42,6 @@ class DownloadService:
             # if debugging only one thread should be started
             DownloadService.thread_count = 1
 
-        # How often should the downloader try to download
-        # a file again if an error occurs.
-        DownloadService.url_tries = 1
-
         self.courses = courses
         self.state_recorder = moodle_service.recorder
         self.token = moodle_service.config_helper.get_token()
@@ -58,9 +53,9 @@ class DownloadService:
         self.threads = []
         # A lock to stabilize thread insecure resources.
         # writing in DB
-        self.lock = threading.Lock()
+        self.db_lock = threading.Lock()
         # reading file system
-        self.lock2 = threading.Lock()
+        self.fs_lock = threading.Lock()
 
         # Sets the download options
         self.options = moodle_service.config_helper.get_download_options()
@@ -99,7 +94,7 @@ class DownloadService:
                             save_destination,
                             self.token,
                             self.thread_report,
-                            self.lock2,
+                            self.fs_lock,
                             self.ssl_context,
                             self.options,
                         )
@@ -160,7 +155,7 @@ class DownloadService:
         with the queue and starts them.
         """
         for i in range(self.thread_count):
-            thread = Downloader(self.queue, self.report, self.state_recorder, i, self.lock, self.url_tries)
+            thread = Downloader(self.queue, self.report, self.state_recorder, i, self.db_lock)
             thread.start()
             self.threads.append(thread)
 
@@ -262,5 +257,4 @@ class DownloadService:
             Log.warning('Error while trying to download files, look at the log for more details.')
 
         for url_target in self.report['failure']:
-            logging.error('Error while trying to download file: %s', url_target)
             Log.error('%s\t%s' % (url_target.file.content_filename, url_target.error))

@@ -38,7 +38,7 @@ class URLTarget(object):
         destination: str,
         token: str,
         thread_report: [],
-        lock: threading.Lock,
+        fs_lock: threading.Lock,
         ssl_context: ssl.SSLContext,
         options: {},
     ):
@@ -50,15 +50,12 @@ class URLTarget(object):
         self.course = course
         self.destination = destination
         self.token = token
-        self.lock = lock
+        self.fs_lock = fs_lock
         self.ssl_context = ssl_context
         self.options = options
 
         # get valid filename
         self.filename = PathTools.to_valid_name(self.file.content_filename)
-
-        # Counts the download attempts
-        self.url_tried = 0
 
         # To return errors
         self.success = False
@@ -126,7 +123,7 @@ class URLTarget(object):
         # this is some kind of raise condition
         # Even though it should hardly ever happen,
         # it is possible that threads try to create the same file
-        self.lock.acquire()
+        self.fs_lock.acquire()
         while os.path.exists(new_path):
             count += 1
 
@@ -137,7 +134,7 @@ class URLTarget(object):
             new_path = str(Path(destination) / new_filename)
 
         Path(new_path).touch()
-        self.lock.release()
+        self.fs_lock.release()
 
         return new_path
 
@@ -165,7 +162,7 @@ class URLTarget(object):
         # this is some kind of raise condition
         # Even though it should hardly ever happen,
         # it is possible that threads try to create the same file
-        self.lock.acquire()
+        self.fs_lock.acquire()
         while os.path.exists(new_path):
             count += 1
 
@@ -179,10 +176,10 @@ class URLTarget(object):
             shutil.move(old_path, new_path)
             self.file.old_file.saved_to = new_path
         except Exception:
-            self.lock.release()
+            self.fs_lock.release()
             return False
 
-        self.lock.release()
+        self.fs_lock.release()
         return True
 
     class YtLogger(object):
@@ -271,7 +268,7 @@ class URLTarget(object):
                 content_filename = os.path.basename(new_path)
                 destination = os.path.dirname(new_path)
 
-                self.lock.acquire()
+                self.fs_lock.acquire()
                 while os.path.exists(new_path):
                     count += 1
 
@@ -286,7 +283,7 @@ class URLTarget(object):
                     shutil.move(one_tmp_file, self.file.saved_to)
                 except Exception as e:
                     logging.warning('Failed to move the temporary video file {}!  Error: {}'.format(one_tmp_file, e))
-                self.lock.release()
+                self.fs_lock.release()
 
                 self.file.time_stamp = int(time.time())
 
@@ -544,7 +541,7 @@ class URLTarget(object):
             return True
         except FileExistsError:
             # On Windows, the temporary file must be deleted first.
-            self.lock.acquire()
+            self.fs_lock.acquire()
 
             try:
                 os.remove(self.file.saved_to)
@@ -552,12 +549,12 @@ class URLTarget(object):
                 self.file.time_stamp = int(time.time())
                 self.success = True
 
-                self.lock.release()
+                self.fs_lock.release()
                 return True
             except Exception as e:
                 logging.warning('Moving the old file {} failed!  Error: {}'.format(old_path, e))
 
-            self.lock.release()
+            self.fs_lock.release()
         except Exception:
             logging.warning('Moving the old file {} failed unexpectedly!  Error: {}'.format(old_path, e))
 
@@ -568,7 +565,6 @@ class URLTarget(object):
         Downloads a file
         """
         self.thread_id = thread_id
-        self.url_tried += 1
 
         # reset download status
         self.downloaded = 0
@@ -656,6 +652,8 @@ class URLTarget(object):
                 # Subtract the already downloaded content in case of an error.
                 self.thread_report[self.thread_id]['total'] -= self.downloaded
                 self.thread_report[self.thread_id]['percentage'] = 100
+
+            logging.error('Error while trying to download file: %s', self)
 
         return self.success
 
