@@ -12,9 +12,10 @@
 
 ### Setup
 1. Install [Python](https://www.python.org/) >=3.7
-2. Run `pip install moodle-dl`  
+2. Install [ffmpeg](http://blog.gregzaal.com/how-to-install-ffmpeg-on-windows/)
+3. Run `pip install moodle-dl`  
     <sup>(To upgrade from an older Version use `pip install -U moodle-dl` instead)</sup>
-3. Run `moodle-dl --init` in the desired download directory.
+4. Run `moodle-dl --init` in the desired download directory.
 
 
 If you run the program on **Windows**, please use [Powershell or CMD](https://www.isunshare.com/windows-10/5-ways-to-open-windows-powershell-in-windows-10.html). Please do not use a mintty like MINGW or similar.
@@ -41,7 +42,7 @@ If you run the program on **Windows**, please use [Powershell or CMD](https://ww
     - You can set whether submissions (files uploaded to Assignments by yourself or a teacher) should be downloaded.
     - You can choose to download descriptions of Moodle courses. 
     - You can choose to download databases of Moodle courses. 
-    - You can set if external linked files should be downloaded (files like youtube videos). To download videos correctly and in high quality you have to install [ffmpeg](http://blog.gregzaal.com/how-to-install-ffmpeg-on-windows/).
+    - You can set if external linked files should be downloaded (files like youtube videos).
     - It does not fetch the current state of your Moodle-Account.
 - `moodle-dl --new-token`
     - Overrides the login-token with a newly obtained one.

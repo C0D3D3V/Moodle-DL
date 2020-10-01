@@ -207,7 +207,7 @@ def run_main(storage_path, verbose=False, skip_cert_verify=False, without_downlo
         logging.debug('Is ffmpeg available: %s', ffmpeg_available)
 
     if IS_DEBUG:
-        logging.info('Debug-Mode detected. Errors will not be logged but instead re-risen.')
+        logging.info('Debug-Mode detected. Errors will be re-risen.')
         app_log.addHandler(ReRaiseOnError())
 
     try:
