@@ -24,7 +24,7 @@ class ResultsHandler:
     def setVersion(self, version: int):
         self.version = version
 
-        logging.debug('Detected moodle version: %d' % (version))
+        logging.debug('Detected moodle version: %d', version)
 
     @staticmethod
     def should_download_course(course_id: int, download_course_ids: [int], dont_download_course_ids: [int]) -> bool:

@@ -1,3 +1,6 @@
+from moodle_dl.download_service.path_tools import PathTools
+
+
 class File:
     def __init__(
         self,
@@ -151,18 +154,18 @@ class File:
         message = 'File ('
 
         message += 'module_id: %s' % (self.module_id)
-        message += ', section_name: %s' % (self.section_name)
-        message += ', module_name: %s' % (self.module_name)
+        message += ', section_name: "%s"' % (PathTools.to_valid_name(self.section_name))
+        message += ', module_name: "%s"' % (PathTools.to_valid_name(self.module_name))
         message += ', content_filepath: %s' % (self.content_filepath)
-        message += ', content_filename: %s' % (self.content_filename)
-        message += ', content_fileurl: %s' % (self.content_fileurl)
+        message += ', content_filename: "%s"' % (PathTools.to_valid_name(self.content_filename))
+        message += ', content_fileurl: "%s"' % (self.content_fileurl)
         message += ', content_filesize: %s' % (self.content_filesize)
         message += ', content_timemodified: %s' % (self.content_timemodified)
         message += ', module_modname: %s' % (self.module_modname)
         message += ', content_type: %s' % (self.content_type)
         message += ', content_isexternalfile: %s' % (self.content_isexternalfile)
 
-        message += ', saved_to: %s' % (self.saved_to)
+        message += ', saved_to: "%s"' % (self.saved_to)
         message += ', time_stamp: %s' % (self.time_stamp)
         message += ', modified: %s' % (self.modified)
         message += ', moved: %s' % (self.moved)

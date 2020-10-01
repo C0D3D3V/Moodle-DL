@@ -25,9 +25,9 @@ class ConsoleService(NotificationService):
             diff_count += len(course.files)
 
         if diff_count > 0:
-            logging.info('%s changes found for the configured Moodle-Account.' % (diff_count))
-
-            Log.success('%s changes found for the configured Moodle-Account.' % (diff_count))
+            msg_changes = '%s changes found for the configured Moodle-Account.'
+            logging.info(msg_changes, diff_count)
+            Log.success(msg_changes % (diff_count))
 
         for course in changes:
             if len(course.files) == 0:

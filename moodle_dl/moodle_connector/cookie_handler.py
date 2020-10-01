@@ -38,7 +38,7 @@ class CookieHandler:
             autologin_key_result = self.request_helper.post_REST('tool_mobile_get_autologin_key', extra_data)
             return autologin_key_result
         except RequestRejectedError as e:
-            logging.debug("Cookie lockout: {}".format(e))  # , extra={'exception': e}
+            logging.debug("Cookie lockout: %s", e)  # , extra={'exception': e}
             return None
 
     def test_cookies(self, moodle_test_url: str) -> bool:

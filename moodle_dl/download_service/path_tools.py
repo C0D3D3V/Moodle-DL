@@ -19,9 +19,16 @@ class PathTools:
         Returns:
             str: The filtered string, that can be used as a filename.
         """
+
+        if name is None:
+            return None
+
         # Moodle saves the title of a section in HTML-Format,
         # so we need to unescape the string
-        name = html.unescape(name)
+        try:
+            name = html.unescape(name)
+        except Exception:
+            pass
 
         # Forward and Backward Slashes are not good for filenames
         for char in PathTools.filename_character_map:

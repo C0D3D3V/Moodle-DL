@@ -160,7 +160,7 @@ class StateRecorder:
                 conn.commit()
 
             conn.commit()
-            logging.debug('Database Version: %s' % str(current_version))
+            logging.debug('Database Version: %s', str(current_version))
 
             conn.close()
 

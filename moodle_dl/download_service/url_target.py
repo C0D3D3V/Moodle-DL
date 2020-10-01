@@ -187,20 +187,29 @@ class URLTarget(object):
         Just a logger for Youtube-DL
         """
 
+        def __init__(self, thread_id: int):
+            self.thread_id = thread_id
+
         def debug(self, msg):
+            if msg.find('[download]') >= 0:
+                return
+            logging.debug('T%s - youtube-dl Debug: %s', self.thread_id, msg)
             pass
 
         def warning(self, msg):
             if msg.find('Falling back') >= 0:
+                logging.debug('T%s - youtube-dl Warning: %s', self.thread_id, msg)
                 return
             if msg.find('Requested formats are incompatible for merge') >= 0:
+                logging.debug('T%s - youtube-dl Warning: %s', self.thread_id, msg)
                 return
-            logging.warning('youtube-dl: ' + msg)
+            logging.warning('T%s - youtube-dl Warning: %s', self.thread_id, msg)
 
         def error(self, msg):
             if msg.find('Unsupported URL') >= 0:
+                logging.debug('T%s - youtube-dl Error: %s', self.thread_id, msg)
                 return
-            logging.error('youtube-dl: ' + msg)
+            logging.error('T%s - youtube-dl Error: %s', self.thread_id, msg)
 
     def yt_hook(self, d):
         downloaded_bytes = d.get('downloaded_bytes', 0)
@@ -282,7 +291,9 @@ class URLTarget(object):
                 try:
                     shutil.move(one_tmp_file, self.file.saved_to)
                 except Exception as e:
-                    logging.warning('Failed to move the temporary video file {}!  Error: {}'.format(one_tmp_file, e))
+                    logging.warning(
+                        'T%s - Failed to move the temporary video file %s!  Error: %s', self.thread_id, one_tmp_file, e
+                    )
                 self.fs_lock.release()
 
                 self.file.time_stamp = int(time.time())
@@ -340,7 +351,7 @@ class URLTarget(object):
             tmp_filename = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
             tmp_file = str(Path(self.destination) / tmp_filename)
             ydl_opts = {
-                'logger': self.YtLogger(),
+                'logger': self.YtLogger(self.thread_id),
                 'progress_hooks': [self.yt_hook],
                 'outtmpl': (tmp_file + '.%(ext)s'),
                 'nocheckcertificate': True,
@@ -360,9 +371,10 @@ class URLTarget(object):
                                 os.remove(self.file.saved_to)
                             except Exception as e:
                                 logging.warning(
-                                    'Could not delete {} after youtube-dl was successful. Error: {}'.format(
-                                        self.file.saved_to, e
-                                    )
+                                    'T%s - Could not delete %s after youtube-dl was successful. Error: %s',
+                                    self.thread_id,
+                                    self.file.saved_to,
+                                    e,
                                 )
                         self.move_tmp_file(tmp_file)
                         self.success = True
@@ -389,7 +401,10 @@ class URLTarget(object):
                 os.remove(self.file.saved_to)
             except Exception:
                 logging.warning(
-                    'Could not delete {} before download is started. Error: {}'.format(self.file.saved_to, e)
+                    'T%s - Could not delete %s before download is started. Error: %s',
+                    self.thread_id,
+                    self.file.saved_to,
+                    e,
                 )
 
         self.set_path(True)
@@ -552,11 +567,11 @@ class URLTarget(object):
                 self.fs_lock.release()
                 return True
             except Exception as e:
-                logging.warning('Moving the old file {} failed!  Error: {}'.format(old_path, e))
+                logging.warning('T%s - Moving the old file %s failed!  Error: %s', self.thread_id, old_path, e)
 
             self.fs_lock.release()
         except Exception:
-            logging.warning('Moving the old file {} failed unexpectedly!  Error: {}'.format(old_path, e))
+            logging.warning('T%s - Moving the old file %s failed unexpectedly!  Error: %s', self.thread_id, old_path, e)
 
         return False
 
@@ -573,6 +588,7 @@ class URLTarget(object):
         self.thread_report[self.thread_id]['current_url'] = self.file.content_fileurl
 
         try:
+            logging.debug('T%s - Starting downloading of: %s', self.thread_id, self)
             self._create_dir(self.destination)
 
             # if file was modified try rename the old file,
@@ -642,18 +658,24 @@ class URLTarget(object):
             except Exception:
                 pass
 
+            logging.error('T%s - Error while trying to download file: %s', self.thread_id, self)
+
             if self.downloaded == 0 and filesize == 0:
                 try:
                     # remove touched file
-                    os.remove(self.file.saved_to)
+                    if os.path.exists(self.file.saved_to):
+                        os.remove(self.file.saved_to)
                 except Exception as e:
-                    logging.warning('Could not delete {} after thread failed. Error: {}'.format(self.file.saved_to, e))
+                    logging.warning(
+                        'T%s - Could not delete %s after thread failed. Error: %s',
+                        self.thread_id,
+                        self.file.saved_to,
+                        e,
+                    )
             else:
                 # Subtract the already downloaded content in case of an error.
                 self.thread_report[self.thread_id]['total'] -= self.downloaded
                 self.thread_report[self.thread_id]['percentage'] = 100
-
-            logging.error('Error while trying to download file: %s', self)
 
         return self.success
 
@@ -721,8 +743,9 @@ class URLTarget(object):
 
     def __str__(self):
         # URLTarget to string
-        return 'URLTarget (%(file)s, %(success)s, %(error)s)' % {
+        return 'URLTarget (%(file)s, %(course)s, %(success)s, Error: %(error)s)' % {
             'file': self.file,
+            'course': self.course,
             'success': self.success,
             'error': self.error,
         }

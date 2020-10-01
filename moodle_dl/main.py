@@ -6,6 +6,9 @@ import sys
 import logging
 import argparse
 import traceback
+
+from shutil import which
+
 import sentry_sdk
 
 import moodle_dl.utils.process_lock as process_lock
@@ -19,7 +22,6 @@ except ImportError:
     pass
 
 from logging.handlers import RotatingFileHandler
-
 from moodle_dl.utils import cutie
 from moodle_dl.utils.logger import Log
 from moodle_dl.version import __version__
@@ -198,20 +200,25 @@ def run_main(storage_path, verbose=False, skip_cert_verify=False, without_downlo
 
     logging.info('--- moodle-dl started ---------------------')
     Log.info('Moodle Downloader starting...')
-    logging.debug('moodle-dl version: ' + __version__)
-    logging.debug('python version: ' + ".".join(map(str, sys.version_info[:3])))
+    if verbose:
+        logging.debug('moodle-dl version: %s', __version__)
+        logging.debug('python version: %s', ".".join(map(str, sys.version_info[:3])))
+        ffmpeg_available = which('ffmpeg') is not None
+        logging.debug('Is ffmpeg available: %s', ffmpeg_available)
 
     if IS_DEBUG:
         logging.info('Debug-Mode detected. Errors will not be logged but instead re-risen.')
         app_log.addHandler(ReRaiseOnError())
 
     try:
-        logging.debug('Loading config...')
-        Log.debug('Loading config...')
+        msg_load_config = 'Loading config...'
+        logging.debug(msg_load_config)
+        Log.debug(msg_load_config)
+
         config = ConfigHelper(storage_path)
         config.load()
     except BaseException as e:
-        logging.error('Error while trying to load the Configuration! {} Exiting...'.format(e), extra={'exception': e})
+        logging.error('Error while trying to load the Configuration! %s Exiting...', e, extra={'exception': e})
         Log.error('Error while trying to load the Configuration!')
         sys.exit(-1)
 
@@ -235,18 +242,23 @@ def run_main(storage_path, verbose=False, skip_cert_verify=False, without_downlo
 
         moodle = MoodleService(config, storage_path, skip_cert_verify, log_responses)
 
-        logging.debug('Checking for changes for the configured Moodle-Account....')
-        Log.debug('Checking for changes for the configured Moodle-Account...')
+        msg_checking_for_changes = 'Checking for changes for the configured Moodle-Account....'
+        logging.debug(msg_checking_for_changes)
+        Log.debug(msg_checking_for_changes)
         changed_courses = moodle.fetch_state()
 
         if log_responses:
-            resonses_logged = "All JSON-responses from Moodle have been written to the responses.log file. Exiting..."
-            logging.debug(resonses_logged)
-            Log.success(resonses_logged)
+            msg_responses_logged = (
+                "All JSON-responses from Moodle have been written to the responses.log file. Exiting..."
+            )
+            logging.debug(msg_responses_logged)
+            Log.success(msg_responses_logged)
+            process_lock.unlock(storage_path)
             return
 
-        logging.debug('Start downloading changed files...')
-        Log.debug('Start downloading changed files...')
+        msg_start_downloading = 'Start downloading changed files...'
+        logging.debug(msg_start_downloading)
+        Log.debug(msg_start_downloading)
 
         if without_downloading_files:
             downloader = FakeDownloadService(changed_courses, moodle, storage_path)
@@ -264,8 +276,9 @@ def run_main(storage_path, verbose=False, skip_cert_verify=False, without_downlo
             moodle.recorder.notified(changed_courses_to_notify)
 
         else:
-            logging.info('No changes found for the configured Moodle-Account.')
-            Log.warning('No changes found for the configured Moodle-Account.')
+            msg_no_changes = 'No changes found for the configured Moodle-Account.'
+            logging.info(msg_no_changes)
+            Log.warning(msg_no_changes)
 
         process_lock.unlock(storage_path)
 
