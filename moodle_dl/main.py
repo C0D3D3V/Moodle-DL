@@ -175,7 +175,7 @@ def run_change_notification_telegram(storage_path):
     Log.success('Telegram Configuration successfully updated!')
 
 
-def run_main(storage_path, skip_cert_verify=False, without_downloading_files=False, log_responses=False):
+def run_main(storage_path, verbose=False, skip_cert_verify=False, without_downloading_files=False, log_responses=False):
 
     log_formatter = logging.Formatter('%(asctime)s  %(levelname)s  {%(module)s}  %(message)s', '%Y-%m-%d %H:%M:%S')
     log_file = os.path.join(storage_path, 'MoodleDownloader.log')
@@ -184,13 +184,19 @@ def run_main(storage_path, skip_cert_verify=False, without_downloading_files=Fal
     )
 
     log_handler.setFormatter(log_formatter)
-    log_handler.setLevel(logging.DEBUG)
+    if verbose:
+        log_handler.setLevel(logging.DEBUG)
+    else:
+        log_handler.setLevel(logging.INFO)
 
     app_log = logging.getLogger()
-    app_log.setLevel(logging.DEBUG)
+    if verbose:
+        app_log.setLevel(logging.DEBUG)
+    else:
+        app_log.setLevel(logging.INFO)
     app_log.addHandler(log_handler)
 
-    logging.info('--- main started ---------------------')
+    logging.info('--- moodle-dl started ---------------------')
     Log.info('Moodle Downloader starting...')
     logging.debug('moodle-dl version: ' + __version__)
     logging.debug('python version: ' + ".".join(map(str, sys.version_info[:3])))
@@ -232,6 +238,12 @@ def run_main(storage_path, skip_cert_verify=False, without_downloading_files=Fal
         logging.debug('Checking for changes for the configured Moodle-Account....')
         Log.debug('Checking for changes for the configured Moodle-Account...')
         changed_courses = moodle.fetch_state()
+
+        if log_responses:
+            resonses_logged = "All JSON-responses from Moodle have been written to the responses.log file. Exiting..."
+            logging.debug(resonses_logged)
+            Log.success(resonses_logged)
+            return
 
         logging.debug('Start downloading changed files...')
         Log.debug('Start downloading changed files...')
@@ -302,8 +314,9 @@ def get_parser():
         description=('Moodle Downloader 2 helps you download all the course files  of your Moodle account.')
     )
     group = parser.add_mutually_exclusive_group()
+
     group.add_argument(
-        '-v', '--version', action='version', version='moodle-dl ' + __version__, help='Print program version and exit'
+        '--version', action='version', version='moodle-dl ' + __version__, help='Print program version and exit'
     )
 
     group.add_argument(
@@ -396,6 +409,14 @@ def get_parser():
     )
 
     parser.add_argument(
+        '-v',
+        '--verbose',
+        default=False,
+        action='store_true',
+        help='Print various debugging information',
+    )
+
+    parser.add_argument(
         '--skip-cert-verify',
         default=False,
         action='store_true',
@@ -445,6 +466,7 @@ def main(args=None):
     args = parser.parse_args(args)
 
     use_sso = args.sso
+    verbose = args.verbose
     storage_path = args.path
     skip_cert_verify = args.skip_cert_verify
     without_downloading_files = args.without_downloading_files
@@ -464,4 +486,4 @@ def main(args=None):
     elif args.manage_database:
         run_manage_database(storage_path)
     else:
-        run_main(storage_path, skip_cert_verify, without_downloading_files, log_responses)
+        run_main(storage_path, verbose, skip_cert_verify, without_downloading_files, log_responses)

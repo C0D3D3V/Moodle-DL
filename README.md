@@ -11,7 +11,7 @@
 
 
 ### Setup
-1. Install [Python](https://www.python.org/) >=3.6
+1. Install [Python](https://www.python.org/) >=3.7
 2. Run `pip install moodle-dl`  
     <sup>(To upgrade from an older Version use `pip install -U moodle-dl` instead)</sup>
 3. Run `moodle-dl --init` in the desired download directory.
@@ -61,7 +61,8 @@ If you run the program on **Windows**, please use [Powershell or CMD](https://ww
 - `moodle-dl --manage-database`
     - To manage the offline database.
     - It allows you to delete entries from the database that are no longer available locally so that they can be downloaded again.
-
+- `moodle-dl --version`
+    - Print program version and exit
 
 ### Options
 Options can be combined with all the actions mentioned above.
@@ -71,6 +72,9 @@ Options can be combined with all the actions mentioned above.
     - `PATH` must be an existing directory in which you have read and write access.
     - Default: current working directory
 
+- `--verbose`
+    - Print various debugging information
+  
 - `--skip-cert-verify`
     - This flag is used to skip the certification verification while sending requests to Moodle.
     - Warning: This might lead to security flaws and should only be used in non-production environments.
