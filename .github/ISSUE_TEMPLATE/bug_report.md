@@ -25,7 +25,17 @@ Also, be sure to check our documentation first: https://github.com/C0D3D3V/Moodl
 
 ## Steps to reproduce the issue
 
-<!-- include screenshots, logs (from terminal and log file), code or other info to help explain your problem -->
+<!-- Include screenshots-->
+
+<!-- Include the terminal protocol--> 
+
+<!-- 
+Backup the `MoodleDownloader.log` log file.
+Run: `moodle-dl --verbose` to activate the verbose mode. 
+Attach the verbose `MoodleDownloader.log` log file to the issue 
+-->
+
+<!-- Include code or other info to help explain your problem -->
 
 
 ## Technical details
