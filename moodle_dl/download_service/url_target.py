@@ -376,6 +376,7 @@ class URLTarget(object):
                                     self.file.saved_to,
                                     e,
                                 )
+                                self.log_exception_extras(e)
                         self.move_tmp_file(tmp_file)
                         self.success = True
                         return True
@@ -523,14 +524,11 @@ class URLTarget(object):
         description.close()
 
         if to_save == '':
-            try:
-                os.remove(self.file.saved_to)
+            os.remove(self.file.saved_to)
 
-                self.file.time_stamp = int(time.time())
+            self.file.time_stamp = int(time.time())
 
-                self.success = True
-            except Exception as e:
-                self.error = traceback.format_exc() + '\nError:' + str(e)
+            self.success = True
         else:
             self.file.time_stamp = int(time.time())
 
@@ -568,10 +566,12 @@ class URLTarget(object):
                 return True
             except Exception as e:
                 logging.warning('T%s - Moving the old file %s failed!  Error: %s', self.thread_id, old_path, e)
+                self.log_exception_extras(e)
 
             self.fs_lock.release()
         except Exception:
             logging.warning('T%s - Moving the old file %s failed unexpectedly!  Error: %s', self.thread_id, old_path, e)
+            self.log_exception_extras(e)
 
         return False
 
@@ -659,6 +659,7 @@ class URLTarget(object):
                 pass
 
             logging.error('T%s - Error while trying to download file: %s', self.thread_id, self)
+            self.log_exception_extras(e)
 
             if self.downloaded == 0 and filesize == 0:
                 try:
@@ -672,6 +673,7 @@ class URLTarget(object):
                         self.file.saved_to,
                         e,
                     )
+                    self.log_exception_extras(e)
             else:
                 # Subtract the already downloaded content in case of an error.
                 self.thread_report[self.thread_id]['total'] -= self.downloaded
@@ -740,6 +742,18 @@ class URLTarget(object):
             raise ContentTooShortError('retrieval incomplete: got only %i out of %i bytes' % (read, size), result)
 
         return result
+
+    def log_exception_extras(self, exc):
+        """Log the extras of an exception object
+
+        Args:
+            exc (Exception): Exception that has occurred
+        """        
+        if hasattr(exc, 'winerror'):
+            logging.debug("Exception winerror: %s", exc.winerror)
+
+        if hasattr(exc, 'winerror'):
+            logging.debug("Exception errno: %s", exc.errno)
 
     def __str__(self):
         # URLTarget to string
