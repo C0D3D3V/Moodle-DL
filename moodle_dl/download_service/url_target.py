@@ -392,7 +392,6 @@ class URLTarget(object):
                                     self.file.saved_to,
                                     e,
                                 )
-                                self.log_exception_extras(e)
                         self.move_tmp_file(tmp_file)
                         self.success = True
                         return True
@@ -528,6 +527,7 @@ class URLTarget(object):
         """
         Creates a Description file
         """
+        logging.debug('T%s - Creating a description file', self.thread_id)
         description = open(self.file.saved_to, 'w+', encoding='utf-8')
         to_save = ""
         if self.file.text_content is not None:
@@ -548,7 +548,6 @@ class URLTarget(object):
 
             self.success = True
         else:
-            logging.debug('T%s - Creating a description file', self.thread_id)
             self.file.time_stamp = int(time.time())
 
             self.success = True
@@ -586,12 +585,10 @@ class URLTarget(object):
                 return True
             except Exception as e:
                 logging.warning('T%s - Moving the old file %s failed!  Error: %s', self.thread_id, old_path, e)
-                self.log_exception_extras(e)
 
             self.fs_lock.release()
         except Exception:
             logging.warning('T%s - Moving the old file %s failed unexpectedly!  Error: %s', self.thread_id, old_path, e)
-            self.log_exception_extras(e)
 
         return False
 
@@ -681,7 +678,6 @@ class URLTarget(object):
                 pass
 
             logging.error('T%s - Error while trying to download file: %s', self.thread_id, self)
-            self.log_exception_extras(e)
 
             if self.downloaded == 0 and filesize == 0:
                 try:
@@ -695,7 +691,6 @@ class URLTarget(object):
                         self.file.saved_to,
                         e,
                     )
-                    self.log_exception_extras(e)
             else:
                 # Subtract the already downloaded content in case of an error.
                 self.thread_report[self.thread_id]['total'] -= self.downloaded
@@ -780,18 +775,6 @@ class URLTarget(object):
             return '%02d:%02d' % (mins, secs)
         else:
             return '%02d:%02d:%02d' % (hours, mins, secs)
-
-    def log_exception_extras(self, exc):
-        """Log the extras of an exception object
-
-        Args:
-            exc (Exception): Exception that has occurred
-        """
-        if hasattr(exc, 'winerror'):
-            logging.debug("Exception winerror: %s", exc.winerror)
-
-        if hasattr(exc, 'winerror'):
-            logging.debug("Exception errno: %s", exc.errno)
 
     def __str__(self):
         # URLTarget to string
