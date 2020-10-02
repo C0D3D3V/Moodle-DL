@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import moodle_dl.main
 
 
