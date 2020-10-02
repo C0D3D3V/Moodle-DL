@@ -1,5 +1,6 @@
 import os
 import ssl
+import sys
 import time
 import shutil
 import urllib
@@ -724,6 +725,8 @@ class URLTarget(object):
 
                 # guess size
                 size = int(headers.get('Content-Length', -1))
+                mtime = headers.get('Last-Modified')
+
 
                 if reporthook:
                     reporthook(blocknum, bs, size)
@@ -740,6 +743,10 @@ class URLTarget(object):
 
         if size >= 0 and read < size:
             raise ContentTooShortError('retrieval incomplete: got only %i out of %i bytes' % (read, size), result)
+
+        print os.stat(filename)
+        os.utime(filename, (0, mtime))
+        print os.stat(filename)
 
         return result
 
