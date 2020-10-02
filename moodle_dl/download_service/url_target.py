@@ -134,7 +134,7 @@ class URLTarget(object):
             new_path = str(Path(destination) / new_filename)
 
         logging.debug('T%s - Set up target file: "%s"', self.thread_id, new_path)
-        Path(new_path).touch()
+        open(new_path, 'a').close()
         self.fs_lock.release()
 
         return new_path
@@ -330,7 +330,7 @@ class URLTarget(object):
         """
 
         urlToDownload = self.file.content_fileurl
-        logging.debug('T%s - Try to download linked file %s.', self.thread_id, urlToDownload)
+        logging.debug('T%s - Try to download linked file %s', self.thread_id, urlToDownload)
 
         if add_token:
             urlToDownload = self._add_token_to_url(self.file.content_fileurl)
@@ -340,7 +340,21 @@ class URLTarget(object):
             cookies_path = self.options.get('cookies_path', None)
             if cookies_path is None:
                 self.success = False
-                raise ValueError('Moodle Cookies are missing.')
+                raise ValueError(
+                    'Moodle Cookies are missing. Run `moodle-dl -nt` to set a privatetoken for cookie generation (If necessary additionally `-sso`)'
+                )
+
+        if delete_if_successful:
+            # if temporary file is not needed delete it as soon as possible
+            try:
+                os.remove(self.file.saved_to)
+            except Exception as e:
+                logging.warning(
+                    'T%s - Could not delete %s before download is started. Error: %s',
+                    self.thread_id,
+                    self.file.saved_to,
+                    e,
+                )
 
         isHTML = False
         new_filename = ""
@@ -382,22 +396,14 @@ class URLTarget(object):
                         # return False
                         pass
                     else:
-                        if delete_if_successful:
-                            try:
-                                os.remove(self.file.saved_to)
-                            except Exception as e:
-                                logging.warning(
-                                    'T%s - Could not delete %s after youtube-dl was successful. Error: %s',
-                                    self.thread_id,
-                                    self.file.saved_to,
-                                    e,
-                                )
                         self.move_tmp_file(tmp_file)
                         self.success = True
                         return True
                 except Exception:
                     # return False
                     pass
+
+        logging.debug('T%s - Downloading file directly', self.thread_id)
 
         # generate file extension for modules names
         new_name, new_extension = os.path.splitext(new_filename)
@@ -411,17 +417,6 @@ class URLTarget(object):
 
         if old_extension != new_extension:
             self.filename = self.filename + new_extension
-
-        if delete_if_successful:
-            try:
-                os.remove(self.file.saved_to)
-            except Exception:
-                logging.warning(
-                    'T%s - Could not delete %s before download is started. Error: %s',
-                    self.thread_id,
-                    self.file.saved_to,
-                    e,
-                )
 
         self.set_path(True)
 
@@ -541,7 +536,7 @@ class URLTarget(object):
         description.close()
 
         if to_save == '':
-            logging.debug('T%s - Remove target file because description file would be empty.', self.thread_id)
+            logging.debug('T%s - Remove target file because description file would be empty', self.thread_id)
             os.remove(self.file.saved_to)
 
             self.file.time_stamp = int(time.time())
@@ -565,7 +560,7 @@ class URLTarget(object):
         if not os.path.exists(old_path):
             return False
 
-        logging.debug('T%s - Moving old file "%s" to new target location.', self.thread_id, old_path)
+        logging.debug('T%s - Moving old file "%s" to new target location', self.thread_id, old_path)
         try:
             shutil.move(old_path, self.file.saved_to)
             self.file.time_stamp = int(time.time())
@@ -652,7 +647,7 @@ class URLTarget(object):
                 return self.success
 
             url_to_download = self.file.content_fileurl
-            logging.debug('T%s - Downloading %s.', self.thread_id, url_to_download)
+            logging.debug('T%s - Downloading %s', self.thread_id, url_to_download)
 
             if add_token:
                 url_to_download = self._add_token_to_url(self.file.content_fileurl)
