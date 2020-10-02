@@ -8,7 +8,9 @@
             "program": "${workspaceFolder}/main.py",
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}/debugging-moodle/",
-            "args": []
+            "args": [
+                "-v"
+            ]
         }
     ]
 }

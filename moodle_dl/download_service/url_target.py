@@ -190,13 +190,21 @@ class URLTarget(object):
         def __init__(self, thread_id: int):
             self.thread_id = thread_id
 
+        def clean_msg(self, msg: str) -> str:
+            msg = msg.replace('\n', '')
+            msg = msg.replace('\r', '')
+            msg = msg.replace('\033[K', '')
+            return msg
+
         def debug(self, msg):
-            if msg.find('[download]') >= 0:
+            if msg.find('ETA') >= 0:
                 return
+            msg = self.clean_msg(msg)
             logging.debug('T%s - youtube-dl Debug: %s', self.thread_id, msg)
             pass
 
         def warning(self, msg):
+            msg = self.clean_msg(msg)
             if msg.find('Falling back') >= 0:
                 logging.debug('T%s - youtube-dl Warning: %s', self.thread_id, msg)
                 return
@@ -206,6 +214,7 @@ class URLTarget(object):
             logging.warning('T%s - youtube-dl Warning: %s', self.thread_id, msg)
 
         def error(self, msg):
+            msg = self.clean_msg(msg)
             if msg.find('Unsupported URL') >= 0:
                 logging.debug('T%s - youtube-dl Error: %s', self.thread_id, msg)
                 return
@@ -748,7 +757,7 @@ class URLTarget(object):
 
         Args:
             exc (Exception): Exception that has occurred
-        """        
+        """
         if hasattr(exc, 'winerror'):
             logging.debug("Exception winerror: %s", exc.winerror)
 
