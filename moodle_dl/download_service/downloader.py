@@ -1,3 +1,4 @@
+import logging
 import threading
 
 from queue import Queue, Empty
@@ -35,6 +36,7 @@ class Downloader(threading.Thread):
         """
         Work the queue until it is empty.
         """
+        logging.debug('T%s - Downloader thread was started', self.thread_id)
         while self.queue.empty() is False:
             try:
                 # raise condition
@@ -48,13 +50,17 @@ class Downloader(threading.Thread):
 
             # If a download fails, add it to the error report.
             if response is False:
+                logging.debug('T%s - URLTarget reports failure!', self.thread_id)
                 self.report['failure'].append(url_target)
 
             # If a download was successful, store it in the database.
             elif response is True:
+                logging.debug('T%s - URLTarget reports success!', self.thread_id)
                 self.db_lock.acquire()
                 self.state_recorder.save_file(url_target.file, url_target.course.id, url_target.course.fullname)
                 self.db_lock.release()
                 self.report['success'].append(url_target)
 
             self.queue.task_done()
+
+        logging.debug('T%s - Downloader thread is finished', self.thread_id)

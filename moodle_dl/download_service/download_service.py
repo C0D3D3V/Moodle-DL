@@ -3,6 +3,7 @@ import ssl
 import sys
 import time
 import shutil
+import logging
 import threading
 from queue import Queue
 import certifi
@@ -102,6 +103,8 @@ class DownloadService:
                     )
 
                     self.total_files += 1
+
+        logging.debug('Queue contains %s URLTargets', self.total_files)
 
     @staticmethod
     def gen_path(storage_path: str, course: Course, file: File):
