@@ -407,6 +407,15 @@ def get_parser():
         ),
     )
 
+    group.add_argument(
+        '--log-responses',
+        default=False,
+        action='store_true',
+        help='To generate a responses.log file'
+        + ' in which all JSON responses from Moodles are logged'
+        + ' along with the requested URL.',
+    )
+
     parser.add_argument(
         '-p',
         '--path',
@@ -458,14 +467,6 @@ def get_parser():
         + 'initialization.',
     )
 
-    parser.add_argument(
-        '--log-responses',
-        default=False,
-        action='store_true',
-        help='If this flag is set, a responses.log file is created'
-        + ' in which all JSON responses from Moodles are logged'
-        + ' along with the requested URL.',
-    )
     return parser
 
 

@@ -64,6 +64,9 @@ If you run the program on **Windows**, please use [Powershell or CMD](https://ww
     - It allows you to delete entries from the database that are no longer available locally so that they can be downloaded again.
 - `moodle-dl --version`
     - Print program version and exit
+- `moodle-dl --log-responses`
+    - To generate a `responses.log` file, in which all JSON responses from Moodles are logged along with the requested URL
+    - This is for development and debugging purposes only. The log file may contain private data.
 
 ### Options
 Options can be combined with all the actions mentioned above.
@@ -72,26 +75,18 @@ Options can be combined with all the actions mentioned above.
     - Sets the location of the configuration, logs and downloaded files. 
     - `PATH` must be an existing directory in which you have read and write access.
     - Default: current working directory
-
 - `--verbose`
     - Print various debugging information
-  
 - `--skip-cert-verify`
     - This flag is used to skip the certification verification while sending requests to Moodle.
     - Warning: This might lead to security flaws and should only be used in non-production environments.
     - Default: False
-
 - `--without-downloading-files`
     - This flag is used to skip the downloading of files.
     - This allows the local database to be updated to the latest version of Moodle without having to download all files.
-
 - `--sso`
     - This flag is used to indicate that a Single Sign On (SSO) login to your Moodle is required. 
     - Can be combined with `--init` and `--new-token`.
-
-- `--log-responses`
-    - If this flag is set, a `responses.log` file is created in which all JSON responses from Moodles are logged along with the requested URL
-    - This is for development and debugging purposes only. The log file may contain private data.
 
 
 
