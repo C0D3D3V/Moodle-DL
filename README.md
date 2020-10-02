@@ -13,7 +13,7 @@
 ### Setup
 1. Install [Python](https://www.python.org/) >=3.7
 2. Install [ffmpeg](http://blog.gregzaal.com/how-to-install-ffmpeg-on-windows/)
-3. Run `pip install moodle-dl`  
+3. Run `pip install moodle-dl` as administrator.
     <sup>(To upgrade from an older Version use `pip install -U moodle-dl` instead)</sup>
 4. Run `moodle-dl --init` in the desired download directory.
 
