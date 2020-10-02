@@ -7,6 +7,7 @@ import threading
 from queue import Queue
 import certifi
 
+from youtube_dl.utils import format_bytes
 
 from moodle_dl.utils.logger import Log
 from moodle_dl.state_recorder.course import Course, File
@@ -224,10 +225,10 @@ class DownloadService:
 
         # The overall progress also includes the total size that needs to be
         # downloaded and the size that has already been downloaded.
-        progressmessage_line = 'Total: %3s%% %12s/%12skb' % (
+        progressmessage_line = 'Total: %3s%% %12s/%12s' % (
             percentage,
-            int(threads_total_downloaded / 1000.0),
-            int(self.total_to_download / 1000.0),
+            format_bytes(threads_total_downloaded),
+            format_bytes(self.total_to_download),
         )
 
         progressmessage_line += ' | Files: %5s/%5s' % (len(self.report['success']), self.total_files)

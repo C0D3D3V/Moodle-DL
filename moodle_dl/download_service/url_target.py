@@ -18,7 +18,7 @@ import urllib.parse as urlparse
 
 import html2text
 import youtube_dl
-import youtube_dl.utils
+from youtube_dl.utils import format_bytes
 
 from moodle_dl.state_recorder.file import File
 from moodle_dl.state_recorder.course import Course
@@ -99,12 +99,12 @@ class URLTarget(object):
         url_parts[4] = urlparse.urlencode(query)
         return urlparse.urlunparse(url_parts)
 
-    @staticmethod
-    def _create_dir(path: str):
+    def create_dir(self, path: str):
         # Creates the folders of a path if they do not exist.
         if not os.path.exists(path):
             try:
                 # raise condition
+                logging.debug('T%s - Create directory: "%s"', self.thread_id, path)
                 os.makedirs(path)
             except FileExistsError:
                 pass
@@ -133,6 +133,7 @@ class URLTarget(object):
 
             new_path = str(Path(destination) / new_filename)
 
+        logging.debug('T%s - Set up target file: "%s"', self.thread_id, new_path)
         Path(new_path).touch()
         self.fs_lock.release()
 
@@ -194,6 +195,9 @@ class URLTarget(object):
             msg = msg.replace('\n', '')
             msg = msg.replace('\r', '')
             msg = msg.replace('\033[K', '')
+            msg = msg.replace('\033[0;31m', '')
+            msg = msg.replace('\033[0m', '')
+
             return msg
 
         def debug(self, msg):
@@ -273,6 +277,7 @@ class URLTarget(object):
         destination = os.path.dirname(tmp_file)
         content_filename = os.path.basename(tmp_file)
 
+        logging.debug('T%s - Renaming "%s" to "%s"', self.thread_id, content_filename, self.filename)
         for filename in os.listdir(destination):
             if filename.startswith(content_filename + '.'):
                 one_tmp_file = os.path.join(destination, filename)
@@ -325,6 +330,8 @@ class URLTarget(object):
         """
 
         urlToDownload = self.file.content_fileurl
+        logging.debug('T%s - Try to download linked file %s.', self.thread_id, urlToDownload)
+
         if add_token:
             urlToDownload = self._add_token_to_url(self.file.content_fileurl)
 
@@ -473,6 +480,7 @@ class URLTarget(object):
         both cases are covered here.
         """
 
+        logging.debug('T%s - Creating a shortcut', self.thread_id)
         with open(self.file.saved_to, 'w+', encoding='utf-8') as shortcut:
             if os.name == 'nt':
                 shortcut.write('[InternetShortcut]' + os.linesep)
@@ -533,12 +541,14 @@ class URLTarget(object):
         description.close()
 
         if to_save == '':
+            logging.debug('T%s - Remove target file because description file would be empty.', self.thread_id)
             os.remove(self.file.saved_to)
 
             self.file.time_stamp = int(time.time())
 
             self.success = True
         else:
+            logging.debug('T%s - Creating a description file', self.thread_id)
             self.file.time_stamp = int(time.time())
 
             self.success = True
@@ -556,6 +566,7 @@ class URLTarget(object):
         if not os.path.exists(old_path):
             return False
 
+        logging.debug('T%s - Moving old file "%s" to new target location.', self.thread_id, old_path)
         try:
             shutil.move(old_path, self.file.saved_to)
             self.file.time_stamp = int(time.time())
@@ -598,7 +609,7 @@ class URLTarget(object):
 
         try:
             logging.debug('T%s - Starting downloading of: %s', self.thread_id, self)
-            self._create_dir(self.destination)
+            self.create_dir(self.destination)
 
             # if file was modified try rename the old file,
             # before create new one
@@ -644,6 +655,8 @@ class URLTarget(object):
                 return self.success
 
             url_to_download = self.file.content_fileurl
+            logging.debug('T%s - Downloading %s.', self.thread_id, url_to_download)
+
             if add_token:
                 url_to_download = self._add_token_to_url(self.file.content_fileurl)
 
@@ -690,8 +703,7 @@ class URLTarget(object):
 
         return self.success
 
-    @staticmethod
-    def urlretrieve(url: str, filename: str, context: ssl.SSLContext, reporthook=None, cookies_path=None):
+    def urlretrieve(self, url: str, filename: str, context: ssl.SSLContext, reporthook=None, cookies_path=None):
         """
         original source:
         https://github.com/python/cpython/blob/
@@ -700,6 +712,7 @@ class URLTarget(object):
         Because urlopen also supports context,
         I decided to adapt the download function.
         """
+        start = time.time()
         url_parsed = urlparse.urlparse(url)
 
         request = urllib.request.Request(url=url, headers=RequestHelper.stdHeader)
@@ -750,7 +763,23 @@ class URLTarget(object):
         if size >= 0 and read < size:
             raise ContentTooShortError('retrieval incomplete: got only %i out of %i bytes' % (read, size), result)
 
+        end = time.time()
+        logging.debug(
+            'T%s - Download of %s finished in %s', self.thread_id, format_bytes(read), self.format_seconds(end - start)
+        )
+
         return result
+
+    @staticmethod
+    def format_seconds(seconds):
+        (mins, secs) = divmod(seconds, 60)
+        (hours, mins) = divmod(mins, 60)
+        if hours > 99:
+            return '--:--:--'
+        if hours == 0:
+            return '%02d:%02d' % (mins, secs)
+        else:
+            return '%02d:%02d:%02d' % (hours, mins, secs)
 
     def log_exception_extras(self, exc):
         """Log the extras of an exception object
