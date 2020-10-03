@@ -75,6 +75,8 @@ Options can be combined with all the actions mentioned above.
     - Sets the location of the configuration, logs and downloaded files. 
     - `PATH` must be an existing directory in which you have read and write access.
     - Default: current working directory
+- `--threads INT`
+    - Overwrites the number of download threads. (default: 5)
 - `--verbose`
     - Print various debugging information
 - `--skip-cert-verify`

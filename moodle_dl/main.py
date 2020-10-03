@@ -413,6 +413,14 @@ def get_parser():
     )
 
     parser.add_argument(
+        '-t',
+        '--threads',
+        default=5,
+        type=int,
+        help=('Sets the number of download threads. (default: %(default)s)'),
+    )
+
+    parser.add_argument(
         '-v',
         '--verbose',
         default=False,
@@ -467,6 +475,7 @@ def main(args=None):
     skip_cert_verify = args.skip_cert_verify
     without_downloading_files = args.without_downloading_files
     log_responses = args.log_responses
+    DownloadService.thread_count = args.threads
 
     if args.init:
         run_init(storage_path, use_sso, skip_cert_verify)

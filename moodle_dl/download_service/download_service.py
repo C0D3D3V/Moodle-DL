@@ -26,6 +26,8 @@ class DownloadService:
     and errors.
     """
 
+    thread_count = 5
+
     def __init__(
         self, courses: [Course], moodle_service: MoodleService, storage_path: str, skip_cert_verify: bool = False
     ):
@@ -39,7 +41,6 @@ class DownloadService:
         """
 
         # How much threads should be created
-        DownloadService.thread_count = 5
         if 'pydevd' in sys.modules:
             # if debugging only one thread should be started
             DownloadService.thread_count = 1
