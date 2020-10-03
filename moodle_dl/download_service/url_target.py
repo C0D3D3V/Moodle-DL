@@ -133,8 +133,14 @@ class URLTarget(object):
 
             new_path = str(Path(destination) / new_filename)
 
-        logging.debug('T%s - Set up target file: "%s"', self.thread_id, new_path)
-        open(new_path, 'a').close()
+        logging.debug('T%s - Seting up target file: "%s"', self.thread_id, new_path)
+        try:
+            open(new_path, 'a').close()
+        except Exception as e:
+            self.fs_lock.release()
+            logging.error('T%s - Failed seting up target file: "%s"', self.thread_id, new_path)
+            raise e
+
         self.fs_lock.release()
 
         return new_path
@@ -151,6 +157,8 @@ class URLTarget(object):
         old_path = self.file.old_file.saved_to
         if not os.path.exists(old_path):
             return False
+
+        logging.debug('T%s - Renaming old file', self.thread_id)
 
         count = 1
         content_filename = os.path.basename(old_path)
@@ -177,6 +185,7 @@ class URLTarget(object):
             shutil.move(old_path, new_path)
             self.file.old_file.saved_to = new_path
         except Exception:
+            logging.warning('T%s - Failed to renaming old file "%s" to "%s"', self.thread_id, old_path, new_path)
             self.fs_lock.release()
             return False
 
