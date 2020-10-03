@@ -9,9 +9,6 @@ class ConfigHelper:
     Handles the saving, formatting and loading of the local configuration.
     """
 
-    windows_map = {'\\': '＼', '/': '／', ':': '꞉', '?': '？', '*': '＊', '<': '＜', '>': '＞', '|': '｜', '"': '＂'}
-    linux_map = {'/': '|'}
-
     def __init__(self, storage_path: str):
         self._whole_config = {}
         self.storage_path = storage_path
@@ -53,13 +50,6 @@ class ConfigHelper:
         self._whole_config.pop(key, None)
         #                           ^ behavior if the key is not present
         self._save()
-
-    def set_default_filename_character_map(self, default_windows_map: bool):
-        # Sets the default filename_character_map for Windows or Empty
-        if default_windows_map:
-            self.set_property("filename_character_map", ConfigHelper.windows_map)
-        else:
-            self.set_property("filename_character_map", ConfigHelper.linux_map)
 
     # ---------------------------- GETTERS ------------------------------------
 
@@ -173,10 +163,9 @@ class ConfigHelper:
 
         return options
 
-    def get_filename_character_map(self) -> {}:
-        # returns the filename_character_map for PathTools
+    def get_restricted_filenames(self) -> {}:
+        # returns the filenames should be restricted
         try:
-            return self.get_property('filename_character_map')
+            return self.get_property('restricted_filenames')
         except ValueError:
-            self.set_default_filename_character_map(True)
-            return self.get_property('filename_character_map')
+            return False

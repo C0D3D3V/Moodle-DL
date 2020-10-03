@@ -1,13 +1,13 @@
-import os
 import html
 
 from pathlib import Path
+from youtube_dl.utils import sanitize_filename
 
 
 class PathTools:
     """A set of methodes to create correct paths."""
 
-    filename_character_map = {}
+    restricted_filenames = False
 
     @staticmethod
     def to_valid_name(name: str) -> str:
@@ -25,25 +25,14 @@ class PathTools:
 
         # Moodle saves the title of a section in HTML-Format,
         # so we need to unescape the string
-        try:
-            name = html.unescape(name)
-        except Exception:
-            pass
-
-        # Forward and Backward Slashes are not good for filenames
-        for char in PathTools.filename_character_map:
-            replacement = PathTools.filename_character_map[char]
-            name = name.replace(char, replacement)
-
-        if os.name != 'nt' and '/' not in PathTools.filename_character_map:
-            name = name.replace('/', '／')
-
-        if os.name == 'nt' and '\\' not in PathTools.filename_character_map:
-            name = name.replace('\\', '／')
+        name = html.unescape(name)
 
         name = name.replace('\n', ' ')
         name = name.replace('\r', ' ')
         name = name.replace('\t', ' ')
+        while '  ' in name:
+            name = name.replace('  ', ' ')
+        name = sanitize_filename(name, PathTools.restricted_filenames)
         name = name.strip('.')
         name = name.strip()
 

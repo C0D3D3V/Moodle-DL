@@ -74,24 +74,6 @@ def run_init(storage_path, use_sso=False, skip_cert_verify=False):
     else:
         moodle.interactively_acquire_token()
 
-    if os.name != 'nt':
-        Log.info(
-            'On Windows many characters are forbidden in filenames and paths, if you want, these characters can be'
-            + ' automatically removed from filenames.'
-        )
-
-        Log.warning('If you want to view the downloaded files on Windows this is important!')
-
-        default_windows_map = cutie.prompt_yes_or_no(
-            'Do you want to load the default filename character map for windows?'
-        )
-        if default_windows_map:
-            config.set_default_filename_character_map(True)
-        else:
-            config.set_default_filename_character_map(False)
-    else:
-        config.set_default_filename_character_map(True)
-
     Log.success('Configuration finished and saved!')
 
     if os.name != 'nt':
@@ -234,7 +216,7 @@ def run_main(storage_path, verbose=False, skip_cert_verify=False, without_downlo
     tg_service = TelegramService(config)
     console_service = ConsoleService(config)
 
-    PathTools.filename_character_map = config.get_filename_character_map()
+    PathTools.restricted_filenames = config.get_restricted_filenames()
 
     try:
         if not IS_DEBUG:
