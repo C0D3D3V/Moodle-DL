@@ -274,43 +274,44 @@ class URLTarget(object):
         @params tmp_file: Is a path + the basename
                           (without the extension) of the tmp_file
         """
-        destination = os.path.dirname(tmp_file)
-        content_filename = os.path.basename(tmp_file)
+        lookup_dir = os.path.dirname(tmp_file)
+        tmp_filename = os.path.basename(tmp_file)
 
-        logging.debug('T%s - Renaming "%s" to "%s"', self.thread_id, content_filename, self.filename)
-        for filename in os.listdir(destination):
-            if filename.startswith(content_filename + '.'):
-                one_tmp_file = os.path.join(destination, filename)
+        logging.debug('T%s - Renaming "%s" to "%s"', self.thread_id, tmp_filename, self.filename)
+        for found_filename in os.listdir(lookup_dir):
+            if found_filename.startswith(tmp_filename + '.'):
+                one_tmp_file = os.path.join(lookup_dir, found_filename)
 
-                content_filename = os.path.basename(one_tmp_file)
-                filename, file_extension = os.path.splitext(content_filename)
+                found_filename_base, found_file_extension = os.path.splitext(found_filename)
 
-                new_path = str(Path(self.destination) / self.filename) + file_extension
+                new_filename = self.filename + found_file_extension
+                new_path = str(Path(self.destination) / new_filename)
 
                 count = 1
-                content_filename = os.path.basename(new_path)
-                destination = os.path.dirname(new_path)
 
                 self.fs_lock.acquire()
                 while os.path.exists(new_path):
                     count += 1
 
-                    filename, file_extension = os.path.splitext(content_filename)
+                    new_filename = '%s_%02d%s' % (self.filename, count, found_file_extension)
 
-                    new_filename = '%s_%02d%s' % (filename, count, file_extension)
-
-                    new_path = str(Path(destination) / new_filename)
+                    new_path = str(Path(self.destination) / new_filename)
 
                 self.file.saved_to = new_path
                 try:
+                    logging.debug('T%s - Moved "%s" to "%s"', self.thread_id, found_filename, new_filename)
                     shutil.move(one_tmp_file, self.file.saved_to)
                 except Exception as e:
                     logging.warning(
-                        'T%s - Failed to move the temporary video file %s!  Error: %s', self.thread_id, one_tmp_file, e
+                        'T%s - Failed to move the temporary video file %s to %s!  Error: %s',
+                        self.thread_id,
+                        found_filename,
+                        new_filename,
+                        e,
                     )
                 self.fs_lock.release()
 
-                self.file.time_stamp = int(time.time())
+        self.file.time_stamp = int(time.time())
 
     def try_download_link(
         self, add_token: bool = False, delete_if_successful: bool = False, use_cookies: bool = False
