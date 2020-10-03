@@ -133,6 +133,13 @@ class URLTarget(object):
 
             new_path = str(Path(destination) / new_filename)
 
+        # Working around MAX_PATH limitation on Windows (see
+        # http://msdn.microsoft.com/en-us/library/windows/desktop/aa365247(v=vs.85).aspx)
+        if os.name == 'nt':
+            absfilepath = os.path.abspath(new_path)
+            if len(absfilepath) > 259:
+                new_path = '\\\\?\\' + absfilepath
+
         logging.debug('T%s - Seting up target file: "%s"', self.thread_id, new_path)
         try:
             open(new_path, 'a').close()
