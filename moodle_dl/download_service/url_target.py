@@ -109,25 +109,24 @@ class URLTarget(object):
             except FileExistsError:
                 pass
 
-    def _rename_if_exists(self, path: str) -> str:
-        """
-        Rename a file name until no file with the same name exists.
-        @param path: The path to the file to be renamed.
-        @return: A path to a file that does not yet exist.
-        """
-        count = 1
-        new_path = path
-        content_filename = os.path.basename(path)
-        destination = os.path.dirname(path)
+    def _get_path_of_non_existent_file(self, wish_path: str) -> str:
+        """Generates a path to a non existing file, based on a wish path
 
-        # this is some kind of raise condition
-        # Even though it should hardly ever happen,
-        # it is possible that threads try to create the same file
-        self.fs_lock.acquire()
+        Args:
+            wish_path (str): the ideal path that is wished
+
+        Returns:
+            str: a path to a non existing file
+        """
+        new_path = wish_path
+
+        count = 0
+        content_filename = os.path.basename(wish_path)
+        destination = os.path.dirname(wish_path)
+        filename, file_extension = os.path.splitext(content_filename)
+
         while os.path.exists(new_path):
             count += 1
-
-            filename, file_extension = os.path.splitext(content_filename)
 
             new_filename = '%s_%02d%s' % (filename, count, file_extension)
 
@@ -139,6 +138,19 @@ class URLTarget(object):
             absfilepath = os.path.abspath(new_path)
             if len(absfilepath) > 259:
                 new_path = '\\\\?\\' + absfilepath
+
+        return new_path
+
+    def _rename_if_exists(self, path: str) -> str:
+        """
+        Rename a file name until no file with the same name exists.
+        @param path: The path to the file to be renamed.
+        @return: A path to a file that does not yet exist.
+        """
+
+        # lock because of raise condition
+        self.fs_lock.acquire()
+        new_path = self._get_path_of_non_existent_file(path)
 
         logging.debug('T%s - Seting up target file: "%s"', self.thread_id, new_path)
         try:
@@ -175,18 +187,9 @@ class URLTarget(object):
         destination = os.path.dirname(old_path)
         new_path = str(Path(destination) / content_filename)
 
-        # this is some kind of raise condition
-        # Even though it should hardly ever happen,
-        # it is possible that threads try to create the same file
+        # lock because of raise condition
         self.fs_lock.acquire()
-        while os.path.exists(new_path):
-            count += 1
-
-            filename, file_extension = os.path.splitext(content_filename)
-
-            new_filename = '%s_%02d%s' % (filename, count, file_extension)
-
-            new_path = str(Path(destination) / new_filename)
+        new_path = self._get_path_of_non_existent_file(new_path)
 
         try:
             shutil.move(old_path, new_path)
@@ -303,15 +306,9 @@ class URLTarget(object):
                 new_filename = self.filename + found_file_extension
                 new_path = str(Path(self.destination) / new_filename)
 
-                count = 1
-
+                # lock because of raise condition
                 self.fs_lock.acquire()
-                while os.path.exists(new_path):
-                    count += 1
-
-                    new_filename = '%s_%02d%s' % (self.filename, count, found_file_extension)
-
-                    new_path = str(Path(self.destination) / new_filename)
+                new_path = self._get_path_of_non_existent_file(new_path)
 
                 self.file.saved_to = new_path
                 try:
@@ -585,6 +582,7 @@ class URLTarget(object):
             return True
         except FileExistsError:
             # On Windows, the temporary file must be deleted first.
+            # lock because of raise condition
             self.fs_lock.acquire()
 
             try:
