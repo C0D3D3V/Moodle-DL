@@ -72,6 +72,8 @@ class DownloadService:
         ]
         # Collects the total size of the files that needs to be downloaded.
         self.total_to_download = 0
+        self.last_threads_total_downloaded = 0
+        self.last_status_timestamp = time.time()
         self.total_files = 0
 
         # delete files, that should be deleted
@@ -144,12 +146,11 @@ class DownloadService:
         print('\n' * (len(self.threads)), end='')
         old_status_message = ''
         while not self._downloader_complete():
-            time.sleep(0.1)
-
             new_status_message = self._get_status_message()
             if old_status_message != new_status_message:
                 print(new_status_message, end='')
                 old_status_message = new_status_message
+            time.sleep(0.5)
 
         self._clear_status_message()
         self._log_failures()
@@ -237,13 +238,34 @@ class DownloadService:
 
         progressmessage_line += ' | Files: %5s/%5s' % (len(self.report['success']), self.total_files)
 
+        diff_to_last_status = threads_total_downloaded - self.last_threads_total_downloaded
+
+        speed = self.calc_speed(self.last_status_timestamp, time.time(), diff_to_last_status)
+        progressmessage_line += ' | ' + self.format_speed(speed)
+
         if len(progressmessage_line) > limits.columns:
             progressmessage_line = progressmessage_line[0 : limits.columns]
         progressmessage_line = '\033[K' + progressmessage_line
 
         progressmessage += progressmessage_line
 
+        self.last_status_timestamp = time.time()
+        self.last_threads_total_downloaded = threads_total_downloaded
+
         return progressmessage
+
+    @staticmethod
+    def calc_speed(start, now, bytes):
+        dif = now - start
+        if bytes == 0 or dif < 0.001:  # One millisecond
+            return None
+        return float(bytes) / dif
+
+    @staticmethod
+    def format_speed(speed):
+        if speed is None:
+            return '%10s' % '---b/s'
+        return '%10s' % ('%s/s' % format_bytes(speed))
 
     def _clear_status_message(self):
         print(f'\033[{len(self.threads)}A', end='')
