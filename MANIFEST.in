@@ -1,0 +1,4 @@
+include README.md
+include LICENSE
+include AUTHORS
+include moodle_dl/notification_services/mail/*.png

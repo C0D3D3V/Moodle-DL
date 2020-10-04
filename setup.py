@@ -22,6 +22,7 @@ setup(
     author='C0D3D3V',
     license='GPL-3.0',
     packages=find_packages(),
+    include_package_data=True,
     entry_points={
         'console_scripts': [
             'moodle-dl = moodle_dl.main:main',
