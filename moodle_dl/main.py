@@ -287,7 +287,13 @@ def run_main(storage_path, verbose=False, skip_cert_verify=False, without_downlo
         sys.exit(-1)
 
 
-def _dir_path(path):
+def _dir_path(path):    
+    # Working around MAX_PATH limitation on Windows (see
+    # http://msdn.microsoft.com/en-us/library/windows/desktop/aa365247(v=vs.85).aspx)
+    if os.name == 'nt':
+        absfilepath = os.path.abspath(path)
+        path = '\\\\?\\' + absfilepath
+
     if os.path.isdir(path):
         return path
     else:

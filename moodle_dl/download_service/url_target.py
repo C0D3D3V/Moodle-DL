@@ -132,13 +132,6 @@ class URLTarget(object):
 
             new_path = str(Path(destination) / new_filename)
 
-        # Working around MAX_PATH limitation on Windows (see
-        # http://msdn.microsoft.com/en-us/library/windows/desktop/aa365247(v=vs.85).aspx)
-        if os.name == 'nt':
-            absfilepath = os.path.abspath(new_path)
-            if len(absfilepath) > 259:
-                new_path = '\\\\?\\' + absfilepath
-
         return new_path
 
     def _rename_if_exists(self, path: str) -> str:
