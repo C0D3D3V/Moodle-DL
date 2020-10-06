@@ -392,6 +392,8 @@ class URLTarget(object):
                 'progress_hooks': [self.yt_hook],
                 'outtmpl': (tmp_file + '.%(ext)s'),
                 'nocheckcertificate': True,
+                'retries': 10,
+                'fragment_retries': 10
             }
             if use_cookies:
                 ydl_opts.update({'cookiefile': cookies_path})

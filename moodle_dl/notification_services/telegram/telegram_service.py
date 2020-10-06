@@ -23,7 +23,10 @@ class TelegramService(NotificationService):
             self.config_helper.remove_property('telegram')
         else:
             print('[The following Inputs are not validated!]')
-
+            print(
+                'Open the following link for help in setting up telegram notifications:'
+                + ' https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Telegram-Notification'
+            )
             config_valid = False
             while not config_valid:
                 telegram_token = input('Telegram Token:    ')

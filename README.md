@@ -58,7 +58,7 @@ If you run the program on **Windows**, please use [Powershell or CMD](https://ww
     - Activate/deactivate/change the settings for receiving notifications via Telegram.
     - It does not affect the rest of the config.
     - It prints all information into the console.
-    - Help with setting up Notifications via Telegram will be here soon
+    - Click [here for help](https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Telegram-Notification) in setting up telegram notifications
 - `moodle-dl --manage-database`
     - To manage the offline database.
     - It allows you to delete entries from the database that are no longer available locally so that they can be downloaded again.
