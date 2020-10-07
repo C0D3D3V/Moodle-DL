@@ -2,6 +2,7 @@ import re
 import os
 import json
 import urllib
+import urllib3
 import requests
 import logging
 
@@ -18,6 +19,14 @@ class RequestHelper:
         'User-Agent': (
             'Mozilla/5.0 (Linux; Android 7.1.1; Moto G Play Build/NPIS26.48-43-2; wv) AppleWebKit/537.36'
             + ' (KHTML, like Gecko) Version/4.0 Chrome/71.0.3578.99 Mobile Safari/537.36 MoodleMobile'
+        ),
+        'Content-Type': 'application/x-www-form-urlencoded',
+    }
+
+    desktopHeader = {
+        'User-Agent': (
+            'Mozilla/5.0 (Linux; Android 7.1.1; Moto G Play Build/NPIS26.48-43-2; wv) AppleWebKit/537.36'
+            + ' (KHTML, like Gecko) Version/4.0 Chrome/71.0.3578.99 Mobile Safari/537.36'
         ),
         'Content-Type': 'application/x-www-form-urlencoded',
     }
@@ -47,6 +56,8 @@ class RequestHelper:
 
         logging.getLogger("requests").setLevel(logging.WARNING)
         logging.getLogger("urllib3").setLevel(logging.WARNING)
+        urllib3.disable_warnings()
+        # logging.captureWarnings(True)
 
     def post_URL(self, url: str, data: {str: str} = None, cookie_jar_path: str = None):
         """

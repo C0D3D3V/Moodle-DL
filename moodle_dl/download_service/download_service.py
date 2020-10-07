@@ -83,6 +83,7 @@ class DownloadService:
             self.ssl_context = ssl._create_unverified_context()
         else:
             self.ssl_context = ssl.create_default_context(cafile=certifi.where())
+        self.skip_cert_verify = skip_cert_verify
 
         # Prepopulate queue with any files that were given
         for course in self.courses:
@@ -101,6 +102,7 @@ class DownloadService:
                             self.thread_report,
                             self.fs_lock,
                             self.ssl_context,
+                            self.skip_cert_verify,
                             self.options,
                         )
                     )
@@ -254,13 +256,13 @@ class DownloadService:
     @staticmethod
     def calc_speed(start, now, bytes):
         dif = now - start
-        if bytes == 0 or dif < 0.001:  # One millisecond
+        if bytes <= 0 or dif < 0.001:  # One millisecond
             return None
         return float(bytes) / dif
 
     @staticmethod
     def format_speed(speed):
-        if speed is None or speed <= 0:
+        if speed is None:
             return '%10s' % '---b/s'
         return '%10s' % ('%s/s' % format_bytes(speed))
 

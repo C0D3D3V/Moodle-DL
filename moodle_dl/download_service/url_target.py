@@ -1,3 +1,4 @@
+import re
 import os
 import ssl
 import time
@@ -6,15 +7,18 @@ import urllib
 import random
 import string
 import logging
+import requests
 import posixpath
 import traceback
 import threading
 import contextlib
 
+from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema
 from pathlib import Path
 from http.cookiejar import MozillaCookieJar
 from urllib.error import ContentTooShortError
 import urllib.parse as urlparse
+from email.utils import unquote
 
 import html2text
 import youtube_dl
@@ -40,6 +44,7 @@ class URLTarget(object):
         thread_report: [],
         fs_lock: threading.Lock,
         ssl_context: ssl.SSLContext,
+        skip_cert_verify: bool,
         options: {},
     ):
         """
@@ -52,6 +57,8 @@ class URLTarget(object):
         self.token = token
         self.fs_lock = fs_lock
         self.ssl_context = ssl_context
+        self.skip_cert_verify = skip_cert_verify
+        self.verify_cert = not skip_cert_verify
         self.options = options
 
         # get valid filename
@@ -366,23 +373,41 @@ class URLTarget(object):
         isHTML = False
         new_filename = ""
         total_bytes_estimate = -1
-        request = urllib.request.Request(url=urlToDownload, headers=RequestHelper.stdHeader)
+        session = requests.Session()
+
+        request = urllib.request.Request(url=urlToDownload, headers=RequestHelper.desktopHeader)
         if use_cookies:
-            cookie_jar = MozillaCookieJar(cookies_path)
-            cookie_jar.load(ignore_discard=True, ignore_expires=True)
-            cookie_jar.add_cookie_header(request)
+            session.cookies = MozillaCookieJar(cookies_path)
 
-        with contextlib.closing(urllib.request.urlopen(request, context=self.ssl_context)) as fp:
-            headers = fp.info()
+            if os.path.exists(cookies_path):
+                session.cookies.load(ignore_discard=True, ignore_expires=True)
 
-            content_type = headers.get_content_type()
-            if content_type == 'text/html' or content_type == 'text/plain':
-                isHTML = True
+        try:
+            response = session.head(
+                urlToDownload,
+                headers=RequestHelper.desktopHeader,
+                verify=self.verify_cert,
+                allow_redirects=True,
+            )
+        except (InvalidSchema, InvalidURL, MissingSchema) as e:
+            # don't download urls like 'mailto:name@provider.com'
+            logging.debug('Attempt is aborted because the URL has no correct format.')
+            self.success = True
+            return False
 
-            url_parsed = urlparse.urlsplit(urlToDownload)
-            new_filename = posixpath.basename(url_parsed.path)
-            new_filename = headers.get_filename(new_filename)
-            total_bytes_estimate = int(headers.get('Content-Length', -1))
+        content_type = response.headers.get('Content-Type', 'text/html').split(';')[0]
+        if content_type == 'text/html' or content_type == 'text/plain':
+            isHTML = True
+
+        total_bytes_estimate = int(response.headers.get('Content-Length', -1))
+
+        url_parsed = urlparse.urlsplit(urlToDownload)
+        new_filename = posixpath.basename(url_parsed.path)
+
+        if "Content-Disposition" in response.headers.keys():
+            found_names = re.findall("filename=(.+)", response.headers["Content-Disposition"])
+            if len(found_names) > 0:
+                new_filename = unquote(found_names[0])
 
         if isHTML:
             tmp_filename = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
@@ -393,7 +418,7 @@ class URLTarget(object):
                 'outtmpl': (tmp_file + '.%(ext)s'),
                 'nocheckcertificate': True,
                 'retries': 10,
-                'fragment_retries': 10
+                'fragment_retries': 10,
             }
             if use_cookies:
                 ydl_opts.update({'cookiefile': cookies_path})
@@ -411,6 +436,13 @@ class URLTarget(object):
                 except Exception:
                     # return False
                     pass
+
+        if response.url != urlToDownload:
+            if response.history and len(response.history) > 0:
+                logging.debug('T%s - URL was redirected, %s times!', self.thread_id, len(response.history))
+            else:
+                logging.debug('T%s - URL has changed after information retrieval.', self.thread_id)
+            urlToDownload = response.url
 
         logging.debug('T%s - Downloading file directly', self.thread_id)
 
