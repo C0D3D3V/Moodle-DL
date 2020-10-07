@@ -46,6 +46,7 @@ If you run the program on **Windows**, please use [Powershell or CMD](https://ww
     - It does not fetch the current state of your Moodle-Account.
 - `moodle-dl --new-token`
     - Overrides the login-token with a newly obtained one.
+    - The script will ask you for your credentials unless you explicitly specify them with the options `--username` and `--password`
     - It does not fetch the current state of your Moodle-Account.
     - Use it if at any point in time, for whatever reason, the saved token gets rejected by Moodle.
     - It does not affect the rest of the config.
@@ -79,6 +80,13 @@ Options can be combined with all the actions mentioned above.
     - Overwrites the number of download threads. (default: 5)
 - `--verbose`
     - Print various debugging information
+- `--username USERNAME`
+    - Can be used to automate the `--new-token` process. 
+    - Specify username to skip the query when creating a new token.
+- `--password PASSWORD`
+    - Can be used to automate the `--new-token` process. 
+    - Specify password to skip the query when creating a new token.
+    - If the password contains special characters like spaces you can enclose it in quotation marks
 - `--skip-cert-verify`
     - This flag is used to skip the certification verification while sending requests to Moodle.
     - Warning: This might lead to security flaws and should only be used in non-production environments.
