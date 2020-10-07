@@ -45,10 +45,19 @@ class MoodleService:
         the Token and saves it.
         @return: The Token for Moodle.
         """
-        print('[The following Credentials are not saved, it is only used temporarily to generate a login token.]')
+
+        automated = False
+        stop_automatic_generation = False
+        if username is not None and password is not None:
+            automated = True
+
+        if not automated:
+            print('[The following Credentials are not saved, it is only used temporarily to generate a login token.]')
 
         moodle_token = None
         while moodle_token is None:
+            if stop_automatic_generation and automated:
+                break
 
             if not use_stored_url:
                 moodle_url = input('URL of Moodle:   ')
@@ -67,6 +76,7 @@ class MoodleService:
 
             if username is not None:
                 moodle_username = username
+                stop_automatic_generation = True
             else:
                 moodle_username = input('Username for Moodle:   ')
 
