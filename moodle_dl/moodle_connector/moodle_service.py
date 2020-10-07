@@ -37,7 +37,9 @@ class MoodleService:
         if log_responses:
             self.log_responses_to = str(Path(storage_path) / 'responses.log')
 
-    def interactively_acquire_token(self, use_stored_url: bool = False) -> str:
+    def interactively_acquire_token(
+        self, use_stored_url: bool = False, username: str = None, password: str = None
+    ) -> str:
         """
         Walks the user through executing a login into the Moodle-System to get
         the Token and saves it.
@@ -63,8 +65,15 @@ class MoodleService:
                 moodle_domain = self.config_helper.get_moodle_domain()
                 moodle_path = self.config_helper.get_moodle_path()
 
-            moodle_username = input('Username for Moodle:   ')
-            moodle_password = getpass('Password for Moodle [no output]:   ')
+            if username is not None:
+                moodle_username = username
+            else:
+                moodle_username = input('Username for Moodle:   ')
+
+            if password is not None:
+                moodle_password = password
+            else:
+                moodle_password = getpass('Password for Moodle [no output]:   ')
 
             try:
                 moodle_token, moodle_privatetoken = login_helper.obtain_login_token(

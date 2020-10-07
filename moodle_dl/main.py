@@ -117,7 +117,7 @@ def run_configure(storage_path, skip_cert_verify=False):
     Log.success('Configuration successfully updated!')
 
 
-def run_new_token(storage_path, use_sso=False, skip_cert_verify=False):
+def run_new_token(storage_path, use_sso=False, username: str = None, password: str = None, skip_cert_verify=False):
     config = ConfigHelper(storage_path)
     config.load()  # because we do not want to override the other settings
 
@@ -126,7 +126,7 @@ def run_new_token(storage_path, use_sso=False, skip_cert_verify=False):
     if use_sso:
         moodle.interactively_acquire_sso_token(use_stored_url=True)
     else:
-        moodle.interactively_acquire_token(use_stored_url=True)
+        moodle.interactively_acquire_token(use_stored_url=True, username=username, password=password)
 
     Log.success('New Token successfully saved!')
 
@@ -287,7 +287,7 @@ def run_main(storage_path, verbose=False, skip_cert_verify=False, without_downlo
         sys.exit(-1)
 
 
-def _dir_path(path):    
+def _dir_path(path):
     # Working around MAX_PATH limitation on Windows (see
     # http://msdn.microsoft.com/en-us/library/windows/desktop/aa365247(v=vs.85).aspx)
     if os.name == 'nt':
@@ -427,6 +427,22 @@ def get_parser():
     )
 
     parser.add_argument(
+        '-u',
+        '--username',
+        default=None,
+        type=str,
+        help=('Specify username to skip the query when creating a new token.'),
+    )
+
+    parser.add_argument(
+        '-pw',
+        '--password',
+        default=None,
+        type=str,
+        help=('Specify password to skip the query when creating a new token.'),
+    )
+
+    parser.add_argument(
         '-v',
         '--verbose',
         default=False,
@@ -460,7 +476,7 @@ def get_parser():
         help='This flag can be used together with --init. If'
         + ' this flag is set, you will be guided through the'
         + ' Single Sign On (SSO) login process during'
-        + 'initialization.',
+        + ' initialization.',
     )
 
     return parser
@@ -477,6 +493,8 @@ def main(args=None):
 
     use_sso = args.sso
     verbose = args.verbose
+    username = args.username
+    password = args.password
     storage_path = args.path
     skip_cert_verify = args.skip_cert_verify
     without_downloading_files = args.without_downloading_files
@@ -488,7 +506,7 @@ def main(args=None):
     elif args.config:
         run_configure(storage_path, skip_cert_verify)
     elif args.new_token:
-        run_new_token(storage_path, use_sso, skip_cert_verify)
+        run_new_token(storage_path, use_sso, username, password, skip_cert_verify)
     elif args.change_notification_mail:
         run_change_notification_mail(storage_path)
     elif args.change_notification_telegram:
