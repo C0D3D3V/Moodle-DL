@@ -196,17 +196,17 @@ class DownloadService:
 
         threads_status_message = ''
         threads_total_downloaded = 0
-        add_empty_line = 0
         for thread in self.threads:
-            if not thread.is_alive():
-                add_empty_line += 1
-                continue
 
             i = thread.thread_id
             # A thread status contains it id and the progress
             # of the current file
             thread_percentage = self.thread_report[i]['percentage']
             thread_current_url = self.thread_report[i]['current_url']
+            if not thread.is_alive():
+                thread_percentage = 100
+                thread_current_url = 'Finished!'
+
             if len(thread_current_url) + 13 > limits.columns:
                 thread_current_url = thread_current_url[0 : limits.columns - 15] + '..'
 
@@ -218,9 +218,6 @@ class DownloadService:
             if extra_totalsize is not None and extra_totalsize != -1:
                 self.total_to_download += extra_totalsize
                 self.thread_report[i]['extra_totalsize'] = -1
-
-        for i in range(add_empty_line):
-            threads_status_message += '\033[K\n'
 
         progressmessage += threads_status_message
 
@@ -263,17 +260,17 @@ class DownloadService:
 
     @staticmethod
     def format_speed(speed):
-        if speed is None:
+        if speed is None or speed <= 0:
             return '%10s' % '---b/s'
         return '%10s' % ('%s/s' % format_bytes(speed))
 
     def _clear_status_message(self):
-        print(f'\033[{len(self.threads)}A', end='')
+        print(f'\033[{len(self.threads)}A\r', end='')
 
         print('\033[K\n' * (len(self.threads)), end='')
         print('\033[K', end='')
 
-        print(f'\033[{len(self.threads)}A', end='')
+        print(f'\033[{len(self.threads)}A\r', end='')
 
     def _log_failures(self):
         """
