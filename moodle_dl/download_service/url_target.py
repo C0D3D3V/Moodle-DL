@@ -396,16 +396,17 @@ class URLTarget(object):
             )
         except (InvalidSchema, InvalidURL, MissingSchema):
             # don't download urls like 'mailto:name@provider.com'
-            logging.debug('Attempt is aborted because the URL has no correct format')
+            logging.debug('T%s - Attempt is aborted because the URL has no correct format', self.thread_id)
             self.success = True
             return False
 
         if not response.ok:
             # The URL reports an HTTP error, so we give up trying to download the URL.
             logging.warning(
-                'Stopping the attemp to download %s because of the HTTP ERROR %s',
+                'T%s - Stopping the attemp to download %s because of the HTTP ERROR %s',
                 self.file.content_fileurl,
                 response.status_code,
+                self.thread_id,
             )
             self.success = True
             return True
