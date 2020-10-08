@@ -12,16 +12,13 @@ class CookieHandler:
     Fetches and saves the cookies of Moodle.
     """
 
-    def __init__(
-        self, request_helper: RequestHelper, version: int, storage_path: str, moodle_domain: str, moodle_path: str
-    ):
+    def __init__(self, request_helper: RequestHelper, version: int, storage_path: str):
         self.request_helper = request_helper
         self.version = version
         self.storage_path = storage_path
-        self.moodle_domain = moodle_domain
-        self.moodle_path = moodle_path
         self.cookies_path = str(Path(storage_path) / 'Cookies.txt')
-        self.moodle_test_url = 'https://' + moodle_domain + moodle_path
+
+        self.moodle_test_url = self.request_helper.url_base
 
     def fetch_autologin_key(self, privatetoken: str) -> {str: str}:
 
@@ -41,16 +38,16 @@ class CookieHandler:
             logging.debug("Cookie lockout: %s", e)  # , extra={'exception': e}
             return None
 
-    def test_cookies(self, moodle_test_url: str) -> bool:
+    def test_cookies(self) -> bool:
         """Test if cookies are valide
-
-        Args:
-            moodle_test_url (str): URL to test
 
         Returns:
             bool: True if valide
         """
-        response, session = self.request_helper.get_URL(moodle_test_url, self.cookies_path)
+
+        logging.debug('Testing cookies with this URL %s', self.moodle_test_url)
+
+        response, session = self.request_helper.get_URL(self.moodle_test_url, self.cookies_path)
 
         response_text = response.text
 
@@ -68,7 +65,8 @@ class CookieHandler:
         if os.path.exists(self.cookies_path):
             # test if still logged in.
 
-            if self.test_cookies(self.moodle_test_url):
+            if self.test_cookies():
+                logging.debug('Cookies are still valid')
                 return True
 
             warning_msg = 'Moodle cookie has expired, an attempt is made to generate a new cookie.'
@@ -102,12 +100,9 @@ class CookieHandler:
 
         cookies_response, cookies_session = self.request_helper.post_URL(url, post_data, self.cookies_path)
 
-        moodle_test_url = self.request_helper.url_base
-        logging.debug(
-            'Autologin redirected to %s | Testing cookies with this URL %s', cookies_response.url, moodle_test_url
-        )
+        logging.debug('Autologin redirected to %s', cookies_response.url)
 
-        if self.test_cookies(moodle_test_url):
+        if self.test_cookies():
             return True
         else:
             error_msg = 'Failed to generate cookies!'

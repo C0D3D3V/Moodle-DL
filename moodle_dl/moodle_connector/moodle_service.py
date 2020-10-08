@@ -232,7 +232,7 @@ class MoodleService:
             results_handler.setVersion(version)
 
             # generate a new cookie if necessary
-            cookie_handler = CookieHandler(request_helper, version, self.storage_path, moodle_domain, moodle_path)
+            cookie_handler = CookieHandler(request_helper, version, self.storage_path)
             cookie_handler.check_and_fetch_cookies(privatetoken, userid)
 
             courses_list = first_contact_handler.fetch_courses(userid)
