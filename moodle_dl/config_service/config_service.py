@@ -45,6 +45,7 @@ class ConfigService:
         self._select_should_download_links_in_descriptions()
         self._select_should_download_databases()
         self._select_should_download_linked_files()
+        self._select_should_download_also_with_cookie()
 
     def _select_courses_to_download(self, courses: [Course]):
         """
@@ -333,6 +334,39 @@ class ConfigService:
         )
 
         self.config_helper.set_property('download_linked_files', download_linked_files)
+
+    def _select_should_download_also_with_cookie(self):
+        """
+        Ask the user whether files for which a cookie is required should be downloaded.
+        """
+        download_also_with_cookie = self.config_helper.get_download_also_with_cookie()
+
+        self.section_seperator()
+        Log.info(
+            'Descriptions may contain links to files that require a browser cookie so they can be downloaded.'
+            + ' There are also several Moodle plugins that cannot be displayed in the Moodle app,'
+            + ' so you need a browser cookie to download these plugin files.'
+        )
+
+        Log.debug(
+            'The Moodle browser cookie is created using your private token and stored in the `Configs.txt` file.'
+            + ' As long as this option is activated, the file always contains a valid cookie.'
+        )
+
+        if self.config_helper.get_privatetoken() is None:
+            Log.error(
+                'Currently no private token is stored in the configuration.'
+                + ' Create a private token with moodle-dl --new-token (if necessary with --sso)'
+            )
+
+        print('')
+
+        download_also_with_cookie = cutie.prompt_yes_or_no(
+            Log.special_str('Would you like to download files for which a cookie is required?'),
+            default_is_yes=download_also_with_cookie,
+        )
+
+        self.config_helper.set_property('download_also_with_cookie', download_also_with_cookie)
 
     def section_seperator(self):
         """Print a seperator line."""

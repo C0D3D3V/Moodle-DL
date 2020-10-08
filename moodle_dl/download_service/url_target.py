@@ -405,9 +405,9 @@ class URLTarget(object):
             # The URL reports an HTTP error, so we give up trying to download the URL.
             logging.warning(
                 'T%s - Stopping the attemp to download %s because of the HTTP ERROR %s',
+                self.thread_id,
                 self.file.content_fileurl,
                 response.status_code,
-                self.thread_id,
             )
             self.success = True
             return True

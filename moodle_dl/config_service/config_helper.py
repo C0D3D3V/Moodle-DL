@@ -137,6 +137,13 @@ class ConfigHelper:
         except ValueError:
             return False
 
+    def get_download_also_with_cookie(self) -> {}:
+        # returns if files for which a cookie is required should be downloaded.
+        try:
+            return self.get_property('download_also_with_cookie')
+        except ValueError:
+            return False
+
     def get_download_options(self) -> {}:
         # returns the option dictionary for downloading files
         options = {}

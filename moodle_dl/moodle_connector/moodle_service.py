@@ -216,9 +216,8 @@ class MoodleService:
         download_course_ids = self.config_helper.get_download_course_ids()
         dont_download_course_ids = self.config_helper.get_dont_download_course_ids()
         download_submissions = self.config_helper.get_download_submissions()
-        download_descriptions = self.config_helper.get_download_descriptions()
-        download_links_in_descriptions = self.config_helper.get_download_links_in_descriptions()
         download_databases = self.config_helper.get_download_databases()
+        download_also_with_cookie = self.config_helper.get_download_also_with_cookie()
 
         courses = []
         filtered_courses = []
@@ -231,9 +230,10 @@ class MoodleService:
             databases_handler = DatabasesHandler(request_helper, version)
             results_handler.setVersion(version)
 
-            # generate a new cookie if necessary
-            cookie_handler = CookieHandler(request_helper, version, self.storage_path)
-            cookie_handler.check_and_fetch_cookies(privatetoken, userid)
+            if download_also_with_cookie:
+                # generate a new cookie if necessary
+                cookie_handler = CookieHandler(request_helper, version, self.storage_path)
+                cookie_handler.check_and_fetch_cookies(privatetoken, userid)
 
             courses_list = first_contact_handler.fetch_courses(userid)
             courses = []
@@ -285,15 +285,7 @@ class MoodleService:
         changes = self.recorder.changes_of_new_version(filtered_courses)
 
         # Filter changes
-        changes = self.filter_courses(
-            changes,
-            download_course_ids,
-            dont_download_course_ids,
-            download_submissions,
-            download_descriptions,
-            download_links_in_descriptions,
-            download_databases,
-        )
+        changes = self.filter_courses(changes, self.config_helper)
 
         changes = self.add_options_to_courses(changes)
 
@@ -313,30 +305,21 @@ class MoodleService:
         return courses
 
     @staticmethod
-    def filter_courses(
-        changes: [Course],
-        download_course_ids: [int],
-        dont_download_course_ids: [int],
-        download_submissions: bool,
-        download_descriptions: bool,
-        download_links_in_descriptions: bool,
-        download_databases: bool,
-    ) -> [Course]:
+    def filter_courses(changes: [Course], config_helper: ConfigHelper) -> [Course]:
         """
         Filters the changes course list from courses that
         should not get downloaded
-        @param download_course_ids: list of course ids
-                                         that should be downloaded
-        @param dont_download_course_ids: list of course ids
-                                         that should not be downloaded
-        @param download_submissions: boolean if submissions
-                                    should be downloaded
-        @param download_descriptions: boolean if descriptions
-                                    should be downloaded
-        @param download_links_in_descriptions: boolean if links in descriptions should be downloaded
-        @param download_databases: boolean if databases should be downloaded
+        @param config_helper: ConfigHelper to obtain all the diffrent filter configs
         @return: filtered changes course list
         """
+
+        download_course_ids = config_helper.get_download_course_ids()
+        dont_download_course_ids = config_helper.get_dont_download_course_ids()
+        download_submissions = config_helper.get_download_submissions()
+        download_descriptions = config_helper.get_download_descriptions()
+        download_links_in_descriptions = config_helper.get_download_links_in_descriptions()
+        download_databases = config_helper.get_download_databases()
+        download_also_with_cookie = config_helper.get_download_also_with_cookie()
 
         filtered_changes = []
 
@@ -366,6 +349,13 @@ class MoodleService:
                 course_files = []
                 for file in course.files:
                     if file.content_type != 'database_file':
+                        course_files.append(file)
+                course.files = course_files
+
+            if not download_also_with_cookie:
+                course_files = []
+                for file in course.files:
+                    if not file.module_modname.startswith('cookie_mod-'):
                         course_files.append(file)
                 course.files = course_files
 

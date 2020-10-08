@@ -23,22 +23,7 @@ class OfflineService:
 
         stored_files = self.state_recorder.get_stored_files()
 
-        download_course_ids = self.config_helper.get_download_course_ids()
-        dont_download_course_ids = self.config_helper.get_dont_download_course_ids()
-        download_submissions = self.config_helper.get_download_submissions()
-        download_descriptions = self.config_helper.get_download_descriptions()
-        download_links_in_descriptions = self.config_helper.get_download_links_in_descriptions()
-        download_databases = self.config_helper.get_download_databases()
-
-        stored_files = MoodleService.filter_courses(
-            stored_files,
-            download_course_ids,
-            dont_download_course_ids,
-            download_submissions,
-            download_descriptions,
-            download_links_in_descriptions,
-            download_databases,
-        )
+        stored_files = MoodleService.filter_courses(stored_files, self.config_helper)
 
         if len(stored_files) <= 0:
             return
