@@ -220,6 +220,7 @@ class URLTarget(object):
             msg = msg.replace('\033[K', '')
             msg = msg.replace('\033[0;31m', '')
             msg = msg.replace('\033[0m', '')
+            msg = re.sub('token=([a-zA-Z0-9]+)', 'censored_sensitive_data', msg)
 
             return msg
 

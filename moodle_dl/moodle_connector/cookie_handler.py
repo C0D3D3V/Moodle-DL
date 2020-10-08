@@ -103,6 +103,7 @@ class CookieHandler:
         cookies_response, cookies_session = self.request_helper.post_URL(url, post_data, self.cookies_path)
 
         moodle_test_url = cookies_response.url
+        logging.debug('Test cookies with this URL: %s', moodle_test_url)
 
         if self.test_cookies(moodle_test_url):
             return True
