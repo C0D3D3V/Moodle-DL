@@ -75,6 +75,9 @@ class URLTarget(object):
         # Total downloaded.
         self.downloaded = 0
 
+        # For Youtube-dl errors
+        self.youtube_dl_failed_with_error = False
+
     def add_progress(self, count: int, block_size: int, total_size: int):
         """
         Callback function for urlretrieve to
@@ -207,8 +210,9 @@ class URLTarget(object):
         Just a logger for Youtube-DL
         """
 
-        def __init__(self, thread_id: int):
-            self.thread_id = thread_id
+        def __init__(self, url_target):
+            self.url_target = url_target
+            self.thread_id = url_target.thread_id
 
         def clean_msg(self, msg: str) -> str:
             msg = msg.replace('\n', '')
@@ -241,7 +245,9 @@ class URLTarget(object):
             if msg.find('Unsupported URL') >= 0:
                 logging.debug('T%s - youtube-dl Error: %s', self.thread_id, msg)
                 return
+            # This is a critical error, with high probability the link can be downloaded at a later time.
             logging.error('T%s - youtube-dl Error: %s', self.thread_id, msg)
+            self.url_target.youtube_dl_failed_with_error = True
 
     def yt_hook(self, d):
         downloaded_bytes = d.get('downloaded_bytes', 0)
@@ -375,7 +381,6 @@ class URLTarget(object):
         total_bytes_estimate = -1
         session = requests.Session()
 
-        request = urllib.request.Request(url=urlToDownload, headers=RequestHelper.desktopHeader)
         if use_cookies:
             session.cookies = MozillaCookieJar(cookies_path)
 
@@ -389,11 +394,21 @@ class URLTarget(object):
                 verify=self.verify_cert,
                 allow_redirects=True,
             )
-        except (InvalidSchema, InvalidURL, MissingSchema) as e:
+        except (InvalidSchema, InvalidURL, MissingSchema):
             # don't download urls like 'mailto:name@provider.com'
-            logging.debug('Attempt is aborted because the URL has no correct format.')
+            logging.debug('Attempt is aborted because the URL has no correct format')
             self.success = True
             return False
+
+        if not response.ok:
+            # The URL reports an HTTP error, so we give up trying to download the URL.
+            logging.warning(
+                'Stopping the attemp to download %s because of the HTTP ERROR %s',
+                self.file.content_fileurl,
+                response.status_code,
+            )
+            self.success = True
+            return True
 
         content_type = response.headers.get('Content-Type', 'text/html').split(';')[0]
         if content_type == 'text/html' or content_type == 'text/plain':
@@ -413,7 +428,7 @@ class URLTarget(object):
             tmp_filename = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
             tmp_file = str(Path(self.destination) / tmp_filename)
             ydl_opts = {
-                'logger': self.YtLogger(self.thread_id),
+                'logger': self.YtLogger(self),
                 'progress_hooks': [self.yt_hook],
                 'outtmpl': (tmp_file + '.%(ext)s'),
                 'nocheckcertificate': True,
@@ -437,9 +452,24 @@ class URLTarget(object):
                     # return False
                     pass
 
+            if self.youtube_dl_failed_with_error is True:
+                if not delete_if_successful:
+                    # cleanup the url-link file
+                    try:
+                        os.remove(self.file.saved_to)
+                    except Exception as e:
+                        logging.warning(
+                            'T%s - Could not delete %s after youtube-dl failed. Error: %s',
+                            self.thread_id,
+                            self.file.saved_to,
+                            e,
+                        )
+                self.success = False
+                raise RuntimeError('Youtube-dl failed to download the URL, see youtube-dl error message for details.')
+
         if response.url != urlToDownload:
             if response.history and len(response.history) > 0:
-                logging.debug('T%s - URL was redirected, %s times!', self.thread_id, len(response.history))
+                logging.debug('T%s - URL was redirected, %s time(s)!', self.thread_id, len(response.history))
             else:
                 logging.debug('T%s - URL has changed after information retrieval.', self.thread_id)
             urlToDownload = response.url
@@ -640,6 +670,7 @@ class URLTarget(object):
         self.thread_report[self.thread_id]['percentage'] = 0
         self.thread_report[self.thread_id]['extra_totalsize'] = None
         self.thread_report[self.thread_id]['current_url'] = self.file.content_fileurl
+        self.youtube_dl_failed_with_error = False
 
         try:
             logging.debug('T%s - Starting downloading of: %s', self.thread_id, self)
