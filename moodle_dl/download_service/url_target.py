@@ -452,7 +452,7 @@ class URLTarget(object):
         if new_extension == '' and isHTML:
             new_extension = '.html'
 
-        if self.file.module_modname.endswith('-description'):
+        if self.file.module_modname.endswith('-description') and new_name != '':
             self.filename = new_name + new_extension
 
         old_name, old_extension = os.path.splitext(self.filename)
