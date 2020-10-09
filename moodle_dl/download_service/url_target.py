@@ -7,22 +7,23 @@ import urllib
 import random
 import string
 import logging
-import requests
 import posixpath
 import traceback
 import threading
 import contextlib
 
-from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema
 from pathlib import Path
 from http.cookiejar import MozillaCookieJar
 from urllib.error import ContentTooShortError
 import urllib.parse as urlparse
 from email.utils import unquote
 
+import requests
 import html2text
 import youtube_dl
+
 from youtube_dl.utils import format_bytes
+from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema
 
 from moodle_dl.state_recorder.file import File
 from moodle_dl.state_recorder.course import Course
@@ -292,47 +293,6 @@ class URLTarget(object):
             self.thread_report[self.thread_id]['percentage'] = 100
             self.thread_report[self.thread_id]['extra_totalsize'] = None
 
-    def move_tmp_file(self, tmp_file: str):
-        """
-        Moves temporary files to there correct locations.
-        This tries to move every file that beginns with the tmp_file string
-        to its new locations.
-        @params tmp_file: Is a path + the basename
-                          (without the extension) of the tmp_file
-        """
-        lookup_dir = os.path.dirname(tmp_file)
-        tmp_filename = os.path.basename(tmp_file)
-
-        logging.debug('T%s - Renaming "%s" to "%s"', self.thread_id, tmp_filename, self.filename)
-        for found_filename in os.listdir(lookup_dir):
-            if found_filename.startswith(tmp_filename + '.'):
-                one_tmp_file = os.path.join(lookup_dir, found_filename)
-
-                found_filename_base, found_file_extension = os.path.splitext(found_filename)
-
-                new_filename = self.filename + found_file_extension
-                new_path = str(Path(self.destination) / new_filename)
-
-                # lock because of raise condition
-                self.fs_lock.acquire()
-                new_path = self._get_path_of_non_existent_file(new_path)
-
-                self.file.saved_to = new_path
-                try:
-                    logging.debug('T%s - Moved "%s" to "%s"', self.thread_id, found_filename, new_filename)
-                    shutil.move(one_tmp_file, self.file.saved_to)
-                except Exception as e:
-                    logging.warning(
-                        'T%s - Failed to move the temporary video file %s to %s!  Error: %s',
-                        self.thread_id,
-                        found_filename,
-                        new_filename,
-                        e,
-                    )
-                self.fs_lock.release()
-
-        self.file.time_stamp = int(time.time())
-
     def try_download_link(
         self, add_token: bool = False, delete_if_successful: bool = False, use_cookies: bool = False
     ) -> bool:
@@ -427,15 +387,20 @@ class URLTarget(object):
                 new_filename = unquote(found_names[0])
 
         if isHTML:
-            tmp_filename = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
-            tmp_file = str(Path(self.destination) / tmp_filename)
+
+            filename_tmpl = self.filename + ' | %(title)s (%(id)s).%(ext)s'
+            if self.file.module_modname.endswith('-description'):
+                filename_tmpl = '%(title)s (%(id)s).%(ext)s'
+            outtmpl = str(Path(self.destination) / filename_tmpl)
+
             ydl_opts = {
                 'logger': self.YtLogger(self),
                 'progress_hooks': [self.yt_hook],
-                'outtmpl': (tmp_file + '.%(ext)s'),
-                'nocheckcertificate': True,
+                'outtmpl': outtmpl,
+                'nocheckcertificate': self.skip_cert_verify,
                 'retries': 10,
                 'fragment_retries': 10,
+                'ignoreerrors': True,
             }
             if use_cookies:
                 ydl_opts.update({'cookiefile': cookies_path})
@@ -447,7 +412,9 @@ class URLTarget(object):
                         # return False
                         pass
                     else:
-                        self.move_tmp_file(tmp_file)
+                        self.file.saved_to = str(Path(self.destination) / self.filename)
+                        self.file.time_stamp = int(time.time())
+
                         self.success = True
                         return True
                 except Exception:
@@ -467,7 +434,9 @@ class URLTarget(object):
                             e,
                         )
                 self.success = False
-                raise RuntimeError('Youtube-dl failed to download the URL, see youtube-dl error message for details.')
+                raise RuntimeError(
+                    'Youtube-dl could not download the URL. For details see youtube-dl error messages in the log file'
+                )
 
         if response.url != urlToDownload:
             if response.history and len(response.history) > 0:
@@ -483,8 +452,8 @@ class URLTarget(object):
         if new_extension == '' and isHTML:
             new_extension = '.html'
 
-        # if self.filename.startswith(('https://', 'http://')):
-        #     self.filename = new_name + new_extension
+        if self.file.module_modname.endswith('-description'):
+            self.filename = new_name + new_extension
 
         old_name, old_extension = os.path.splitext(self.filename)
 
@@ -717,8 +686,6 @@ class URLTarget(object):
                 add_token = False
                 if self.options.get('download_linked_files', False) and not self.is_filtered_external_domain():
                     self.try_download_link(add_token, False, False)
-                    # Warning: try_download_link overwrites saved_to and
-                    # time_stamp in move_tmp_file
                 return self.success
 
             url_to_download = self.file.content_fileurl
