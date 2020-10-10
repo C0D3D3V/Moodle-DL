@@ -168,6 +168,11 @@ class ConfigHelper:
         else:
             options.update({'cookies_path': None})
 
+        try:
+            options.update({'youtube_dl_options': self.get_property('youtube_dl_options')})
+        except ValueError:
+            options.update({'youtube_dl_options': {}})
+
         return options
 
     def get_restricted_filenames(self) -> {}:

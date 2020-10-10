@@ -338,12 +338,29 @@ class MoodleService:
                         course_files.append(file)
                 course.files = course_files
 
-            if not download_links_in_descriptions:
-                course_files = []
-                for file in course.files:
-                    if not file.module_modname.endswith('-description'):
+            course_files = []
+            for file in course.files:
+                if not file.content_type == 'description-url':
+                    course_files.append(file)
+
+                elif download_links_in_descriptions:
+                    add_description_url = True
+                    for test_file in course.files:
+                        if file.content_fileurl == test_file.content_fileurl:
+                            if test_file.content_type != 'description-url':
+                                # If a URL in a description also exists as a real link in the course,
+                                # then ignore this URL
+                                add_description_url = False
+                                break
+                            elif file.module_id > test_file.module_id:
+                                # Always use the link from the older description.
+                                add_description_url = False
+                                break
+
+                    if add_description_url:
                         course_files.append(file)
-                course.files = course_files
+
+            course.files = course_files
 
             if not download_databases:
                 course_files = []

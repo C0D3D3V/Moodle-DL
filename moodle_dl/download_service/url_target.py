@@ -293,6 +293,12 @@ class URLTarget(object):
             self.thread_report[self.thread_id]['percentage'] = 100
             self.thread_report[self.thread_id]['extra_totalsize'] = None
 
+    def is_blocked_for_youtube_dl(self, url_to_download: str):
+        url_parsed = urlparse.urlparse(url_to_download)
+        if url_parsed.hostname.endswith('youtube.com') and url_parsed.path.startswith('/channel/'):
+            return True
+        return False
+
     def try_download_link(
         self, add_token: bool = False, delete_if_successful: bool = False, use_cookies: bool = False
     ) -> bool:
@@ -310,11 +316,11 @@ class URLTarget(object):
             bool: If it was successfull.
         """
 
-        urlToDownload = self.file.content_fileurl
-        logging.debug('T%s - Try to download linked file %s', self.thread_id, urlToDownload)
+        url_to_download = self.file.content_fileurl
+        logging.debug('T%s - Try to download linked file %s', self.thread_id, url_to_download)
 
         if add_token:
-            urlToDownload = self._add_token_to_url(self.file.content_fileurl)
+            url_to_download = self._add_token_to_url(self.file.content_fileurl)
 
         cookies_path = None
         if use_cookies:
@@ -350,8 +356,8 @@ class URLTarget(object):
 
         try:
             response = session.head(
-                urlToDownload,
-                headers=RequestHelper.desktopHeader,
+                url_to_download,
+                headers=RequestHelper.stdHeader,
                 verify=self.verify_cert,
                 allow_redirects=True,
             )
@@ -378,7 +384,14 @@ class URLTarget(object):
 
         total_bytes_estimate = int(response.headers.get('Content-Length', -1))
 
-        url_parsed = urlparse.urlsplit(urlToDownload)
+        if response.url != url_to_download:
+            if response.history and len(response.history) > 0:
+                logging.debug('T%s - URL was %s time(s) redirected', self.thread_id, len(response.history))
+            else:
+                logging.debug('T%s - URL has changed after information retrieval', self.thread_id)
+            url_to_download = response.url
+
+        url_parsed = urlparse.urlparse(url_to_download)
         new_filename = posixpath.basename(url_parsed.path)
 
         if "Content-Disposition" in response.headers.keys():
@@ -386,10 +399,10 @@ class URLTarget(object):
             if len(found_names) > 0:
                 new_filename = unquote(found_names[0])
 
-        if isHTML:
+        if isHTML and not self.is_blocked_for_youtube_dl(url_to_download):
 
             filename_tmpl = self.filename + ' | %(title)s (%(id)s).%(ext)s'
-            if self.file.module_modname.endswith('-description'):
+            if self.file.content_type == 'description-url':
                 filename_tmpl = '%(title)s (%(id)s).%(ext)s'
             outtmpl = str(Path(self.destination) / filename_tmpl)
 
@@ -402,16 +415,19 @@ class URLTarget(object):
                 'fragment_retries': 10,
                 'ignoreerrors': True,
             }
+            youtube_dl_options = self.options.get('youtube_dl_options', {})
+            ydl_opts.update(youtube_dl_options)
+
             if use_cookies:
                 ydl_opts.update({'cookiefile': cookies_path})
 
             with youtube_dl.YoutubeDL(ydl_opts) as ydl:
                 try:
-                    ydl_results = ydl.download([urlToDownload])
+                    ydl_results = ydl.download([url_to_download])
                     if ydl_results == 1:
                         # return False
                         pass
-                    else:
+                    elif self.file.module_name != 'index_mod-page':
                         self.file.saved_to = str(Path(self.destination) / self.filename)
                         self.file.time_stamp = int(time.time())
 
@@ -438,13 +454,6 @@ class URLTarget(object):
                     'Youtube-dl could not download the URL. For details see youtube-dl error messages in the log file'
                 )
 
-        if response.url != urlToDownload:
-            if response.history and len(response.history) > 0:
-                logging.debug('T%s - URL was redirected, %s time(s)!', self.thread_id, len(response.history))
-            else:
-                logging.debug('T%s - URL has changed after information retrieval.', self.thread_id)
-            urlToDownload = response.url
-
         logging.debug('T%s - Downloading file directly', self.thread_id)
 
         # generate file extension for modules names
@@ -452,7 +461,7 @@ class URLTarget(object):
         if new_extension == '' and isHTML:
             new_extension = '.html'
 
-        if self.file.module_modname.endswith('-description') and new_name != '':
+        if self.file.content_type == 'description-url' and new_name != '':
             self.filename = new_name + new_extension
 
         old_name, old_extension = os.path.splitext(self.filename)
@@ -466,7 +475,7 @@ class URLTarget(object):
             self.thread_report[self.thread_id]['extra_totalsize'] = total_bytes_estimate
 
         self.urlretrieve(
-            urlToDownload,
+            url_to_download,
             self.file.saved_to,
             context=self.ssl_context,
             reporthook=self.add_progress,
@@ -488,7 +497,7 @@ class URLTarget(object):
         """
 
         url_parsed = urlparse.urlparse(self.file.content_fileurl)
-        domain = url_parsed.netloc.split(':')[0]
+        domain = url_parsed.hostname
 
         blacklist = self.options.get('download_domains_blacklist', [])
         whitelist = self.options.get('download_domains_whitelist', [])

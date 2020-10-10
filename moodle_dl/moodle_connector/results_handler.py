@@ -136,6 +136,7 @@ class ResultsHandler:
         """
 
         urls = list(set(re.findall(r'href=[\'"]?([^\'" >]+)', description)))
+        urls += list(set(re.findall(r'src=[\'"]?([^\'" >]+)', description)))
 
         result = []
         for url in urls:

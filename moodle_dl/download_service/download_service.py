@@ -143,6 +143,9 @@ class DownloadService:
         Starts all threads to download the files and
         issues status messages at regular intervals.
         """
+        if self.total_files == 0:
+            return
+
         self._create_downloader_threads()
 
         print('\n' * (len(self.threads)), end='')
