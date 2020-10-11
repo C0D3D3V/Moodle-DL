@@ -94,6 +94,7 @@ Options can be combined with all the actions mentioned above.
 - `--without-downloading-files`
     - This flag is used to skip the downloading of files.
     - This allows the local database to be updated to the latest version of Moodle without having to download all files.
+    - This can also be used to ignore recurring errors by adding the files that produce the errors to the database. So these files are not downloaded again.
 - `--sso`
     - This flag is used to indicate that a Single Sign On (SSO) login to your Moodle is required. 
     - Can be combined with `--init` and `--new-token`.

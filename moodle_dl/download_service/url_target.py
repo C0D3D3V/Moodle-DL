@@ -4,8 +4,6 @@ import ssl
 import time
 import shutil
 import urllib
-import random
-import string
 import logging
 import posixpath
 import traceback
@@ -22,7 +20,7 @@ import requests
 import html2text
 import youtube_dl
 
-from youtube_dl.utils import format_bytes
+from youtube_dl.utils import format_bytes, timeconvert
 from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema
 
 from moodle_dl.state_recorder.file import File
@@ -299,6 +297,30 @@ class URLTarget(object):
             return True
         return False
 
+    def set_utime(self, last_modified: str = None):
+        """Sets the last modified and last activated time of a downloaded file
+
+        Args:
+            last_modified (str, optional): The last_modified header from the Webpage. Defaults to None.
+        """
+
+        if last_modified is not None:
+            filetime = timeconvert(last_modified)
+            if filetime is not None and filetime >= 0:
+                try:
+                    os.utime(self.file.saved_to, (time.time(), filetime))
+                    return
+                except Exception:
+                    logging.debug('T%s - Could not change utime', self.thread_id)
+                    pass
+
+        try:
+            os.utime(self.file.saved_to, (time.time(), self.file.content_timemodified))
+            return
+        except Exception:
+            logging.debug('T%s - Could not change utime', self.thread_id)
+            pass
+
     def try_download_link(
         self, add_token: bool = False, delete_if_successful: bool = False, use_cookies: bool = False
     ) -> bool:
@@ -383,6 +405,7 @@ class URLTarget(object):
             isHTML = True
 
         total_bytes_estimate = int(response.headers.get('Content-Length', -1))
+        last_modified = response.headers.get('Last-Modified', None)
 
         if response.url != url_to_download:
             if response.history and len(response.history) > 0:
@@ -414,6 +437,7 @@ class URLTarget(object):
                 'retries': 10,
                 'fragment_retries': 10,
                 'ignoreerrors': True,
+                'addmetadata': True,
             }
             youtube_dl_options = self.options.get('youtube_dl_options', {})
             ydl_opts.update(youtube_dl_options)
@@ -482,6 +506,7 @@ class URLTarget(object):
             cookies_path=cookies_path,
         )
 
+        self.set_utime(last_modified)
         self.file.time_stamp = int(time.time())
 
         self.success = True
@@ -502,21 +527,21 @@ class URLTarget(object):
         blacklist = self.options.get('download_domains_blacklist', [])
         whitelist = self.options.get('download_domains_whitelist', [])
 
-        inBlacklist = False
+        in_blacklist = False
 
         for entry in blacklist:
             if domain == entry or domain.endswith('.' + entry):
-                inBlacklist = True
+                in_blacklist = True
                 break
 
-        inWhitelist = len(whitelist) == 0
+        in_whitelist = len(whitelist) == 0
 
         for entry in whitelist:
             if domain == entry or domain.endswith('.' + entry):
-                inWhitelist = True
+                in_whitelist = True
                 break
 
-        return not inWhitelist or inBlacklist
+        return not in_whitelist or in_blacklist
 
     def create_shortcut(self):
         """
@@ -711,6 +736,7 @@ class URLTarget(object):
                 cookies_path=cookies_path,
             )
 
+            self.set_utime()
             self.file.time_stamp = int(time.time())
 
             self.success = True
