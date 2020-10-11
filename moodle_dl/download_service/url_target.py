@@ -304,22 +304,18 @@ class URLTarget(object):
             last_modified (str, optional): The last_modified header from the Webpage. Defaults to None.
         """
 
-        if last_modified is not None:
-            filetime = timeconvert(last_modified)
-            if filetime is not None and filetime >= 0:
-                try:
+        try:
+            if last_modified is not None:
+                filetime = timeconvert(last_modified)
+                if filetime is not None and filetime > 0:
                     os.utime(self.file.saved_to, (time.time(), filetime))
                     return
-                except Exception:
-                    logging.debug('T%s - Could not change utime', self.thread_id)
-                    pass
 
-        try:
-            os.utime(self.file.saved_to, (time.time(), self.file.content_timemodified))
-            return
+            if self.file.content_timemodified is not None and self.file.content_timemodified > 0:
+                os.utime(self.file.saved_to, (time.time(), self.file.content_timemodified))
+                
         except Exception:
             logging.debug('T%s - Could not change utime', self.thread_id)
-            pass
 
     def try_download_link(
         self, add_token: bool = False, delete_if_successful: bool = False, use_cookies: bool = False
