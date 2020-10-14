@@ -81,17 +81,14 @@ def run_init(storage_path, use_sso=False, skip_cert_verify=False):
             Log.info(
                 '  To set a cron-job for this program on your Unix-System:\n'
                 + '    1. `crontab -e`\n'
-                + '    2. Add `*/15 * * * * cd %s && python3 %smain.py`\n'
-                % (os.getcwd(), os.path.join(os.path.dirname(os.path.realpath(__file__)), ''))
+                + '    2. Add `*/15 * * * * cd {} && moodle-dl`\n'.format(os.getcwd())
                 + '    3. Save and you\'re done!'
             )
         else:
             Log.info(
                 '  To set a cron-job for this program on your Unix-System:\n'
                 + '    1. `crontab -e`\n'
-                + '    2. Add `*/15 * * * *'
-                + ' cd %s && python3 %smain.py --path %s`\n'
-                % (os.getcwd(), os.path.join(os.path.dirname(os.path.realpath(__file__)), ''), storage_path)
+                + '    2. Add `*/15 * * * * cd {} && moodle-dl -p {}`\n'.format(os.getcwd(), storage_path)
                 + '    3. Save and you\'re done!'
             )
 
