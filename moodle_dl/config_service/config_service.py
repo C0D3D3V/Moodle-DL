@@ -171,9 +171,7 @@ class ConfigService:
         changed = False
 
         # Ask for new name
-        overwrite_name_with = input(
-            Log.special_str('Enter a new name for this Course [leave blank for "%s"]:   ' % (course.fullname,))
-        )
+        overwrite_name_with = input('Enter a new name for this Course [leave blank for "%s"]:   ' % (course.fullname,))
 
         if overwrite_name_with == '':
             overwrite_name_with = None
