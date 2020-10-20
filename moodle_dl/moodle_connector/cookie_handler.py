@@ -55,12 +55,6 @@ class CookieHandler:
             return True
         return False
 
-    def delete_cookie_file(self):
-        try:
-            os.remove(self.cookies_path)
-        except OSError:
-            pass
-
     def check_and_fetch_cookies(self, privatetoken: str, userid: str) -> bool:
         if os.path.exists(self.cookies_path):
             # test if still logged in.
@@ -80,7 +74,6 @@ class CookieHandler:
             )
             logging.warning(error_msg)
             Log.error('\r' + error_msg + '\033[K')
-            self.delete_cookie_file()
             return False
 
         autologin_key = self.fetch_autologin_key(privatetoken)
@@ -90,7 +83,6 @@ class CookieHandler:
             logging.debug(error_msg)
             print('')
             Log.error(error_msg)
-            self.delete_cookie_file()
             return False
 
         print('\rDownloading cookies\033[K', end='')
@@ -109,5 +101,4 @@ class CookieHandler:
             logging.debug(error_msg)
             print('')
             Log.error(error_msg)
-            self.delete_cookie_file()
             return False

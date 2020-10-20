@@ -313,7 +313,7 @@ class URLTarget(object):
 
             if self.file.content_timemodified is not None and self.file.content_timemodified > 0:
                 os.utime(self.file.saved_to, (time.time(), self.file.content_timemodified))
-                
+
         except Exception:
             logging.debug('T%s - Could not change utime', self.thread_id)
 
@@ -340,10 +340,9 @@ class URLTarget(object):
         if add_token:
             url_to_download = self._add_token_to_url(self.file.content_fileurl)
 
-        cookies_path = None
+        cookies_path = self.options.get('cookies_path', None)
         if use_cookies:
-            cookies_path = self.options.get('cookies_path', None)
-            if cookies_path is None:
+            if cookies_path is None or not os.path.isfile(cookies_path):
                 self.success = False
                 raise ValueError(
                     'Moodle Cookies are missing. Run `moodle-dl -nt` to set a privatetoken for cookie generation (If necessary additionally `-sso`)'
@@ -366,11 +365,10 @@ class URLTarget(object):
         total_bytes_estimate = -1
         session = requests.Session()
 
-        if use_cookies:
-            session.cookies = MozillaCookieJar(cookies_path)
+        session.cookies = MozillaCookieJar(cookies_path)
 
-            if os.path.exists(cookies_path):
-                session.cookies.load(ignore_discard=True, ignore_expires=True)
+        if os.path.isfile(cookies_path):
+            session.cookies.load(ignore_discard=True, ignore_expires=True)
 
         try:
             response = session.head(
@@ -435,10 +433,11 @@ class URLTarget(object):
                 'ignoreerrors': True,
                 'addmetadata': True,
             }
+
             youtube_dl_options = self.options.get('youtube_dl_options', {})
             ydl_opts.update(youtube_dl_options)
 
-            if use_cookies:
+            if cookies_path is not None and os.path.isfile(cookies_path):
                 ydl_opts.update({'cookiefile': cookies_path})
 
             with youtube_dl.YoutubeDL(ydl_opts) as ydl:
@@ -702,10 +701,8 @@ class URLTarget(object):
                 self.try_download_link(add_token, True, False)
                 return self.success
 
-            cookies_path = None
             if self.file.module_modname.startswith('cookie_mod'):
                 add_token = False
-                cookies_path = self.options.get('cookies_path', None)
                 self.try_download_link(add_token, True, True)
                 return self.success
 
@@ -723,6 +720,8 @@ class URLTarget(object):
 
             if add_token:
                 url_to_download = self._add_token_to_url(self.file.content_fileurl)
+
+            cookies_path = self.options.get('cookies_path', None)
 
             self.urlretrieve(
                 url_to_download,
@@ -781,8 +780,9 @@ class URLTarget(object):
         request = urllib.request.Request(url=url, headers=RequestHelper.stdHeader)
         if cookies_path is not None:
             cookie_jar = MozillaCookieJar(cookies_path)
-            cookie_jar.load(ignore_discard=True, ignore_expires=True)
-            cookie_jar.add_cookie_header(request)
+            if os.path.isfile(cookies_path):
+                cookie_jar.load(ignore_discard=True, ignore_expires=True)
+                cookie_jar.add_cookie_header(request)
 
         with contextlib.closing(urllib.request.urlopen(request, context=context)) as fp:
             headers = fp.info()

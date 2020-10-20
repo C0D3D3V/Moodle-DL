@@ -221,6 +221,7 @@ class MoodleService:
 
         courses = []
         filtered_courses = []
+        cookie_handler = None
         try:
 
             print('\rDownloading account information\033[K', end='')
@@ -285,7 +286,7 @@ class MoodleService:
         changes = self.recorder.changes_of_new_version(filtered_courses)
 
         # Filter changes
-        changes = self.filter_courses(changes, self.config_helper)
+        changes = self.filter_courses(changes, self.config_helper, cookie_handler)
 
         changes = self.add_options_to_courses(changes)
 
@@ -305,11 +306,14 @@ class MoodleService:
         return courses
 
     @staticmethod
-    def filter_courses(changes: [Course], config_helper: ConfigHelper) -> [Course]:
+    def filter_courses(
+        changes: [Course], config_helper: ConfigHelper, cookie_handler: CookieHandler = None
+    ) -> [Course]:
         """
         Filters the changes course list from courses that
         should not get downloaded
         @param config_helper: ConfigHelper to obtain all the diffrent filter configs
+        @param cookie_handler: CookieHandler to check if the cookie is valid
         @return: filtered changes course list
         """
 
@@ -320,6 +324,8 @@ class MoodleService:
         download_links_in_descriptions = config_helper.get_download_links_in_descriptions()
         download_databases = config_helper.get_download_databases()
         download_also_with_cookie = config_helper.get_download_also_with_cookie()
+        if cookie_handler is not None:
+            download_also_with_cookie = cookie_handler.test_cookies()
 
         filtered_changes = []
 
