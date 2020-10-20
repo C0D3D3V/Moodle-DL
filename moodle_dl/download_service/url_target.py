@@ -440,21 +440,22 @@ class URLTarget(object):
             if cookies_path is not None and os.path.isfile(cookies_path):
                 ydl_opts.update({'cookiefile': cookies_path})
 
-            with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-                try:
-                    ydl_results = ydl.download([url_to_download])
-                    if ydl_results == 1:
-                        # return False
-                        pass
-                    elif self.file.module_name != 'index_mod-page':
-                        self.file.saved_to = str(Path(self.destination) / self.filename)
-                        self.file.time_stamp = int(time.time())
-
-                        self.success = True
-                        return True
-                except Exception:
+            ydl = youtube_dl.YoutubeDL(ydl_opts)
+            try:
+                ydl_results = ydl.download([url_to_download])
+                if ydl_results == 1:
                     # return False
                     pass
+                elif self.file.module_name != 'index_mod-page':
+                    self.file.saved_to = str(Path(self.destination) / self.filename)
+                    self.file.time_stamp = int(time.time())
+
+                    self.success = True
+                    return True
+            except Exception:
+                # return False
+                pass
+            # if we want we could save ydl.cookiejar (Also the cookiejar of moodle-dl)
 
             if self.youtube_dl_failed_with_error is True:
                 if not delete_if_successful:
