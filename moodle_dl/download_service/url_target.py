@@ -367,7 +367,7 @@ class URLTarget(object):
 
         session.cookies = MozillaCookieJar(cookies_path)
 
-        if os.path.isfile(cookies_path):
+        if cookies_path is not None and os.path.isfile(cookies_path):
             session.cookies.load(ignore_discard=True, ignore_expires=True)
 
         try:
