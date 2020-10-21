@@ -58,9 +58,7 @@ class OpencastBaseIE(InfoExtractor):
                 formats.extend(self._extract_mpd_formats(href, video_id, mpd_id='dash', fatal=False))
             elif transport == 'HLS' or ext == 'm3u8':
                 formats.extend(
-                    self._extract_m3u8_formats(
-                        href, video_id, ext='mp4', m3u8_id='hls', entry_protocol='m3u8_native', fatal=False
-                    )
+                    self._extract_m3u8_formats(href, video_id, m3u8_id='hls', entry_protocol='m3u8_native', fatal=False)
                 )
             elif transport == 'HDS' or ext == 'f4m':
                 formats.extend(self._extract_f4m_formats(href, video_id, f4m_id='hds', fatal=False))
@@ -79,8 +77,13 @@ class OpencastBaseIE(InfoExtractor):
                             {
                                 'app': m_obj.group('app'),
                                 'play_path': m_obj.group('playpath'),
+                                'rtmp_live': True,
+                                'preference': -2,
                             }
                         )
+                        extention = m_obj.group('playpath').split(':')
+                        if len(extention) > 1:
+                            track_obj.update({'ext': extention[0]})
 
                 audio_info = track.get('audio')
                 if audio_info is not None:
