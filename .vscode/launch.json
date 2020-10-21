@@ -10,7 +10,8 @@
             "cwd": "${workspaceFolder}/debugging-moodle/",
             "args": [
                 "-v"
-            ]
+            ],
+            "justMyCode": false
         }
     ]
 }
