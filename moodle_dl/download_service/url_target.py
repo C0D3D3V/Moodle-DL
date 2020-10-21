@@ -675,8 +675,6 @@ class URLTarget(object):
         self.thread_report[self.thread_id]['current_url'] = self.file.content_fileurl
         self.youtube_dl_failed_with_error = False
 
-        if self.file.content_fileurl == 'http://www.gutenberg.org/catalog/world/readfile?fk_files=1469960':
-            self.file.content_fileurl = 'https://oc-video1.ruhr-uni-bochum.de/paella/ui/watch.html?id=ed063cd5-72c8-46b5-a60a-569243edcea8'
         try:
             logging.debug('T%s - Starting downloading of: %s', self.thread_id, self)
             self.create_dir(self.destination)
