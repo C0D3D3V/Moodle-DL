@@ -236,6 +236,13 @@ class StateRecorder:
             return True
         return False
 
+    def __ignore_deleted(self, file: File):
+        # Returns true if the deleted file should be ignored.
+        if file.module_modname.endswith('forum'):
+            return True
+
+        return False
+
     def get_stored_files(self) -> [Course]:
         # get all stored files (that are not yet deleted)
         conn = sqlite3.connect(self.db_file)
@@ -337,12 +344,13 @@ class StateRecorder:
                         # file does still exist
                         break
 
-                if matching_file is None:
+                if matching_file is None and not self.__ignore_deleted(stored_file):
                     # No matching file was found --> file was deleted
                     stored_file.deleted = True
                     stored_file.notified = False
                     changed_course.files.append(stored_file)
-                else:
+
+                elif matching_file is not None:
                     matching_file.moved = True
                     matching_file.old_file = stored_file
                     changed_course.files.append(matching_file)

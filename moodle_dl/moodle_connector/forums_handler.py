@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from moodle_dl.moodle_connector.request_helper import RequestHelper
 from moodle_dl.state_recorder.course import Course
 from moodle_dl.download_service.path_tools import PathTools
@@ -136,6 +138,7 @@ class ForumsHandler:
                                     'subject': discussion.get('subject', ''),
                                     'timemodified': timemodified,
                                     'discussion_id': discussion.get('discussion', 0),
+                                    'created': discussion.get('created', 0),
                                 }
                             )
                         else:
@@ -157,15 +160,16 @@ class ForumsHandler:
             if len(shorted_discussion_name) > 17:
                 shorted_discussion_name = shorted_discussion_name[:15] + '..'
             discussion_id = discussion.get('discussion_id', 0)
+            discussion_created = discussion.get('created', 0)
 
             print(
-                '\rDownloading posts of discussion [%17s|%6s] %3d/%3d\033[K'
+                '\rDownloading posts of discussion [%-17s|%6s] %3d/%3d\033[K'
                 % (shorted_discussion_name, discussion_id, i, len(latest_discussions) - 1),
                 end='',
             )
 
             data = {
-                'discussionid': discussion.get('discussion_id', 0),
+                'discussionid': discussion_id,
                 'sortby': 'modified',
                 'sortdirection': 'ASC',
             }
@@ -185,7 +189,9 @@ class ForumsHandler:
                 if post_parent != 0:
                     post_filename = PathTools.to_valid_name(post_filename + ' response to [' + str(post_parent) + ']')
 
-                post_path = valid_subject
+                post_path = PathTools.to_valid_name(
+                    datetime.utcfromtimestamp(discussion_created).strftime('%y-%m-%d') + ' ' + valid_subject
+                )
 
                 post_files = post.get('messageinlinefiles', [])
                 post_files += post.get('attachments', [])

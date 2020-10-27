@@ -272,7 +272,7 @@ class MoodleService:
 
                 into = '\rDownloading course information'
 
-                status_message = into + ' %3d/%3d [%17s|%6s]' % (index, len(courses), shorted_course_name, course.id)
+                status_message = into + ' %3d/%3d [%-17s|%6s]' % (index, len(courses), shorted_course_name, course.id)
 
                 if len(status_message) > limits.columns:
                     status_message = status_message[0 : limits.columns]

@@ -154,8 +154,6 @@ class ResultsHandler:
 
         result = []
         original_module_modname = module_modname
-        if original_module_modname != "forum" and len(urls) > 0:
-            print(original_module_modname)
 
         for url in urls:
             if url == '':
