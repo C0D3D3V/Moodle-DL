@@ -33,7 +33,7 @@ class PathTools:
         while '  ' in name:
             name = name.replace('  ', ' ')
         name = sanitize_filename(name, PathTools.restricted_filenames)
-        name = name.strip('.')
+        name = name.strip('. ')
         name = name.strip()
 
         return name

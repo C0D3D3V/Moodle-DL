@@ -153,18 +153,22 @@ class ResultsHandler:
         urls += list(set(re.findall(r'src=[\'"]?([^\'" >]+)', description)))
 
         result = []
+        original_module_modname = module_modname
+        if original_module_modname != "forum" and len(urls) > 0:
+            print(original_module_modname)
+
         for url in urls:
             if url == '':
                 continue
 
-            module_modname = 'url-description'
+            module_modname = 'url-description-' + original_module_modname
 
             url_parts = urlparse.urlparse(url)
             if url_parts.hostname == self.moodle_domain and url_parts.path.find('/webservice/') >= 0:
-                module_modname = 'index_mod-description'
+                module_modname = 'index_mod-description-' + original_module_modname
 
             elif url_parts.hostname == self.moodle_domain:
-                module_modname = 'cookie_mod-description'
+                module_modname = 'cookie_mod-description-' + original_module_modname
 
             new_file = File(
                 module_id=module_id,

@@ -617,6 +617,7 @@ class URLTarget(object):
 
             self.success = True
         else:
+            self.set_utime()
             self.file.time_stamp = int(time.time())
 
             self.success = True

@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from moodle_dl.moodle_connector.request_helper import RequestHelper
 from moodle_dl.state_recorder.course import Course
 from moodle_dl.download_service.path_tools import PathTools
@@ -154,8 +152,8 @@ class ForumsHandler:
         result = []
 
         for i, discussion in enumerate(latest_discussions):
-
-            shorted_discussion_name = discussion.get('subject', '')
+            valid_subject = PathTools.to_valid_name(discussion.get('subject', ''))
+            shorted_discussion_name = valid_subject
             if len(shorted_discussion_name) > 17:
                 shorted_discussion_name = shorted_discussion_name[:15] + '..'
             discussion_id = discussion.get('discussion_id', 0)
@@ -178,23 +176,16 @@ class ForumsHandler:
 
             for post in posts:
                 post_message = post.get('message', '')
-                post_created = post.get('created', 0)
                 post_modified = post.get('modified', 0)
 
                 post_id = post.get('id', 0)
                 post_parent = post.get('parent', 0)
                 post_userfullname = post.get('userfullname', '')
-                post_filename = PathTools.to_valid_name(
-                    datetime.utcfromtimestamp(post_created).strftime('%Y-%m-%d %H:%M:%S')
-                    + ' ['
-                    + str(post_id)
-                    + '] '
-                    + post_userfullname
-                )
+                post_filename = PathTools.to_valid_name('[' + str(post_id) + '] ' + post_userfullname)
                 if post_parent != 0:
                     post_filename = PathTools.to_valid_name(post_filename + ' response to [' + str(post_parent) + ']')
 
-                post_path = PathTools.to_valid_name(discussion.get('subject', ''))
+                post_path = valid_subject
 
                 post_files = post.get('messageinlinefiles', [])
                 post_files += post.get('attachments', [])

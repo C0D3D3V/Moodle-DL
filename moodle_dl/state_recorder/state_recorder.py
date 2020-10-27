@@ -172,6 +172,18 @@ class StateRecorder:
 
         if file1.content_type == file2.content_type and file1.module_modname == file2.module_modname:
             return True
+
+        elif (
+            file1.content_type == 'description-url'
+            and file1.content_type == file2.content_type
+            and (
+                file1.module_modname.startswith(file2.module_modname)
+                or file2.module_modname.startswith(file1.module_modname)
+            )
+        ):
+            # stop redownloading old description urls. Sorry the  module_modname structure has changed
+            return True
+
         return False
 
     def __files_have_same_path(self, file1: File, file2: File) -> bool:
