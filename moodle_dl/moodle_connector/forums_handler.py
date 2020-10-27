@@ -26,7 +26,7 @@ class ForumsHandler:
         if self.version < 2013051400:
             return {}
 
-        print('\rDownloading databases information\033[K', end='')
+        print('\rDownloading forums information\033[K', end='')
 
         # We create a dictionary with all the courses we want to request.
         extra_data = {}
@@ -87,8 +87,6 @@ class ForumsHandler:
 
         counter = 0
         total = 0
-        intro = '\rDownloading forum discussions'
-
         # count total forums for nice console output
         for course_id in forums:
             for forum_id in forums[course_id]:
@@ -110,7 +108,9 @@ class ForumsHandler:
                     }
 
                     print(
-                        intro + ' %3d/%3d [%6s|%6s|p%s]\033[K' % (counter, total, course_id, real_id, page_num), end=''
+                        '\rDownloading forum discussions %3d/%3d [%6s|%6s|p%s]\033[K'
+                        % (counter, total, course_id, real_id, page_num),
+                        end='',
                     )
 
                     if self.version >= 2019052000:
@@ -155,8 +155,14 @@ class ForumsHandler:
 
         for i, discussion in enumerate(latest_discussions):
 
+            shorted_discussion_name = discussion.get('subject', '')
+            if len(shorted_discussion_name) > 17:
+                shorted_discussion_name = shorted_discussion_name[:15] + '..'
+            discussion_id = discussion.get('discussion_id', 0)
+
             print(
-                '\rDownloading posts of discussion %3d/%3d\033[K' % (i, len(latest_discussions) - 1),
+                '\rDownloading posts of discussion [%17s|%6s] %3d/%3d\033[K'
+                % (shorted_discussion_name, discussion_id, i, len(latest_discussions) - 1),
                 end='',
             )
 
@@ -196,9 +202,9 @@ class ForumsHandler:
                 post_file = {
                     'filename': post_filename,
                     'filepath': post_path,
-                    'modified': post_modified,
-                    'message': post_message,
-                    'type': 'post',
+                    'timemodified': post_modified,
+                    'description': post_message,
+                    'type': 'description',
                 }
                 result.append(post_file)
 

@@ -128,7 +128,13 @@ class ResultsHandler:
         return description
 
     def _find_all_urls_in_description(
-        self, section_name: str, module_name: str, module_modname: str, module_id: str, description: str
+        self,
+        section_name: str,
+        module_name: str,
+        module_modname: str,
+        module_id: str,
+        content_filepath: str,
+        description: str,
     ) -> [File]:
         """Parses a description to find all urls in it. Then it creates for every url a file entry.
 
@@ -164,7 +170,7 @@ class ResultsHandler:
                 module_id=module_id,
                 section_name=section_name,
                 module_name=module_name,
-                content_filepath='/',
+                content_filepath=content_filepath,
                 content_filename=url,
                 content_fileurl=url,
                 content_filesize=0,
@@ -261,7 +267,7 @@ class ResultsHandler:
             if content_type == 'description':
                 new_file.text_content = content_description
                 files += self._find_all_urls_in_description(
-                    section_name, module_name, module_modname, module_id, content_description
+                    section_name, module_name, module_modname, module_id, content_filepath, content_description
                 )
 
             files.append(new_file)
@@ -310,7 +316,7 @@ class ResultsHandler:
 
         description.text_content = module_description
         files += self._find_all_urls_in_description(
-            section_name, module_name, module_modname, module_id, module_description
+            section_name, module_name, module_modname, module_id, content_filepath, module_description
         )
 
         files.append(description)
