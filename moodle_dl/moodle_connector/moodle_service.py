@@ -14,6 +14,7 @@ from moodle_dl.moodle_connector import login_helper
 from moodle_dl.moodle_connector import sso_token_receiver
 from moodle_dl.moodle_connector.cookie_handler import CookieHandler
 from moodle_dl.moodle_connector.results_handler import ResultsHandler
+from moodle_dl.moodle_connector.forums_handler import ForumsHandler
 from moodle_dl.moodle_connector.databases_handler import DatabasesHandler
 from moodle_dl.moodle_connector.assignments_handler import AssignmentsHandler
 from moodle_dl.moodle_connector.first_contact_handler import FirstContactHandler
@@ -217,6 +218,7 @@ class MoodleService:
         dont_download_course_ids = self.config_helper.get_dont_download_course_ids()
         download_submissions = self.config_helper.get_download_submissions()
         download_databases = self.config_helper.get_download_databases()
+        download_forums = self.config_helper.get_download_forums()
         download_also_with_cookie = self.config_helper.get_download_also_with_cookie()
 
         courses = []
@@ -229,6 +231,7 @@ class MoodleService:
             userid, version = first_contact_handler.fetch_userid_and_version()
             assignments_handler = AssignmentsHandler(request_helper, version)
             databases_handler = DatabasesHandler(request_helper, version)
+            forums_handler = ForumsHandler(request_helper, version)
             results_handler.setVersion(version)
 
             if download_also_with_cookie:
@@ -250,6 +253,11 @@ class MoodleService:
             databases = databases_handler.fetch_databases(courses)
             if download_databases:
                 databases = databases_handler.fetch_database_files(databases)
+
+            forums = forums_handler.fetch_forums(courses)
+            if download_forums:
+                last_timestamps_per_forum = {942115: 1595849253}
+                forums = forums_handler.fetch_forums_posts(forums, last_timestamps_per_forum)
 
             index = 0
             for course in courses:
@@ -273,7 +281,8 @@ class MoodleService:
 
                 course_assignments = assignments.get(course.id, {})
                 course_databases = databases.get(course.id, {})
-                results_handler.set_fetch_addons(course_assignments, course_databases)
+                course_forums = forums.get(course.id, {})
+                results_handler.set_fetch_addons(course_assignments, course_databases, course_forums)
                 course.files = results_handler.fetch_files(course.id)
 
                 filtered_courses.append(course)

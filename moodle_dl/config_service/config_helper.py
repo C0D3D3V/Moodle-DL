@@ -81,6 +81,13 @@ class ConfigHelper:
         except ValueError:
             return False
 
+    def get_download_forums(self) -> bool:
+        # returns a stored boolean if forums should be downloaded
+        try:
+            return self.get_property('download_forums')
+        except ValueError:
+            return False
+
     def get_download_course_ids(self) -> str:
         # returns a stored list of course ids hat should be downloaded
         try:

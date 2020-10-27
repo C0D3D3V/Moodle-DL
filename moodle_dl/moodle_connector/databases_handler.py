@@ -76,8 +76,6 @@ class DatabasesHandler:
         entries. This is kind of waste of resources, because there
         is no API to get all entries at once
         @param databases: the dictionary of databases of all courses.
-        @param download_course_ids: ids of courses for that should
-                                    be downloaded
         @return: A Dictionary of all databases,
                  indexed by courses, then databases
         """
@@ -88,8 +86,9 @@ class DatabasesHandler:
 
         counter = 0
         total = 0
+        intro = '\rDownloading database information'
 
-        # count total assignments for nice console output
+        # count total databases for nice console output
         for course_id in databases:
             for database_id in databases[course_id]:
                 total += 1
@@ -104,6 +103,8 @@ class DatabasesHandler:
 
                 if not access.get('timeavailable', False):
                     continue
+
+                print(intro + ' %3d/%3d [%6s|%6s]\033[K' % (counter, total, course_id, real_id), end='')
 
                 data.update({'returncontents': 1})
 

@@ -145,7 +145,11 @@ class AssignmentsHandler:
                 filename = editorfield.get('description', '')
                 description = editorfield.get('text', '')
                 if filename != '' and description != '':
-                    description_file = {'filename': filename, 'description': description, 'type': 'description'}
+                    description_file = {
+                        'filename': filename,
+                        'description': description,
+                        'type': 'description',
+                    }
                     result.append(description_file)
 
         return result

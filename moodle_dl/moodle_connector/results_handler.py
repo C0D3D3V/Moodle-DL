@@ -20,6 +20,7 @@ class ResultsHandler:
         self.moodle_path = moodle_path
         self.course_assignments = {}
         self.course_databases = {}
+        self.course_forums = {}
 
     def setVersion(self, version: int):
         self.version = version
@@ -105,6 +106,13 @@ class ResultsHandler:
                 database_files = database.get('files', [])
 
                 files += self._handle_files(section_name, module_name, module_modname, module_id, database_files)
+
+            elif module_modname == 'forum':
+                # find forums with same module_id
+                forums = self.course_forums.get(module_id, {})
+                forums_files = forums.get('files', [])
+
+                files += self._handle_files(section_name, module_name, module_modname, module_id, forums_files)
 
         return files
 
@@ -309,15 +317,17 @@ class ResultsHandler:
 
         return files
 
-    def set_fetch_addons(self, course_assignments: {int: {int: {}}}, course_databases: {int: {int: {}}}):
+    def set_fetch_addons(self, course_assignments: {}, course_databases: {}, course_forums: {}):
         """
         Sets the optional data that will be added to the result list
          during the process.
         @params course_assignments: The dictionary of assignments per course
         @params course_databases: The dictionary of databases per course
+        @params course_forums: The dictionary of forums per course
         """
         self.course_assignments = course_assignments
         self.course_databases = course_databases
+        self.course_forums = course_forums
 
     def fetch_files(self, course_id: str) -> [File]:
         """
