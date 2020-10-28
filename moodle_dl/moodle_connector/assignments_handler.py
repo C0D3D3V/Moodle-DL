@@ -46,6 +46,9 @@ class AssignmentsHandler:
             for course_assign_obj in course_assign_objs:
                 assign_id = course_assign_obj.get('cmid', 0)
                 assign_rid = course_assign_obj.get('id', 0)
+                assign_name = course_assign_obj.get('name', '')
+                assign_timemodified = course_assign_obj.get('timemodified', 0)
+
                 assign_files = []
                 assign_files += course_assign_obj.get('introfiles', [])
                 assign_files += course_assign_obj.get('introattachments', [])
@@ -56,7 +59,16 @@ class AssignmentsHandler:
                     if file_type is None or file_type == '':
                         assign_file.update({'type': 'assign_file'})
 
-                course_assigns.update({assign_id: {'id': assign_rid, 'files': assign_files}})
+                course_assigns.update(
+                    {
+                        assign_id: {
+                            'id': assign_rid,
+                            'files': assign_files,
+                            'name': assign_name,
+                            'timemodified': assign_timemodified,
+                        }
+                    }
+                )
 
             result.update({course_id: course_assigns})
 
@@ -90,15 +102,20 @@ class AssignmentsHandler:
         for course_id in assignments:
             for assignment_id in assignments[course_id]:
                 counter += 1
-                real_id = assignments[course_id][assignment_id].get('id', 0)
+                assign = assignments[course_id][assignment_id]
+                real_id = assign.get('id', 0)
                 data = {'userid': userid, 'assignid': real_id}
 
-                print(intro + ' %3d/%3d [%6s|%6s]\033[K' % (counter, total, course_id, real_id), end='')
+                shorted_assign_name = assign.get('name', '')
+                if len(shorted_assign_name) > 17:
+                    shorted_assign_name = shorted_assign_name[:15] + '..'
+
+                print(intro + ' %3d/%3d [%-17s|%6s]\033[K' % (counter, total, shorted_assign_name, course_id), end='')
 
                 submission = self.request_helper.post_REST('mod_assign_get_submission_status', data)
 
                 submission_files = self._get_files_of_submission(submission)
-                assignments[course_id][assignment_id]['files'] += submission_files
+                assign['files'] += submission_files
 
         return assignments
 
