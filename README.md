@@ -41,7 +41,7 @@ If you run the program on **Windows**, please use [Powershell or CMD](https://ww
       - select the courses that will be downloaded.
       - rename each course individually.
       - decide if subfolders should be created inside a course folder.
-      - set whether submissions (files uploaded to assignments by yourself or a teacher), descriptions, links inside descriptions, databases or forum discussions should be downloaded.
+      - set whether submissions (files uploaded to assignments by yourself or a teacher), descriptions, links inside descriptions, databases and forum discussions should be downloaded.
       - set if external linked files should be downloaded (files like youtube videos).
       - set if files on moodle that require a cookie should be downloaded.
 - `moodle-dl --new-token`
