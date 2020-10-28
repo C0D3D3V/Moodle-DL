@@ -11,6 +11,8 @@
 
 
 ### Setup
+If you use *Arch Linux*, you can install the package [from AUR](https://aur.archlinux.org/packages/moodle-dl-git/), otherwise you can follow this procedure:
+
 1. Install [Python](https://www.python.org/) >=3.7
 2. Install [ffmpeg](https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Installing-ffmpeg)
 3. Run `pip install moodle-dl` as administrator. </br>
