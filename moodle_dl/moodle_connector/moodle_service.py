@@ -256,7 +256,7 @@ class MoodleService:
 
             forums = forums_handler.fetch_forums(courses)
             if download_forums:
-                last_timestamps_per_forum = {942115: 1595849253}
+                last_timestamps_per_forum = self.recorder.get_last_timestamps_per_forum()
                 forums = forums_handler.fetch_forums_posts(forums, last_timestamps_per_forum)
 
             index = 0

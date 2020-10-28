@@ -442,6 +442,29 @@ class StateRecorder:
 
         return changed_courses
 
+    def get_last_timestamps_per_forum(self) -> {}:
+        """Returns a dict of timestamps per forum cmid"""
+
+        conn = sqlite3.connect(self.db_file)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        result_dict = {}
+
+        cursor.execute(
+            """SELECT module_id, max(content_timemodified) as content_timemodified
+            FROM files WHERE module_modname = 'forum' AND content_type = 'description'
+            GROUP BY module_id;"""
+        )
+
+        curse_rows = cursor.fetchall()
+
+        for course_row in curse_rows:
+            result_dict[course_row['module_id']] = course_row['content_timemodified']
+
+        conn.close()
+
+        return result_dict
+
     def changes_to_notify(self) -> [Course]:
         changed_courses = []
 
