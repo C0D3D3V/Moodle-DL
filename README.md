@@ -29,38 +29,29 @@ If you run the program on **Windows**, please use [Powershell or CMD](https://ww
 ### Usage
 - `moodle-dl`
     - Fetches the current state of your Moodle Account, saves it and detects any changes.
-    - If configured, it also sends out a mail-notification.
-    - It prints the current status into the console 
-	- It writes a more detailed log into `MoodleDownloader.log` for debug purpose.
+    - If configured, it also sends out a notifications.
+    - It prints the changes into the console
 - `moodle-dl --init`
     - Guides you trough the configuration of the software, including the activation of notifications and obtainment of a login-token for your Moodle-Account.
     - After the necessary configuration, further additional configurations can be made. 
-	- It does not fetch the current state of your Moodle-Account.
     - If you have to log in with Single Sign On (SSO), you can set the option `--sso` additionally.
 - `moodle-dl --config`
     - Guides you through the additional configuration of the software.
-    - This includes the selection of the courses to be downloaded and various configuration options for these courses.
-    - You can rename each course individually and decide if a folder structure should be created.
-    - You can set whether submissions (files uploaded to Assignments by yourself or a teacher) should be downloaded.
-    - You can choose to download descriptions of Moodle courses. 
-    - You can choose to download databases of Moodle courses. 
-    - You can set if external linked files should be downloaded (files like youtube videos).
-    - It does not fetch the current state of your Moodle-Account.
+    - The guide allows you to
+      - select the courses that will be downloaded.
+      - rename each course individually.
+      - decide if subfolders should be created inside a course folder.
+      - set whether submissions (files uploaded to assignments by yourself or a teacher), descriptions, links inside descriptions, databases or forum discussions should be downloaded.
+      - set if external linked files should be downloaded (files like youtube videos).
+      - set if files on moodle that require a cookie should be downloaded.
 - `moodle-dl --new-token`
     - Overrides the login-token with a newly obtained one.
-    - The script will ask you for your credentials unless you explicitly specify them with the options `--username` and `--password`
-    - It does not fetch the current state of your Moodle-Account.
+    - The script will ask for credentials unless they are explicitly specify with the options `--username` and `--password`
     - Use it if at any point in time, for whatever reason, the saved token gets rejected by Moodle.
-    - It does not affect the rest of the config.
-    - It prints all information into the console.
 - `moodle-dl --change-notification-mail`
     - Activate/deactivate/change the settings for receiving notifications via e-mail.
-    - It does not affect the rest of the config.
-    - It prints all information into the console.
 - `moodle-dl --change-notification-telegram`
     - Activate/deactivate/change the settings for receiving notifications via Telegram.
-    - It does not affect the rest of the config.
-    - It prints all information into the console.
     - Click [here for help](https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Telegram-Notification) in setting up telegram notifications
 - `moodle-dl --manage-database`
     - To manage the offline database.
@@ -81,7 +72,7 @@ Options can be combined with all the actions mentioned above.
 - `--threads INT`
     - Overwrites the number of download threads. (default: 5)
 - `--verbose`
-    - Print various debugging information
+    - Print various debugging information into the `MoodleDownloader.log` file.
 - `--username USERNAME`
     - Can be used to automate the `--new-token` process. 
     - Specify username to skip the query when creating a new token.
@@ -90,7 +81,7 @@ Options can be combined with all the actions mentioned above.
     - Specify password to skip the query when creating a new token.
     - If the password contains special characters like spaces you can enclose it in quotation marks
 - `--skip-cert-verify`
-    - This flag is used to skip the certification verification while sending requests to Moodle.
+    - This flag is used to skip the certification verification while sending requests to Moodle and all other websites.
     - Warning: This might lead to security flaws and should only be used in non-production environments.
     - Default: False
 - `--without-downloading-files`
