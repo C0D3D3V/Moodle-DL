@@ -1,33 +1,51 @@
 from moodle_dl.state_recorder.course import Course
 
 
-def create_full_moodle_diff_message(changed_courses: [Course]) -> str:
+def create_full_moodle_diff_message(changed_courses: [Course]) -> [str]:
     """
-    Creates an telegram message with all changed files. This includes new,
+    Creates telegram messages with all changed files. This includes new,
     modified and deleted files. Files that have changed since the last message.
-    There is a maximum of characters for this message.
+
     @param changed_courses: A list of all courses with their modified files.
+    @returns a list of messages
     """
-    full_content = ''
+
+    diff_count = 0
+    for course in changed_courses:
+        diff_count += len(course.files)
+
+    result_list = []
+    one_msg_content = '%s new Changes in the Moodle courses!' % (diff_count)
 
     for course in changed_courses:
-        full_content += '\r\n> <b>' + course.fullname + '</b>'
+        new_line = '\r\n\r\n\r\n> <b>' + course.fullname + '</b>\r\n'
+        if len(one_msg_content) + len(new_line) >= 4096:
+            result_list.append(one_msg_content)
+            one_msg_content = new_line
+        else:
+            one_msg_content += new_line
+
         for file in course.files:
-            if len(full_content) > 2000:
-                return full_content + '\r\n\r\n<b>...and more changes. But it is to much text for this message.</b>'
             if file.modified:
-                full_content += '\r\n* Modified: ' + file.content_filename
+                new_line = '\r\n<i>* Modified:</i> ' + file.saved_to
             elif file.moved:
                 if file.new_file is not None:
-                    full_content += '\r\n* Moved: ' + file.new_file.content_filename
+                    new_line = '\r\n<i>* Moved:</i> ' + file.new_file.saved_to
                 else:
-                    full_content += '\r\n* Moved: ' + file.content_filename
+                    new_line = '\r\n<i>* Moved:</i> ' + file.saved_to
             elif file.deleted:
-                full_content += '\r\n- Deleted: ' + file.content_filename
+                new_line = '\r\n<i>- Deleted:</i> ' + file.saved_to
             else:
-                full_content += '\r\n+ Added: ' + file.content_filename
+                new_line = '\r\n<i>+ Added:</i> ' + file.saved_to
 
-    return full_content
+            if len(one_msg_content) + len(new_line) >= 4096:
+                result_list.append(one_msg_content)
+                one_msg_content = new_line
+            else:
+                one_msg_content += new_line
+
+    result_list.append(one_msg_content)
+    return result_list
 
 
 def create_full_error_message(details) -> (str, {str: str}):

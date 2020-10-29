@@ -97,13 +97,10 @@ class TelegramService(NotificationService):
         if not self._is_configured():
             return
 
-        message_content = create_full_moodle_diff_message(changes)
+        messages = create_full_moodle_diff_message(changes)
 
-        diff_count = 0
-        for course in changes:
-            diff_count += len(course.files)
-
-        self._send_message(('%s new Changes in the Moodle courses!\r\n' % (diff_count)) + message_content)
+        for message_content in messages:
+            self._send_message(message_content)
 
     def notify_about_error(self, error_description: str):
         """
