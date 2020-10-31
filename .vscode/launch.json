@@ -11,7 +11,7 @@
             "args": [
                 "-v"
             ],
-            "justMyCode": true
+            "justMyCode": false
         }
     ]
 }

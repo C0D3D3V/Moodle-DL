@@ -246,6 +246,9 @@ class URLTarget(object):
             if msg.find('Unsupported URL') >= 0:
                 logging.debug('T%s - youtube-dl Error: %s', self.thread_id, msg)
                 return
+            if msg.find('no suitable InfoExtractor') >= 0:
+                logging.debug('T%s - youtube-dl Error: %s', self.thread_id, msg)
+                return
             # This is a critical error, with high probability the link can be downloaded at a later time.
             logging.error('T%s - youtube-dl Error: %s', self.thread_id, msg)
             self.url_target.youtube_dl_failed_with_error = True
