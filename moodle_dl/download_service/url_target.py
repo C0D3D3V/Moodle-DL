@@ -449,7 +449,6 @@ class URLTarget(object):
             try:
                 ydl_results = ydl.download([url_to_download])
                 if ydl_results == 1:
-                    # return False
                     pass
                 elif self.file.module_name != 'index_mod-page':
                     self.file.saved_to = str(Path(self.destination) / self.filename)
@@ -457,9 +456,14 @@ class URLTarget(object):
 
                     self.success = True
                     return True
-            except Exception:
-                # return False
-                pass
+            except Exception as e:
+                logging.error(
+                            'T%s - Youtube-dl failed! Error: %s',
+                            self.thread_id,
+                            e,
+                        )
+                self.youtube_dl_failed_with_error = True
+
             # if we want we could save ydl.cookiejar (Also the cookiejar of moodle-dl)
 
             if self.youtube_dl_failed_with_error is True:
