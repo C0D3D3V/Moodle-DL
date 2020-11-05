@@ -110,6 +110,13 @@ class URLTarget(object):
         return urlparse.urlunparse(url_parts)
 
     def create_dir(self, path: str):
+        """
+        Creates a directory.
+
+        Args:
+            self: (todo): write your description
+            path: (str): write your description
+        """
         # Creates the folders of a path if they do not exist.
         if not os.path.exists(path):
             try:
@@ -211,10 +218,24 @@ class URLTarget(object):
         """
 
         def __init__(self, url_target):
+            """
+            Initialize a thread url.
+
+            Args:
+                self: (todo): write your description
+                url_target: (str): write your description
+            """
             self.url_target = url_target
             self.thread_id = url_target.thread_id
 
         def clean_msg(self, msg: str) -> str:
+            """
+            Clean a message.
+
+            Args:
+                self: (todo): write your description
+                msg: (str): write your description
+            """
             msg = msg.replace('\n', '')
             msg = msg.replace('\r', '')
             msg = msg.replace('\033[K', '')
@@ -225,6 +246,13 @@ class URLTarget(object):
             return msg
 
         def debug(self, msg):
+            """
+            Log a debug message
+
+            Args:
+                self: (todo): write your description
+                msg: (str): write your description
+            """
             if msg.find('ETA') >= 0:
                 return
             msg = self.clean_msg(msg)
@@ -232,6 +260,13 @@ class URLTarget(object):
             pass
 
         def warning(self, msg):
+            """
+            Log a warning
+
+            Args:
+                self: (todo): write your description
+                msg: (str): write your description
+            """
             msg = self.clean_msg(msg)
             if msg.find('Falling back') >= 0:
                 logging.debug('T%s - youtube-dl Warning: %s', self.thread_id, msg)
@@ -242,6 +277,13 @@ class URLTarget(object):
             logging.warning('T%s - youtube-dl Warning: %s', self.thread_id, msg)
 
         def error(self, msg):
+            """
+            Called when an error occurs.
+
+            Args:
+                self: (todo): write your description
+                msg: (str): write your description
+            """
             msg = self.clean_msg(msg)
             if msg.find('Unsupported URL') >= 0:
                 logging.debug('T%s - youtube-dl Error: %s', self.thread_id, msg)
@@ -254,6 +296,13 @@ class URLTarget(object):
             self.url_target.youtube_dl_failed_with_error = True
 
     def yt_hook(self, d):
+        """
+        Hook to the report
+
+        Args:
+            self: (todo): write your description
+            d: (dict): write your description
+        """
         downloaded_bytes = d.get('downloaded_bytes', 0)
         total_bytes_estimate = d.get('total_bytes_estimate', 0)
         total_bytes = d.get('total_bytes', 0)
@@ -296,6 +345,13 @@ class URLTarget(object):
             self.thread_report[self.thread_id]['extra_totalsize'] = None
 
     def is_blocked_for_youtube_dl(self, url_to_download: str):
+        """
+        Check if youtube is youtube is youtube.
+
+        Args:
+            self: (todo): write your description
+            url_to_download: (str): write your description
+        """
         url_parsed = urlparse.urlparse(url_to_download)
         if url_parsed.hostname.endswith('youtube.com') and url_parsed.path.startswith('/channel/'):
             return True
@@ -846,6 +902,12 @@ class URLTarget(object):
 
     @staticmethod
     def format_seconds(seconds):
+        """
+        Formats a human readable representation of seconds.
+
+        Args:
+            seconds: (int): write your description
+        """
         (mins, secs) = divmod(seconds, 60)
         (hours, mins) = divmod(mins, 60)
         if hours > 99:
@@ -856,6 +918,12 @@ class URLTarget(object):
             return '%02d:%02d:%02d' % (hours, mins, secs)
 
     def __str__(self):
+        """
+        Returns a string representing the task
+
+        Args:
+            self: (todo): write your description
+        """
         # URLTarget to string
         return 'URLTarget (%(file)s, %(course)s, %(success)s, Error: %(error)s)' % {
             'file': self.file,

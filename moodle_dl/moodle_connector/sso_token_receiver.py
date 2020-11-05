@@ -14,6 +14,12 @@ class TransferServer(BaseHTTPRequestHandler):
     received_token = ''
 
     def do_GET(self):
+        """
+        Make a get request.
+
+        Args:
+            self: (todo): write your description
+        """
         if self.path == '/favicon.ico':
             # Don't serve favicon
             self.send_response(404)
@@ -30,6 +36,13 @@ class TransferServer(BaseHTTPRequestHandler):
         self.wfile.write(('Moodle Downloader - Token was successfully transferred.').encode('utf-8'))
 
     def log_message(self, format, *args):
+        """
+        Log a message with the given format.
+
+        Args:
+            self: (todo): write your description
+            format: (str): write your description
+        """
         return
 
 

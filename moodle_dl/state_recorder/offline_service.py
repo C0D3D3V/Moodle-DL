@@ -11,11 +11,25 @@ from moodle_dl.state_recorder.state_recorder import StateRecorder
 
 class OfflineService:
     def __init__(self, config_helper: ConfigHelper, storage_path: str):
+        """
+        Initialize the storage.
+
+        Args:
+            self: (todo): write your description
+            config_helper: (todo): write your description
+            storage_path: (str): write your description
+        """
         self.config_helper = config_helper
         self.storage_path = storage_path
         self.state_recorder = StateRecorder(Path(storage_path) / 'moodle_state.db')
 
     def interactively_manage_database(self):
+        """
+        Manage files
+
+        Args:
+            self: (todo): write your description
+        """
         RESET_SEQ = '\033[0m'
         COLOR_SEQ = '\033[1;%dm'
 

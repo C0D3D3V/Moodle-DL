@@ -29,6 +29,16 @@ class MoodleService:
         skip_cert_verify: bool = False,
         log_responses: bool = False,
     ):
+        """
+        Initialize the session.
+
+        Args:
+            self: (todo): write your description
+            config_helper: (todo): write your description
+            storage_path: (str): write your description
+            skip_cert_verify: (str): write your description
+            log_responses: (list): write your description
+        """
         self.config_helper = config_helper
         self.storage_path = storage_path
         self.recorder = StateRecorder(Path(storage_path) / 'moodle_state.db')

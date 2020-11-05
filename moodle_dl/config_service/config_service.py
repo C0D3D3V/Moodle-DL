@@ -11,6 +11,15 @@ from moodle_dl.moodle_connector.request_helper import RequestRejectedError, Requ
 
 class ConfigService:
     def __init__(self, config_helper: ConfigHelper, storage_path: str, skip_cert_verify: bool = False):
+        """
+        Initialize the config file.
+
+        Args:
+            self: (todo): write your description
+            config_helper: (todo): write your description
+            storage_path: (str): write your description
+            skip_cert_verify: (str): write your description
+        """
         self.config_helper = config_helper
         self.storage_path = storage_path
         self.skip_cert_verify = skip_cert_verify

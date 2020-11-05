@@ -11,6 +11,13 @@ class NotificationService:
     # every abstractmethod  has a concrete implementation in it.
 
     def __init__(self, config_helper: ConfigHelper):
+        """
+        Initialize the configuration.
+
+        Args:
+            self: (todo): write your description
+            config_helper: (todo): write your description
+        """
         self.config_helper = config_helper
 
     @abstractmethod

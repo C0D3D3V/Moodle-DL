@@ -13,6 +13,15 @@ class CookieHandler:
     """
 
     def __init__(self, request_helper: RequestHelper, version: int, storage_path: str):
+        """
+        Initialize the request.
+
+        Args:
+            self: (todo): write your description
+            request_helper: (todo): write your description
+            version: (todo): write your description
+            storage_path: (str): write your description
+        """
         self.request_helper = request_helper
         self.version = version
         self.storage_path = storage_path
@@ -21,6 +30,13 @@ class CookieHandler:
         self.moodle_test_url = self.request_helper.url_base
 
     def fetch_autologin_key(self, privatetoken: str) -> {str: str}:
+        """
+        Fetch autologin_key
+
+        Args:
+            self: (todo): write your description
+            privatetoken: (str): write your description
+        """
 
         # do this only if version is greater then 3.2
         # because tool_mobile_get_autologin_key will fail
@@ -56,6 +72,14 @@ class CookieHandler:
         return False
 
     def check_and_fetch_cookies(self, privatetoken: str, userid: str) -> bool:
+        """
+        Check if a given user has already been fetched.
+
+        Args:
+            self: (todo): write your description
+            privatetoken: (str): write your description
+            userid: (todo): write your description
+        """
         if os.path.exists(self.cookies_path):
             # test if still logged in.
 

@@ -72,6 +72,12 @@ class MailService(NotificationService):
                 self.config_helper.set_property('mail', mail_cfg)
 
     def _is_configured(self) -> bool:
+        """
+        Returns true if the configuration is set.
+
+        Args:
+            self: (todo): write your description
+        """
         # Checks if the sending of emails has been configured.
         try:
             self.config_helper.get_property('mail')

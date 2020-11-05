@@ -39,9 +39,28 @@ class OpencastBaseIE(InfoExtractor):
     _UUID_RE = r'[\da-fA-F]{8}-[\da-fA-F]{4}-[\da-fA-F]{4}-[\da-fA-F]{4}-[\da-fA-F]{12}'
 
     def _call_api(self, host, video_id, path, note=None, errnote=None, fatal=True):
+        """
+        Calls a single video
+
+        Args:
+            self: (todo): write your description
+            host: (str): write your description
+            video_id: (str): write your description
+            path: (str): write your description
+            note: (todo): write your description
+            errnote: (todo): write your description
+            fatal: (todo): write your description
+        """
         return self._download_json(self._API_BASE % (host, video_id), video_id, note=note, errnote=errnote, fatal=fatal)
 
     def _parse_mediapackage(self, video):
+        """
+        Parses video. video.
+
+        Args:
+            self: (todo): write your description
+            video: (dict): write your description
+        """
         tracks = video.get('media', {}).get('track', [])
 
         video_id = video.get('id')
@@ -171,6 +190,13 @@ class OpencastIE(OpencastBaseIE):
     }
 
     def _real_extract(self, url):
+        """
+        Extract real real url.
+
+        Args:
+            self: (todo): write your description
+            url: (str): write your description
+        """
         mobj = re.match(self._VALID_URL, url)
         host = mobj.group('host')
         video_id = mobj.group('id')
@@ -222,6 +248,13 @@ class OpencastPlaylistIE(OpencastBaseIE):
     ]
 
     def _real_extract(self, url):
+        """
+        Extract real url
+
+        Args:
+            self: (todo): write your description
+            url: (str): write your description
+        """
         mobj = re.match(self._VALID_URL, url)
         host = mobj.group('host')
         video_id = mobj.group('id')

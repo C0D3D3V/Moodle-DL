@@ -10,6 +10,17 @@ class MailShooter:
     """
 
     def __init__(self, sender: str, smtp_server_host: str, smtp_server_port: int, username: str, password: str):
+        """
+        Initialize smtp server.
+
+        Args:
+            self: (todo): write your description
+            sender: (todo): write your description
+            smtp_server_host: (todo): write your description
+            smtp_server_port: (int): write your description
+            username: (str): write your description
+            password: (str): write your description
+        """
         self.sender = sender
         self.smtp_server_host = smtp_server_host
         self.smtp_server_port = smtp_server_port

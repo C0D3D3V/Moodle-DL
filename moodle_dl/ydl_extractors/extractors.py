@@ -5,6 +5,12 @@ from moodle_dl.ydl_extractors.opencast import OpencastIE, OpencastPlaylistIE
 
 
 def add_additional_extractors(ydl: YoutubeDL):
+    """
+    Add additional additional additional additional structures.
+
+    Args:
+        ydl: (todo): write your description
+    """
     additional_extractors = [
         OpencastIE(ydl),
         OpencastPlaylistIE(ydl),

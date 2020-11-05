@@ -13,6 +13,15 @@ class ResultsHandler:
     """
 
     def __init__(self, request_helper: RequestHelper, moodle_domain: str, moodle_path: str):
+        """
+        Initialize request
+
+        Args:
+            self: (todo): write your description
+            request_helper: (todo): write your description
+            moodle_domain: (todo): write your description
+            moodle_path: (str): write your description
+        """
         self.request_helper = request_helper
         # oldest supported Moodle version
         self.version = 2011120500
@@ -23,6 +32,13 @@ class ResultsHandler:
         self.course_forums = {}
 
     def setVersion(self, version: int):
+        """
+        Set the version.
+
+        Args:
+            self: (todo): write your description
+            version: (str): write your description
+        """
         self.version = version
 
         logging.debug('Detected moodle version: %d', version)

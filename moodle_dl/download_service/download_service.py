@@ -258,6 +258,14 @@ class DownloadService:
 
     @staticmethod
     def calc_speed(start, now, bytes):
+        """
+        Calculate the speed.
+
+        Args:
+            start: (todo): write your description
+            now: (todo): write your description
+            bytes: (list): write your description
+        """
         dif = now - start
         if bytes <= 0 or dif < 0.001:  # One millisecond
             return None
@@ -265,11 +273,23 @@ class DownloadService:
 
     @staticmethod
     def format_speed(speed):
+        """
+        Formats speed. speed
+
+        Args:
+            speed: (str): write your description
+        """
         if speed is None:
             return '%10s' % '---b/s'
         return '%10s' % ('%s/s' % format_bytes(speed))
 
     def _clear_status_message(self):
+        """
+        Clears the message.
+
+        Args:
+            self: (todo): write your description
+        """
         print(f'\033[{len(self.threads)}A\r', end='')
 
         print('\033[K\n' * (len(self.threads)), end='')

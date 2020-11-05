@@ -11,6 +11,14 @@ class ForumsHandler:
     """
 
     def __init__(self, request_helper: RequestHelper, version: int):
+        """
+        Initialize the request.
+
+        Args:
+            self: (todo): write your description
+            request_helper: (todo): write your description
+            version: (todo): write your description
+        """
         self.request_helper = request_helper
         self.version = version
 
@@ -152,6 +160,13 @@ class ForumsHandler:
         return forums
 
     def _get_files_of_discussions(self, latest_discussions: []) -> []:
+        """
+        Get the list of - recent files.
+
+        Args:
+            self: (todo): write your description
+            latest_discussions: (str): write your description
+        """
         result = []
 
         for i, discussion in enumerate(latest_discussions):

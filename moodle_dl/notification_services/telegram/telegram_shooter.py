@@ -17,10 +17,25 @@ class TelegramShooter:
     }
 
     def __init__(self, telegram_token: str, telegram_chatid: str):
+        """
+        Initialize a token
+
+        Args:
+            self: (todo): write your description
+            telegram_token: (str): write your description
+            telegram_chatid: (str): write your description
+        """
         self.telegram_token = telegram_token
         self.telegram_chatid = telegram_chatid
 
     def send(self, message: str):
+        """
+        Sends a message.
+
+        Args:
+            self: (todo): write your description
+            message: (str): write your description
+        """
         payload = {'chat_id': self.telegram_chatid, 'text': message, 'parse_mode': 'HTML'}
 
         url = 'https://api.telegram.org/bot%s/sendMessage' % (self.telegram_token)
@@ -31,6 +46,12 @@ class TelegramShooter:
 
     @staticmethod
     def _check_response_code(response):
+        """
+        Check response code.
+
+        Args:
+            response: (todo): write your description
+        """
         # Normally Telegram answer with response 200
         if response.status_code not in [200, 400]:
             raise RuntimeError(

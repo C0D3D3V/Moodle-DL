@@ -7,6 +7,11 @@ exec(compile(open('moodle_dl/version.py').read(), 'moodle_dl/version.py', 'exec'
 
 
 def readme():
+    """
+    Read the contents of the readme file.
+
+    Args:
+    """
     this_directory = path.abspath(path.dirname(__file__))
     with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
         return f.read()

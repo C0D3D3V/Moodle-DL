@@ -63,6 +63,12 @@ class TelegramService(NotificationService):
                 self.config_helper.set_property('telegram', telegram_cfg)
 
     def _is_configured(self) -> bool:
+        """
+        Returns true if the configuration is set.
+
+        Args:
+            self: (todo): write your description
+        """
         # Checks if the sending of Telegram messages has been configured.
         try:
             self.config_helper.get_property('telegram')

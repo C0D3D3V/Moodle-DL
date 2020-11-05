@@ -8,6 +8,14 @@ class DatabasesHandler:
     """
 
     def __init__(self, request_helper: RequestHelper, version: int):
+        """
+        Initialize the request.
+
+        Args:
+            self: (todo): write your description
+            request_helper: (todo): write your description
+            version: (todo): write your description
+        """
         self.request_helper = request_helper
         self.version = version
 
@@ -117,6 +125,12 @@ class DatabasesHandler:
 
     @staticmethod
     def _get_files_of_db_entries(entries: {}) -> []:
+        """
+        Return a list of entries.
+
+        Args:
+            entries: (dict): write your description
+        """
         result = []
 
         entries_list = entries.get('entries', [])

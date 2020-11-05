@@ -168,6 +168,14 @@ class StateRecorder:
             raise RuntimeError('Could not create database! Error: %s' % (error))
 
     def __files_have_same_type(self, file1: File, file2: File) -> bool:
+        """
+        Return true if two files are same
+
+        Args:
+            self: (todo): write your description
+            file1: (str): write your description
+            file2: (str): write your description
+        """
         # Returns True if the files have the same type attributes
 
         if file1.content_type == file2.content_type and file1.module_modname == file2.module_modname:
@@ -187,6 +195,14 @@ class StateRecorder:
         return False
 
     def __files_have_same_path(self, file1: File, file2: File) -> bool:
+        """
+        Return true if two file1 and file2 are same.
+
+        Args:
+            self: (todo): write your description
+            file1: (str): write your description
+            file2: (str): write your description
+        """
         # Returns True if the files have the same path attributes
 
         if (
@@ -200,6 +216,14 @@ class StateRecorder:
         return False
 
     def __files_are_diffrent(self, file1: File, file2: File) -> bool:
+        """
+        Check if two file1 and file are the same.
+
+        Args:
+            self: (todo): write your description
+            file1: (str): write your description
+            file2: (str): write your description
+        """
         # Returns True if these files differ from each other
 
         # Not sure if this would be a good idea
@@ -226,6 +250,14 @@ class StateRecorder:
         return False
 
     def __file_was_moved(self, file1: File, file2: File) -> bool:
+        """
+        Determine if two files are the same
+
+        Args:
+            self: (todo): write your description
+            file1: (str): write your description
+            file2: (str): write your description
+        """
         # Returns True if the file was moved to an other path
 
         if (
@@ -237,6 +269,13 @@ class StateRecorder:
         return False
 
     def __ignore_deleted(self, file: File):
+        """
+        Check if a file was deleted.
+
+        Args:
+            self: (todo): write your description
+            file: (str): write your description
+        """
         # Returns true if the deleted file should be ignored.
         if file.module_modname.endswith('forum'):
             return True
@@ -244,6 +283,12 @@ class StateRecorder:
         return False
 
     def get_stored_files(self) -> [Course]:
+        """
+        Returns a list of files for the db.
+
+        Args:
+            self: (str): write your description
+        """
         # get all stored files (that are not yet deleted)
         conn = sqlite3.connect(self.db_file)
         conn.row_factory = sqlite3.Row
@@ -285,6 +330,16 @@ class StateRecorder:
         return stored_courses
 
     def __get_modified_files(self, stored_courses: [Course], current_courses: [Course]) -> [Course]:
+        """
+        Returns the modified files that course.
+
+        Args:
+            self: (todo): write your description
+            stored_courses: (str): write your description
+            Course: (todo): write your description
+            current_courses: (str): write your description
+            Course: (todo): write your description
+        """
         # returns courses with modified and deleted files
         changed_courses = []
 
@@ -363,6 +418,18 @@ class StateRecorder:
     def __get_new_files(
         self, changed_courses: [Course], stored_courses: [Course], current_courses: [Course]
     ) -> [Course]:
+        """
+        Returns a list of files that have changed.
+
+        Args:
+            self: (todo): write your description
+            changed_courses: (todo): write your description
+            Course: (todo): write your description
+            stored_courses: (str): write your description
+            Course: (todo): write your description
+            current_courses: (str): write your description
+            Course: (todo): write your description
+        """
         # check for new files
         for current_course in current_courses:
             # check if that file does not exist in stored
@@ -414,6 +481,14 @@ class StateRecorder:
         return changed_courses
 
     def changes_of_new_version(self, current_courses: [Course]) -> [Course]:
+        """
+        Returns a list of changes made to the current one.
+
+        Args:
+            self: (todo): write your description
+            current_courses: (todo): write your description
+            Course: (todo): write your description
+        """
         # The database should only have one entry for one file,
         # no matter if it is deleted or modified, so is it easier
         # to track changes
@@ -466,6 +541,12 @@ class StateRecorder:
         return result_dict
 
     def changes_to_notify(self) -> [Course]:
+        """
+        Returns a list of changes changed.
+
+        Args:
+            self: (todo): write your description
+        """
         changed_courses = []
 
         conn = sqlite3.connect(self.db_file)
@@ -516,6 +597,14 @@ class StateRecorder:
         return changed_courses
 
     def notified(self, courses: [Course]):
+        """
+        Sends the notification.
+
+        Args:
+            self: (todo): write your description
+            courses: (todo): write your description
+            Course: (todo): write your description
+        """
         # saves that a notification with the changes where send
 
         conn = sqlite3.connect(self.db_file)
@@ -540,6 +629,15 @@ class StateRecorder:
         conn.close()
 
     def save_file(self, file: File, course_id: int, course_fullname: str):
+        """
+        Save a file
+
+        Args:
+            self: (todo): write your description
+            file: (str): write your description
+            course_id: (todo): write your description
+            course_fullname: (str): write your description
+        """
         if file.deleted:
             self.delete_file(file, course_id, course_fullname)
         elif file.modified:
@@ -550,6 +648,15 @@ class StateRecorder:
             self.new_file(file, course_id, course_fullname)
 
     def new_file(self, file: File, course_id: int, course_fullname: str):
+        """
+        Create a new file
+
+        Args:
+            self: (todo): write your description
+            file: (todo): write your description
+            course_id: (todo): write your description
+            course_fullname: (str): write your description
+        """
         # saves a file to index
 
         conn = sqlite3.connect(self.db_file)
@@ -566,6 +673,14 @@ class StateRecorder:
         conn.close()
 
     def batch_delete_files(self, courses: [Course]):
+        """
+        Deletes files from the db.
+
+        Args:
+            self: (todo): write your description
+            courses: (todo): write your description
+            Course: (todo): write your description
+        """
         conn = sqlite3.connect(self.db_file)
         cursor = conn.cursor()
 
@@ -587,6 +702,14 @@ class StateRecorder:
         conn.close()
 
     def batch_delete_files_from_db(self, files: [File]):
+        """
+        Deletes multiple files from db
+
+        Args:
+            self: (todo): write your description
+            files: (str): write your description
+            File: (str): write your description
+        """
         conn = sqlite3.connect(self.db_file)
         cursor = conn.cursor()
 
@@ -605,6 +728,15 @@ class StateRecorder:
         conn.close()
 
     def delete_file(self, file: File, course_id: int, course_fullname: str):
+        """
+        Delete a file
+
+        Args:
+            self: (todo): write your description
+            file: (todo): write your description
+            course_id: (todo): write your description
+            course_fullname: (str): write your description
+        """
         conn = sqlite3.connect(self.db_file)
         cursor = conn.cursor()
 
@@ -623,6 +755,15 @@ class StateRecorder:
         conn.close()
 
     def move_file(self, file: File, course_id: int, course_fullname: str):
+        """
+        Move file
+
+        Args:
+            self: (str): write your description
+            file: (todo): write your description
+            course_id: (todo): write your description
+            course_fullname: (str): write your description
+        """
         conn = sqlite3.connect(self.db_file)
         cursor = conn.cursor()
 
@@ -659,6 +800,15 @@ class StateRecorder:
         conn.close()
 
     def modifie_file(self, file: File, course_id: int, course_fullname: str):
+        """
+        Modifie a file
+
+        Args:
+            self: (todo): write your description
+            file: (str): write your description
+            course_id: (todo): write your description
+            course_fullname: (str): write your description
+        """
         conn = sqlite3.connect(self.db_file)
         cursor = conn.cursor()
 

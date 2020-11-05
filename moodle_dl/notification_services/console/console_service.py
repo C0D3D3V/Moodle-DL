@@ -7,6 +7,12 @@ from moodle_dl.notification_services.notification_service import NotificationSer
 
 class ConsoleService(NotificationService):
     def interactively_configure(self) -> None:
+        """
+        Interact configuration.
+
+        Args:
+            self: (todo): write your description
+        """
         raise RuntimeError('Not yet implemendet!')
 
     def notify_about_changes_in_moodle(self, changes: [Course]) -> None:
@@ -64,4 +70,11 @@ class ConsoleService(NotificationService):
             print('\n')
 
     def notify_about_error(self, error_description: str):
+        """
+        Called when an error occurs.
+
+        Args:
+            self: (todo): write your description
+            error_description: (str): write your description
+        """
         raise RuntimeError('Not yet implemented!')

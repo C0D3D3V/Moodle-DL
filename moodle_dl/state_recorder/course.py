@@ -4,6 +4,16 @@ from moodle_dl.download_service.path_tools import PathTools
 
 class Course:
     def __init__(self, _id: int, fullname: str, files: [File] = []):
+        """
+        Create a new file.
+
+        Args:
+            self: (todo): write your description
+            _id: (int): write your description
+            fullname: (str): write your description
+            files: (list): write your description
+            File: (str): write your description
+        """
         self.id = _id
         self.fullname = fullname
         self.files = files
@@ -12,6 +22,12 @@ class Course:
         self.create_directory_structure = True
 
     def __str__(self):
+        """
+        Generate a string representation of this message.
+
+        Args:
+            self: (todo): write your description
+        """
         message = 'Course ('
 
         message += 'id: %s' % (self.id)

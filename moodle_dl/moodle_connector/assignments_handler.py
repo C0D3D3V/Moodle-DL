@@ -8,6 +8,14 @@ class AssignmentsHandler:
     """
 
     def __init__(self, request_helper: RequestHelper, version: int):
+        """
+        Initialize the request.
+
+        Args:
+            self: (todo): write your description
+            request_helper: (todo): write your description
+            version: (todo): write your description
+        """
         self.request_helper = request_helper
         self.version = version
 
@@ -121,6 +129,12 @@ class AssignmentsHandler:
 
     @staticmethod
     def _get_files_of_submission(submission: {}) -> []:
+        """
+        Get submission submission.
+
+        Args:
+            submission: (dict): write your description
+        """
         result = []
         # get own submissions
         lastattempt = submission.get('lastattempt', {})
@@ -138,6 +152,12 @@ class AssignmentsHandler:
 
     @staticmethod
     def _get_files_of_plugins(obj: {}) -> []:
+        """
+        Return a list of filearea objects.
+
+        Args:
+            obj: (todo): write your description
+        """
         result = []
         plugins = obj.get('plugins', [])
 

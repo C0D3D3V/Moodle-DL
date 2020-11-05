@@ -8,6 +8,13 @@ class FirstContactHandler:
     """
 
     def __init__(self, request_helper: RequestHelper):
+        """
+        Initialize the request.
+
+        Args:
+            self: (todo): write your description
+            request_helper: (todo): write your description
+        """
         self.request_helper = request_helper
         # oldest supported Moodle version
         self.version = 2011120500

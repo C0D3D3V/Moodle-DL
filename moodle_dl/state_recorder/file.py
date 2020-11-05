@@ -25,6 +25,32 @@ class File:
         file_id: int = None,
         old_file_id: int = None,
     ):
+        """
+        Initialize a section.
+
+        Args:
+            self: (todo): write your description
+            module_id: (str): write your description
+            section_name: (str): write your description
+            module_name: (str): write your description
+            content_filepath: (str): write your description
+            content_filename: (str): write your description
+            content_fileurl: (str): write your description
+            content_filesize: (int): write your description
+            content_timemodified: (todo): write your description
+            module_modname: (str): write your description
+            content_type: (bool): write your description
+            content_isexternalfile: (str): write your description
+            saved_to: (todo): write your description
+            time_stamp: (int): write your description
+            modified: (todo): write your description
+            moved: (todo): write your description
+            deleted: (todo): write your description
+            notified: (todo): write your description
+            hash: (todo): write your description
+            file_id: (str): write your description
+            old_file_id: (str): write your description
+        """
 
         self.file_id = file_id
 
@@ -85,6 +111,12 @@ class File:
         self.old_file_id = old_file_id
 
     def getMap(self) -> {str: str}:
+        """
+        Returns a dict of all sections of - memory
+
+        Args:
+            self: (todo): write your description
+        """
         return {
             'file_id': self.file_id,
             'module_id': self.module_id,
@@ -110,6 +142,12 @@ class File:
 
     @staticmethod
     def fromRow(row):
+        """
+        Creates a row from a file.
+
+        Args:
+            row: (str): write your description
+        """
 
         return File(
             file_id=row['file_id'],
@@ -151,6 +189,12 @@ class File:
             """
 
     def __str__(self):
+        """
+        Returns a human - readable for this section.
+
+        Args:
+            self: (todo): write your description
+        """
         message = 'File ('
 
         message += 'module_id: %s' % (self.module_id)

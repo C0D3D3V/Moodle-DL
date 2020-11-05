@@ -46,11 +46,26 @@ class ReRaiseOnError(logging.StreamHandler):
     """
 
     def emit(self, record):
+        """
+        Emit a record.
+
+        Args:
+            self: (todo): write your description
+            record: (todo): write your description
+        """
         if hasattr(record, 'exception'):
             raise record.exception
 
 
 def run_init(storage_path, use_sso=False, skip_cert_verify=False):
+    """
+    Run a connection.
+
+    Args:
+        storage_path: (str): write your description
+        use_sso: (bool): write your description
+        skip_cert_verify: (todo): write your description
+    """
     config = ConfigHelper(storage_path)
 
     if config.is_present():
@@ -106,6 +121,13 @@ def run_init(storage_path, use_sso=False, skip_cert_verify=False):
 
 
 def run_configure(storage_path, skip_cert_verify=False):
+    """
+    Configure : class.
+
+    Args:
+        storage_path: (str): write your description
+        skip_cert_verify: (todo): write your description
+    """
     config = ConfigHelper(storage_path)
     config.load()  # because we do not want to override the other settings
 
@@ -115,6 +137,16 @@ def run_configure(storage_path, skip_cert_verify=False):
 
 
 def run_new_token(storage_path, use_sso=False, username: str = None, password: str = None, skip_cert_verify=False):
+    """
+    Run a new token.
+
+    Args:
+        storage_path: (str): write your description
+        use_sso: (bool): write your description
+        username: (str): write your description
+        password: (str): write your description
+        skip_cert_verify: (todo): write your description
+    """
     config = ConfigHelper(storage_path)
     config.load()  # because we do not want to override the other settings
 
@@ -129,6 +161,12 @@ def run_new_token(storage_path, use_sso=False, username: str = None, password: s
 
 
 def run_manage_database(storage_path):
+    """
+    Run the database.
+
+    Args:
+        storage_path: (str): write your description
+    """
     config = ConfigHelper(storage_path)
     config.load()  # because we want to only manage configured courses
 
@@ -139,6 +177,12 @@ def run_manage_database(storage_path):
 
 
 def run_change_notification_mail(storage_path):
+    """
+    Run the notification mail mail.
+
+    Args:
+        storage_path: (str): write your description
+    """
     config = ConfigHelper(storage_path)
     config.load()
 
@@ -148,6 +192,12 @@ def run_change_notification_mail(storage_path):
 
 
 def run_change_notification_telegram(storage_path):
+    """
+    Runs the notification.
+
+    Args:
+        storage_path: (str): write your description
+    """
     config = ConfigHelper(storage_path)
     config.load()
 
@@ -157,6 +207,16 @@ def run_change_notification_telegram(storage_path):
 
 
 def run_main(storage_path, verbose=False, skip_cert_verify=False, without_downloading_files=False, log_responses=False):
+    """
+    Run the application.
+
+    Args:
+        storage_path: (str): write your description
+        verbose: (bool): write your description
+        skip_cert_verify: (todo): write your description
+        without_downloading_files: (str): write your description
+        log_responses: (todo): write your description
+    """
 
     log_formatter = logging.Formatter('%(asctime)s  %(levelname)s  {%(module)s}  %(message)s', '%Y-%m-%d %H:%M:%S')
     log_file = os.path.join(storage_path, 'MoodleDownloader.log')
@@ -285,6 +345,12 @@ def run_main(storage_path, verbose=False, skip_cert_verify=False, without_downlo
 
 
 def _dir_path(path):
+    """
+    Return the path of the given path.
+
+    Args:
+        path: (str): write your description
+    """
     # Working around MAX_PATH limitation on Windows (see
     # http://msdn.microsoft.com/en-us/library/windows/desktop/aa365247(v=vs.85).aspx)
     if os.name == 'nt':
@@ -298,6 +364,11 @@ def _dir_path(path):
 
 
 def check_debug():
+    """
+    Determine if debug is enabled.
+
+    Args:
+    """
     global IS_DEBUG
     if 'pydevd' in sys.modules:
         IS_DEBUG = True

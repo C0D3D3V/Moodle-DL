@@ -31,6 +31,17 @@ class RequestHelper:
         skip_cert_verify: bool = False,
         log_responses_to: str = None,
     ):
+        """
+        Initialize a token
+
+        Args:
+            self: (todo): write your description
+            moodle_domain: (todo): write your description
+            moodle_path: (str): write your description
+            token: (str): write your description
+            skip_cert_verify: (str): write your description
+            log_responses_to: (todo): write your description
+        """
         self.token = token
         self.moodle_domain = moodle_domain
         self.moodle_path = moodle_path
@@ -182,6 +193,12 @@ class RequestHelper:
 
     @staticmethod
     def _check_response_code(response):
+        """
+        Check response code.
+
+        Args:
+            response: (todo): write your description
+        """
         # Normally Moodle answer with response 200
         if response.status_code != 200:
             raise RuntimeError(
@@ -271,6 +288,13 @@ class RequestHelper:
         """
 
         def recursion(data, base=[]):
+            """
+            Recursively recursively walks.
+
+            Args:
+                data: (dict): write your description
+                base: (str): write your description
+            """
             pairs = []
 
             for key, value in data.items():

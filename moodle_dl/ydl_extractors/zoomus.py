@@ -20,6 +20,13 @@ class ZoomUSIE(InfoExtractor):
     }
 
     def _real_extract(self, url):
+        """
+        Parse the url *
+
+        Args:
+            self: (todo): write your description
+            url: (str): write your description
+        """
         display_id = self._match_id(url)
         webpage = self._download_webpage(url, display_id)
 
@@ -57,6 +64,15 @@ class ZoomUSIE(InfoExtractor):
         return {'id': display_id, 'title': title, 'formats': formats}
 
     def _verify_video_password(self, url, video_id, webpage):
+        """
+        Verifies a video password.
+
+        Args:
+            self: (todo): write your description
+            url: (str): write your description
+            video_id: (str): write your description
+            webpage: (str): write your description
+        """
         password = self._downloader.params.get('videopassword')
         if password is None:
             raise ExtractorError(
