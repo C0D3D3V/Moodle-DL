@@ -459,10 +459,10 @@ class URLTarget(object):
                     return True
             except Exception as e:
                 logging.error(
-                            'T%s - Youtube-dl failed! Error: %s',
-                            self.thread_id,
-                            e,
-                        )
+                    'T%s - Youtube-dl failed! Error: %s',
+                    self.thread_id,
+                    e,
+                )
                 self.youtube_dl_failed_with_error = True
 
             # if we want we could save ydl.cookiejar (Also the cookiejar of moodle-dl)

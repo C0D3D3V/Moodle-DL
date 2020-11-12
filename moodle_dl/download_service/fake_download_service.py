@@ -1,4 +1,5 @@
 import os
+import platform
 
 from pathlib import Path
 
@@ -46,7 +47,7 @@ class FakeDownloadService:
 
                     if file.module_modname.startswith('url'):
                         file.saved_to = str(Path(save_destination) / (filename + '.desktop'))
-                        if os.name == 'nt':
+                        if os.name == 'nt' or platform.system() == "Darwin":
                             file.saved_to = str(Path(save_destination) / (filename + '.URL'))
 
                     if file.content_type == 'description':
@@ -55,6 +56,5 @@ class FakeDownloadService:
                     self.state_recorder.save_file(file, course.id, course.fullname)
 
     def run(self):
-        """Dummy function
-        """
+        """Dummy function"""
         Log.success('All files stored in the Database!')
