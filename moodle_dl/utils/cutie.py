@@ -6,7 +6,7 @@ Command-line User Tools for simpler Input
 Source: https://github.com/Kamik423/cutie/blob/master/cutie.py
 
 Authors: Hans and Kamik423
-License: MIT
+License: MIT (https://github.com/Kamik423/cutie/blob/master/license.md)
 """
 
 import os
