@@ -1,5 +1,6 @@
 import re
 import os
+import platform
 import ssl
 import time
 import shutil
@@ -557,7 +558,7 @@ class URLTarget(object):
 
         logging.debug('T%s - Creating a shortcut', self.thread_id)
         with open(self.file.saved_to, 'w+', encoding='utf-8') as shortcut:
-            if os.name == 'nt':
+            if os.name == 'nt' or platform.system() == "Darwin":
                 shortcut.write('[InternetShortcut]' + os.linesep)
                 shortcut.write('URL=' + self.file.content_fileurl + os.linesep)
             else:
@@ -589,7 +590,7 @@ class URLTarget(object):
 
         elif self.file.module_modname.startswith('url') and not ignore_attributes:
             self.file.saved_to = str(Path(self.destination) / (self.filename + '.desktop'))
-            if os.name == 'nt':
+            if os.name == 'nt' or platform.system() == "Darwin":
                 self.file.saved_to = str(Path(self.destination) / (self.filename + '.URL'))
 
             self.file.saved_to = self._rename_if_exists(self.file.saved_to)
