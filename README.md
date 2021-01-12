@@ -44,6 +44,7 @@ If you run the program on **Windows**, please use [Powershell or CMD](https://ww
       - set whether submissions (files uploaded to assignments by yourself or a teacher), descriptions, links inside descriptions, databases and forum discussions should be downloaded.
       - set if external linked files should be downloaded (files like youtube videos).
       - set if files on moodle that require a cookie should be downloaded.
+      - to add extra courses to your download list which you can see but you are not enrolled in, check out [this wiki entry](https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Download-public-courses).
 - `moodle-dl --new-token`
     - Overrides the login-token with a newly obtained one.
     - The script will ask for credentials unless they are explicitly specify with the options `--username` and `--password`
