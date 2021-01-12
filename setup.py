@@ -33,7 +33,7 @@ setup(
         'sentry_sdk>=0.13.5',
         'colorama>=0.4.3',
         'readchar>=2.0.1',
-        'youtube_dl>=2020.9.20',
+        'youtube_dl>=2021.1.8',
         'certifi>=2020.4.5.2',
         'html2text>=2020.1.16',
         'requests>=2.24.0',

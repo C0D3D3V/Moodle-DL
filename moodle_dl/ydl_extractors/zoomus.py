@@ -7,7 +7,7 @@ from youtube_dl.utils import ExtractorError, int_or_none, url_or_none, parse_fil
 
 class ZoomUSIE(InfoExtractor):
     IE_NAME = 'zoom.us'
-    _VALID_URL = r'https://(?:.*).?zoom.us/rec(?:ording)?/play/(?P<id>[A-Za-z0-9\-_]+)'
+    _VALID_URL = r'https://(?:.*).?zoom.us/rec(?:ording)?/(play|share)/(?P<id>[A-Za-z0-9\-_.]+)'
 
     _TEST = {
         'url': 'https://zoom.us/recording/play/SILVuCL4bFtRwWTtOCFQQxAsBQsJljFtm9e4Z_bvo-A8B-nzUSYZRNuPl3qW5IGK',
