@@ -95,6 +95,13 @@ class ConfigHelper:
         except ValueError:
             return []
 
+    def get_download_public_course_ids(self) -> str:
+        # returns a stored list of public course ids hat should be downloaded
+        try:
+            return self.get_property('download_public_course_ids')
+        except ValueError:
+            return []
+
     def get_token(self) -> str:
         # returns a stored token
         try:

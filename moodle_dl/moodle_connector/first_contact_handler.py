@@ -47,3 +47,25 @@ class FirstContactHandler:
         for course in result:
             results.append(Course(course.get('id', 0), course.get('fullname', ''), []))
         return results
+
+    def fetch_courses_info(self, course_ids: [int]) -> [Course]:
+        """
+        Queries the Moodle system for info about courses in a list.
+        @param course_ids: A list of courses ids
+        @return: A list of courses
+        """
+        if len(course_ids) == 0:
+            return []
+
+        data = {
+            "field": "ids",
+            "value": ",".join(list(map(str, course_ids)))
+        }
+
+        result = self.request_helper.post_REST('core_course_get_courses_by_field', data)
+        result = result.get('courses', [])
+
+        results = []
+        for course in result:
+            results.append(Course(course.get('id', 0), course.get('fullname', ''), []))
+        return results
