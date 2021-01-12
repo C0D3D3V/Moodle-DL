@@ -215,6 +215,7 @@ class MoodleService:
         results_handler = ResultsHandler(request_helper, moodle_domain, moodle_path)
 
         download_course_ids = self.config_helper.get_download_course_ids()
+        download_public_course_ids = self.config_helper.get_download_public_course_ids()
         dont_download_course_ids = self.config_helper.get_dont_download_course_ids()
         download_submissions = self.config_helper.get_download_submissions()
         download_databases = self.config_helper.get_download_databases()
@@ -245,6 +246,10 @@ class MoodleService:
             for course in courses_list:
                 if ResultsHandler.should_download_course(course.id, download_course_ids, dont_download_course_ids):
                     courses.append(course)
+
+            public_courses_list = first_contact_handler.fetch_courses_info(download_public_course_ids)
+            for course in public_courses_list:
+                courses.append(course)
 
             assignments = assignments_handler.fetch_assignments(courses)
             if download_submissions:
@@ -327,6 +332,7 @@ class MoodleService:
         """
 
         download_course_ids = config_helper.get_download_course_ids()
+        download_public_course_ids = config_helper.get_download_public_course_ids()
         dont_download_course_ids = config_helper.get_dont_download_course_ids()
         download_submissions = config_helper.get_download_submissions()
         download_descriptions = config_helper.get_download_descriptions()
@@ -392,7 +398,7 @@ class MoodleService:
                 course.files = course_files
 
             if (
-                ResultsHandler.should_download_course(course.id, download_course_ids, dont_download_course_ids)
+                ResultsHandler.should_download_course(course.id, download_course_ids + download_public_course_ids, dont_download_course_ids)
                 and len(course.files) > 0
             ):
                 filtered_changes.append(course)
