@@ -30,6 +30,7 @@ class FirstContactHandler:
         except Exception as e:
             raise RuntimeError('Error could not parse version string: "%s" Error: %s' % (version, e))
 
+        self.version = version
         return userid, version
 
     def fetch_courses(self, userid: str) -> [Course]:
@@ -54,13 +55,11 @@ class FirstContactHandler:
         @param course_ids: A list of courses ids
         @return: A list of courses
         """
-        if len(course_ids) == 0:
+        # API is only available since version 3.2
+        if len(course_ids) == 0 or self.version < 2016120500:
             return []
 
-        data = {
-            "field": "ids",
-            "value": ",".join(list(map(str, course_ids)))
-        }
+        data = {"field": "ids", "value": ",".join(list(map(str, course_ids)))}
 
         result = self.request_helper.post_REST('core_course_get_courses_by_field', data)
         result = result.get('courses', [])
