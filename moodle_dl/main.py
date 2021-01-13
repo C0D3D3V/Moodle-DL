@@ -264,6 +264,7 @@ def run_main(storage_path, verbose=False, skip_cert_verify=False, without_downlo
         logging.debug('All done. Exiting...')
         Log.success('All done. Exiting..')
     except BaseException as e:
+        print('\n')
         if not isinstance(e, process_lock.LockError):
             process_lock.unlock(storage_path)
 
@@ -278,8 +279,9 @@ def run_main(storage_path, verbose=False, skip_cert_verify=False, without_downlo
         tg_service.notify_about_error(short_error)
 
         logging.debug('Exception-Handling completed. Exiting...')
-        Log.critical('Exception:\n%s' % (error_formatted))
-        Log.error('The following error occurred during execution: %s' % (str(e)))
+        if verbose:
+            Log.critical('Exception:\n%s' % (error_formatted))
+        Log.error('The following error occurred during execution:\n%s' % (str(e)))
 
         sys.exit(-1)
 

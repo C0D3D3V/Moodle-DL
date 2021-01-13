@@ -225,76 +225,72 @@ class MoodleService:
         courses = []
         filtered_courses = []
         cookie_handler = None
-        try:
 
-            print('\rDownloading account information\033[K', end='')
+        print('\rDownloading account information\033[K', end='')
 
-            userid, version = first_contact_handler.fetch_userid_and_version()
-            assignments_handler = AssignmentsHandler(request_helper, version)
-            databases_handler = DatabasesHandler(request_helper, version)
-            forums_handler = ForumsHandler(request_helper, version)
-            results_handler.setVersion(version)
+        userid, version = first_contact_handler.fetch_userid_and_version()
+        assignments_handler = AssignmentsHandler(request_helper, version)
+        databases_handler = DatabasesHandler(request_helper, version)
+        forums_handler = ForumsHandler(request_helper, version)
+        results_handler.setVersion(version)
 
-            if download_also_with_cookie:
-                # generate a new cookie if necessary
-                cookie_handler = CookieHandler(request_helper, version, self.storage_path)
-                cookie_handler.check_and_fetch_cookies(privatetoken, userid)
+        if download_also_with_cookie:
+            # generate a new cookie if necessary
+            cookie_handler = CookieHandler(request_helper, version, self.storage_path)
+            cookie_handler.check_and_fetch_cookies(privatetoken, userid)
 
-            courses_list = first_contact_handler.fetch_courses(userid)
-            courses = []
-            # Filter unselected courses
-            for course in courses_list:
-                if ResultsHandler.should_download_course(course.id, download_course_ids, dont_download_course_ids):
-                    courses.append(course)
-
-            public_courses_list = first_contact_handler.fetch_courses_info(download_public_course_ids)
-            for course in public_courses_list:
+        courses_list = first_contact_handler.fetch_courses(userid)
+        courses = []
+        # Filter unselected courses
+        for course in courses_list:
+            if ResultsHandler.should_download_course(course.id, download_course_ids, dont_download_course_ids):
                 courses.append(course)
 
-            assignments = assignments_handler.fetch_assignments(courses)
-            if download_submissions:
-                assignments = assignments_handler.fetch_submissions(userid, assignments)
+        public_courses_list = first_contact_handler.fetch_courses_info(download_public_course_ids)
+        for course in public_courses_list:
+            courses.append(course)
 
-            databases = databases_handler.fetch_databases(courses)
-            if download_databases:
-                databases = databases_handler.fetch_database_files(databases)
+        assignments = assignments_handler.fetch_assignments(courses)
+        if download_submissions:
+            assignments = assignments_handler.fetch_submissions(userid, assignments)
 
-            forums = forums_handler.fetch_forums(courses)
-            if download_forums:
-                last_timestamps_per_forum = self.recorder.get_last_timestamps_per_forum()
-                forums = forums_handler.fetch_forums_posts(forums, last_timestamps_per_forum)
+        databases = databases_handler.fetch_databases(courses)
+        if download_databases:
+            databases = databases_handler.fetch_database_files(databases)
 
-            index = 0
-            for course in courses:
-                index += 1
+        forums = forums_handler.fetch_forums(courses)
+        if download_forums:
+            last_timestamps_per_forum = self.recorder.get_last_timestamps_per_forum()
+            forums = forums_handler.fetch_forums_posts(forums, last_timestamps_per_forum)
 
-                # to limit the output to one line
-                limits = shutil.get_terminal_size()
+        index = 0
+        for course in courses:
+            index += 1
 
-                shorted_course_name = course.fullname
-                if len(course.fullname) > 17:
-                    shorted_course_name = course.fullname[:15] + '..'
+            # to limit the output to one line
+            limits = shutil.get_terminal_size()
 
-                into = '\rDownloading course information'
+            shorted_course_name = course.fullname
+            if len(course.fullname) > 17:
+                shorted_course_name = course.fullname[:15] + '..'
 
-                status_message = into + ' %3d/%3d [%-17s|%6s]' % (index, len(courses), shorted_course_name, course.id)
+            into = '\rDownloading course information'
 
-                if len(status_message) > limits.columns:
-                    status_message = status_message[0 : limits.columns]
+            status_message = into + ' %3d/%3d [%-17s|%6s]' % (index, len(courses), shorted_course_name, course.id)
 
-                print(status_message + '\033[K', end='')
+            if len(status_message) > limits.columns:
+                status_message = status_message[0 : limits.columns]
 
-                course_assignments = assignments.get(course.id, {})
-                course_databases = databases.get(course.id, {})
-                course_forums = forums.get(course.id, {})
-                results_handler.set_fetch_addons(course_assignments, course_databases, course_forums)
-                course.files = results_handler.fetch_files(course.id)
+            print(status_message + '\033[K', end='')
 
-                filtered_courses.append(course)
-            print('')
+            course_assignments = assignments.get(course.id, {})
+            course_databases = databases.get(course.id, {})
+            course_forums = forums.get(course.id, {})
+            results_handler.set_fetch_addons(course_assignments, course_databases, course_forums)
+            course.files = results_handler.fetch_files(course.id)
 
-        except (RequestRejectedError, ValueError, RuntimeError) as error:
-            raise RuntimeError('Error while communicating with the Moodle System! (%s)' % (error))
+            filtered_courses.append(course)
+        print('')
 
         logging.debug('Checking for changes...')
         changes = self.recorder.changes_of_new_version(filtered_courses)
@@ -398,7 +394,9 @@ class MoodleService:
                 course.files = course_files
 
             if (
-                ResultsHandler.should_download_course(course.id, download_course_ids + download_public_course_ids, dont_download_course_ids)
+                ResultsHandler.should_download_course(
+                    course.id, download_course_ids + download_public_course_ids, dont_download_course_ids
+                )
                 and len(course.files) > 0
             ):
                 filtered_changes.append(course)

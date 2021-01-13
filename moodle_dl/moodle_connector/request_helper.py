@@ -184,7 +184,7 @@ class RequestHelper:
     def _check_response_code(response):
         # Normally Moodle answer with response 200
         if response.status_code != 200:
-            raise RuntimeError(
+            raise RequestRejectedError(
                 'An Unexpected Error happened on side of the Moodle System!'
                 + (' Status-Code: %s' % str(response.status_code))
                 + ('\nHeader: %s' % response.headers)
@@ -231,12 +231,14 @@ class RequestHelper:
         # Try to parse the JSON
         try:
             response_extracted = response.json()
+        except ValueError as error:
+            raise RequestRejectedError('The Moodle Mobile API does not appear to be available at this time.') from error
         except Exception as error:
-            raise RuntimeError(
+            raise RequestRejectedError(
                 'An Unexpected Error occurred while trying'
                 + ' to parse the json response! Moodle'
-                + ' response: %s.\nError: %s' % (response.read(), error)
-            )
+                + ' response: %s.\nError: %s' % (response.text, error)
+            ) from error
         # Check for known errors
         if 'error' in response_extracted:
             error = response_extracted.get('error', '')
@@ -255,6 +257,11 @@ class RequestHelper:
             exception = response_extracted.get('exception', '')
             errorcode = response_extracted.get('errorcode', '')
             message = response_extracted.get('message', '')
+
+            if errorcode == 'invalidtoken':
+                raise RequestRejectedError(
+                    'Your Moodle token has expired. To create a new one run "moodle-dl -nt -u USERNAME -pw PASSWORD"'
+                )
 
             raise RequestRejectedError(
                 'The Moodle System rejected the Request.'

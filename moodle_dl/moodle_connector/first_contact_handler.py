@@ -59,7 +59,10 @@ class FirstContactHandler:
         if len(course_ids) == 0 or self.version < 2016120500:
             return []
 
-        data = {"field": "ids", "value": ",".join(list(map(str, course_ids)))}
+        data = {
+            "field": "ids",
+            "value": ",".join(list(map(str, course_ids))),
+        }
 
         result = self.request_helper.post_REST('core_course_get_courses_by_field', data)
         result = result.get('courses', [])
