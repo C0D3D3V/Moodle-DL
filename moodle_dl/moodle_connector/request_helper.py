@@ -74,7 +74,7 @@ class RequestHelper:
                 session.cookies.load(ignore_discard=True, ignore_expires=True)
 
         try:
-            response = session.post(url, data=data_urlencoded, headers=self.stdHeader, verify=self.verify)
+            response = session.post(url, data=data_urlencoded, headers=self.stdHeader, verify=self.verify, timeout=60)
         except RequestException as error:
             raise ConnectionError("Connection error: %s" % str(error)) from None
 
@@ -103,7 +103,7 @@ class RequestHelper:
             if os.path.exists(cookie_jar_path):
                 session.cookies.load(ignore_discard=True, ignore_expires=True)
         try:
-            response = session.get(url, headers=self.stdHeader, verify=self.verify)
+            response = session.get(url, headers=self.stdHeader, verify=self.verify, timeout=60)
         except RequestException as error:
             raise ConnectionError("Connection error: %s" % str(error)) from None
 
@@ -128,7 +128,7 @@ class RequestHelper:
         url = self._get_REST_POST_URL(self.url_base, function)
 
         try:
-            response = requests.post(url, data=data_urlencoded, headers=self.stdHeader, verify=self.verify)
+            response = requests.post(url, data=data_urlencoded, headers=self.stdHeader, verify=self.verify, timeout=60)
         except RequestException as error:
             raise ConnectionError("Connection error: %s" % str(error)) from None
 
@@ -185,6 +185,7 @@ class RequestHelper:
                 data=urllib.parse.urlencode(data),
                 headers=self.stdHeader,
                 verify=self.verify,
+                timeout=60,
             )
         except RequestException as error:
             raise ConnectionError("Connection error: %s" % str(error)) from None
@@ -212,7 +213,7 @@ class RequestHelper:
 
         url = '%slib/upgrade.txt' % (self.url_base)
         try:
-            response = requests.get(url, headers=self.stdHeader, verify=self.verify)
+            response = requests.get(url, headers=self.stdHeader, verify=self.verify, timeout=60)
         except RequestException as error:
             raise ConnectionError("Connection error: %s" % str(error)) from None
 

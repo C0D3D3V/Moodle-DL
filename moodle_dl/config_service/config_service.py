@@ -35,8 +35,9 @@ class ConfigService:
 
             courses = first_contact_handler.fetch_courses(userid)
 
-        except (RequestRejectedError, ValueError, RuntimeError) as error:
-            raise RuntimeError('Error while communicating with the Moodle System! (%s)' % (error))
+        except (RequestRejectedError, ValueError, RuntimeError, ConnectionError) as error:
+            Log.error('Error while communicating with the Moodle System! (%s)' % (error))
+            exit(1)
 
         self._select_courses_to_download(courses)
         self._set_options_of_courses(courses)

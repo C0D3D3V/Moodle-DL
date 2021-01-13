@@ -29,7 +29,7 @@ class TelegramShooter:
         data_urlencoded = urllib.parse.urlencode(payload)
 
         try:
-            response = requests.post(url, data=data_urlencoded, headers=self.stdHeader)
+            response = requests.post(url, data=data_urlencoded, headers=self.stdHeader, timeout=60)
         except RequestException as error:
             raise ConnectionError("Connection error: %s" % str(error)) from None
 

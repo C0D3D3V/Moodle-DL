@@ -3,6 +3,7 @@ import os
 import platform
 import ssl
 import time
+import socket
 import shutil
 import urllib
 import logging
@@ -381,6 +382,7 @@ class URLTarget(object):
                 headers=RequestHelper.stdHeader,
                 verify=self.verify_cert,
                 allow_redirects=True,
+                timeout=60,
             )
         except (InvalidSchema, InvalidURL, MissingSchema):
             # don't download urls like 'mailto:name@provider.com'
@@ -751,7 +753,7 @@ class URLTarget(object):
             self.success = True
 
         except Exception as e:
-            self.error = traceback.format_exc() + '\nError:' + str(e)
+            self.error = str(e)
             filesize = 0
             try:
                 filesize = os.path.getsize(self.file.saved_to)
@@ -759,6 +761,7 @@ class URLTarget(object):
                 pass
 
             logging.error('T%s - Error while trying to download file: %s', self.thread_id, self)
+            logging.error('T%s - Traceback:\n%s', self.thread_id, traceback.format_exc())
 
             if self.downloaded == 0 and filesize == 0:
                 try:
@@ -798,7 +801,7 @@ class URLTarget(object):
                 cookie_jar.load(ignore_discard=True, ignore_expires=True)
                 cookie_jar.add_cookie_header(request)
 
-        with contextlib.closing(urllib.request.urlopen(request, context=context)) as fp:
+        with contextlib.closing(urllib.request.urlopen(request, context=context, timeout=60)) as fp:
             headers = fp.info()
 
             # Just return the local path and the 'headers' for file://
@@ -828,7 +831,11 @@ class URLTarget(object):
                     reporthook(blocknum, bs, size)
 
                 while True:
-                    block = fp.read(bs)
+                    try:
+                        block = fp.read(bs)
+                    except (socket.timeout, socket.error) as error:
+                        raise ConnectionError("Connection error: %s" % str(error)) from None
+
                     if not block:
                         break
                     read += len(block)

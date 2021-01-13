@@ -92,9 +92,11 @@ class MoodleService:
                 )
 
             except RequestRejectedError as error:
-                print('Login Failed! (%s) Please try again.' % (error))
+                Log.error('Login Failed! (%s) Please try again.' % (error))
             except (ValueError, RuntimeError) as error:
-                print('Error while communicating with the Moodle System! (%s) Please try again.' % (error))
+                Log.error('Error while communicating with the Moodle System! (%s) Please try again.' % (error))
+            except ConnectionError as error:
+                Log.error(str(error))
 
         if automated is True and moodle_token is None:
             exit(1)
