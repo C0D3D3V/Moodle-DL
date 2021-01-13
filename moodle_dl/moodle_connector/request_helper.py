@@ -7,6 +7,7 @@ import requests
 import logging
 
 from http.cookiejar import MozillaCookieJar
+from requests.exceptions import RequestException
 
 
 class RequestHelper:
@@ -72,7 +73,10 @@ class RequestHelper:
             if os.path.exists(cookie_jar_path):
                 session.cookies.load(ignore_discard=True, ignore_expires=True)
 
-        response = session.post(url, data=data_urlencoded, headers=self.stdHeader, verify=self.verify)
+        try:
+            response = session.post(url, data=data_urlencoded, headers=self.stdHeader, verify=self.verify)
+        except RequestException as error:
+            raise ConnectionError("Connection error: %s" % str(error)) from None
 
         if cookie_jar_path is not None:
             for cookie in session.cookies:
@@ -98,8 +102,10 @@ class RequestHelper:
 
             if os.path.exists(cookie_jar_path):
                 session.cookies.load(ignore_discard=True, ignore_expires=True)
-
-        response = session.get(url, headers=self.stdHeader, verify=self.verify)
+        try:
+            response = session.get(url, headers=self.stdHeader, verify=self.verify)
+        except RequestException as error:
+            raise ConnectionError("Connection error: %s" % str(error)) from None
 
         if cookie_jar_path is not None:
             session.cookies.save(ignore_discard=True, ignore_expires=True)
@@ -121,7 +127,10 @@ class RequestHelper:
         data_urlencoded = self._get_POST_DATA(function, self.token, data)
         url = self._get_REST_POST_URL(self.url_base, function)
 
-        response = requests.post(url, data=data_urlencoded, headers=self.stdHeader, verify=self.verify)
+        try:
+            response = requests.post(url, data=data_urlencoded, headers=self.stdHeader, verify=self.verify)
+        except RequestException as error:
+            raise ConnectionError("Connection error: %s" % str(error)) from None
 
         json_result = self._initial_parse(response)
         if self.log_responses and function not in ['tool_mobile_get_autologin_key']:
@@ -170,13 +179,15 @@ class RequestHelper:
         @return: The JSON response returned by the Moodle System, already
         checked for errors.
         """
-
-        response = requests.post(
-            '%slogin/token.php' % (self.url_base),
-            data=urllib.parse.urlencode(data),
-            headers=self.stdHeader,
-            verify=self.verify,
-        )
+        try:
+            response = requests.post(
+                '%slogin/token.php' % (self.url_base),
+                data=urllib.parse.urlencode(data),
+                headers=self.stdHeader,
+                verify=self.verify,
+            )
+        except RequestException as error:
+            raise ConnectionError("Connection error: %s" % str(error)) from None
 
         return self._initial_parse(response)
 
@@ -200,7 +211,10 @@ class RequestHelper:
         """
 
         url = '%slib/upgrade.txt' % (self.url_base)
-        response = requests.get(url, headers=self.stdHeader, verify=self.verify)
+        try:
+            response = requests.get(url, headers=self.stdHeader, verify=self.verify)
+        except RequestException as error:
+            raise ConnectionError("Connection error: %s" % str(error)) from None
 
         self._check_response_code(response)
 

@@ -22,7 +22,7 @@ import html2text
 import youtube_dl
 
 from youtube_dl.utils import format_bytes, timeconvert
-from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema
+from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema, RequestException
 
 from moodle_dl.state_recorder.file import File
 from moodle_dl.state_recorder.course import Course
@@ -387,6 +387,8 @@ class URLTarget(object):
             logging.debug('T%s - Attempt is aborted because the URL has no correct format', self.thread_id)
             self.success = True
             return False
+        except RequestException as error:
+            raise ConnectionError("Connection error: %s" % str(error)) from None
 
         if not response.ok:
             # The URL reports an HTTP error, so we give up trying to download the URL.

@@ -1,6 +1,8 @@
 import urllib
 import requests
 
+from requests.exceptions import RequestException
+
 
 class TelegramShooter:
     """
@@ -26,7 +28,11 @@ class TelegramShooter:
         url = 'https://api.telegram.org/bot%s/sendMessage' % (self.telegram_token)
         data_urlencoded = urllib.parse.urlencode(payload)
 
-        response = requests.post(url, data=data_urlencoded, headers=self.stdHeader)
+        try:
+            response = requests.post(url, data=data_urlencoded, headers=self.stdHeader)
+        except RequestException as error:
+            raise ConnectionError("Connection error: %s" % str(error)) from None
+
         self._check_errors(response)
 
     @staticmethod
