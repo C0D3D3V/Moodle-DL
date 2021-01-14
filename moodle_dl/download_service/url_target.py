@@ -486,7 +486,7 @@ class URLTarget(object):
                 self.success = False
                 raise RuntimeError(
                     'Youtube-dl could not download the URL. For details see youtube-dl error messages in the log file. '
-                    + 'You can ignore this error by running "moodle-dl --ignore-ytdl-errors" once.'
+                    + 'You can ignore this error by running `moodle-dl --ignore-ytdl-errors` once.'
                 )
 
         logging.debug('T%s - Downloading file directly', self.thread_id)
