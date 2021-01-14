@@ -259,7 +259,7 @@ class StateRecorder:
         curse_rows = cursor.fetchall()
 
         for course_row in curse_rows:
-            course = Course(course_row['course_id'], course_row['course_fullname'], [])
+            course = Course(course_row['course_id'], course_row['course_fullname'])
 
             cursor.execute(
                 """SELECT *
@@ -312,7 +312,7 @@ class StateRecorder:
             # there is the same course in the current set
             # so try to find removed files, that are still exist in storage
             # also find modified files
-            changed_course = Course(stored_course.id, stored_course.fullname, [])
+            changed_course = Course(stored_course.id, stored_course.fullname)
             for stored_file in stored_course.files:
                 matching_file = None
 
@@ -381,11 +381,7 @@ class StateRecorder:
                 # skip the next checks!
                 continue
 
-            # Does anyone know why it is necessary to give
-            # a course an empty list of files O.o
-            # if I don't do this then a course will be created
-            # with the files of the previous course
-            changed_course = Course(current_course.id, current_course.fullname, [])
+            changed_course = Course(current_course.id, current_course.fullname)
             for current_file in current_course.files:
                 matching_file = None
 
@@ -480,7 +476,7 @@ class StateRecorder:
         curse_rows = cursor.fetchall()
 
         for course_row in curse_rows:
-            course = Course(course_row['course_id'], course_row['course_fullname'], [])
+            course = Course(course_row['course_id'], course_row['course_fullname'])
 
             cursor.execute(
                 """SELECT *

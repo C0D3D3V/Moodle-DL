@@ -46,7 +46,7 @@ class FirstContactHandler:
 
         results = []
         for course in result:
-            results.append(Course(course.get('id', 0), course.get('fullname', ''), []))
+            results.append(Course(course.get('id', 0), course.get('fullname', '')))
         return results
 
     def fetch_courses_info(self, course_ids: [int]) -> [Course]:
@@ -69,5 +69,5 @@ class FirstContactHandler:
 
         results = []
         for course in result:
-            results.append(Course(course.get('id', 0), course.get('fullname', ''), []))
+            results.append(Course(course.get('id', 0), course.get('fullname', '')))
         return results

@@ -3,10 +3,13 @@ from moodle_dl.download_service.path_tools import PathTools
 
 
 class Course:
-    def __init__(self, _id: int, fullname: str, files: [File] = []):
+    def __init__(self, _id: int, fullname: str, files: [File] = None):
         self.id = _id
         self.fullname = fullname
-        self.files = files
+        if files is not None:
+            self.files = files
+        else:
+            self.files = []
 
         self.overwrite_name_with = None
         self.create_directory_structure = True
