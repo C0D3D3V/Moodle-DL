@@ -156,7 +156,14 @@ def run_change_notification_telegram(storage_path):
     Log.success('Telegram Configuration successfully updated!')
 
 
-def run_main(storage_path, verbose=False, skip_cert_verify=False, without_downloading_files=False, log_responses=False):
+def run_main(
+    storage_path,
+    verbose=False,
+    skip_cert_verify=False,
+    ignore_ytdl_errors=False,
+    without_downloading_files=False,
+    log_responses=False,
+):
 
     log_formatter = logging.Formatter('%(asctime)s  %(levelname)s  {%(module)s}  %(message)s', '%Y-%m-%d %H:%M:%S')
     log_file = os.path.join(storage_path, 'MoodleDownloader.log')
@@ -242,7 +249,7 @@ def run_main(storage_path, verbose=False, skip_cert_verify=False, without_downlo
         if without_downloading_files:
             downloader = FakeDownloadService(changed_courses, moodle, storage_path)
         else:
-            downloader = DownloadService(changed_courses, moodle, storage_path, skip_cert_verify)
+            downloader = DownloadService(changed_courses, moodle, storage_path, skip_cert_verify, ignore_ytdl_errors)
         downloader.run()
 
         changed_courses_to_notify = moodle.recorder.changes_to_notify()
@@ -459,6 +466,17 @@ def get_parser():
     )
 
     parser.add_argument(
+        '-iye',
+        '--ignore-ytdl-errors',
+        default=False,
+        action='store_true',
+        help='If this option is set, errors that occur when downloading with the help of Youtube-dl are ignored. '
+        + 'Thus, no further attempt will be made to download the file using youtube-dl. '
+        + 'By default, youtube-dl errors are critical, so the download of the corresponding file '
+        + 'will be aborted and when you run moodle-dl again, the download will be repeated.',
+    )
+
+    parser.add_argument(
         '--without-downloading-files',
         default=False,
         action='store_true',
@@ -496,6 +514,7 @@ def main(args=None):
     password = args.password
     storage_path = args.path
     skip_cert_verify = args.skip_cert_verify
+    ignore_ytdl_errors = args.ignore_ytdl_errors
     without_downloading_files = args.without_downloading_files
     log_responses = args.log_responses
     DownloadService.thread_count = args.threads
@@ -514,4 +533,4 @@ def main(args=None):
     elif args.manage_database:
         run_manage_database(storage_path)
     else:
-        run_main(storage_path, verbose, skip_cert_verify, without_downloading_files, log_responses)
+        run_main(storage_path, verbose, skip_cert_verify, ignore_ytdl_errors, without_downloading_files, log_responses)

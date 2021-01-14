@@ -471,7 +471,7 @@ class URLTarget(object):
 
             # if we want we could save ydl.cookiejar (Also the cookiejar of moodle-dl)
 
-            if self.youtube_dl_failed_with_error is True:
+            if self.youtube_dl_failed_with_error is True and not self.options.get('ignore_ytdl_errors', False):
                 if not delete_if_successful:
                     # cleanup the url-link file
                     try:
@@ -485,7 +485,8 @@ class URLTarget(object):
                         )
                 self.success = False
                 raise RuntimeError(
-                    'Youtube-dl could not download the URL. For details see youtube-dl error messages in the log file'
+                    'Youtube-dl could not download the URL. For details see youtube-dl error messages in the log file. '
+                    + 'You can ignore this error by running "moodle-dl --ignore-ytdl-errors" once.'
                 )
 
         logging.debug('T%s - Downloading file directly', self.thread_id)

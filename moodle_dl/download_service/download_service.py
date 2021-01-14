@@ -29,7 +29,12 @@ class DownloadService:
     thread_count = 5
 
     def __init__(
-        self, courses: [Course], moodle_service: MoodleService, storage_path: str, skip_cert_verify: bool = False
+        self,
+        courses: [Course],
+        moodle_service: MoodleService,
+        storage_path: str,
+        skip_cert_verify: bool = False,
+        ignore_ytdl_errors: bool = False,
     ):
         """
         Initiates the DownloadService with all files that
@@ -62,6 +67,8 @@ class DownloadService:
 
         # Sets the download options
         self.options = moodle_service.config_helper.get_download_options()
+        # Add console parameters
+        self.options.update({'ignore_ytdl_errors': ignore_ytdl_errors})
 
         # report is used to collect successful and failed downloads
         self.report = {'success': [], 'failure': []}
