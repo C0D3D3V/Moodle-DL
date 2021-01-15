@@ -281,7 +281,11 @@ def run_main(
         if r_client:
             sentry_sdk.capture_exception(e)
 
-        short_error = '%s\r\n%s' % (str(e), traceback.format_exc(limit=1))
+        short_error = str(e)
+
+        if not short_error or short_error.isspace():
+            short_error = traceback.format_exc(limit=1)
+
         mail_service.notify_about_error(short_error)
         tg_service.notify_about_error(short_error)
 

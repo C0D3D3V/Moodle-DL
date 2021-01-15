@@ -247,13 +247,13 @@ class RequestHelper:
         try:
             response_extracted = response.json()
         except ValueError as error:
-            raise RequestRejectedError('The Moodle Mobile API does not appear to be available at this time.') from error
+            raise RequestRejectedError('The Moodle Mobile API does not appear to be available at this time.') from None
         except Exception as error:
             raise RequestRejectedError(
                 'An Unexpected Error occurred while trying'
                 + ' to parse the json response! Moodle'
                 + ' response: %s.\nError: %s' % (response.text, error)
-            ) from error
+            ) from None
         # Check for known errors
         if 'error' in response_extracted:
             error = response_extracted.get('error', '')

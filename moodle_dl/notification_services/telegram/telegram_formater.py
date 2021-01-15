@@ -52,4 +52,4 @@ def create_full_error_message(details) -> (str, {str: str}):
     """
     Creates an error message
     """
-    return 'The following error occurred during execution:' + details
+    return 'The following error occurred during execution:\n' + details
