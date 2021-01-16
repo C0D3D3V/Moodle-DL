@@ -133,6 +133,28 @@ class AssignmentsHandler:
         result += AssignmentsHandler._get_files_of_plugins(l_submission)
         result += AssignmentsHandler._get_files_of_plugins(l_teamsubmission)
         result += AssignmentsHandler._get_files_of_plugins(feedback)
+        result += AssignmentsHandler._get_grade_of_feedback(feedback)
+
+        return result
+
+    @staticmethod
+    def _get_grade_of_feedback(feedback: {}) -> []:
+        result = []
+
+        gradefordisplay = feedback.get('gradefordisplay', "")
+        gradeddate = feedback.get('gradeddate', 0)
+        if gradeddate == 0 or gradefordisplay == "":
+            return result
+
+        file = {
+            'filename': 'grade',
+            'filepath': '/',
+            'timemodified': gradeddate,
+            'description': gradefordisplay,
+            'type': 'description',
+        }
+
+        result.append(file)
 
         return result
 
