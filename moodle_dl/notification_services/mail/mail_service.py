@@ -5,12 +5,14 @@ from getpass import getpass
 
 from moodle_dl.utils import cutie
 from moodle_dl.state_recorder.course import Course
+from moodle_dl.download_service.url_target import URLTarget
 from moodle_dl.notification_services.mail.mail_shooter import MailShooter
 from moodle_dl.notification_services.notification_service import NotificationService
 from moodle_dl.notification_services.mail.mail_formater import (
     create_full_welcome_mail,
     create_full_moodle_diff_mail,
     create_full_error_mail,
+    create_full_failed_downloads_mail,
 )
 
 
@@ -102,7 +104,7 @@ class MailService(NotificationService):
             mail_shooter.send(mail_cfg['target'], subject, mail_content[0], mail_content[1])
         except BaseException as e:
             error_formatted = traceback.format_exc()
-            logging.error('While sending notification:\n%s' % (error_formatted), extra={'exception': e})
+            logging.error('While sending notification:\n%s', error_formatted, extra={'exception': e})
             raise e  # to be properly notified via Sentry
 
     def notify_about_changes_in_moodle(self, changes: [Course]) -> None:
@@ -136,3 +138,19 @@ class MailService(NotificationService):
 
         mail_content = create_full_error_mail(error_description)
         self._send_mail('Error!', mail_content)
+
+    def notify_about_failed_downloads(self, failed_downloads: [URLTarget]):
+        """
+        Sends out an mail with all failed download if configured to send out error messages.
+        @param failed_downloads: A list of failed URLTargets.
+        """
+        if not self._is_configured():
+            return
+
+        mail_cfg = self.config_helper.get_property('mail')
+
+        if not mail_cfg.get('send_error_msg', True):
+            return
+
+        mail_content = create_full_failed_downloads_mail(failed_downloads)
+        self._send_mail('Faild to download files!', mail_content)

@@ -754,7 +754,7 @@ class URLTarget(object):
             self.success = True
 
         except Exception as e:
-            self.error = str(e)
+            self.error = e
             filesize = 0
             try:
                 filesize = os.path.getsize(self.file.saved_to)

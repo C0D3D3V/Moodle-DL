@@ -3,11 +3,13 @@ import traceback
 
 from moodle_dl.utils import cutie
 from moodle_dl.state_recorder.course import Course
+from moodle_dl.download_service.url_target import URLTarget
 from moodle_dl.notification_services.telegram.telegram_shooter import TelegramShooter
 from moodle_dl.notification_services.notification_service import NotificationService
 from moodle_dl.notification_services.telegram.telegram_formater import (
-    create_full_moodle_diff_message,
-    create_full_error_message,
+    create_full_moodle_diff_messages,
+    create_full_error_messages,
+    create_full_failed_downloads_messages,
 )
 
 
@@ -97,7 +99,7 @@ class TelegramService(NotificationService):
         if not self._is_configured():
             return
 
-        messages = create_full_moodle_diff_message(changes)
+        messages = create_full_moodle_diff_messages(changes)
 
         for message_content in messages:
             self._send_message(message_content)
@@ -114,5 +116,24 @@ class TelegramService(NotificationService):
 
         if not telegram_cfg.get('send_error_msg', True):
             return
+        messages = create_full_error_messages(error_description)
 
-        self._send_message(create_full_error_message(error_description))
+        for message_content in messages:
+            self._send_message(message_content)
+
+    def notify_about_failed_downloads(self, failed_downloads: [URLTarget]):
+        """
+        Sends out an message about failed download if configured to send out error messages.
+        @param failed_downloads: A list of failed URLTargets.
+        """
+        if not self._is_configured():
+            return
+
+        telegram_cfg = self.config_helper.get_property('telegram')
+
+        if not telegram_cfg.get('send_error_msg', True):
+            return
+        messages = create_full_failed_downloads_messages(failed_downloads)
+
+        for message_content in messages:
+            self._send_message(message_content)

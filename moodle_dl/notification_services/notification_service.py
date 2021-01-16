@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
 from moodle_dl.state_recorder.course import Course
+from moodle_dl.download_service.url_target import URLTarget
 from moodle_dl.config_service.config_helper import ConfigHelper
 
 
@@ -38,5 +39,15 @@ class NotificationService:
         the execution of the program.
         The caller shouldn't care about if the sending was successful.
         @param error_description: The error text.
+        """
+        pass
+
+    @abstractmethod
+    def notify_about_failed_downloads(self, failed_downloads: [URLTarget]) -> None:
+        """
+        Sends out a Notification to inform about failed downloads encountered during
+        the execution of the program.
+        The caller shouldn't care about if the sending was successful.
+        @param failed_downloads: A list of failed URLTargets.
         """
         pass

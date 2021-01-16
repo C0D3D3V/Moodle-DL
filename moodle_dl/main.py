@@ -206,7 +206,7 @@ def run_main(
     except BaseException as e:
         logging.error('Error while trying to load the Configuration! %s Exiting...', e, extra={'exception': e})
         Log.error('Error while trying to load the Configuration!')
-        sys.exit(-1)
+        sys.exit(1)
 
     r_client = False
     try:
@@ -251,6 +251,7 @@ def run_main(
         else:
             downloader = DownloadService(changed_courses, moodle, storage_path, skip_cert_verify, ignore_ytdl_errors)
         downloader.run()
+        failed_downloads = downloader.get_failed_url_targets()
 
         changed_courses_to_notify = moodle.recorder.changes_to_notify()
 
@@ -265,6 +266,11 @@ def run_main(
             msg_no_changes = 'No changes found for the configured Moodle-Account.'
             logging.info(msg_no_changes)
             Log.warning(msg_no_changes)
+
+        if len(failed_downloads) > 0:
+            console_service.notify_about_failed_downloads(failed_downloads)
+            mail_service.notify_about_failed_downloads(failed_downloads)
+            tg_service.notify_about_failed_downloads(failed_downloads)
 
         process_lock.unlock(storage_path)
 
@@ -281,20 +287,20 @@ def run_main(
         if r_client:
             sentry_sdk.capture_exception(e)
 
-        short_error = str(e)
+        if verbose:
+            Log.critical('Exception:\n%s' % (error_formatted))
 
+        short_error = str(e)
         if not short_error or short_error.isspace():
             short_error = traceback.format_exc(limit=1)
 
+        console_service.notify_about_error(short_error)
         mail_service.notify_about_error(short_error)
         tg_service.notify_about_error(short_error)
 
         logging.debug('Exception-Handling completed. Exiting...')
-        if verbose:
-            Log.critical('Exception:\n%s' % (error_formatted))
-        Log.error('The following error occurred during execution:\n%s' % (str(e)))
 
-        sys.exit(-1)
+        sys.exit(1)
 
 
 def _dir_path(path):

@@ -2,6 +2,7 @@ import logging
 
 from moodle_dl.utils.logger import Log
 from moodle_dl.state_recorder.course import Course
+from moodle_dl.download_service.url_target import URLTarget
 from moodle_dl.notification_services.notification_service import NotificationService
 
 
@@ -64,4 +65,30 @@ class ConsoleService(NotificationService):
             print('\n')
 
     def notify_about_error(self, error_description: str):
-        raise RuntimeError('Not yet implemented!')
+        Log.error('The following error occurred during execution:\n%s' % (error_description))
+
+    def notify_about_failed_downloads(self, failed_downloads: [URLTarget]):
+        if len(failed_downloads) > 0:
+            print('')
+            Log.warning(
+                'Error while trying to download files, look at the log for more details. List of failed downloads:'
+            )
+            print('')
+
+        RESET_SEQ = '\033[0m'
+        COLOR_SEQ = '\033[1;%dm'
+
+        BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = range(30, 38)
+
+        for url_target in failed_downloads:
+            print(
+                (COLOR_SEQ % CYAN)
+                + url_target.file.content_filename
+                + RESET_SEQ
+                + (COLOR_SEQ % RED)
+                + '\n\t'
+                + str(url_target.error)
+                + RESET_SEQ
+            )
+
+        print('')

@@ -165,7 +165,6 @@ class DownloadService:
             time.sleep(0.5)
 
         self._clear_status_message()
-        self._log_failures()
 
     def _create_downloader_threads(self):
         """
@@ -284,13 +283,8 @@ class DownloadService:
 
         print(f'\033[{len(self.threads)}A\r', end='')
 
-    def _log_failures(self):
+    def get_failed_url_targets(self):
         """
-        Logs errors if any have occurred.
+        Return a list of failed Downloads, as a list of URLTargets.
         """
-        print('')
-        if len(self.report['failure']) > 0:
-            Log.warning('Error while trying to download files, look at the log for more details.')
-
-        for url_target in self.report['failure']:
-            Log.error('%s\t%s' % (url_target.file.content_filename, url_target.error))
+        return self.report['failure']

@@ -1,7 +1,8 @@
 from moodle_dl.state_recorder.course import Course
+from moodle_dl.download_service.url_target import URLTarget
 
 
-def create_full_moodle_diff_message(changed_courses: [Course]) -> [str]:
+def create_full_moodle_diff_messages(changed_courses: [Course]) -> [str]:
     """
     Creates telegram messages with all changed files. This includes new,
     modified and deleted files. Files that have changed since the last message.
@@ -48,8 +49,44 @@ def create_full_moodle_diff_message(changed_courses: [Course]) -> [str]:
     return result_list
 
 
-def create_full_error_message(details) -> (str, {str: str}):
+def create_full_error_messages(details) -> [str]:
     """
-    Creates an error message
+    Creates error messages
     """
-    return 'The following error occurred during execution:\n' + details
+    result_list = []
+
+    one_msg_content = 'The following error occurred during execution:\r\n'
+    for new_line in details.splitlines():
+        new_line = new_line + '\r\n'
+        if len(one_msg_content) + len(new_line) >= 4096:
+            result_list.append(one_msg_content)
+            one_msg_content = new_line
+        else:
+            one_msg_content += new_line
+
+    result_list.append(one_msg_content)
+    return result_list
+
+
+def create_full_failed_downloads_messages(failed_downloads: [URLTarget]) -> [str]:
+    """
+    Creates messages with all failed downloads
+    """
+
+    result_list = []
+    if len(failed_downloads) == 0:
+        return result_list
+
+    one_msg_content = (
+        'Error while trying to download files, look at the log for more details. List of failed downloads:\r\n\r\n'
+    )
+    for url_target in failed_downloads:
+        new_line = '<i>%s:</i>\r\n%s\r\n\r\n' % (url_target.file.content_filename, url_target.error)
+        if len(one_msg_content) + len(new_line) >= 4096:
+            result_list.append(one_msg_content)
+            one_msg_content = new_line
+        else:
+            one_msg_content += new_line
+
+    result_list.append(one_msg_content)
+    return result_list

@@ -4,6 +4,7 @@ from string import Template
 from email.utils import make_msgid
 
 from moodle_dl.state_recorder.course import Course
+from moodle_dl.download_service.url_target import URLTarget
 
 """
 Encapsulates the formatting of the various notification-mails.
@@ -62,6 +63,35 @@ error_message_box = Template(
             </td>
         </tr>
     </table>
+'''
+)
+
+failed_downloads_message_box = Template(
+    '''
+    <table style="width: 100%; margin-bottom: 15px;">
+        <thead style="heigth: 0"><tr>
+            <th style="width: 100%;"/>
+        </tr></thead>
+        ${list_entries}
+    </table>
+'''
+)
+failed_downloads_list_entry_box = Template(
+    '''
+    <tr>
+        <td style="padding: 15px; padding-top: 7px; padding-bottom: 7px; color: #2b3033; font-size: 16px;
+        font-family: 'Segoe UI', 'Calibri', 'Lucida Grande', Arial,
+        sans-serif; ">
+            ${file_name}
+        </td>
+    </tr>
+    <tr>
+        <td style="padding: 15px; padding-top: 7px; padding-bottom: 7px; font-size: 14px;
+        font-family: 'Segoe UI', 'Calibri', 'Lucida Grande', Arial,
+        sans-serif; background-color: #ff3860; color: #fff;">
+            ${error_msg}
+        </td>
+    </tr>
 '''
 )
 
@@ -284,5 +314,24 @@ def create_full_error_mail(details) -> (str, {str: str}):
     content = error_message_box.substitute(details=details)
 
     full_content = _finish_with_main_wrapper(content, 'The following error occurred during execution:')
+
+    return full_content
+
+
+def create_full_failed_downloads_mail(failed_downloads: [URLTarget]) -> (str, {str: str}):
+    """
+    Creates an message with all failed downloads
+    """
+    list_entries = ''
+    for url_target in failed_downloads:
+        list_entries += failed_downloads_list_entry_box.substitute(
+            file_name=url_target.file.content_filename, error_msg=url_target.error
+        )
+
+    content = failed_downloads_message_box.substitute(list_entries=list_entries)
+
+    full_content = _finish_with_main_wrapper(
+        content, 'Error while trying to download files, look at the log for more details. List of failed downloads:'
+    )
 
     return full_content

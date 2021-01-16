@@ -55,6 +55,13 @@ class FakeDownloadService:
 
                     self.state_recorder.save_file(file, course.id, course.fullname)
 
+    def get_failed_url_targets(self):
+        """
+        Return a list of failed Downloads, as a list of URLTargets.
+        No download can fail, so this is only a dummy function.
+        """
+        return []
+
     def run(self):
         """Dummy function"""
         Log.success('All files stored in the Database!')
