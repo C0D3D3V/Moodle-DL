@@ -346,7 +346,7 @@ class MoodleService:
             if not download_submissions:
                 course_files = []
                 for file in course.files:
-                    if file.content_type != 'submission_file':
+                    if not (file.module_modname.endswith('assign') and file.deleted):
                         course_files.append(file)
                 course.files = course_files
 
