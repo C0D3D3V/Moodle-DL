@@ -32,6 +32,7 @@ from moodle_dl.state_recorder.offline_service import OfflineService
 from moodle_dl.moodle_connector.moodle_service import MoodleService
 from moodle_dl.download_service.download_service import DownloadService
 from moodle_dl.notification_services.mail.mail_service import MailService
+from moodle_dl.notification_services.xmpp.xmpp_service import XmppService
 from moodle_dl.download_service.fake_download_service import FakeDownloadService
 from moodle_dl.notification_services.console.console_service import ConsoleService
 from moodle_dl.notification_services.telegram.telegram_service import TelegramService
@@ -61,6 +62,7 @@ def run_init(storage_path, use_sso=False, skip_cert_verify=False):
 
     MailService(config).interactively_configure()
     TelegramService(config).interactively_configure()
+    XmppService(config).interactively_configure()
 
     do_sentry = cutie.prompt_yes_or_no('Do you want to configure Error Reporting via Sentry?')
     if do_sentry:
@@ -156,6 +158,15 @@ def run_change_notification_telegram(storage_path):
     Log.success('Telegram Configuration successfully updated!')
 
 
+def run_change_notification_xmpp(storage_path):
+    config = ConfigHelper(storage_path)
+    config.load()
+
+    XmppService(config).interactively_configure()
+
+    Log.success('XMPP Configuration successfully updated!')
+
+
 def run_main(
     storage_path,
     verbose=False,
@@ -218,6 +229,7 @@ def run_main(
 
     mail_service = MailService(config)
     tg_service = TelegramService(config)
+    xmpp_service = XmppService(config)
     console_service = ConsoleService(config)
 
     PathTools.restricted_filenames = config.get_restricted_filenames()
@@ -259,6 +271,7 @@ def run_main(
             console_service.notify_about_changes_in_moodle(changed_courses_to_notify)
             mail_service.notify_about_changes_in_moodle(changed_courses_to_notify)
             tg_service.notify_about_changes_in_moodle(changed_courses_to_notify)
+            xmpp_service.notify_about_changes_in_moodle(changed_courses_to_notify)
 
             moodle.recorder.notified(changed_courses_to_notify)
 
@@ -271,6 +284,7 @@ def run_main(
             console_service.notify_about_failed_downloads(failed_downloads)
             mail_service.notify_about_failed_downloads(failed_downloads)
             tg_service.notify_about_failed_downloads(failed_downloads)
+            xmpp_service.notify_about_failed_downloads(failed_downloads)
 
         process_lock.unlock(storage_path)
 
@@ -297,6 +311,7 @@ def run_main(
         console_service.notify_about_error(short_error)
         mail_service.notify_about_error(short_error)
         tg_service.notify_about_error(short_error)
+        xmpp_service.notify_about_error(short_error)
 
         logging.debug('Exception-Handling completed. Exiting...')
 
@@ -395,6 +410,17 @@ def get_parser():
         help=(
             'Activate/deactivate/change the settings for'
             + ' receiving notifications via Telegram. It does not'
+            + ' affect the rest of the config.'
+        ),
+    )
+
+    group.add_argument(
+        '-cx',
+        '--change-notification-xmpp',
+        action='store_true',
+        help=(
+            'Activate/deactivate/change the settings for'
+            + ' receiving notifications via XMPP. It does not'
             + ' affect the rest of the config.'
         ),
     )
@@ -538,8 +564,9 @@ def main(args=None):
     elif args.change_notification_mail:
         run_change_notification_mail(storage_path)
     elif args.change_notification_telegram:
-
         run_change_notification_telegram(storage_path)
+    elif args.change_notification_xmpp:
+        run_change_notification_xmpp(storage_path)
     elif args.manage_database:
         run_manage_database(storage_path)
     else:

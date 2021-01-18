@@ -19,7 +19,7 @@ def create_full_moodle_diff_messages(changed_courses: [Course]) -> [str]:
     one_msg_content = '%s new Changes in the Moodle courses!' % (diff_count)
 
     for course in changed_courses:
-        new_line = '\r\n\r\n\r\n> <b>' + course.fullname + '</b>\r\n'
+        new_line = '\r\n\r\n\r\n> **' + course.fullname + '**\r\n'
         if len(one_msg_content) + len(new_line) >= 4096:
             result_list.append(one_msg_content)
             one_msg_content = new_line
@@ -28,16 +28,16 @@ def create_full_moodle_diff_messages(changed_courses: [Course]) -> [str]:
 
         for file in course.files:
             if file.modified:
-                new_line = '\r\n<i>* Modified:</i> ' + file.saved_to
+                new_line = '\r\n__* Modified:__ ' + file.saved_to
             elif file.moved:
                 if file.new_file is not None:
-                    new_line = '\r\n<i>* Moved:</i> ' + file.new_file.saved_to
+                    new_line = '\r\n__* Moved:__ ' + file.new_file.saved_to
                 else:
-                    new_line = '\r\n<i>* Moved:</i> ' + file.saved_to
+                    new_line = '\r\n__* Moved:__ ' + file.saved_to
             elif file.deleted:
-                new_line = '\r\n<i>- Deleted:</i> ' + file.saved_to
+                new_line = '\r\n__- Deleted:__ ' + file.saved_to
             else:
-                new_line = '\r\n<i>+ Added:</i> ' + file.saved_to
+                new_line = '\r\n__+ Added:__ ' + file.saved_to
 
             if len(one_msg_content) + len(new_line) >= 4096:
                 result_list.append(one_msg_content)
@@ -78,10 +78,10 @@ def create_full_failed_downloads_messages(failed_downloads: [URLTarget]) -> [str
         return result_list
 
     one_msg_content = (
-        'Error while trying to download files, look at the log for more details. List of failed downloads:\r\n\r\n'
+        'Error while trying to download files, look at the log for more details.\r\nList of failed downloads:\r\n\r\n'
     )
     for url_target in failed_downloads:
-        new_line = '<i>%s:</i>\r\n%s\r\n\r\n' % (url_target.file.content_filename, url_target.error)
+        new_line = '__%s:__\r\n%s\r\n\r\n' % (url_target.file.content_filename, url_target.error)
         if len(one_msg_content) + len(new_line) >= 4096:
             result_list.append(one_msg_content)
             one_msg_content = new_line
