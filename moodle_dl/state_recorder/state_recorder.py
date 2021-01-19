@@ -195,6 +195,7 @@ class StateRecorder:
             and file1.content_filepath == file2.content_filepath
             and file1.content_filename == file2.content_filename
             and self.__files_have_same_type(file1, file2)
+            and (file1.content_type != 'description' or file1.module_name == file2.module_name)
         ):
             return True
         return False
@@ -225,6 +226,12 @@ class StateRecorder:
             return True
         return False
 
+    def __files_are_moveable(self, file1: File, file2: File) -> bool:
+        # Descriptions are not not movable at all
+        if file1.content_type != 'description' and file2.content_type != 'description':
+            return True
+        return False
+
     def __file_was_moved(self, file1: File, file2: File) -> bool:
         # Returns True if the file was moved to an other path
 
@@ -232,6 +239,7 @@ class StateRecorder:
             not self.__files_are_diffrent(file1, file2)
             and self.__files_have_same_type(file1, file2)
             and not self.__files_have_same_path(file1, file2)
+            and self.__files_are_moveable(file1, file2)
         ):
             return True
         return False
