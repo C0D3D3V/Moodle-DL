@@ -143,7 +143,7 @@ class AssignmentsHandler:
 
         gradefordisplay = feedback.get('gradefordisplay', "")
         gradeddate = feedback.get('gradeddate', 0)
-        if gradeddate == 0 or gradefordisplay == "":
+        if gradeddate is None or gradefordisplay is None or gradeddate == 0 or gradefordisplay == "":
             return result
 
         file = {

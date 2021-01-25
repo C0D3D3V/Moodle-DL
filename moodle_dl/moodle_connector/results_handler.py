@@ -122,6 +122,9 @@ class ResultsHandler:
         Tries to filter ids and stuff,
         that is knowing to change over time in descriptions.
         """
+        if description is None:
+            return ''
+
         if not isinstance(description, str):
             return description
 
