@@ -122,6 +122,8 @@ class ResultsHandler:
         Tries to filter ids and stuff,
         that is knowing to change over time in descriptions.
         """
+        if not isinstance(description, str):
+            return description
 
         description = re.sub(r'id="[^"]*"', "", description)
         description = re.sub(r"id='[^']*'", "", description)
