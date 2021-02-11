@@ -52,6 +52,11 @@ class OfflineService:
 
         section_options = []
         sections = []
+
+        # Add the option to select all sections
+        section_options.append(COLOR_SEQ % MAGENTA + '[All sections]' + RESET_SEQ)
+        sections.append(None)  # Add None at index 0 to avoid index shifting
+
         for course_file in selected_course.files:
             if not os.path.exists(course_file.saved_to) and (course_file.section_name not in sections):
                 section_options.append(COLOR_SEQ % MAGENTA + course_file.section_name + RESET_SEQ)
@@ -62,13 +67,22 @@ class OfflineService:
         print('')
 
         selected_sections_ids = cutie.select_multiple(options=section_options, minimal_count=1)
+
         selected_sections = []
         for selected_sections_id in selected_sections_ids:
-            if selected_sections_id < len(sections):
+            if selected_sections_id == 0:
+                selected_sections = sections[1:]
+                break
+            elif (selected_sections_id) < len(sections):
                 selected_sections.append(sections[selected_sections_id])
 
         file_options = []
         files = []
+
+        # Add the option to select all files
+        file_options.append(COLOR_SEQ % CYAN + '[All files]' + RESET_SEQ)
+        files.append(None)  # Add None at index 0 to avoid index shifting
+
         for course_file in selected_course.files:
             if not os.path.exists(course_file.saved_to) and (course_file.section_name in selected_sections):
                 file_options.append(COLOR_SEQ % CYAN + course_file.content_filename + RESET_SEQ)
@@ -81,7 +95,14 @@ class OfflineService:
 
         files_to_delete = []
         for file_index in selected_files:
-            if file_index < len(files) and isinstance(files[file_index], File):
+            if file_index == 0:  # If all files is selected
+                for file_to_delete in files[1:]:  # Ignore the first element of the array set as None
+                    if isinstance(file_to_delete, File):
+                        files_to_delete.append(file_to_delete)
+
+                break
+
+            elif file_index < len(files) and isinstance(files[file_index], File):
                 files_to_delete.append(files[file_index])
 
         self.state_recorder.batch_delete_files_from_db(files_to_delete)
