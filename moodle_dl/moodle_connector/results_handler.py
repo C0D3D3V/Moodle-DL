@@ -245,7 +245,8 @@ class ResultsHandler:
             if content_fileurl == '' and module_modname.startswith(('url', 'index_mod', 'cookie_mod')):
                 continue
 
-            if module_modname.startswith('index_mod'):
+            # Add the extention condition to avoid renaming pdf files or other downloaded content from moodle pages.
+            if module_modname.startswith('index_mod') and content_filename.endswith('.html'):
                 content_filename = module_name
 
             hash_description = None
