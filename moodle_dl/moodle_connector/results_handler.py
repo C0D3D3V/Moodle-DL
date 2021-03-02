@@ -173,12 +173,24 @@ class ResultsHandler:
             elif url_parts.hostname == self.moodle_domain:
                 module_modname = 'cookie_mod-description-' + original_module_modname
 
+            fist_guess_filename = url
+            if fist_guess_filename.startswith('data:image/'):
+                file_extension_guess = 'png'
+                if len(fist_guess_filename.split(';')) > 1:
+                    if len(fist_guess_filename.split(';')[0].split('/')) > 1:
+                        file_extension_guess = fist_guess_filename.split(';')[0].split('/')[1]
+
+                fist_guess_filename = 'inline_image.' + file_extension_guess
+
+            if len(fist_guess_filename) > 254:
+                fist_guess_filename = fist_guess_filename[:254]
+
             new_file = File(
                 module_id=module_id,
                 section_name=section_name,
                 module_name=module_name,
                 content_filepath=content_filepath,
-                content_filename=url,
+                content_filename=fist_guess_filename,
                 content_fileurl=url,
                 content_filesize=0,
                 content_timemodified=0,
