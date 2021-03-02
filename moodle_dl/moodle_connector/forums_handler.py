@@ -180,11 +180,16 @@ class ForumsHandler:
 
             for post in posts:
                 post_message = post.get('message', '')
+                if post_message is None:
+                    post_message = ''
                 post_modified = post.get('modified', 0)
 
                 post_id = post.get('id', 0)
                 post_parent = post.get('parent', 0)
                 post_userfullname = post.get('userfullname', '')
+                if post_userfullname is None:
+                    post_userfullname = "Unknown"
+
                 post_filename = PathTools.to_valid_name('[' + str(post_id) + '] ' + post_userfullname)
                 if post_parent != 0:
                     post_filename = PathTools.to_valid_name(post_filename + ' response to [' + str(post_parent) + ']')
