@@ -725,7 +725,7 @@ class URLTarget(object):
 
             # if it is a URL we have to create a shortcut
             # instead of downloading it
-            if self.file.module_modname.startswith('url'):
+            if self.file.module_modname.startswith('url') and not self.file.content_fileurl.startswith('data:'):
                 self.create_shortcut()
                 add_token = False
                 if self.options.get('download_linked_files', False) and not self.is_filtered_external_domain():
