@@ -676,6 +676,20 @@ class URLTarget(object):
 
         return False
 
+    def store_data_url(self):
+        url_to_download = self.file.content_fileurl
+        logging.debug('T%s - Data-URL detected', self.thread_id)
+        self.set_path(True)
+        with urllib.request.urlopen(url_to_download) as response:
+            data = response.read()
+
+        with open(self.file.saved_to, "wb") as target_file:
+            target_file.write(data)
+
+        self.set_utime()
+        self.file.time_stamp = int(time.time())
+        self.success = True
+
     def download(self, thread_id: int):
         """
         Downloads a file
@@ -730,6 +744,10 @@ class URLTarget(object):
                 add_token = False
                 if self.options.get('download_linked_files', False) and not self.is_filtered_external_domain():
                     self.try_download_link(add_token, False, False)
+                return self.success
+
+            if self.file.content_fileurl.startswith('data:'):
+                self.store_data_url()
                 return self.success
 
             url_to_download = self.file.content_fileurl
