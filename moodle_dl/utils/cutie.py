@@ -39,7 +39,7 @@ class DefaultKeys:
 
     interrupt: List[str] = [readchar.key.CTRL_C, readchar.key.CTRL_D]
     select: List[str] = [readchar.key.SPACE]
-    confirm: List[str] = [readchar.key.ENTER]
+    confirm: List[str] = [readchar.key.ENTER, readchar.key.CR, readchar.key.LF]
     delete: List[str] = [readchar.key.BACKSPACE]
     down: List[str] = [readchar.key.DOWN, 'j']
     up: List[str] = [readchar.key.UP, 'k']
