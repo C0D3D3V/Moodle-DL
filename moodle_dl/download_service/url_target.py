@@ -679,6 +679,15 @@ class URLTarget(object):
     def store_data_url(self):
         url_to_download = self.file.content_fileurl
         logging.debug('T%s - Data-URL detected', self.thread_id)
+        try:
+            os.remove(self.file.saved_to)
+        except Exception as e:
+            logging.warning(
+                'T%s - Could not delete %s before storing data url. Error: %s',
+                self.thread_id,
+                self.file.saved_to,
+                e,
+            )
         self.set_path(True)
         with urllib.request.urlopen(url_to_download) as response:
             data = response.read()
