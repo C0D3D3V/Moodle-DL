@@ -307,7 +307,13 @@ def prompt_yes_or_no(
     is_yes = default_is_yes
     is_selected = enter_empty_confirms
     current_message = ''
-    yn_prompt = f' ({yes_text[0]}/{no_text[0]}) ' if char_prompt else ': '
+    if char_prompt:
+        if default_is_yes:
+            yn_prompt = f' ({yes_text[0]}/{no_text[0].lower()}) '
+        else:
+            yn_prompt = f' ({yes_text[0].lower()}/{no_text[0]}) '
+    else:
+        yn_prompt = ': '
     print()
     while True:
         yes = is_yes and is_selected
