@@ -31,6 +31,7 @@ class DefaultKeys:
     Attributes:
         interrupt(List[str]): Keys that cause a keyboard interrupt.
         select(List[str]): Keys that trigger list element selection.
+        select_all(List[str]): Keys that trigger selection of all list elements.
         confirm(List[str]): Keys that trigger list confirmation.
         delete(List[str]): Keys that trigger character deletion.
         down(List[str]): Keys that select the element below.
@@ -39,6 +40,7 @@ class DefaultKeys:
 
     interrupt: List[str] = [readchar.key.CTRL_C, readchar.key.CTRL_D]
     select: List[str] = [readchar.key.SPACE]
+    select_all: List[str] = [readchar.key.CTRL_A]
     confirm: List[str] = [readchar.key.ENTER, readchar.key.CR, readchar.key.LF]
     delete: List[str] = [readchar.key.BACKSPACE]
     down: List[str] = [readchar.key.DOWN, 'j']
@@ -273,6 +275,10 @@ def select_multiple(
                 error_message = f'Must select at most {maximal_count} options'
             else:
                 break
+        elif keypress in DefaultKeys.select_all:
+            for i in range(0, max_index+1):
+                if i not in ticked_indices:
+                    ticked_indices.append(i)
         elif keypress in DefaultKeys.interrupt:
             raise KeyboardInterrupt
     print('\033[1A\033[K', end='', flush=True)
