@@ -361,7 +361,7 @@ class URLTarget(object):
             url_to_download = self._add_token_to_url(self.file.content_fileurl)
 
         # adds /download to sciebo.de urls
-        self._extend_sciebo_url(self.file.content_fileurl)
+        url_to_download = self._extend_sciebo_url(self.file.content_fileurl)
 
         cookies_path = self.options.get('cookies_path', None)
         if use_cookies:
