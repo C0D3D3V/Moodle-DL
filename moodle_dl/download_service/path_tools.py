@@ -30,6 +30,7 @@ class PathTools:
         name = name.replace('\n', ' ')
         name = name.replace('\r', ' ')
         name = name.replace('\t', ' ')
+        name = name.replace('\xad', '')
         while '  ' in name:
             name = name.replace('  ', ' ')
         name = sanitize_filename(name, PathTools.restricted_filenames)
