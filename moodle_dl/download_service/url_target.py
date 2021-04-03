@@ -333,11 +333,11 @@ class URLTarget(object):
 
         Args:
             add_token (bool, optional): Adds the ws-token to the url. Defaults to False.
-            delete_if_successful (bool, optional): Deletes the tmp file if download was successfull. Defaults to False.
+            delete_if_successful (bool, optional): Deletes the tmp file if download was successful. Defaults to False.
             use_cookies (bool, optional): Adds the cookies to the requests. Defaults to False.
 
         Returns:
-            bool: If it was successfull.
+            bool: If it was successful.
         """
 
         url_to_download = self.file.content_fileurl
@@ -426,7 +426,6 @@ class URLTarget(object):
                 new_filename = unquote(found_names[0])
 
         if isHTML and not self.is_blocked_for_youtube_dl(url_to_download):
-
             filename_tmpl = self.filename + ' | %(title)s (%(id)s).%(ext)s'
             if self.file.content_type == 'description-url':
                 filename_tmpl = '%(title)s (%(id)s).%(ext)s'
@@ -671,7 +670,7 @@ class URLTarget(object):
                 logging.warning('T%s - Moving the old file %s failed!  Error: %s', self.thread_id, old_path, e)
 
             self.fs_lock.release()
-        except Exception:
+        except Exception as e:
             logging.warning('T%s - Moving the old file %s failed unexpectedly!  Error: %s', self.thread_id, old_path, e)
 
         return False
@@ -729,7 +728,7 @@ class URLTarget(object):
                 if self.try_move_file():
                     return self.success
 
-            # if it is a Description we have to create a descripton file
+            # if it is a Description we have to create a description file
             # instead of downloading it
             if self.file.content_type == 'description':
                 self.create_description()
