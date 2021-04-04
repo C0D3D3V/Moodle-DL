@@ -118,8 +118,6 @@ class URLTarget(object):
             @return: The URL with the string.
         """
         if 'sciebo.de' in url:
-            # content_fileurl += '/download'
-            parsed_url = urlparse.urlparse(url)
             url_parts = list(urlparse.urlparse(url))
             url_parts[2] = url_parts[2].strip('/') + '/download'
             url = urlparse.urlunparse(url_parts)
