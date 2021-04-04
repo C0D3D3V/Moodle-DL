@@ -39,6 +39,7 @@ setup(
         'requests>=2.24.0',
         'slixmpp>=1.6.0',
         'beautifulsoup4>=4.9.3',
+        'lxml>=4.6.3',
     ],
     classifiers=[
         'Development Status :: 4 - Beta',
