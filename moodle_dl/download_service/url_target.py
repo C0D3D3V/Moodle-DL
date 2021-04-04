@@ -111,6 +111,20 @@ class URLTarget(object):
         url_parts[4] = urlparse.urlencode(query)
         return urlparse.urlunparse(url_parts)
 
+    def _extend_sciebo_url(self, url: str) -> str:
+        """
+            Adds the string /download to a URL containing 'sciebo.de'
+            @param url: The URL where the string should be added.
+            @return: The URL with the string.
+        """
+        if 'sciebo.de' in url:
+            # content_fileurl += '/download'
+            parsed_url = urlparse.urlparse(url)
+            url_parts = list(urlparse.urlparse(url))
+            url_parts[2] = url_parts[2].strip('/') + '/download'
+            url = urlparse.urlunparse(url_parts)
+        return url
+
     def create_dir(self, path: str):
         # Creates the folders of a path if they do not exist.
         if not os.path.exists(path):
@@ -345,6 +359,9 @@ class URLTarget(object):
 
         if add_token:
             url_to_download = self._add_token_to_url(self.file.content_fileurl)
+
+        # adds /download to sciebo.de urls
+        url_to_download = self._extend_sciebo_url(self.file.content_fileurl)
 
         cookies_path = self.options.get('cookies_path', None)
         if use_cookies:
