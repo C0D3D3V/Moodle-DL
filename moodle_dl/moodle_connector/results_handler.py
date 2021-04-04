@@ -277,9 +277,6 @@ class ResultsHandler:
                 m.update(hashable_description.encode('utf-8'))
                 hash_description = m.hexdigest()
 
-            if 'sciebo.de' in content_fileurl:
-                content_fileurl += '/download'
-
             new_file = File(
                 module_id=module_id,
                 section_name=section_name,
