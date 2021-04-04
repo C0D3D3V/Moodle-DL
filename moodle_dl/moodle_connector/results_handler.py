@@ -239,6 +239,35 @@ class ResultsHandler:
         files.append(new_file)
         return files
 
+    def _handle_opencast_lti_mod(
+        self, section_name: str, module_name: str, module_modname: str, module_id: str, module_url: str
+    ) -> [File]:
+        """
+        Creates a list of files out of a LTI module
+        @param module_url: The url to the LTI module.
+        @params: All necessary parameters to create a file.
+        @return: A list of files that were created out of the module.
+        """
+        files = []
+
+        new_file = File(
+            module_id=module_id,
+            section_name=section_name,
+            module_name=module_name,
+            content_filepath='/',
+            content_filename=module_name,
+            content_fileurl=module_url,
+            content_filesize=0,
+            content_timemodified=0,
+            module_modname=module_modname + '_opencast',
+            content_type='lti_mod',
+            content_isexternalfile=True,
+            hash=None,
+        )
+
+        files.append(new_file)
+        return files
+
     def _handle_files(
         self, section_name: str, module_name: str, module_modname: str, module_id: str, module_contents: []
     ) -> [File]:
