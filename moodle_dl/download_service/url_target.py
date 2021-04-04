@@ -117,7 +117,7 @@ class URLTarget(object):
             @param url: The URL where the string should be added.
             @return: The URL with the string.
         """
-        if 'sciebo.de' in url:
+        if 'sciebo.de' in url and 'download' not in url:
             url_parts = list(urlparse.urlparse(url))
             url_parts[2] = url_parts[2].strip('/') + '/download'
             url = urlparse.urlunparse(url_parts)
