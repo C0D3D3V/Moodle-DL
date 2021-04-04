@@ -2,6 +2,7 @@
 /test
 /debugging-moodle
 __pycache__
+/venv
 
 config.json
 MoodleDownloader.log

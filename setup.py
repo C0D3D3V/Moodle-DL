@@ -38,6 +38,7 @@ setup(
         'html2text>=2020.1.16',
         'requests>=2.24.0',
         'slixmpp>=1.6.0',
+        'beautifulsoup4>=4.9.3',
     ],
     classifiers=[
         'Development Status :: 4 - Beta',

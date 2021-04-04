@@ -113,6 +113,14 @@ class ResultsHandler:
                 forums_files = forums.get('files', [])
 
                 files += self._handle_files(section_name, module_name, module_modname, module_id, forums_files)
+            elif module_modname == 'lti':
+                module_icon = module.get('modicon', 'no icon')
+                if 'RUBcast' in module_icon:
+                    files += self._handle_opencast_lti_mod(section_name, module_name, module_modname, module_id, module_url)
+                else:
+                    logging.debug('Got unhandled LTI module: name=%s url=%s', module_name, module_url)
+            else:
+                logging.debug('Got unhandled module: name=%s mod=%s url=%s', module_name, module_modname, module_url)
 
         return files
 

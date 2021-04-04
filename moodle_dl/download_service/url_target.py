@@ -18,6 +18,7 @@ from urllib.error import ContentTooShortError
 import urllib.parse as urlparse
 from email.utils import unquote
 
+from bs4 import BeautifulSoup
 import requests
 import html2text
 import youtube_dl
@@ -738,12 +739,19 @@ class URLTarget(object):
             add_token = True
             if self.file.module_modname.startswith('index_mod'):
                 add_token = True
-                self.try_download_link(add_token, True, False)
+                self.try_download_link(add_token, delete_if_successful=True, use_cookies=False)
                 return self.success
 
             if self.file.module_modname.startswith('cookie_mod'):
                 add_token = False
-                self.try_download_link(add_token, True, True)
+                self.try_download_link(add_token, delete_if_successful=True, use_cookies=True)
+                return self.success
+
+            if self.file.module_modname.startswith('lti_opencast'):
+                add_token = False
+                if self.options.get('download_linked_files', False) and not self.is_filtered_external_domain():
+                    if self.get_opencast_cookie():
+                        self.try_download_link(add_token, delete_if_successful=True, use_cookies=True)
                 return self.success
 
             # if it is a URL we have to create a shortcut
@@ -881,6 +889,59 @@ class URLTarget(object):
         )
 
         return result
+
+    def get_opencast_cookie(self):
+        cookies_path = self.options.get('cookies_path', None)
+        if cookies_path is None or not os.path.isfile(cookies_path):
+            return False
+
+        lti_launch_url = self.file.content_fileurl.replace('view', 'launch')
+
+        session = requests.Session()
+        session.cookies = MozillaCookieJar(cookies_path)
+        session.cookies.load(ignore_discard=True, ignore_expires=True)
+        response = session.get(url=lti_launch_url)
+        if response.status_code != 200:
+            return False
+
+        soap = BeautifulSoup(response.content, 'lxml')
+        forms = soap.find_all('form')
+        if len(forms) != 1:
+            return False
+
+        lti_form = forms[0]
+        lti_url = lti_form.get('action', None)
+        lti_fields = lti_form.find_all('input')
+        if len(lti_fields) == 0 or lti_url is None or lti_url == '':
+            return False
+
+        post_data = {}
+        for field in lti_fields:
+            field_name = field.get('name')
+            field_value = field.get('value')
+            post_data.update({field_name: field_value})
+
+        lti_response = session.post(url=lti_url, data=post_data, allow_redirects=False)
+        if lti_response.status_code != 302:
+            return False
+
+        redirect_url = lti_response.headers.get('Location', None)
+        if redirect_url is None or redirect_url == '':
+            return False
+
+        query = dict(urlparse.parse_qsl(urlparse.urlparse(redirect_url).query))
+        if query.get('series', None) is not None:
+            sid = query.get('series')
+            url_parts = list(urlparse.urlparse(redirect_url))
+            url_parts[2] = '/engage/ui/index.html'
+
+            query.pop('series')
+            query.update({'epFrom': sid})
+            url_parts[4] = urlparse.urlencode(query)
+            redirect_url = urlparse.urlunparse(url_parts)
+        self.file.content_fileurl = redirect_url
+        session.cookies.save(ignore_discard=True, ignore_expires=True)
+        return True
 
     @staticmethod
     def format_seconds(seconds):
