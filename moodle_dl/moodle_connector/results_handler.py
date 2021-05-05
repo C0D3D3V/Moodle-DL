@@ -2,6 +2,7 @@ import re
 import logging
 import hashlib
 import urllib.parse as urlparse
+from html import unescape
 
 from moodle_dl.state_recorder.file import File
 from moodle_dl.moodle_connector.request_helper import RequestHelper
@@ -313,6 +314,8 @@ class ResultsHandler:
 
         m = hashlib.sha1()
         hashable_description = ResultsHandler._filter_changing_attributes(module_description)
+        hashable_description = unescape(hashable_description)
+        hashable_description = urlparse.unquote(hashable_description)
         m.update(hashable_description.encode('utf-8'))
         hash_description = m.hexdigest()
 
