@@ -186,6 +186,11 @@ class ResultsHandler:
             if len(fist_guess_filename) > 254:
                 fist_guess_filename = fist_guess_filename[:254]
 
+            fist_guess_filename = unescape(fist_guess_filename)
+            fist_guess_filename = urlparse.unquote(fist_guess_filename)
+            url = unescape(url)
+            url = urlparse.unquote(url)
+
             new_file = File(
                 module_id=module_id,
                 section_name=section_name,
