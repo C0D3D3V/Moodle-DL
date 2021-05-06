@@ -427,7 +427,7 @@ class URLTarget(object):
 
         if isHTML and not self.is_blocked_for_youtube_dl(url_to_download):
 
-            filename_tmpl = self.filename + ' | %(title)s (%(id)s).%(ext)s'
+            filename_tmpl = self.filename + ' - %(title)s (%(id)s).%(ext)s'
             if self.file.content_type == 'description-url':
                 filename_tmpl = '%(title)s (%(id)s).%(ext)s'
             outtmpl = str(Path(self.destination) / filename_tmpl)
