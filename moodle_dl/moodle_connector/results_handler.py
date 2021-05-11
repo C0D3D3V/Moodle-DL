@@ -130,6 +130,12 @@ class ResultsHandler:
 
         description = re.sub(r'id="[^"]*"', "", description)
         description = re.sub(r"id='[^']*'", "", description)
+        
+        # some folder downloads inside a description file may have some session key inside which will always be different.
+        # remove it, to prevent always tagging this file as "modified".
+        description = re.sub(r'<input type="hidden" name="sesskey" value="[0-9a-zA-Z]*" \/>', "", description)
+        description = re.sub(r"<input type='hidden' name='sesskey' value='[0-9a-zA-Z]*' \/>", "", description)
+        
         return description
 
     def _find_all_urls_in_description(
