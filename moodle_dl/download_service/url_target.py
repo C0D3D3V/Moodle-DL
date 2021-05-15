@@ -113,9 +113,9 @@ class URLTarget(object):
 
     def _extend_sciebo_url(self, url: str) -> str:
         """
-            Adds the string /download to a URL containing 'sciebo.de'
-            @param url: The URL where the string should be added.
-            @return: The URL with the string.
+        Adds the string /download to a URL containing 'sciebo.de'
+        @param url: The URL where the string should be added.
+        @return: The URL with the string.
         """
         if 'sciebo.de' in url and 'download' not in url:
             url_parts = list(urlparse.urlparse(url))
@@ -686,7 +686,7 @@ class URLTarget(object):
                 logging.warning('T%s - Moving the old file %s failed!  Error: %s', self.thread_id, old_path, e)
 
             self.fs_lock.release()
-        except Exception:
+        except Exception as e:
             logging.warning('T%s - Moving the old file %s failed unexpectedly!  Error: %s', self.thread_id, old_path, e)
 
         return False
