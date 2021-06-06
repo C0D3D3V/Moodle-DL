@@ -526,10 +526,10 @@ def get_parser():
         '--sso',
         default=False,
         action='store_true',
-        help='This flag can be used together with --init. If'
+        help='This flag can be used together with --init and -nt. If'
         + ' this flag is set, you will be guided through the'
         + ' Single Sign On (SSO) login process during'
-        + ' initialization.',
+        + ' initialization or new token retrieval.',
     )
 
     return parser
