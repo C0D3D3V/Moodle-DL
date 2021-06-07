@@ -275,7 +275,7 @@ class RequestHelper:
 
             if errorcode == 'invalidtoken':
                 raise RequestRejectedError(
-                    'Your Moodle token has expired. To create a new one run "moodle-dl -nt -u USERNAME -pw PASSWORD"'
+                    'Your Moodle token has expired. To create a new one run "moodle-dl -nt -u USERNAME -pw PASSWORD" or "moodle-dl -nt -sso"'
                 )
 
             raise RequestRejectedError(
