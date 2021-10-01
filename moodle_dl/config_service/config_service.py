@@ -30,8 +30,12 @@ class ConfigService:
 
         courses = []
         try:
-
-            userid, version = first_contact_handler.fetch_userid_and_version()
+            userid, version = self.config_helper.get_userid_and_version()
+            if userid is None or version is None:
+                userid, version = first_contact_handler.fetch_userid_and_version()
+                self._select_should_userid_and_version_be_saved(userid, version)
+            else:
+                first_contact_handler.version = version
 
             courses = first_contact_handler.fetch_courses(userid)
 
@@ -48,6 +52,40 @@ class ConfigService:
         self._select_should_download_forums()
         self._select_should_download_linked_files()
         self._select_should_download_also_with_cookie()
+
+    def _select_should_userid_and_version_be_saved(self, userid, version):
+        """
+        Asks the user if the userid and version should be saved in the configuration
+        """
+
+        print('')
+        Log.info(
+            'The user id and version number of Moodle are downloaded'
+            + ' at the beginning of each run of the downloader.'
+            + ' Since this data rarely changes, it can be saved in the'
+            + ' configuration.'
+        )
+
+        Log.critical(f'Your user id is `{userid}` and the moodle version is `{version}`')
+
+        print('')
+
+        save_userid_and_version = cutie.prompt_yes_or_no(
+            Log.special_str('Do you want to store the user id and version number of Moodle in the configuration?'),
+            default_is_yes=False,
+        )
+
+        if save_userid_and_version:
+            Log.warning(
+                'Remember to delete the version number from the'
+                + ' configuration once Moodle has been updated'
+                + ' and then run the configurator again!'
+            )
+
+            self.config_helper.set_property('userid', userid)
+            self.config_helper.set_property('version', version)
+
+        self.section_seperator()
 
     def _select_courses_to_download(self, courses: [Course]):
         """

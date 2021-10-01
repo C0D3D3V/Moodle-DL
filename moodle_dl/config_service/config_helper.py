@@ -88,6 +88,15 @@ class ConfigHelper:
         except ValueError:
             return False
 
+    def get_userid_and_version(self) -> (str, int):
+        # returns the userid and a version
+        try:
+            userid = self.get_property('userid')
+            version = int(self.get_property('version'))
+            return userid, version
+        except ValueError:
+            return None, None
+
     def get_download_course_ids(self) -> str:
         # returns a stored list of course ids hat should be downloaded
         try:

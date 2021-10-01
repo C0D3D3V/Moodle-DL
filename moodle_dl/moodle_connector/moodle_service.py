@@ -230,7 +230,11 @@ class MoodleService:
 
         print('\rDownloading account information\033[K', end='')
 
-        userid, version = first_contact_handler.fetch_userid_and_version()
+        userid, version = self.config_helper.get_userid_and_version()
+        if userid is None or version is None:
+            userid, version = first_contact_handler.fetch_userid_and_version()
+        else:
+            first_contact_handler.version = version
         assignments_handler = AssignmentsHandler(request_helper, version)
         databases_handler = DatabasesHandler(request_helper, version)
         forums_handler = ForumsHandler(request_helper, version)
