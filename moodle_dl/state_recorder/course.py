@@ -13,6 +13,7 @@ class Course:
 
         self.overwrite_name_with = None
         self.create_directory_structure = True
+        self.excluded_sections = []
 
     def __str__(self):
         message = 'Course ('

@@ -318,6 +318,7 @@ class MoodleService:
             if options is not None:
                 course.overwrite_name_with = options.get('overwrite_name_with', None)
                 course.create_directory_structure = options.get('create_directory_structure', True)
+                course.excluded_sections = options.get("exclude", [])
 
         return courses
 
