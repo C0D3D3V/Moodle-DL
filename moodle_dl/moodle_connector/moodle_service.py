@@ -302,7 +302,7 @@ class MoodleService:
         changes = self.recorder.changes_of_new_version(filtered_courses)
 
         # Filter changes
-        changes = self.filter_courses(changes, self.config_helper, cookie_handler)
+        changes = self.filter_courses(changes, self.config_helper, cookie_handler, courses_list + public_courses_list)
 
         changes = self.add_options_to_courses(changes)
 
@@ -323,13 +323,17 @@ class MoodleService:
 
     @staticmethod
     def filter_courses(
-        changes: [Course], config_helper: ConfigHelper, cookie_handler: CookieHandler = None
+        changes: [Course],
+        config_helper: ConfigHelper,
+        cookie_handler: CookieHandler = None,
+        courses_list: [Course] = None,
     ) -> [Course]:
         """
         Filters the changes course list from courses that
         should not get downloaded
         @param config_helper: ConfigHelper to obtain all the diffrent filter configs
         @param cookie_handler: CookieHandler to check if the cookie is valid
+        @param courses_list: A list of all courses that are available online
         @return: filtered changes course list
         """
 
@@ -347,6 +351,24 @@ class MoodleService:
         filtered_changes = []
 
         for course in changes:
+            if not ResultsHandler.should_download_course(
+                course.id, download_course_ids + download_public_course_ids, dont_download_course_ids
+            ):
+                # Filter courses that should not be downloaded
+                continue
+
+            if courses_list is not None:
+                not_online = True
+                # Filter courses that are not available online
+                for online_course in courses_list:
+                    if online_course.id == course.id:
+                        not_online = False
+                        break
+                if not_online:
+                    Log.warning(f'The Moodle course with id {course.id} is no longer available online.')
+                    logging.warning(f'The Moodle course with id {course.id} is no longer available online.')
+                    continue
+
             if not download_submissions:
                 course_files = []
                 for file in course.files:
@@ -399,12 +421,7 @@ class MoodleService:
                         course_files.append(file)
                 course.files = course_files
 
-            if (
-                ResultsHandler.should_download_course(
-                    course.id, download_course_ids + download_public_course_ids, dont_download_course_ids
-                )
-                and len(course.files) > 0
-            ):
+            if len(course.files) > 0:
                 filtered_changes.append(course)
 
         return filtered_changes
