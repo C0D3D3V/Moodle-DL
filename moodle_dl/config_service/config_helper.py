@@ -139,14 +139,14 @@ class ConfigHelper:
         except ValueError:
             raise ValueError('Not yet configured!')
 
-    def get_options_of_courses(self) -> str:
+    def get_options_of_courses(self) -> {}:
         # returns a stored dictionary of options for courses
         try:
             return self.get_property('options_of_courses')
         except ValueError:
             return {}
 
-    def get_dont_download_course_ids(self) -> str:
+    def get_dont_download_course_ids(self) -> []:
         # returns a stored list of ids that should not be downloaded
         try:
             return self.get_property('dont_download_course_ids')

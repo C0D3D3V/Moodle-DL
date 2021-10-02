@@ -133,20 +133,25 @@ class ConfigService:
         self.config_helper.remove_property('dont_download_course_ids')
         return download_course_ids
 
-    def _select_sections_to_download(self, sections: [str]):
+    def _select_sections_to_download(self, sections: [str], excluded: [str]):
         """
         Asks the user for the courses that should be downloaded.
         @param courses: All available courses
         """
+
         choices = []
-        for section in sections:
+        defaults = []
+        for i, section in enumerate(sections):
             choices.append(('%5i\t%s' % (section.get("id"), section.get("name"))))
             print(choices)
+
+            if section.get("name") not in excluded:
+                defaults.append(i)
 
         Log.special('Which of the sections should be downloaded?')
         Log.info('[You can select with the space bar and confirm your selection with the enter key]')
         print('')
-        selected_sections = cutie.select_multiple(options=choices)
+        selected_sections = cutie.select_multiple(options=choices, ticked_indices=defaults)
         print(selected_sections)
 
         dont_download_section_ids = []
@@ -169,7 +174,8 @@ class ConfigService:
             + 'You can set these options:\n'
             + ' - A different name for the course\n'
             + ' - If a directory structure should be created for the course'
-            + ' [create_directory_structure (cfs)].'
+            + ' [create_directory_structure (cfs)]\n'
+            + ' - Which of the sections should be downloaded (default all).'
         )
         print('')
 
@@ -240,7 +246,7 @@ class ConfigService:
                 'original_name': course.fullname,
                 'overwrite_name_with': None,
                 'create_directory_structure': True,
-                'exclude': None,
+                'exclude': [],
             }
 
         changed = False
@@ -270,10 +276,11 @@ class ConfigService:
             changed = True
             current_course_settings.update({'create_directory_structure': create_directory_structure})
 
-        dont_download_section_ids = self._select_sections_to_download(sections)
+        excluded_sections = current_course_settings.get('exclude', [])
+
+        dont_download_section_ids = self._select_sections_to_download(sections, excluded_sections)
         print(dont_download_section_ids)
-        if not dont_download_section_ids:
-            dont_download_section_ids = None
+
         if dont_download_section_ids is not current_course_settings.get('exclude', True):
             changed = True
             current_course_settings.update({'exclude': dont_download_section_ids})
