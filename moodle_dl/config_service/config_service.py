@@ -152,7 +152,7 @@ class ConfigService:
         dont_download_section_ids = []
         for i, section in enumerate(sections):
             if i not in selected_sections:
-                dont_download_section_ids.append(section.get("id"))
+                dont_download_section_ids.append(section.get("name"))
 
         return dont_download_section_ids
 
