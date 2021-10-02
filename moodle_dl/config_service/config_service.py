@@ -38,13 +38,20 @@ class ConfigService:
                 first_contact_handler.version = version
 
             courses = first_contact_handler.fetch_courses(userid)
+            print(courses)
+
 
         except (RequestRejectedError, ValueError, RuntimeError, ConnectionError) as error:
             Log.error('Error while communicating with the Moodle System! (%s)' % (error))
             exit(1)
 
-        self._select_courses_to_download(courses)
-        self._set_options_of_courses(courses)
+        courseids = self._select_courses_to_download(courses)
+
+        sections = {}
+        for id in courseids:
+            sections[id] = first_contact_handler.fetch_sections(id)
+
+        self._set_options_of_courses(courses, sections)
         self._select_should_download_submissions()
         self._select_should_download_descriptions()
         self._select_should_download_links_in_descriptions()
@@ -113,6 +120,7 @@ class ConfigService:
         Log.special('Which of the courses should be downloaded?')
         Log.info('[You can select with the space bar and confirm your selection with the enter key]')
         print('')
+        print(choices)
         selected_courses = cutie.select_multiple(options=choices, ticked_indices=defaults)
 
         download_course_ids = []
@@ -123,8 +131,32 @@ class ConfigService:
         self.config_helper.set_property('download_course_ids', download_course_ids)
 
         self.config_helper.remove_property('dont_download_course_ids')
+        return download_course_ids
 
-    def _set_options_of_courses(self, courses: [Course]):
+    def _select_sections_to_download(self, sections: [str]):
+        """
+        Asks the user for the courses that should be downloaded.
+        @param courses: All available courses
+        """
+        choices = []
+        for section in sections:
+            choices.append(('%5i\t%s' % (section.get("id"), section.get("name"))))
+            print(choices)
+
+        Log.special('Which of the sections should be downloaded?')
+        Log.info('[You can select with the space bar and confirm your selection with the enter key]')
+        print('')
+        selected_sections = cutie.select_multiple(options=choices)
+        print(selected_sections)
+
+        dont_download_section_ids = []
+        for i, section in enumerate(sections):
+            if i not in selected_sections:
+                dont_download_section_ids.append(section.get("id"))
+
+        return dont_download_section_ids
+
+    def _set_options_of_courses(self, courses: [Course], sections: []):
         """
         Let the user set special options for every single course
         """
@@ -161,6 +193,7 @@ class ConfigService:
                             'original_name': course.fullname,
                             'overwrite_name_with': None,
                             'create_directory_structure': True,
+                            'exclude': []
                         }
 
                     # create list of options
@@ -190,9 +223,10 @@ class ConfigService:
             if selected_course == 0:
                 break
             else:
-                self._change_settings_of(choices_courses[selected_course - 1], options_of_courses)
+                sel = choices_courses[selected_course - 1]
+                self._change_settings_of(sel, options_of_courses, sections[sel.id])
 
-    def _change_settings_of(self, course: Course, options_of_courses: {}):
+    def _change_settings_of(self, course: Course, options_of_courses: {}, sections: [str]):
         """
         Ask for a new Name for the course.
         Then asks if a file structure should be created.
@@ -206,6 +240,7 @@ class ConfigService:
                 'original_name': course.fullname,
                 'overwrite_name_with': None,
                 'create_directory_structure': True,
+                'exclude': None,
             }
 
         changed = False
@@ -234,6 +269,14 @@ class ConfigService:
         if create_directory_structure is not current_course_settings.get('create_directory_structure', True):
             changed = True
             current_course_settings.update({'create_directory_structure': create_directory_structure})
+
+        dont_download_section_ids = self._select_sections_to_download(sections)
+        print(dont_download_section_ids)
+        if not dont_download_section_ids:
+            dont_download_section_ids = None
+        if dont_download_section_ids is not current_course_settings.get('exclude', True):
+            changed = True
+            current_course_settings.update({'exclude': dont_download_section_ids})
 
         if changed:
             options_of_courses.update({str(course.id): current_course_settings})

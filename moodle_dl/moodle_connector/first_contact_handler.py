@@ -70,4 +70,21 @@ class FirstContactHandler:
         results = []
         for course in result:
             results.append(Course(course.get('id', 0), course.get('fullname', '')))
+        print("IOOOO ", result)
         return results
+
+    def fetch_sections(self, course_id: int) -> []:
+        """
+        TODO
+        @param course_id:
+        @return:
+        """
+
+        data = {'courseid': course_id}
+        course_sections = self.request_helper.post_REST('core_course_get_contents', data)
+
+        sections = []
+        for section in course_sections:
+            sections.append({"id": section.get("id"), "name": section.get("name")})
+
+        return sections
