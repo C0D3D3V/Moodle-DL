@@ -28,20 +28,26 @@ class OfflineService:
         if len(stored_files) <= 0:
             return
 
-        print(
-            'This management tool will navigate you through a menu to'
-            + ' selectively remove file entries from the database so'
-            + ' that these files can be downloaded again.'
-        )
-
         course_options = []
         courses = []
+        changes = False
         for course in stored_files:
             for course_file in course.files:
                 if not os.path.exists(course_file.saved_to):
                     course_options.append(COLOR_SEQ % BLUE + course.fullname + RESET_SEQ)
                     courses.append(course)
+                    changes = True
                     break
+
+        if not changes:
+            print("No files to re-download. Delete a local file to use this tool")
+            return
+
+        print(
+            'This management tool will navigate you through a menu to'
+            + ' selectively remove file entries from the database so'
+            + ' that these files can be downloaded again.'
+        )
 
         print('Choose one of the courses:')
         print('[Confirm your selection with the Enter key]')
