@@ -269,6 +269,7 @@ class MoodleService:
             last_timestamps_per_forum = self.recorder.get_last_timestamps_per_forum()
             forums = forums_handler.fetch_forums_posts(forums, last_timestamps_per_forum)
 
+        courses = self.add_options_to_courses(courses)
         index = 0
         for course in courses:
             index += 1
@@ -293,7 +294,7 @@ class MoodleService:
             course_databases = databases.get(course.id, {})
             course_forums = forums.get(course.id, {})
             results_handler.set_fetch_addons(course_assignments, course_databases, course_forums)
-            course.files = results_handler.fetch_files(course.id)
+            course.files = results_handler.fetch_files(course)
 
             filtered_courses.append(course)
         print('')
@@ -303,8 +304,6 @@ class MoodleService:
 
         # Filter changes
         changes = self.filter_courses(changes, self.config_helper, cookie_handler, courses_list + public_courses_list)
-
-        changes = self.add_options_to_courses(changes)
 
         return changes
 

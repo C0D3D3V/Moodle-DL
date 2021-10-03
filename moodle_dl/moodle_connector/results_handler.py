@@ -3,6 +3,7 @@ import logging
 import hashlib
 import urllib.parse as urlparse
 
+from moodle_dl.state_recorder.course import Course
 from moodle_dl.state_recorder.file import File
 from moodle_dl.moodle_connector.request_helper import RequestHelper
 
@@ -37,7 +38,15 @@ class ResultsHandler:
 
         return inWhitelist and not inBlacklist
 
-    def _get_files_in_sections(self, course_sections: []) -> [File]:
+    @staticmethod
+    def should_download_section(section_id: int, dont_download_sections_ids: [int]) -> bool:
+        """
+        Checks if a section is not in Blacklist
+        """
+
+        return section_id not in dont_download_sections_ids or len(dont_download_sections_ids) == 0
+
+    def _get_files_in_sections(self, course_sections: [], excluded_sections: [int]) -> [File]:
         """
         Iterates over all sections of a course to find files (or modules).
         @param course_sections: The course object returned by Moodle,
@@ -46,15 +55,16 @@ class ResultsHandler:
         """
         files = []
         for section in course_sections:
-            section_name = section.get('name', '')
-            section_modules = section.get('modules', [])
-            section_summary = section.get('summary', '')
-            if section_summary is not None and section_summary != '':
-                files += self._handle_description(
-                    section_name, 'Section summary', 'section_summary', 0, section_summary
-                )
+            if ResultsHandler.should_download_section(section.get("id"), excluded_sections):
+                section_name = section.get('name', '')
+                section_modules = section.get('modules', [])
+                section_summary = section.get('summary', '')
+                if section_summary is not None and section_summary != '':
+                    files += self._handle_description(
+                        section_name, 'Section summary', 'section_summary', 0, section_summary
+                    )
 
-            files += self._get_files_in_modules(section_name, section_modules)
+                files += self._get_files_in_modules(section_name, section_modules)
 
         return files
 
@@ -361,7 +371,7 @@ class ResultsHandler:
         self.course_databases = course_databases
         self.course_forums = course_forums
 
-    def fetch_files(self, course_id: str) -> [File]:
+    def fetch_files(self, course: Course) -> [File]:
         """
         Queries the Moodle system for all the files that
         are present in a course
@@ -369,9 +379,9 @@ class ResultsHandler:
         @return: A list of Files
         """
 
-        data = {'courseid': course_id}
+        data = {'courseid': course.id}
         course_sections = self.request_helper.post_REST('core_course_get_contents', data)
 
-        files = self._get_files_in_sections(course_sections)
+        files = self._get_files_in_sections(course_sections, course.excluded_sections)
 
         return files

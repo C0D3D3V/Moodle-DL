@@ -95,9 +95,6 @@ class DownloadService:
         # Prepopulate queue with any files that were given
         for course in self.courses:
             for file in course.files:
-                if file.section_name in course.excluded_sections:
-                    print("Skipping ", course.overwrite_name_with, "/", file.section_name, "/", file.content_filename)
-                    continue
                 if file.deleted is False:
                     self.total_to_download += file.content_filesize
 

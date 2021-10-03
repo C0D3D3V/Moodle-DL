@@ -133,31 +133,31 @@ class ConfigService:
         self.config_helper.remove_property('dont_download_course_ids')
         return download_course_ids
 
-    def _select_sections_to_download(self, sections: [str], excluded: [str]):
+    def _select_sections_to_download(self, sections: [str], excluded: [str]) -> [int]:
         """
-        Asks the user for the courses that should be downloaded.
-        @param courses: All available courses
+        Asks the user for the sections that should be downloaded.
+        @param sections: All available sections
+        @param excluded sections currently excluded
         """
 
         choices = []
         defaults = []
         for i, section in enumerate(sections):
-            choices.append(('%5i\t%s' % (section.get("id"), section.get("name"))))
-            print(choices)
+            section_id = section.get("id")
+            choices.append(('%5i\t%s' % (section_id, section.get("name"))))
 
-            if section.get("name") not in excluded:
+            if ResultsHandler.should_download_section(section_id, excluded):
                 defaults.append(i)
 
         Log.special('Which of the sections should be downloaded?')
         Log.info('[You can select with the space bar and confirm your selection with the enter key]')
         print('')
         selected_sections = cutie.select_multiple(options=choices, ticked_indices=defaults)
-        print(selected_sections)
 
         dont_download_section_ids = []
         for i, section in enumerate(sections):
             if i not in selected_sections:
-                dont_download_section_ids.append(section.get("name"))
+                dont_download_section_ids.append(section.get("id"))
 
         return dont_download_section_ids
 
@@ -279,7 +279,6 @@ class ConfigService:
         excluded_sections = current_course_settings.get('exclude', [])
 
         dont_download_section_ids = self._select_sections_to_download(sections, excluded_sections)
-        print(dont_download_section_ids)
 
         if dont_download_section_ids is not current_course_settings.get('exclude', True):
             changed = True
