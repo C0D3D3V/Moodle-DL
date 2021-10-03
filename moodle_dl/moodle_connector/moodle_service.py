@@ -304,6 +304,7 @@ class MoodleService:
 
         # Filter changes
         changes = self.filter_courses(changes, self.config_helper, cookie_handler, courses_list + public_courses_list)
+        changes = self.add_options_to_courses(changes)
 
         return changes
 

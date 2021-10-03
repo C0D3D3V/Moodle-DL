@@ -38,7 +38,6 @@ class ConfigService:
                 first_contact_handler.version = version
 
             courses = first_contact_handler.fetch_courses(userid)
-            print(courses)
 
 
         except (RequestRejectedError, ValueError, RuntimeError, ConnectionError) as error:
@@ -120,7 +119,6 @@ class ConfigService:
         Log.special('Which of the courses should be downloaded?')
         Log.info('[You can select with the space bar and confirm your selection with the enter key]')
         print('')
-        print(choices)
         selected_courses = cutie.select_multiple(options=choices, ticked_indices=defaults)
 
         download_course_ids = []
