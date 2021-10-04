@@ -226,12 +226,7 @@ class RequestHelper:
             if match:
                 version_string = match.group(1)
                 break
-
-        majorVersion = version_string.split('.')[0]
-        minorVersion = version_string[len(majorVersion) :].replace('.', '')
-
-        version = float(majorVersion + '.' + minorVersion)
-        return version
+        return version_string.strip()
 
     def _initial_parse(self, response) -> object:
         """

@@ -4,6 +4,7 @@ import logging
 from pathlib import Path
 from getpass import getpass
 from urllib.parse import urlparse
+from distutils.version import StrictVersion
 
 from moodle_dl.utils import cutie
 from moodle_dl.utils.logger import Log
@@ -130,7 +131,7 @@ class MoodleService:
 
         version = RequestHelper(moodle_domain, moodle_path, '', self.skip_cert_verify).get_simple_moodle_version()
 
-        if version > 3.8:
+        if StrictVersion(version) > StrictVersion("3.8.1"):
             print(
                 'Between version 3.81 and 3.82 a change was added to'
                 + ' Moodle so that automatic copying of the SSO token'
