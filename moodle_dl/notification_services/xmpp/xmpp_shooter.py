@@ -16,11 +16,6 @@ class XmppShooter:
 
         self.to_jid = aioxmpp.JID.fromstr(recipient)
 
-        self.client = aioxmpp.PresenceManagedClient(
-            self.g_jid,
-            self.g_security_layer,
-        )
-
     def send(self, message):
         loop = asyncio.get_event_loop()
         try:
@@ -36,7 +31,13 @@ class XmppShooter:
             loop.close()
 
     async def async_send_messages(self, messages):
-        async with self.client.connected():
+        client = aioxmpp.Client(
+            self.g_jid,
+            self.g_security_layer,
+        )
+        client.resumption_timeout = 0
+
+        async with client.connected() as stream:
             for message_content in messages:
                 msg = aioxmpp.Message(
                     to=self.to_jid,
@@ -44,4 +45,4 @@ class XmppShooter:
                 )
                 msg.body[None] = message_content
 
-                await self.client.send(msg)
+                await stream.send(msg)

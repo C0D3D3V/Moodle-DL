@@ -49,6 +49,7 @@ class MailService(NotificationService):
                     mail_shooter.send(target, 'Hey!', welcome_content[0], welcome_content[1])
                 except BaseException as e:
                     print('Error while sending the test mail: %s' % (str(e)))
+                    continue
                 else:
                     input(
                         'Please check if you received the Welcome-Mail.'

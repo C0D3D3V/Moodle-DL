@@ -40,6 +40,7 @@ class XmppService(NotificationService):
                     xmpp_shooter.send('This is a Testmessage from Moodle Downloader!')
                 except BaseException as e:
                     print('Error while sending the test message: %s' % (str(e)))
+                    continue
 
                 else:
                     input(
