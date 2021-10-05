@@ -37,7 +37,7 @@ setup(
         'certifi>=2020.4.5.2',
         'html2text>=2020.1.16',
         'requests>=2.24.0',
-        'slixmpp>=1.6.0',
+        'aioxmpp>=0.12.2',
     ],
     classifiers=[
         'Development Status :: 4 - Beta',

@@ -1,25 +1,47 @@
-import slixmpp
+import asyncio
+
+import aioxmpp
 
 
-class XmppShooter(slixmpp.ClientXMPP):
+class XmppShooter:
 
     """
-    A basic Slixmpp shooter that will log in, send a message,
+    A basic XMPP shooter that will log in, send messages,
     and then log out.
     """
 
-    def __init__(self, jid, password, recipient, messages):
-        super().__init__(jid, password)
+    def __init__(self, jid, password, recipient):
+        self.g_jid = aioxmpp.JID.fromstr(jid)
+        self.g_security_layer = aioxmpp.make_security_layer(password)
 
-        self.recipient = recipient
-        self.messages = messages
+        self.to_jid = aioxmpp.JID.fromstr(recipient)
 
-        self.add_event_handler("session_start", self.start)
+        self.client = aioxmpp.PresenceManagedClient(
+            self.g_jid,
+            self.g_security_layer,
+        )
 
-    async def start(self, event):
-        self.send_presence()
+    def send(self, message):
+        loop = asyncio.get_event_loop()
+        try:
+            loop.run_until_complete(self.async_send_messages([message]))
+        finally:
+            loop.close()
 
-        for message_content in self.messages:
-            self.send_message(mto=self.recipient, mbody=message_content, mtype='chat')
+    def send_messages(self, messages):
+        loop = asyncio.get_event_loop()
+        try:
+            loop.run_until_complete(self.async_send_messages(messages))
+        finally:
+            loop.close()
 
-        self.disconnect()
+    async def async_send_messages(self, messages):
+        async with self.client.connected():
+            for message_content in messages:
+                msg = aioxmpp.Message(
+                    to=self.to_jid,
+                    type_=aioxmpp.MessageType.CHAT,
+                )
+                msg.body[None] = message_content
+
+                await self.client.send(msg)

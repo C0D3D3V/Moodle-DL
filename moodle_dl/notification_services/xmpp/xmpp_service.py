@@ -36,12 +36,8 @@ class XmppService(NotificationService):
                 print('Testing XMPP-Config...')
 
                 try:
-                    xmpp_shooter = XmppShooter(
-                        sender, password, target, ['This is a Testmessage from Moodle Downloader!']
-                    )
-                    # Connect to the XMPP server and start processing XMPP stanzas.
-                    xmpp_shooter.connect()
-                    xmpp_shooter.process(forever=False)
+                    xmpp_shooter = XmppShooter(sender, password, target)
+                    xmpp_shooter.send('This is a Testmessage from Moodle Downloader!')
                 except BaseException as e:
                     print('Error while sending the test message: %s' % (str(e)))
 
@@ -90,11 +86,8 @@ class XmppService(NotificationService):
         Log.debug('Sending Notification via XMPP... (Please wait)')
 
         try:
-            xmpp = XmppShooter(xmpp_cfg['sender'], xmpp_cfg['password'], xmpp_cfg['target'], messages)
-
-            # Connect to the XMPP server and start processing XMPP stanzas.
-            xmpp.connect()
-            xmpp.process(forever=False)
+            xmpp = XmppShooter(xmpp_cfg['sender'], xmpp_cfg['password'], xmpp_cfg['target'])
+            xmpp.send_messages(messages)
         except BaseException as e:
             error_formatted = traceback.format_exc()
             logging.error('While sending notification:\n%s' % (error_formatted), extra={'exception': e})
