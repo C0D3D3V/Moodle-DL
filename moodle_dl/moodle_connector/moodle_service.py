@@ -132,7 +132,7 @@ class MoodleService:
         version = RequestHelper(moodle_domain, moodle_path, '', self.skip_cert_verify).get_simple_moodle_version()
 
         if StrictVersion(version) > StrictVersion("3.8.1"):
-            print(
+            Log.warning(
                 'Between version 3.81 and 3.82 a change was added to'
                 + ' Moodle so that automatic copying of the SSO token'
                 + ' might not work.'

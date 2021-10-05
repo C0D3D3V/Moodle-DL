@@ -4,6 +4,7 @@ import traceback
 from getpass import getpass
 
 from moodle_dl.utils import cutie
+from moodle_dl.utils.logger import Log
 from moodle_dl.state_recorder.course import Course
 from moodle_dl.download_service.url_target import URLTarget
 from moodle_dl.notification_services.mail.mail_shooter import MailShooter
@@ -93,6 +94,7 @@ class MailService(NotificationService):
 
         try:
             logging.debug('Sending Notification via Mail...')
+            Log.debug('Sending Notification via Mail... (Please wait)')
 
             mail_shooter = MailShooter(
                 mail_cfg['sender'],

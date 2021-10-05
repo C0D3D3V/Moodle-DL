@@ -1,21 +1,25 @@
-from moodle_dl.notification_services.xmpp.xmpp_bot import XmppBot
+import slixmpp
 
 
-class XmppShooter:
+class XmppShooter(slixmpp.ClientXMPP):
+
     """
-    Encapsulates the sending of notification-messages.
+    A basic Slixmpp shooter that will log in, send a message,
+    and then log out.
     """
 
-    def __init__(self, xmpp_sender: str, xmpp_password: str, xmpp_target: str):
-        self.xmpp_sender = xmpp_sender
-        self.xmpp_password = xmpp_password
-        self.xmpp_target = xmpp_target
+    def __init__(self, jid, password, recipient, messages):
+        super().__init__(jid, password)
 
-    def send(self, message: str):
-        xmpp = XmppBot(self.xmpp_sender, self.xmpp_password, self.xmpp_target, message)
-        xmpp.register_plugin('xep_0030')  # Service Discovery
-        xmpp.register_plugin('xep_0199')  # XMPP Ping
+        self.recipient = recipient
+        self.messages = messages
 
-        # Connect to the XMPP server and start processing XMPP stanzas.
-        xmpp.connect()
-        xmpp.process(forever=False)
+        self.add_event_handler("session_start", self.start)
+
+    async def start(self, event):
+        self.send_presence()
+
+        for message_content in self.messages:
+            self.send_message(mto=self.recipient, mbody=message_content, mtype='chat')
+
+        self.disconnect()
