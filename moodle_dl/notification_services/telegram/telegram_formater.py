@@ -45,16 +45,16 @@ def create_full_moodle_diff_messages(changed_courses: [Course]) -> [str]:
 
         for file in course.files:
             if file.modified:
-                new_line = '\r\n__* Modified:__ ' + file.saved_to
+                new_line = '\r\n🔄 Modified:\r\n ' + file.saved_to
             elif file.moved:
                 if file.new_file is not None:
-                    new_line = '\r\n__* Moved:__ ' + file.new_file.saved_to
+                    new_line = '\r\n🔀 Moved:\r\n ' + file.new_file.saved_to
                 else:
-                    new_line = '\r\n__* Moved:__ ' + file.saved_to
+                    new_line = '\r\n🔀 Moved:\r\n ' + file.saved_to
             elif file.deleted:
-                new_line = '\r\n__- Deleted:__ ' + file.saved_to
+                new_line = '\r\n❌ Deleted:\r\n ' + file.saved_to
             else:
-                new_line = '\r\n__+ Added:__ ' + file.saved_to
+                new_line = '\r\n✅ Added:\r\n ' + file.saved_to
 
             one_msg_content = append_with_limit(new_line, one_msg_content, result_list)
 
