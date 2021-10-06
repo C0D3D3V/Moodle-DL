@@ -192,9 +192,16 @@ class ResultsHandler:
             url = html.unescape(url)
             url = urlparse.unquote(url)
 
+            url_parts = urlparse.urlparse(url)
+            if url_parts.hostname == self.moodle_domain and url_parts.path.find('/theme/image.php/') >= 0:
+                url = re.sub(
+                    r"\/theme\/image.php\/(\w+)\/(\w+)\/\d+\/",
+                    r"/theme/image.php/\g<1>/\g<2>/-1/",
+                    url,
+                )
+
             module_modname = 'url-description-' + original_module_modname
 
-            url_parts = urlparse.urlparse(url)
             if url_parts.hostname == self.moodle_domain and url_parts.path.find('/webservice/') >= 0:
                 module_modname = 'index_mod-description-' + original_module_modname
 
