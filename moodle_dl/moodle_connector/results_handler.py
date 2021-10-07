@@ -82,7 +82,7 @@ class ResultsHandler:
             if module_modname in ['moodecvideo', 'page']:
                 module_modname = 'index_mod-' + module_modname
 
-            if module_modname in ['kalvidres']:
+            if module_modname in ['kalvidres', 'helixmedia']:
                 module_modname = 'cookie_mod-' + module_modname
                 files += self._handle_cookie_mod(section_name, module_name, module_modname, module_id, module_url)
 
