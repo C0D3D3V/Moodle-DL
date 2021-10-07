@@ -204,3 +204,10 @@ class ConfigHelper:
             return self.get_property('restricted_filenames')
         except ValueError:
             return False
+
+    def get_use_http(self) -> bool:
+        # returns a stored boolean if http should be used instead of https
+        try:
+            return self.get_property('use_http')
+        except ValueError:
+            return False

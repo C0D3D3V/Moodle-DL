@@ -31,13 +31,18 @@ class RequestHelper:
         token: str = '',
         skip_cert_verify: bool = False,
         log_responses_to: str = None,
+        use_http: bool = False,
     ):
         self.token = token
         self.moodle_domain = moodle_domain
         self.moodle_path = moodle_path
 
         self.verify = not skip_cert_verify
-        self.url_base = 'https://' + moodle_domain + moodle_path
+
+        scheme = 'https://'
+        if use_http:
+            scheme = 'http://'
+        self.url_base = scheme + moodle_domain + moodle_path
 
         self.log_responses_to = log_responses_to
         self.log_responses = False

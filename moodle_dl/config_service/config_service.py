@@ -24,8 +24,9 @@ class ConfigService:
         token = self.config_helper.get_token()
         moodle_domain = self.config_helper.get_moodle_domain()
         moodle_path = self.config_helper.get_moodle_path()
+        use_http = self.config_helper.get_use_http()
 
-        request_helper = RequestHelper(moodle_domain, moodle_path, token, self.skip_cert_verify)
+        request_helper = RequestHelper(moodle_domain, moodle_path, token, self.skip_cert_verify, use_http=use_http)
         first_contact_handler = FirstContactHandler(request_helper)
 
         courses = []

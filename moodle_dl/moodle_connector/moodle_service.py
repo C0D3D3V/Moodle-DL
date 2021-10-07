@@ -64,7 +64,16 @@ class MoodleService:
             if not use_stored_url:
                 moodle_url = input('URL of Moodle:   ')
 
-                if not moodle_url.startswith('https://'):
+                use_http = False
+                if moodle_url.startswith('http://'):
+                    Log.error(
+                        'Warning: You have entered an insecure URL! Are you sure that the Moodle is'
+                        + ' not accessible via `https://`? All your data will be transferred'
+                        + ' insecurely! If your Moodle is accessible via `https://`, then run'
+                        + ' the process again using `https://` to protect your data.'
+                    )
+                    use_http = True
+                elif not moodle_url.startswith('https://'):
                     Log.error('The url of your moodle must start with `https://`')
                     continue
 
@@ -75,6 +84,7 @@ class MoodleService:
             else:
                 moodle_domain = self.config_helper.get_moodle_domain()
                 moodle_path = self.config_helper.get_moodle_path()
+                use_http = self.config_helper.get_use_http()
 
             if username is not None:
                 moodle_username = username
@@ -89,7 +99,12 @@ class MoodleService:
 
             try:
                 moodle_token, moodle_privatetoken = login_helper.obtain_login_token(
-                    moodle_username, moodle_password, moodle_domain, moodle_path, self.skip_cert_verify
+                    moodle_username,
+                    moodle_password,
+                    moodle_domain,
+                    moodle_path,
+                    self.skip_cert_verify,
+                    use_http,
                 )
 
             except RequestRejectedError as error:
@@ -108,6 +123,8 @@ class MoodleService:
             self.config_helper.set_property('privatetoken', moodle_privatetoken)
         self.config_helper.set_property('moodle_domain', moodle_domain)
         self.config_helper.set_property('moodle_path', moodle_path)
+        if use_http is True:
+            self.config_helper.set_property('use_http', use_http)
 
         return moodle_token
 
@@ -129,7 +146,17 @@ class MoodleService:
             moodle_domain = self.config_helper.get_moodle_domain()
             moodle_path = self.config_helper.get_moodle_path()
 
-        version = RequestHelper(moodle_domain, moodle_path, '', self.skip_cert_verify).get_simple_moodle_version()
+        use_http = self.config_helper.get_use_http()
+        scheme = 'https://'
+        if use_http:
+            scheme = 'http://'
+
+        version = RequestHelper(
+            moodle_domain,
+            moodle_path,
+            skip_cert_verify=self.skip_cert_verify,
+            use_http=use_http,
+        ).get_simple_moodle_version()
 
         if StrictVersion(version) > StrictVersion("3.8.1"):
             Log.warning(
@@ -147,7 +174,7 @@ class MoodleService:
 
         if do_automatic:
             print(
-                'https://'
+                scheme
                 + moodle_domain
                 + moodle_path
                 + 'admin/tool/mobile/launch.php?service='
@@ -157,7 +184,7 @@ class MoodleService:
             moodle_token = sso_token_receiver.receive_token()
         else:
             print(
-                'https://'
+                scheme
                 + moodle_domain
                 + moodle_path
                 + 'admin/tool/mobile/launch.php?service='
@@ -212,8 +239,16 @@ class MoodleService:
         privatetoken = self.config_helper.get_privatetoken()
         moodle_domain = self.config_helper.get_moodle_domain()
         moodle_path = self.config_helper.get_moodle_path()
+        use_http = self.config_helper.get_use_http()
 
-        request_helper = RequestHelper(moodle_domain, moodle_path, token, self.skip_cert_verify, self.log_responses_to)
+        request_helper = RequestHelper(
+            moodle_domain,
+            moodle_path,
+            token,
+            self.skip_cert_verify,
+            self.log_responses_to,
+            use_http,
+        )
         first_contact_handler = FirstContactHandler(request_helper)
         results_handler = ResultsHandler(request_helper, moodle_domain, moodle_path)
 
