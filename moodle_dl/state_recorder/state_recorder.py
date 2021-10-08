@@ -205,8 +205,10 @@ class StateRecorder:
 
         # Not sure if this would be a good idea
         #  or file1.module_name != file2.module_name)
-        if (file1.content_fileurl != file2.content_fileurl or file1.content_filesize != file2.content_filesize) and (
-            file1.content_timemodified != file2.content_timemodified
+        if (
+                file1.content_filesize != file2.content_filesize
+                or (file1.content_fileurl != file2.content_fileurl
+                    and file1.content_timemodified != file2.content_timemodified)
         ):
             return True
         if (
