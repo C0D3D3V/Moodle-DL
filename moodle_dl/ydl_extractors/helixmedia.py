@@ -62,10 +62,15 @@ class Helixmedia(InfoExtractor):
         video_model = json.loads(js_to_json(self._search_regex(r'var model = ([^;]+);', video_webpage, 'video model')))
 
         video_title = video_model.get('VideoTitle', None)
+
         video_description = video_model.get('VideoDescription', '')
         video_id = str(video_model.get('VideoId', video_id))
         download_url = video_model.get('DownloadUrl', None)
         video_json = json.loads(video_model.get('PlayScreenVm', {}).get('VodPlayerModel', {}).get('PlayerJson', '{}'))
+        if video_json == {}:
+            video_json = json.loads(video_model.get('VodPlayerModel', {}).get('PlayerJson', '{}'))
+        if video_title is None:
+            video_title = video_json.get('abouttext', 'Unknown title')
 
         thumbnail_list = video_json.get('tracks', [])
         thumbnail = None
