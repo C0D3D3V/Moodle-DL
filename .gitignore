@@ -2,6 +2,8 @@
 /test
 /debugging-moodle
 __pycache__
-
+/build
+/dist
 config.json
 MoodleDownloader.log
+/moodle_dl.egg-info

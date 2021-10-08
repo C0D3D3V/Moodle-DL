@@ -6,7 +6,7 @@ import re
 import json
 
 from youtube_dl.compat import (
-    compat_parse_qs,
+    compat_urllib_parse,
     compat_urllib_parse_urlparse,
 )
 
@@ -16,12 +16,14 @@ from youtube_dl.utils import (
     urlencode_postdata,
     js_to_json,
     determine_ext,
+    extract_attributes,
 )
 
 
 class Helixmedia(InfoExtractor):
     IE_NAME = 'helixmedia'
     _VALID_URL = r'(?P<scheme>https?://)(?P<host>[^/]+)(?P<path>.*)?/mod/helixmedia/view.php\?.*?id=(?P<id>\d+)'
+    _LAUNCH_FORM = 'ltiLaunchForm'
 
     # _TEST = {'url': 'http://localhost/moodle/mod/helixmedia/view.php?id=3'}
 
@@ -36,9 +38,13 @@ class Helixmedia(InfoExtractor):
 
         # webpage = self._download_webpage(url, video_id)
         launch_webpage = self._download_webpage(launch_url, video_id)
-        launch_inputs = self._hidden_inputs(launch_webpage)
+        launch_inputs = self._form_hidden_inputs(self._LAUNCH_FORM, launch_webpage)
+        launch_form_str = self._search_regex(
+            r'(?P<form><form[^>]+?id=(["\'])%s\2[^>]*>)' % self._LAUNCH_FORM, launch_webpage, 'login form', group='form'
+        )
 
-        action_url = 'https://na1upload.medialibrary.com/Lti/Launch'
+        action_url = extract_attributes(launch_form_str).get('action')
+
         submit_page, start_urlh = self._download_webpage_handle(
             action_url, video_id, 'Launch Helix Media', data=urlencode_postdata(launch_inputs)
         )
@@ -46,13 +52,12 @@ class Helixmedia(InfoExtractor):
         if 'UploadSessionId' not in start_urlh.geturl():
             raise ExtractorError('Unable to launch helixmedia video', expected=True)
 
-        qs = compat_parse_qs(compat_urllib_parse_urlparse(start_urlh.geturl()).query)
-        UploadSessionId = qs.get('UploadSessionId', [None])[0]
+        parsed_mediaserver_url = list(compat_urllib_parse_urlparse(start_urlh.geturl()))
+        parsed_mediaserver_url[4] += '&mobile=N&fullWidth=940&fullHeight=906'
+        parsed_mediaserver_url[2] += 'Split'
+        mediaserver_url = compat_urllib_parse.urlunparse(parsed_mediaserver_url)
 
-        default_video_url = (
-            'https://na1upload.medialibrary.com/Lti/HomeSplit?mobile=N&fullWidth=940&fullHeight=906&UploadSessionId='
-        )
-        video_webpage = self._download_webpage(default_video_url + UploadSessionId, video_id)
+        video_webpage = self._download_webpage(mediaserver_url, video_id)
 
         video_model = json.loads(js_to_json(self._search_regex(r'var model = ([^;]+);', video_webpage, 'video model')))
 
@@ -89,7 +94,7 @@ class Helixmedia(InfoExtractor):
                 formats.extend(self._extract_f4m_formats(href, video_id, f4m_id='hds', fatal=False))
             elif ext == 'smil':
                 formats.extend(self._extract_smil_formats(href, video_id, fatal=False))
-            elif ext == 'mp4':
+            else:
                 track_obj = {
                     'url': href,
                     'ext': ext,
@@ -99,7 +104,6 @@ class Helixmedia(InfoExtractor):
         if download_url is not None:
             track_obj_direct = {
                 'url': download_url,
-                'ext': 'mp4',
             }
             formats.append(track_obj_direct)
 
