@@ -140,6 +140,16 @@ def run_manage_database(storage_path):
     Log.success('All done.')
 
 
+def run_delete_old_files(storage_path):
+    config = ConfigHelper(storage_path)
+    config.load()  # Not really needed, we check all local courses
+
+    offline_service = OfflineService(config, storage_path)
+    offline_service.delete_old_files()
+
+    Log.success('All done.')
+
+
 def run_change_notification_mail(storage_path):
     config = ConfigHelper(storage_path)
     config.load()
@@ -438,6 +448,17 @@ def get_parser():
     )
 
     group.add_argument(
+        '-dof',
+        '--delete-old-files',
+        action='store_true',
+        help=(
+            'This option lets you delete old copies of files.'
+            + ' It allows you to delete entries from the database'
+            + ' and from local file system.'
+        ),
+    )
+
+    group.add_argument(
         '--log-responses',
         default=False,
         action='store_true',
@@ -569,5 +590,7 @@ def main(args=None):
         run_change_notification_xmpp(storage_path)
     elif args.manage_database:
         run_manage_database(storage_path)
+    elif args.delete_old_files:
+        run_delete_old_files(storage_path)
     else:
         run_main(storage_path, verbose, skip_cert_verify, ignore_ytdl_errors, without_downloading_files, log_responses)

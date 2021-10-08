@@ -294,6 +294,52 @@ class StateRecorder:
         conn.close()
         return stored_courses
 
+    def get_old_files(self) -> [Course]:
+        # get all stored files (that are not yet deleted)
+        conn = sqlite3.connect(self.db_file)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        stored_courses = []
+
+        cursor.execute(
+            """SELECT DISTINCT course_id, course_fullname
+            FROM files WHERE old_file_id IS NOT NULL"""
+        )
+
+        course_rows = cursor.fetchall()
+        for course_row in course_rows:
+            course = Course(course_row['course_id'], course_row['course_fullname'])
+
+            cursor.execute(
+                """SELECT *
+                FROM files
+                WHERE course_id = ?
+                AND old_file_id IS NOT NULL""",
+                (course.id,)
+            )
+
+            updated_files = cursor.fetchall()
+
+            course.files = []
+
+            for updated_file in updated_files:
+                cursor.execute(
+                    """SELECT *
+                    FROM files
+                    WHERE file_id = ?""",
+                    (updated_file['old_file_id'],)
+                )
+
+                old_file = cursor.fetchone()
+
+                notify_file = File.fromRow(old_file)
+                course.files.append(notify_file)
+
+            stored_courses.append(course)
+
+        conn.close()
+        return stored_courses
+
     def __get_modified_files(self, stored_courses: [Course], current_courses: [Course]) -> [Course]:
         # returns courses with modified and deleted files
         changed_courses = []
@@ -597,6 +643,14 @@ class StateRecorder:
         cursor = conn.cursor()
 
         for file in files:
+            cursor.execute(
+                """UPDATE files
+                SET old_file_id = NULL
+                WHERE old_file_id = ?
+                """,
+                (file.file_id,)
+            )
+
             data = {}
             data.update(file.getMap())
 
