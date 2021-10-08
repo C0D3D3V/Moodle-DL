@@ -6,6 +6,8 @@ from getpass import getpass
 from urllib.parse import urlparse
 from distutils.version import StrictVersion
 
+from youtube_dl.utils import determine_ext
+
 from moodle_dl.utils import cutie
 from moodle_dl.utils.logger import Log
 from moodle_dl.config_service.config_helper import ConfigHelper
@@ -380,6 +382,7 @@ class MoodleService:
         download_descriptions = config_helper.get_download_descriptions()
         download_links_in_descriptions = config_helper.get_download_links_in_descriptions()
         download_databases = config_helper.get_download_databases()
+        exclude_file_extensions = config_helper.get_exclude_file_extensions()
         download_also_with_cookie = config_helper.get_download_also_with_cookie()
         if cookie_handler is not None:
             download_also_with_cookie = cookie_handler.test_cookies()
@@ -454,6 +457,14 @@ class MoodleService:
                 course_files = []
                 for file in course.files:
                     if not file.module_modname.startswith('cookie_mod-'):
+                        course_files.append(file)
+                course.files = course_files
+
+            if len(exclude_file_extensions) > 0:
+                # Exclude files whose file extension is blacklisted.
+                course_files = []
+                for file in course.files:
+                    if not (determine_ext(file.content_filename) in exclude_file_extensions):
                         course_files.append(file)
                 course.files = course_files
 

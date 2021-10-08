@@ -160,8 +160,18 @@ class ConfigHelper:
         except ValueError:
             return False
 
+    def get_exclude_file_extensions(self) -> {}:
+        # returns a list of file extensions that should not be downloaded
+        try:
+            exclude_file_extensions = self.get_property('exclude_file_extensions')
+            if not type(exclude_file_extensions) is list:
+                exclude_file_extensions = [exclude_file_extensions]
+            return exclude_file_extensions
+        except ValueError:
+            return []
+
     def get_download_also_with_cookie(self) -> {}:
-        # returns if files for which a cookie is required should be downloaded.
+        # returns if files for which a cookie is required should be downloaded
         try:
             return self.get_property('download_also_with_cookie')
         except ValueError:
