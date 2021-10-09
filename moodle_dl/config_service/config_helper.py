@@ -206,6 +206,11 @@ class ConfigHelper:
         except ValueError:
             options.update({'youtube_dl_options': {}})
 
+        try:
+            options.update({'videopasswords': self.get_property('videopasswords')})
+        except ValueError:
+            options.update({'videopasswords': {}})
+
         return options
 
     def get_restricted_filenames(self) -> {}:

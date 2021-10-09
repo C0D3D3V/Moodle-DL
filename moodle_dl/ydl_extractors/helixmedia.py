@@ -16,7 +16,9 @@ from youtube_dl.utils import (
     urlencode_postdata,
     js_to_json,
     determine_ext,
+    mimetype2ext,
     extract_attributes,
+    HEADRequest,
 )
 
 
@@ -37,7 +39,7 @@ class Helixmedia(InfoExtractor):
         launch_url = scheme + host + path + '/mod/helixmedia/launch.php?type=1&id=' + video_id
 
         # webpage = self._download_webpage(url, video_id)
-        launch_webpage = self._download_webpage(launch_url, video_id)
+        launch_webpage = self._download_webpage(launch_url, video_id, 'Downloading helixmedia launch webpage')
         launch_inputs = self._form_hidden_inputs(self._LAUNCH_FORM, launch_webpage)
         launch_form_str = self._search_regex(
             r'(?P<form><form[^>]+?id=(["\'])%s\2[^>]*>)' % self._LAUNCH_FORM, launch_webpage, 'login form', group='form'
@@ -46,7 +48,7 @@ class Helixmedia(InfoExtractor):
         action_url = extract_attributes(launch_form_str).get('action')
 
         submit_page, start_urlh = self._download_webpage_handle(
-            action_url, video_id, 'Launch Helix Media', data=urlencode_postdata(launch_inputs)
+            action_url, video_id, 'Launch helixmedia app', data=urlencode_postdata(launch_inputs)
         )
 
         if 'UploadSessionId' not in start_urlh.geturl():
@@ -57,7 +59,7 @@ class Helixmedia(InfoExtractor):
         parsed_mediaserver_url[2] += 'Split'
         mediaserver_url = compat_urllib_parse.urlunparse(parsed_mediaserver_url)
 
-        video_webpage = self._download_webpage(mediaserver_url, video_id)
+        video_webpage = self._download_webpage(mediaserver_url, video_id, 'Downloading video details')
 
         video_model = json.loads(js_to_json(self._search_regex(r'var model = ([^;]+);', video_webpage, 'video model')))
 
@@ -107,8 +109,13 @@ class Helixmedia(InfoExtractor):
                 formats.append(track_obj)
 
         if download_url is not None:
+            ext_req = HEADRequest(download_url)
+            ext_handle = self._request_webpage(ext_req, video_id, note='Determining extension')
+            ext = self.urlhandle_detect_ext(ext_handle)
+
             track_obj_direct = {
                 'url': download_url,
+                'ext': ext,
             }
             formats.append(track_obj_direct)
 
@@ -129,3 +136,16 @@ class Helixmedia(InfoExtractor):
             result_obj.update({'thumbnail': thumbnail})
 
         return result_obj
+
+    def urlhandle_detect_ext(self, url_handle):
+        getheader = url_handle.headers.get
+
+        cd = getheader('Content-Disposition')
+        if cd:
+            m = re.match(r'attachment;.*filename="(?P<filename>[^"]+)"', cd)
+            if m:
+                e = determine_ext(m.group('filename'), default_ext=None)
+                if e:
+                    return e
+
+        return mimetype2ext(getheader('Content-Type'))
