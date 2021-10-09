@@ -82,16 +82,16 @@ class ResultsHandler:
             if module_modname in ['moodecvideo', 'page']:
                 module_modname = 'index_mod-' + module_modname
 
-            if module_modname in ['kalvidres', 'helixmedia']:
-                module_modname = 'cookie_mod-' + module_modname
-                files += self._handle_cookie_mod(section_name, module_name, module_modname, module_id, module_url)
-
             if module_description is not None:
                 files += self._handle_description(
                     section_name, module_name, module_modname, module_id, module_description
                 )
 
-            if module_modname.startswith(('resource', 'folder', 'url', 'index_mod')):
+            if module_modname in ['kalvidres', 'helixmedia', 'lti']:
+                module_modname = 'cookie_mod-' + module_modname
+                files += self._handle_cookie_mod(section_name, module_name, module_modname, module_id, module_url)
+
+            elif module_modname.startswith(('resource', 'folder', 'url', 'index_mod')):
                 files += self._handle_files(section_name, module_name, module_modname, module_id, module_contents)
 
             elif module_modname == 'assign':
@@ -115,12 +115,6 @@ class ResultsHandler:
                 forums_files = forums.get('files', [])
 
                 files += self._handle_files(section_name, module_name, module_modname, module_id, forums_files)
-            elif module_modname == 'lti':
-                module_icon = module.get('modicon', 'no icon')
-                if 'RUBcast' in module_icon:
-                    files += self._handle_opencast_lti_mod(section_name, module_name, module_modname, module_id, module_url)
-                else:
-                    logging.debug('Got unhandled LTI module: name=%s url=%s', module_name, module_url)
             else:
                 logging.debug('Got unhandled module: name=%s mod=%s url=%s', module_name, module_modname, module_url)
 
