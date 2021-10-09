@@ -112,20 +112,6 @@ class URLTarget(object):
         url_parts[4] = urlparse.urlencode(query)
         return urlparse.urlunparse(url_parts)
 
-    def _extend_sciebo_url(self, url: str) -> str:
-        """
-            Adds the string /download to a URL containing 'sciebo.de'
-            @param url: The URL where the string should be added.
-            @return: The URL with the string.
-        """
-        if 'sciebo.de' in url:
-            # content_fileurl += '/download'
-            parsed_url = urlparse.urlparse(url)
-            url_parts = list(urlparse.urlparse(url))
-            url_parts[2] = url_parts[2].strip('/') + '/download'
-            url = urlparse.urlunparse(url_parts)
-        return url
-
     def create_dir(self, path: str):
         # Creates the folders of a path if they do not exist.
         if not os.path.exists(path):
@@ -272,8 +258,14 @@ class URLTarget(object):
 
     def yt_hook(self, d):
         downloaded_bytes = d.get('downloaded_bytes', 0)
+        if downloaded_bytes is None:
+            downloaded_bytes = 0
         total_bytes_estimate = d.get('total_bytes_estimate', 0)
+        if total_bytes_estimate is None:
+            total_bytes_estimate = 0
         total_bytes = d.get('total_bytes', 0)
+        if total_bytes is None:
+            total_bytes = 0
 
         difference = downloaded_bytes - self.downloaded
         self.thread_report[self.thread_id]['total'] += difference
@@ -315,6 +307,7 @@ class URLTarget(object):
     def is_blocked_for_youtube_dl(self, url_to_download: str):
         url_parsed = urlparse.urlparse(url_to_download)
         if url_parsed.hostname.endswith('youtube.com') and url_parsed.path.startswith('/channel/'):
+            # We do not want to download whole channels
             return True
         return False
 
@@ -360,9 +353,6 @@ class URLTarget(object):
 
         if add_token:
             url_to_download = self._add_token_to_url(self.file.content_fileurl)
-
-        # adds /download to sciebo.de urls
-        url_to_download = self._extend_sciebo_url(self.file.content_fileurl)
 
         cookies_path = self.options.get('cookies_path', None)
         if use_cookies:
@@ -444,7 +434,8 @@ class URLTarget(object):
                 new_filename = unquote(found_names[0])
 
         if isHTML and not self.is_blocked_for_youtube_dl(url_to_download):
-            filename_tmpl = self.filename + ' | %(title)s (%(id)s).%(ext)s'
+
+            filename_tmpl = self.filename + ' - %(title)s (%(id)s).%(ext)s'
             if self.file.content_type == 'description-url':
                 filename_tmpl = '%(title)s (%(id)s).%(ext)s'
             outtmpl = str(Path(self.destination) / filename_tmpl)
@@ -468,23 +459,43 @@ class URLTarget(object):
 
             ydl = youtube_dl.YoutubeDL(ydl_opts)
             add_additional_extractors(ydl)
-            try:
-                ydl_results = ydl.download([url_to_download])
-                if ydl_results == 1:
-                    pass
-                elif self.file.module_name != 'index_mod-page':
-                    self.file.saved_to = str(Path(self.destination) / self.filename)
-                    self.file.time_stamp = int(time.time())
 
-                    self.success = True
-                    return True
-            except Exception as e:
-                logging.error(
-                    'T%s - Youtube-dl failed! Error: %s',
-                    self.thread_id,
-                    e,
-                )
-                self.youtube_dl_failed_with_error = True
+            videopasswords = self.options.get('videopasswords', {})
+
+            password_list = videopasswords.get(url_parsed.netloc, [])
+            if not type(password_list) is list:
+                password_list = [password_list]
+
+            idx_pw = 0
+            while True:
+                if idx_pw + 1 <= len(password_list):
+                    ydl.params['videopassword'] = password_list[idx_pw]
+
+                self.youtube_dl_failed_with_error = False
+                # we restart youtube-dl, so we need to reset the return code
+                ydl._download_retcode = 0
+                try:
+                    ydl_results = ydl.download([url_to_download])
+                    if ydl_results == 1:
+                        pass
+                    elif self.file.module_name != 'index_mod-page':
+                        self.file.saved_to = str(Path(self.destination) / self.filename)
+                        self.file.time_stamp = int(time.time())
+
+                        self.success = True
+                        return True
+                    else:
+                        break
+                except Exception as e:
+                    logging.error(
+                        'T%s - Youtube-dl failed! Error: %s',
+                        self.thread_id,
+                        e,
+                    )
+                    self.youtube_dl_failed_with_error = True
+                idx_pw += 1
+                if idx_pw + 1 > len(password_list):
+                    break
 
             # if we want we could save ydl.cookiejar (Also the cookiejar of moodle-dl)
 

@@ -31,13 +31,18 @@ class RequestHelper:
         token: str = '',
         skip_cert_verify: bool = False,
         log_responses_to: str = None,
+        use_http: bool = False,
     ):
         self.token = token
         self.moodle_domain = moodle_domain
         self.moodle_path = moodle_path
 
         self.verify = not skip_cert_verify
-        self.url_base = 'https://' + moodle_domain + moodle_path
+
+        scheme = 'https://'
+        if use_http:
+            scheme = 'http://'
+        self.url_base = scheme + moodle_domain + moodle_path
 
         self.log_responses_to = log_responses_to
         self.log_responses = False
@@ -226,12 +231,7 @@ class RequestHelper:
             if match:
                 version_string = match.group(1)
                 break
-
-        majorVersion = version_string.split('.')[0]
-        minorVersion = version_string[len(majorVersion) :].replace('.', '')
-
-        version = float(majorVersion + '.' + minorVersion)
-        return version
+        return version_string.strip()
 
     def _initial_parse(self, response) -> object:
         """
@@ -275,7 +275,7 @@ class RequestHelper:
 
             if errorcode == 'invalidtoken':
                 raise RequestRejectedError(
-                    'Your Moodle token has expired. To create a new one run "moodle-dl -nt -u USERNAME -pw PASSWORD"'
+                    'Your Moodle token has expired. To create a new one run "moodle-dl -nt -u USERNAME -pw PASSWORD" or "moodle-dl -nt -sso"'
                 )
 
             raise RequestRejectedError(

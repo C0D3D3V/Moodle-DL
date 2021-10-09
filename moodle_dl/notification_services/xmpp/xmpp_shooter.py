@@ -1,21 +1,48 @@
-from moodle_dl.notification_services.xmpp.xmpp_bot import XmppBot
+import asyncio
+
+import aioxmpp
 
 
 class XmppShooter:
+
     """
-    Encapsulates the sending of notification-messages.
+    A basic XMPP shooter that will log in, send messages,
+    and then log out.
     """
 
-    def __init__(self, xmpp_sender: str, xmpp_password: str, xmpp_target: str):
-        self.xmpp_sender = xmpp_sender
-        self.xmpp_password = xmpp_password
-        self.xmpp_target = xmpp_target
+    def __init__(self, jid, password, recipient):
+        self.g_jid = aioxmpp.JID.fromstr(jid)
+        self.g_security_layer = aioxmpp.make_security_layer(password)
 
-    def send(self, message: str):
-        xmpp = XmppBot(self.xmpp_sender, self.xmpp_password, self.xmpp_target, message)
-        xmpp.register_plugin('xep_0030')  # Service Discovery
-        xmpp.register_plugin('xep_0199')  # XMPP Ping
+        self.to_jid = aioxmpp.JID.fromstr(recipient)
 
-        # Connect to the XMPP server and start processing XMPP stanzas.
-        xmpp.connect()
-        xmpp.process(forever=False)
+    def send(self, message):
+        loop = asyncio.get_event_loop()
+        try:
+            loop.run_until_complete(self.async_send_messages([message]))
+        finally:
+            loop.close()
+
+    def send_messages(self, messages):
+        loop = asyncio.get_event_loop()
+        try:
+            loop.run_until_complete(self.async_send_messages(messages))
+        finally:
+            loop.close()
+
+    async def async_send_messages(self, messages):
+        client = aioxmpp.Client(
+            self.g_jid,
+            self.g_security_layer,
+        )
+        client.resumption_timeout = 0
+
+        async with client.connected() as stream:
+            for message_content in messages:
+                msg = aioxmpp.Message(
+                    to=self.to_jid,
+                    type_=aioxmpp.MessageType.CHAT,
+                )
+                msg.body[None] = message_content
+
+                await stream.send(msg)

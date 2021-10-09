@@ -4,6 +4,7 @@ import traceback
 from getpass import getpass
 
 from moodle_dl.utils import cutie
+from moodle_dl.utils.logger import Log
 from moodle_dl.state_recorder.course import Course
 from moodle_dl.download_service.url_target import URLTarget
 from moodle_dl.notification_services.xmpp.xmpp_shooter import XmppShooter
@@ -39,6 +40,7 @@ class XmppService(NotificationService):
                     xmpp_shooter.send('This is a Testmessage from Moodle Downloader!')
                 except BaseException as e:
                     print('Error while sending the test message: %s' % (str(e)))
+                    continue
 
                 else:
                     input(
@@ -72,19 +74,21 @@ class XmppService(NotificationService):
             logging.debug('XMPP-Notifications not configured, skipping.')
             return False
 
-    def _send_message(self, message_content: str):
+    def _send_messages(self, messages: [str]):
         """
         Sends an message
         """
-        if not self._is_configured():
+        if not self._is_configured() or messages is None or len(messages) == 0:
             return
 
         xmpp_cfg = self.config_helper.get_property('xmpp')
 
+        logging.debug('Sending Notification via XMPP...')
+        Log.debug('Sending Notification via XMPP... (Please wait)')
+
         try:
-            logging.debug('Sending Notification via XMPP...')
-            xmpp_shooter = XmppShooter(xmpp_cfg['sender'], xmpp_cfg['password'], xmpp_cfg['target'])
-            xmpp_shooter.send(message_content)
+            xmpp = XmppShooter(xmpp_cfg['sender'], xmpp_cfg['password'], xmpp_cfg['target'])
+            xmpp.send_messages(messages)
         except BaseException as e:
             error_formatted = traceback.format_exc()
             logging.error('While sending notification:\n%s' % (error_formatted), extra={'exception': e})
@@ -100,8 +104,7 @@ class XmppService(NotificationService):
 
         messages = create_full_moodle_diff_messages(changes)
 
-        for message_content in messages:
-            self._send_message(message_content)
+        self._send_messages(messages)
 
     def notify_about_error(self, error_description: str):
         """
@@ -117,8 +120,7 @@ class XmppService(NotificationService):
             return
         messages = create_full_error_messages(error_description)
 
-        for message_content in messages:
-            self._send_message(message_content)
+        self._send_messages(messages)
 
     def notify_about_failed_downloads(self, failed_downloads: [URLTarget]):
         """
@@ -134,5 +136,4 @@ class XmppService(NotificationService):
             return
         messages = create_full_failed_downloads_messages(failed_downloads)
 
-        for message_content in messages:
-            self._send_message(message_content)
+        self._send_messages(messages)

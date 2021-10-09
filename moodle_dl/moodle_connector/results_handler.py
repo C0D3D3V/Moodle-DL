@@ -1,7 +1,9 @@
 import re
+import html
 import logging
 import hashlib
 import urllib.parse as urlparse
+
 
 from moodle_dl.state_recorder.file import File
 from moodle_dl.moodle_connector.request_helper import RequestHelper
@@ -80,7 +82,7 @@ class ResultsHandler:
             if module_modname in ['moodecvideo', 'page']:
                 module_modname = 'index_mod-' + module_modname
 
-            if module_modname in ['kalvidres']:
+            if module_modname in ['kalvidres', 'helixmedia']:
                 module_modname = 'cookie_mod-' + module_modname
                 files += self._handle_cookie_mod(section_name, module_name, module_modname, module_id, module_url)
 
@@ -136,8 +138,27 @@ class ResultsHandler:
         if not isinstance(description, str):
             return description
 
+        # to avoid changing encodings (see issue #96) we unencode and unquote everything
+        description = html.unescape(description)
+        description = urlparse.unquote(description)
+
+        # ids can change very quickly
         description = re.sub(r'id="[^"]*"', "", description)
         description = re.sub(r"id='[^']*'", "", description)
+
+        # Embedded images from Moodle can change their timestemp (is such a theme feature)
+        # We change every timestemp to -1 the default.
+        description = re.sub(
+            r"\/theme\/image.php\/(\w+)\/(\w+)\/\d+\/",
+            r"/theme/image.php/\g<1>/\g<2>/-1/",
+            description,
+        )
+
+        # some folder downloads inside a description file may have some session key inside which will always be different.
+        # remove it, to prevent always tagging this file as "modified".
+        description = re.sub(r'<input type="hidden" name="sesskey" value="[0-9a-zA-Z]*" \/>', "", description)
+        description = re.sub(r"<input type='hidden' name='sesskey' value='[0-9a-zA-Z]*' \/>", "", description)
+
         return description
 
     def _find_all_urls_in_description(
@@ -163,7 +184,9 @@ class ResultsHandler:
         """
 
         urls = list(set(re.findall(r'href=[\'"]?([^\'" >]+)', description)))
+        urls += list(set(re.findall(r'<a[^>]*>([^<]*)<\/a>', description)))
         urls += list(set(re.findall(r'src=[\'"]?([^\'" >]+)', description)))
+        urls = list(set(urls))
 
         result = []
         original_module_modname = module_modname
@@ -172,9 +195,21 @@ class ResultsHandler:
             if url == '':
                 continue
 
-            module_modname = 'url-description-' + original_module_modname
+            # To avoid different encodings and quotes and so that youtube-dl downloads correctly
+            # (See issues #96 and #103), we remove all encodings.
+            url = html.unescape(url)
+            url = urlparse.unquote(url)
 
             url_parts = urlparse.urlparse(url)
+            if url_parts.hostname == self.moodle_domain and url_parts.path.find('/theme/image.php/') >= 0:
+                url = re.sub(
+                    r"\/theme\/image.php\/(\w+)\/(\w+)\/\d+\/",
+                    r"/theme/image.php/\g<1>/\g<2>/-1/",
+                    url,
+                )
+
+            module_modname = 'url-description-' + original_module_modname
+
             if url_parts.hostname == self.moodle_domain and url_parts.path.find('/webservice/') >= 0:
                 module_modname = 'index_mod-description-' + original_module_modname
 

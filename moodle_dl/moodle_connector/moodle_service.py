@@ -4,6 +4,9 @@ import logging
 from pathlib import Path
 from getpass import getpass
 from urllib.parse import urlparse
+from distutils.version import StrictVersion
+
+from youtube_dl.utils import determine_ext
 
 from moodle_dl.utils import cutie
 from moodle_dl.utils.logger import Log
@@ -63,7 +66,16 @@ class MoodleService:
             if not use_stored_url:
                 moodle_url = input('URL of Moodle:   ')
 
-                if not moodle_url.startswith('https://'):
+                use_http = False
+                if moodle_url.startswith('http://'):
+                    Log.error(
+                        'Warning: You have entered an insecure URL! Are you sure that the Moodle is'
+                        + ' not accessible via `https://`? All your data will be transferred'
+                        + ' insecurely! If your Moodle is accessible via `https://`, then run'
+                        + ' the process again using `https://` to protect your data.'
+                    )
+                    use_http = True
+                elif not moodle_url.startswith('https://'):
                     Log.error('The url of your moodle must start with `https://`')
                     continue
 
@@ -74,6 +86,7 @@ class MoodleService:
             else:
                 moodle_domain = self.config_helper.get_moodle_domain()
                 moodle_path = self.config_helper.get_moodle_path()
+                use_http = self.config_helper.get_use_http()
 
             if username is not None:
                 moodle_username = username
@@ -88,7 +101,12 @@ class MoodleService:
 
             try:
                 moodle_token, moodle_privatetoken = login_helper.obtain_login_token(
-                    moodle_username, moodle_password, moodle_domain, moodle_path, self.skip_cert_verify
+                    moodle_username,
+                    moodle_password,
+                    moodle_domain,
+                    moodle_path,
+                    self.skip_cert_verify,
+                    use_http,
                 )
 
             except RequestRejectedError as error:
@@ -107,6 +125,8 @@ class MoodleService:
             self.config_helper.set_property('privatetoken', moodle_privatetoken)
         self.config_helper.set_property('moodle_domain', moodle_domain)
         self.config_helper.set_property('moodle_path', moodle_path)
+        if use_http is True:
+            self.config_helper.set_property('use_http', use_http)
 
         return moodle_token
 
@@ -128,10 +148,20 @@ class MoodleService:
             moodle_domain = self.config_helper.get_moodle_domain()
             moodle_path = self.config_helper.get_moodle_path()
 
-        version = RequestHelper(moodle_domain, moodle_path, '', self.skip_cert_verify).get_simple_moodle_version()
+        use_http = self.config_helper.get_use_http()
+        scheme = 'https://'
+        if use_http:
+            scheme = 'http://'
 
-        if version > 3.8:
-            print(
+        version = RequestHelper(
+            moodle_domain,
+            moodle_path,
+            skip_cert_verify=self.skip_cert_verify,
+            use_http=use_http,
+        ).get_simple_moodle_version()
+
+        if StrictVersion(version) > StrictVersion("3.8.1"):
+            Log.warning(
                 'Between version 3.81 and 3.82 a change was added to'
                 + ' Moodle so that automatic copying of the SSO token'
                 + ' might not work.'
@@ -146,7 +176,7 @@ class MoodleService:
 
         if do_automatic:
             print(
-                'https://'
+                scheme
                 + moodle_domain
                 + moodle_path
                 + 'admin/tool/mobile/launch.php?service='
@@ -156,7 +186,7 @@ class MoodleService:
             moodle_token = sso_token_receiver.receive_token()
         else:
             print(
-                'https://'
+                scheme
                 + moodle_domain
                 + moodle_path
                 + 'admin/tool/mobile/launch.php?service='
@@ -211,8 +241,16 @@ class MoodleService:
         privatetoken = self.config_helper.get_privatetoken()
         moodle_domain = self.config_helper.get_moodle_domain()
         moodle_path = self.config_helper.get_moodle_path()
+        use_http = self.config_helper.get_use_http()
 
-        request_helper = RequestHelper(moodle_domain, moodle_path, token, self.skip_cert_verify, self.log_responses_to)
+        request_helper = RequestHelper(
+            moodle_domain,
+            moodle_path,
+            token,
+            self.skip_cert_verify,
+            self.log_responses_to,
+            use_http,
+        )
         first_contact_handler = FirstContactHandler(request_helper)
         results_handler = ResultsHandler(request_helper, moodle_domain, moodle_path)
 
@@ -230,7 +268,11 @@ class MoodleService:
 
         print('\rDownloading account information\033[K', end='')
 
-        userid, version = first_contact_handler.fetch_userid_and_version()
+        userid, version = self.config_helper.get_userid_and_version()
+        if userid is None or version is None:
+            userid, version = first_contact_handler.fetch_userid_and_version()
+        else:
+            first_contact_handler.version = version
         assignments_handler = AssignmentsHandler(request_helper, version)
         databases_handler = DatabasesHandler(request_helper, version)
         forums_handler = ForumsHandler(request_helper, version)
@@ -298,7 +340,7 @@ class MoodleService:
         changes = self.recorder.changes_of_new_version(filtered_courses)
 
         # Filter changes
-        changes = self.filter_courses(changes, self.config_helper, cookie_handler)
+        changes = self.filter_courses(changes, self.config_helper, cookie_handler, courses_list + public_courses_list)
 
         changes = self.add_options_to_courses(changes)
 
@@ -319,13 +361,17 @@ class MoodleService:
 
     @staticmethod
     def filter_courses(
-        changes: [Course], config_helper: ConfigHelper, cookie_handler: CookieHandler = None
+        changes: [Course],
+        config_helper: ConfigHelper,
+        cookie_handler: CookieHandler = None,
+        courses_list: [Course] = None,
     ) -> [Course]:
         """
         Filters the changes course list from courses that
         should not get downloaded
         @param config_helper: ConfigHelper to obtain all the diffrent filter configs
         @param cookie_handler: CookieHandler to check if the cookie is valid
+        @param courses_list: A list of all courses that are available online
         @return: filtered changes course list
         """
 
@@ -336,6 +382,7 @@ class MoodleService:
         download_descriptions = config_helper.get_download_descriptions()
         download_links_in_descriptions = config_helper.get_download_links_in_descriptions()
         download_databases = config_helper.get_download_databases()
+        exclude_file_extensions = config_helper.get_exclude_file_extensions()
         download_also_with_cookie = config_helper.get_download_also_with_cookie()
         if cookie_handler is not None:
             download_also_with_cookie = cookie_handler.test_cookies()
@@ -343,6 +390,24 @@ class MoodleService:
         filtered_changes = []
 
         for course in changes:
+            if not ResultsHandler.should_download_course(
+                course.id, download_course_ids + download_public_course_ids, dont_download_course_ids
+            ):
+                # Filter courses that should not be downloaded
+                continue
+
+            if courses_list is not None:
+                not_online = True
+                # Filter courses that are not available online
+                for online_course in courses_list:
+                    if online_course.id == course.id:
+                        not_online = False
+                        break
+                if not_online:
+                    Log.warning(f'The Moodle course with id {course.id} is no longer available online.')
+                    logging.warning(f'The Moodle course with id {course.id} is no longer available online.')
+                    continue
+
             if not download_submissions:
                 course_files = []
                 for file in course.files:
@@ -395,12 +460,15 @@ class MoodleService:
                         course_files.append(file)
                 course.files = course_files
 
-            if (
-                ResultsHandler.should_download_course(
-                    course.id, download_course_ids + download_public_course_ids, dont_download_course_ids
-                )
-                and len(course.files) > 0
-            ):
+            if len(exclude_file_extensions) > 0:
+                # Exclude files whose file extension is blacklisted.
+                course_files = []
+                for file in course.files:
+                    if not (determine_ext(file.content_filename) in exclude_file_extensions):
+                        course_files.append(file)
+                course.files = course_files
+
+            if len(course.files) > 0:
                 filtered_changes.append(course)
 
         return filtered_changes

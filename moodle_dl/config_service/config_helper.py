@@ -88,6 +88,15 @@ class ConfigHelper:
         except ValueError:
             return False
 
+    def get_userid_and_version(self) -> (str, int):
+        # returns the userid and a version
+        try:
+            userid = self.get_property('userid')
+            version = int(self.get_property('version'))
+            return userid, version
+        except ValueError:
+            return None, None
+
     def get_download_course_ids(self) -> str:
         # returns a stored list of course ids hat should be downloaded
         try:
@@ -151,8 +160,18 @@ class ConfigHelper:
         except ValueError:
             return False
 
+    def get_exclude_file_extensions(self) -> {}:
+        # returns a list of file extensions that should not be downloaded
+        try:
+            exclude_file_extensions = self.get_property('exclude_file_extensions')
+            if not type(exclude_file_extensions) is list:
+                exclude_file_extensions = [exclude_file_extensions]
+            return exclude_file_extensions
+        except ValueError:
+            return []
+
     def get_download_also_with_cookie(self) -> {}:
-        # returns if files for which a cookie is required should be downloaded.
+        # returns if files for which a cookie is required should be downloaded
         try:
             return self.get_property('download_also_with_cookie')
         except ValueError:
@@ -187,11 +206,23 @@ class ConfigHelper:
         except ValueError:
             options.update({'youtube_dl_options': {}})
 
+        try:
+            options.update({'videopasswords': self.get_property('videopasswords')})
+        except ValueError:
+            options.update({'videopasswords': {}})
+
         return options
 
     def get_restricted_filenames(self) -> {}:
         # returns the filenames should be restricted
         try:
             return self.get_property('restricted_filenames')
+        except ValueError:
+            return False
+
+    def get_use_http(self) -> bool:
+        # returns a stored boolean if http should be used instead of https
+        try:
+            return self.get_property('use_http')
         except ValueError:
             return False
