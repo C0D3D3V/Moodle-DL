@@ -471,6 +471,8 @@ class URLTarget(object):
                     ydl.params['videopassword'] = password_list[idx_pw]
 
                 self.youtube_dl_failed_with_error = False
+                # we restart youtube-dl, so we need to reset the return code
+                ydl._download_retcode = 0
                 try:
                     ydl_results = ydl.download([url_to_download])
                     if ydl_results == 1:
@@ -481,6 +483,8 @@ class URLTarget(object):
 
                         self.success = True
                         return True
+                    else:
+                        break
                 except Exception as e:
                     logging.error(
                         'T%s - Youtube-dl failed! Error: %s',

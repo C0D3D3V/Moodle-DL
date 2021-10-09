@@ -129,5 +129,5 @@ class Owncloud(InfoExtractor):
             default="The password is wrong. Try again.",
         )
         if password_protected is not None:
-            raise ExtractorError('Login failed, %s said: %r' % (self.IE_NAME, warning))
+            raise ExtractorError('Login failed, %s said: %r' % (self.IE_NAME, warning), expected=True)
         return validation_response, urlh
