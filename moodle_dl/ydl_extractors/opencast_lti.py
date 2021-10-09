@@ -27,7 +27,7 @@ class OpencastLTI(InfoExtractor):
     _VALID_URL = r'(?P<scheme>https?://)(?P<host>[^/]+)(?P<path>.*)?/mod/lti/view.php\?.*?id=(?P<id>\d+)'
     _LAUNCH_FORM = 'ltiLaunchForm'
 
-    # _TEST = {'url': 'http://moodle.ruhr-uni-bochum.de/moodle/mod/lti/view.php?id=1406269'}
+    # _TEST = {'url': 'http://moodle.ruhr-uni-bochum.de/mod/lti/view.php?id=1406269'}
 
     def _real_extract(self, url):
         mobj = re.match(self._VALID_URL, url)
@@ -36,7 +36,7 @@ class OpencastLTI(InfoExtractor):
         path = mobj.group('path')
         video_id = mobj.group('id')
 
-        launch_url = scheme + host + path + '/mod/lti/launch.php?type=1&id=' + video_id
+        launch_url = scheme + host + path + '/mod/lti/launch.php?id=' + video_id
 
         # webpage = self._download_webpage(url, video_id)
         launch_webpage = self._download_webpage(launch_url, video_id, 'Downloading opencast lti launch webpage')
