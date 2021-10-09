@@ -182,12 +182,12 @@ class DownloadService:
         are not finished yet.
         @return: status of the downloaders
         """
-        fininshed_downlaoding = True
+        finished_downloading = True
         for thread in self.threads:
             if thread.is_alive():
-                fininshed_downlaoding = False
+                finished_downloading = False
                 break
-        return fininshed_downlaoding
+        return finished_downloading
 
     def _get_status_message(self) -> str:
         """
@@ -263,11 +263,11 @@ class DownloadService:
         return progressmessage
 
     @staticmethod
-    def calc_speed(start, now, bytes):
+    def calc_speed(start, now, byte_count):
         dif = now - start
-        if bytes <= 0 or dif < 0.001:  # One millisecond
+        if byte_count <= 0 or dif < 0.001:  # One millisecond
             return None
-        return float(bytes) / dif
+        return float(byte_count) / dif
 
     @staticmethod
     def format_speed(speed):

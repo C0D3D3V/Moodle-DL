@@ -340,11 +340,11 @@ class URLTarget(object):
 
         Args:
             add_token (bool, optional): Adds the ws-token to the url. Defaults to False.
-            delete_if_successful (bool, optional): Deletes the tmp file if download was successfull. Defaults to False.
+            delete_if_successful (bool, optional): Deletes the tmp file if download was successful. Defaults to False.
             use_cookies (bool, optional): Adds the cookies to the requests. Defaults to False.
 
         Returns:
-            bool: If it was successfull.
+            bool: If it was successful.
         """
 
         url_to_download = self.file.content_fileurl
@@ -756,7 +756,7 @@ class URLTarget(object):
                 if self.try_move_file():
                     return self.success
 
-            # if it is a Description we have to create a descripton file
+            # if it is a Description we have to create a description file
             # instead of downloading it
             if self.file.content_type == 'description':
                 self.create_description()
@@ -765,12 +765,12 @@ class URLTarget(object):
             add_token = True
             if self.file.module_modname.startswith('index_mod'):
                 add_token = True
-                self.try_download_link(add_token, True, False)
+                self.try_download_link(add_token, delete_if_successful=True, use_cookies=False)
                 return self.success
 
             if self.file.module_modname.startswith('cookie_mod'):
                 add_token = False
-                self.try_download_link(add_token, True, True)
+                self.try_download_link(add_token, delete_if_successful=True, use_cookies=True)
                 return self.success
 
             # if it is a URL we have to create a shortcut

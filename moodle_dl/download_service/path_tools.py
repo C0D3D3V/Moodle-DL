@@ -5,13 +5,13 @@ from youtube_dl.utils import sanitize_filename
 
 
 class PathTools:
-    """A set of methodes to create correct paths."""
+    """A set of methods to create correct paths."""
 
     restricted_filenames = False
 
     @staticmethod
     def to_valid_name(name: str) -> str:
-        """Filtering invalide characters in filenames and paths.
+        """Filtering invalid characters in filenames and paths.
 
         Args:
             name (str): The string that will go through the filtering
@@ -30,6 +30,7 @@ class PathTools:
         name = name.replace('\n', ' ')
         name = name.replace('\r', ' ')
         name = name.replace('\t', ' ')
+        name = name.replace('\xad', '')
         while '  ' in name:
             name = name.replace('  ', ' ')
         name = sanitize_filename(name, PathTools.restricted_filenames)

@@ -82,16 +82,16 @@ class ResultsHandler:
             if module_modname in ['moodecvideo', 'page']:
                 module_modname = 'index_mod-' + module_modname
 
-            if module_modname in ['kalvidres', 'helixmedia']:
-                module_modname = 'cookie_mod-' + module_modname
-                files += self._handle_cookie_mod(section_name, module_name, module_modname, module_id, module_url)
-
             if module_description is not None:
                 files += self._handle_description(
                     section_name, module_name, module_modname, module_id, module_description
                 )
 
-            if module_modname.startswith(('resource', 'folder', 'url', 'index_mod')):
+            if module_modname in ['kalvidres', 'helixmedia', 'lti']:
+                module_modname = 'cookie_mod-' + module_modname
+                files += self._handle_cookie_mod(section_name, module_name, module_modname, module_id, module_url)
+
+            elif module_modname.startswith(('resource', 'folder', 'url', 'index_mod')):
                 files += self._handle_files(section_name, module_name, module_modname, module_id, module_contents)
 
             elif module_modname == 'assign':
@@ -115,6 +115,8 @@ class ResultsHandler:
                 forums_files = forums.get('files', [])
 
                 files += self._handle_files(section_name, module_name, module_modname, module_id, forums_files)
+            else:
+                logging.debug('Got unhandled module: name=%s mod=%s url=%s', module_name, module_modname, module_url)
 
         return files
 
@@ -259,6 +261,35 @@ class ResultsHandler:
             content_timemodified=0,
             module_modname=module_modname,
             content_type='cookie_mod',
+            content_isexternalfile=True,
+            hash=None,
+        )
+
+        files.append(new_file)
+        return files
+
+    def _handle_opencast_lti_mod(
+        self, section_name: str, module_name: str, module_modname: str, module_id: str, module_url: str
+    ) -> [File]:
+        """
+        Creates a list of files out of a LTI module
+        @param module_url: The url to the LTI module.
+        @params: All necessary parameters to create a file.
+        @return: A list of files that were created out of the module.
+        """
+        files = []
+
+        new_file = File(
+            module_id=module_id,
+            section_name=section_name,
+            module_name=module_name,
+            content_filepath='/',
+            content_filename=module_name,
+            content_fileurl=module_url,
+            content_filesize=0,
+            content_timemodified=0,
+            module_modname=module_modname + '_opencast',
+            content_type='lti_mod',
             content_isexternalfile=True,
             hash=None,
         )
