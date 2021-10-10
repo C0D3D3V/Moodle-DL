@@ -3,6 +3,7 @@ import os
 import platform
 import ssl
 import time
+import shlex
 import socket
 import shutil
 import urllib
@@ -10,6 +11,7 @@ import logging
 import posixpath
 import traceback
 import threading
+import subprocess
 import contextlib
 
 from pathlib import Path
@@ -432,7 +434,55 @@ class URLTarget(object):
             if len(found_names) > 0:
                 new_filename = unquote(found_names[0])
 
-        if isHTML and not self.is_blocked_for_youtube_dl(url_to_download):
+        external_file_downloaders = self.options.get('external_file_downloaders', {})
+        external_file_downloader = external_file_downloaders.get(url_parsed.netloc, "")
+        if isHTML and external_file_downloader != "":
+            # This link is to be downloaded from an external program.
+            cmd = external_file_downloader.replace('%U', url_to_download)
+            logging.debug(
+                'T%s - Run external downloader using the following command: %s',
+                self.thread_id,
+                cmd,
+            )
+
+            p = subprocess.Popen(
+                shlex.split(cmd),
+                cwd=str(self.destination),
+                stderr=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                universal_newlines=True,
+            )
+
+            for line in p.stdout:
+                # line = line.decode('utf-8', 'replace')
+                self.thread_report[self.thread_id]['external_dl'] = line.replace('\n', '').replace('\r', '')
+
+            _, stderr = p.communicate()
+            if p.returncode != 0:
+                logging.error('T%s - External Downloader Error: %s', self.thread_id, stderr.decode('utf-8', 'replace'))
+                if not delete_if_successful:
+                    # cleanup the url-link file
+                    try:
+                        os.remove(self.file.saved_to)
+                    except Exception as e:
+                        logging.warning(
+                            'T%s - Could not delete %s after external downloader failed. Error: %s',
+                            self.thread_id,
+                            self.file.saved_to,
+                            e,
+                        )
+                self.success = False
+                raise RuntimeError(
+                    'The external downloader could not download the URL.'
+                    + ' For details, see the error messages in the log file.'
+                )
+            else:
+                self.file.saved_to = str(Path(self.destination) / self.filename)
+                self.file.time_stamp = int(time.time())
+                self.success = True
+                return True
+
+        elif isHTML and not self.is_blocked_for_youtube_dl(url_to_download):
 
             filename_tmpl = self.filename + ' - %(title)s (%(id)s).%(ext)s'
             if self.file.content_type == 'description-url':
@@ -460,7 +510,6 @@ class URLTarget(object):
             add_additional_extractors(ydl)
 
             videopasswords = self.options.get('videopasswords', {})
-
             password_list = videopasswords.get(url_parsed.netloc, [])
             if not type(password_list) is list:
                 password_list = [password_list]
@@ -737,6 +786,7 @@ class URLTarget(object):
         self.thread_report[self.thread_id]['percentage'] = 0
         self.thread_report[self.thread_id]['extra_totalsize'] = None
         self.thread_report[self.thread_id]['current_url'] = self.file.content_fileurl
+        self.thread_report[self.thread_id]['external_dl'] = None
         self.youtube_dl_failed_with_error = False
 
         try:

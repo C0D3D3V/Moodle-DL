@@ -74,7 +74,14 @@ class DownloadService:
         self.report = {'success': [], 'failure': []}
         # thread_report is used to get live reports from the threads
         self.thread_report = [
-            {'total': 0, 'percentage': 0, 'old_extra_totalsize': None, 'extra_totalsize': None, 'current_url': ''}
+            {
+                'total': 0,
+                'percentage': 0,
+                'old_extra_totalsize': None,
+                'extra_totalsize': None,
+                'current_url': '',
+                'external_dl': None,
+            }
             for i in range(self.thread_count)
         ]
         # Collects the total size of the files that needs to be downloaded.
@@ -214,6 +221,9 @@ class DownloadService:
             # of the current file
             thread_percentage = self.thread_report[i]['percentage']
             thread_current_url = self.thread_report[i]['current_url']
+            if self.thread_report[i]['external_dl'] is not None:
+                thread_current_url = 'ExtDL: ' + self.thread_report[i]['external_dl']
+
             if not thread.is_alive():
                 thread_percentage = 100
                 thread_current_url = 'Finished!'

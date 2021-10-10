@@ -211,6 +211,11 @@ class ConfigHelper:
         except ValueError:
             options.update({'videopasswords': {}})
 
+        try:
+            options.update({'external_file_downloaders': self.get_property('external_file_downloaders')})
+        except ValueError:
+            options.update({'external_file_downloaders': {}})
+
         return options
 
     def get_restricted_filenames(self) -> {}:
