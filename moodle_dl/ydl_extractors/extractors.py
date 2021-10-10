@@ -5,6 +5,7 @@ from moodle_dl.ydl_extractors.opencast import OpencastIE, OpencastPlaylistIE
 from moodle_dl.ydl_extractors.helixmedia import Helixmedia
 from moodle_dl.ydl_extractors.owncloud import Owncloud
 from moodle_dl.ydl_extractors.opencast_lti import OpencastLTI
+from moodle_dl.ydl_extractors.googledrive import GoogleDriveIE
 
 
 def add_additional_extractors(ydl: YoutubeDL):
@@ -15,6 +16,7 @@ def add_additional_extractors(ydl: YoutubeDL):
         Helixmedia(ydl),
         Owncloud(ydl),
         OpencastLTI(ydl),
+        GoogleDriveIE(ydl),
     ]
 
     for extractor in additional_extractors:
