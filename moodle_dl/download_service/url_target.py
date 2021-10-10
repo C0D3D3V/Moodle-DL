@@ -440,26 +440,35 @@ class URLTarget(object):
             # This link is to be downloaded from an external program.
             cmd = external_file_downloader.replace('%U', url_to_download)
             logging.debug(
-                'T%s - Run external downloader using the following command: %s',
+                'T%s - Run external downloader using the following command: `%s`',
                 self.thread_id,
                 cmd,
             )
+            external_dl_failed_with_error = False
 
-            p = subprocess.Popen(
-                shlex.split(cmd),
-                cwd=str(self.destination),
-                stderr=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                universal_newlines=True,
-            )
+            try:
+                p = subprocess.Popen(
+                    shlex.split(cmd),
+                    cwd=str(self.destination),
+                    stderr=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    universal_newlines=True,
+                )
 
-            for line in p.stdout:
-                # line = line.decode('utf-8', 'replace')
-                self.thread_report[self.thread_id]['external_dl'] = line.replace('\n', '').replace('\r', '')
+                for line in p.stdout:
+                    # line = line.decode('utf-8', 'replace')
+                    self.thread_report[self.thread_id]['external_dl'] = line.replace('\n', '').replace('\r', '')
 
-            _, stderr = p.communicate()
-            if p.returncode != 0:
-                logging.error('T%s - External Downloader Error: %s', self.thread_id, stderr.decode('utf-8', 'replace'))
+                _, stderr = p.communicate()
+
+                if p.returncode != 0:
+                    external_dl_failed_with_error = True
+            except Exception as e:
+                stderr = str(e)
+                external_dl_failed_with_error = True
+
+            if external_dl_failed_with_error:
+                logging.error('T%s - External Downloader Error: %s', self.thread_id, stderr)
                 if not delete_if_successful:
                     # cleanup the url-link file
                     try:

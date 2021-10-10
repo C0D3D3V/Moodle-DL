@@ -1,4 +1,5 @@
 import re
+import sys
 import base64
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -71,7 +72,7 @@ def receive_token() -> str:
             + ' downloader once with administrator rights, so that it'
             + ' can wait on port 80 for the token.'
         )
-        exit(1)
+        sys.exit(1)
 
     extracted_token = None
 

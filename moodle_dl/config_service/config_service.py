@@ -1,3 +1,4 @@
+import sys
 import shutil
 
 from moodle_dl.utils import cutie
@@ -42,7 +43,7 @@ class ConfigService:
 
         except (RequestRejectedError, ValueError, RuntimeError, ConnectionError) as error:
             Log.error('Error while communicating with the Moodle System! (%s)' % (error))
-            exit(1)
+            sys.exit(1)
 
         self._select_courses_to_download(courses)
         self._set_options_of_courses(courses)

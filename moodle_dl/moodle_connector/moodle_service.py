@@ -1,3 +1,4 @@
+import sys
 import shutil
 import logging
 
@@ -117,7 +118,7 @@ class MoodleService:
                 Log.error(str(error))
 
         if automated is True and moodle_token is None:
-            exit(1)
+            sys.exit(1)
 
         # Saves the created token and the successful Moodle parameters.
         self.config_helper.set_property('token', moodle_token)
