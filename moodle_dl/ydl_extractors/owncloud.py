@@ -5,6 +5,7 @@ from youtube_dl.extractor.common import InfoExtractor
 from youtube_dl.compat import (
     compat_urllib_parse,
     compat_urllib_parse_urlparse,
+    compat_urllib_parse_unquote,
 )
 
 from youtube_dl.utils import (
@@ -16,6 +17,7 @@ from youtube_dl.utils import (
     HEADRequest,
     determine_ext,
     mimetype2ext,
+    encode_compat_str,
 )
 
 
@@ -84,15 +86,35 @@ class Owncloud(InfoExtractor):
     def urlhandle_detect_ext(self, url_handle):
         getheader = url_handle.headers.get
 
-        cd = getheader('Content-Disposition')
+        def encode_compat_str_or_none(x, encoding='iso-8859-1', errors='ignore'):
+            return encode_compat_str(x, encoding=encoding, errors=errors) if x else None
+
+        cd = encode_compat_str_or_none(getheader('Content-Disposition'))
         if cd:
-            m = re.match(r'attachment;.*filename="(?P<filename>[^"]+)"', cd)
+            m = re.match(
+                r'''(?xi)
+                attachment;\s*
+                (?:filename\s*=[^;]+?;\s*)?                    # possible initial filename=...;, ignored
+                filename(?P<x>\*)?\s*=\s*                      # filename/filename* =
+                    (?(x)(?P<charset>\S+?)'[\w-]*'|(?P<q>")?)  # if * then charset'...' else maybe "
+                    (?P<filename>(?(q)[^"]+(?=")|[^\s;]+))         # actual name of file
+                ''',
+                cd,
+            )
             if m:
-                e = determine_ext(m.group('filename'), default_ext=None)
+                m = m.groupdict()
+                filename = m.get('filename')
+                if m.get('x'):
+                    try:
+                        filename = compat_urllib_parse_unquote(filename, encoding=m.get('charset', 'utf-8'))
+                    except LookupError:  # unrecognised character set name
+                        pass
+                e = determine_ext(filename, default_ext=None)
                 if e:
                     return e
 
-        return mimetype2ext(getheader('Content-Type'))
+        ct = encode_compat_str_or_none(getheader('Content-Type'))
+        return mimetype2ext(ct)
 
     def _extend_to_download_url(self, url: str) -> str:
         """
