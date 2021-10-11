@@ -78,6 +78,9 @@ class File:
         # For Textlable
         self.text_content = None
 
+        # For Created HTML-Files like Quizzes
+        self.html_content = None
+
         # To manage the corresponding moved or changed files
         self.old_file = None
         self.new_file = None

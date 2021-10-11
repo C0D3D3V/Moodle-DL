@@ -720,6 +720,34 @@ class URLTarget(object):
 
             self.success = True
 
+    def create_html_file(self):
+        """
+        Creates a HTML file
+        """
+        logging.debug('T%s - Creating a html file', self.thread_id)
+        html_file = open(self.file.saved_to, 'w+', encoding='utf-8')
+        to_save = ""
+        if self.file.html_content is not None:
+            to_save = self.file.html_content
+
+            if to_save != '':
+                html_file.write(to_save)
+
+        html_file.close()
+
+        if to_save == '':
+            logging.debug('T%s - Remove target file because html file would be empty', self.thread_id)
+            os.remove(self.file.saved_to)
+
+            self.file.time_stamp = int(time.time())
+
+            self.success = True
+        else:
+            self.set_utime()
+            self.file.time_stamp = int(time.time())
+
+            self.success = True
+
     def try_move_file(self) -> bool:
         """
         It will try to move the old file to the new location.
@@ -819,6 +847,12 @@ class URLTarget(object):
             # instead of downloading it
             if self.file.content_type == 'description':
                 self.create_description()
+                return self.success
+
+            # if it is a HTML-File we have to create a HTML file
+            # instead of downloading it
+            if self.file.content_type == 'html':
+                self.create_html_file()
                 return self.success
 
             add_token = True

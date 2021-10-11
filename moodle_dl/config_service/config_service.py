@@ -52,6 +52,7 @@ class ConfigService:
         self._select_should_download_links_in_descriptions()
         self._select_should_download_databases()
         self._select_should_download_forums()
+        self._select_should_download_quizzes()
         self._select_should_download_linked_files()
         self._select_should_download_also_with_cookie()
 
@@ -303,6 +304,25 @@ class ConfigService:
         )
 
         self.config_helper.set_property('download_forums', download_forums)
+
+    def _select_should_download_quizzes(self):
+        """
+        Asks the user if quizzes should be downloaded
+        """
+        download_quizzes = self.config_helper.get_download_quizzes()
+
+        self.section_seperator()
+        Log.info(
+            'Quizzes are tests that a student must complete in a course and are graded on.'
+            + ' Only quizzes that are in progress or have been completed will be downloaded.'
+        )
+        print('')
+
+        download_quizzes = cutie.prompt_yes_or_no(
+            Log.special_str('Do you want to download quizzes of your courses?'), default_is_yes=download_quizzes
+        )
+
+        self.config_helper.set_property('download_quizzes', download_quizzes)
 
     def _select_should_download_descriptions(self):
         """

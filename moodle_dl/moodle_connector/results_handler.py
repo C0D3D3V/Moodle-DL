@@ -23,6 +23,7 @@ class ResultsHandler:
         self.course_assignments = {}
         self.course_databases = {}
         self.course_forums = {}
+        self.course_quizzes = {}
 
     def setVersion(self, version: int):
         self.version = version
@@ -115,6 +116,12 @@ class ResultsHandler:
                 forums_files = forums.get('files', [])
 
                 files += self._handle_files(section_name, module_name, module_modname, module_id, forums_files)
+            elif module_modname == 'quiz':
+                # find quizzes with same module_id
+                quizzes = self.course_quizzes.get(module_id, {})
+                quizzes_files = quizzes.get('files', [])
+
+                files += self._handle_files(section_name, module_name, module_modname, module_id, quizzes_files)
             else:
                 logging.debug('Got unhandled module: name=%s mod=%s url=%s', module_name, module_modname, module_url)
 
@@ -306,6 +313,9 @@ class ResultsHandler:
                 m.update(hashable_description.encode('utf-8'))
                 hash_description = m.hexdigest()
 
+            if content_type == 'html':
+                content_html = content.get('html', '')
+
             new_file = File(
                 module_id=module_id,
                 section_name=section_name,
@@ -326,6 +336,9 @@ class ResultsHandler:
                 files += self._find_all_urls_in_description(
                     section_name, module_name, module_modname, module_id, content_filepath, content_description
                 )
+
+            if content_type == 'html':
+                new_file.html_content = content_html
 
             files.append(new_file)
         return files
@@ -380,17 +393,19 @@ class ResultsHandler:
 
         return files
 
-    def set_fetch_addons(self, course_assignments: {}, course_databases: {}, course_forums: {}):
+    def set_fetch_addons(self, course_assignments: {}, course_databases: {}, course_forums: {}, course_quizzes: {}):
         """
         Sets the optional data that will be added to the result list
          during the process.
         @params course_assignments: The dictionary of assignments per course
         @params course_databases: The dictionary of databases per course
         @params course_forums: The dictionary of forums per course
+        @params course_quizzes: The dictionary of quizzes per course
         """
         self.course_assignments = course_assignments
         self.course_databases = course_databases
         self.course_forums = course_forums
+        self.course_quizzes = course_quizzes
 
     def fetch_files(self, course_id: str) -> [File]:
         """

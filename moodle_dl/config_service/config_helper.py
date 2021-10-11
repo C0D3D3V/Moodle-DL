@@ -88,6 +88,13 @@ class ConfigHelper:
         except ValueError:
             return False
 
+    def get_download_quizzes(self) -> bool:
+        # returns a stored boolean if quizzes should be downloaded
+        try:
+            return self.get_property('download_quizzes')
+        except ValueError:
+            return False
+
     def get_userid_and_version(self) -> (str, int):
         # returns the userid and a version
         try:
