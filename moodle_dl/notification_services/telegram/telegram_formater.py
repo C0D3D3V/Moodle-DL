@@ -60,9 +60,8 @@ def create_full_moodle_diff_messages(changed_courses: [Course]) -> [str]:
 
             if file.content_type == 'description':
                 try:
-                    description_file = open(file.saved_to, 'r')
-                    description_lines = description_file.readlines()
-                    description_file.close()
+                    with open(file.saved_to, 'r') as description_file:
+                        description_lines = description_file.read().splitlines()
                 except Exception:
                     description_lines = []
 

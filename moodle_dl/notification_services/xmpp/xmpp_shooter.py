@@ -17,18 +17,10 @@ class XmppShooter:
         self.to_jid = aioxmpp.JID.fromstr(recipient)
 
     def send(self, message):
-        loop = asyncio.get_event_loop()
-        try:
-            loop.run_until_complete(self.async_send_messages([message]))
-        finally:
-            loop.close()
+        asyncio.run(self.async_send_messages([message]))
 
     def send_messages(self, messages):
-        loop = asyncio.get_event_loop()
-        try:
-            loop.run_until_complete(self.async_send_messages(messages))
-        finally:
-            loop.close()
+        asyncio.run(self.async_send_messages(messages))
 
     async def async_send_messages(self, messages):
         client = aioxmpp.Client(
