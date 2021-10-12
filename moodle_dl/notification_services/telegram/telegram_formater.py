@@ -58,15 +58,20 @@ def create_full_moodle_diff_messages(changed_courses: [Course]) -> [str]:
 
             one_msg_content = append_with_limit(new_line, one_msg_content, result_list)
 
-            if file.text_content:
-                h2t_handler = html2text.HTML2Text()
-                markdown_text = h2t_handler.handle(file.text_content).strip()
-                if markdown_text != '':
-                    one_msg_content = append_with_limit('```\r\n', one_msg_content, result_list)
-                    for new_line in markdown_text.splitlines():
+            if file.content_type == 'description':
+                try:
+                    description_file = open(file.saved_to, 'r')
+                    description_lines = description_file.readlines()
+                    description_file.close()
+                except Exception:
+                    description_lines = []
+
+                if len(description_lines) > 0:
+                    one_msg_content = append_with_limit('\r\n==>\r\n', one_msg_content, result_list)
+                    for new_line in description_lines:
                         new_line = new_line + '\r\n'
                         one_msg_content = append_with_limit(new_line, one_msg_content, result_list)
-                    one_msg_content = append_with_limit('```\r\n', one_msg_content, result_list)
+                    one_msg_content = append_with_limit('<==\r\n', one_msg_content, result_list)
 
     result_list.append(one_msg_content)
     return result_list
