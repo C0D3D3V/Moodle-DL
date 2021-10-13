@@ -44,23 +44,23 @@ def create_full_moodle_diff_messages(changed_courses: [Course]) -> [str]:
         one_msg_content = append_with_limit(new_line, one_msg_content, result_list)
 
         for file in course.files:
+            saved_to_path = file.saved_to
+            if file.new_file is not None:
+                saved_to_path = file.new_file.saved_to
             if file.modified:
-                new_line = '\r\n🔄 Modified:\r\n ' + file.saved_to
+                new_line = '\r\n🔄 Modified:\r\n ' + saved_to_path
             elif file.moved:
-                if file.new_file is not None:
-                    new_line = '\r\n🔀 Moved:\r\n ' + file.new_file.saved_to
-                else:
-                    new_line = '\r\n🔀 Moved:\r\n ' + file.saved_to
+                new_line = '\r\n🔀 Moved:\r\n ' + saved_to_path
             elif file.deleted:
-                new_line = '\r\n❌ Deleted:\r\n ' + file.saved_to
+                new_line = '\r\n❌ Deleted:\r\n ' + saved_to_path
             else:
-                new_line = '\r\n✅ Added:\r\n ' + file.saved_to
+                new_line = '\r\n✅ Added:\r\n ' + saved_to_path
 
             one_msg_content = append_with_limit(new_line, one_msg_content, result_list)
 
             if file.content_type == 'description':
                 try:
-                    with open(file.saved_to, 'r') as description_file:
+                    with open(saved_to_path, 'r') as description_file:
                         description_lines = description_file.read().splitlines()
                 except Exception:
                     description_lines = []

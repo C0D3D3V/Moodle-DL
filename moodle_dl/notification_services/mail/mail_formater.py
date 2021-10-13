@@ -268,21 +268,20 @@ def create_full_moodle_diff_mail(changed_courses: [Course]) -> (str, {str: str})
     for course in changed_courses:
         inner_content = ''
         for file in course.files:
-
+            saved_to_path = file.saved_to
+            if file.new_file is not None:
+                saved_to_path = file.new_file.saved_to
             if file.modified:
-                inner_content += moodle_modified_box.substitute(file_name=file.saved_to)
+                inner_content += moodle_modified_box.substitute(file_name=saved_to_path)
             elif file.moved:
                 if file.new_file is not None:
-                    inner_content += moodle_moved_box.substitute(
-                        file_name=(file.saved_to + ' ==> ' + file.new_file.saved_to)
-                    )
+                    inner_content += moodle_moved_box.substitute(file_name=(file.saved_to + ' ==> ' + saved_to_path))
                 else:
-                    inner_content += moodle_moved_box.substitute(file_name=file.saved_to)
-
+                    inner_content += moodle_moved_box.substitute(file_name=saved_to_path)
             elif file.deleted:
-                inner_content += moodle_deleted_box.substitute(file_name=file.saved_to)
+                inner_content += moodle_deleted_box.substitute(file_name=saved_to_path)
             else:
-                inner_content += moodle_added_box.substitute(file_name=file.saved_to)
+                inner_content += moodle_added_box.substitute(file_name=saved_to_path)
 
         full_content += moodle_main_box.substitute(content=inner_content, course_name=course.fullname)
 
