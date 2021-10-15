@@ -106,6 +106,7 @@ def select(
     caption_prefix: str = '',
     selected_index: int = 0,
     confirm_on_select: bool = True,
+    reserved_lines: int = 3,
 ) -> int:
     """Select an option from a list.
     Args:
@@ -116,18 +117,52 @@ def select(
         caption_prefix (str, optional): Prefix for captions ().
         selected_index (int, optional): The index to be selected at first.
         confirm_on_select (bool, optional): Select keys also confirm.
+        reserved_lines (int, optional): How many lines of the terminal are
+            reserved and should not be used.
     Returns:
         int: The index that has been selected.
     """
-
-    print('\n' * (len(options) - 1))
     if caption_indices is None:
         caption_indices = []
-    while True:
-        print(f'\033[{len(options) + 1}A')
-        console_columns = shutil.get_terminal_size().columns - 5
 
-        for i, option in enumerate(options):
+    max_index = len(options)
+    max_lines = len(options) + 1  # Last line is for empty line
+
+    # Lines that were output in the previous interation
+    lines_printed = 0
+    # By how many entries is the list shifted
+    shift = 0
+
+    while True:
+        print(f'\033[{lines_printed}A')
+
+        console_lines = shutil.get_terminal_size().lines
+        # Extra empty line for correct terminal behavior
+        view_hight = max(0, min(console_lines - reserved_lines, max_lines))
+        # View consists of
+        # (top-indicator)
+        # entries
+        # (bottom-indicator)
+        # empty line
+
+        #  Darstellbaren Einträge =  view_hight - top-indicator
+        if shift > (max_lines - 1) - (view_hight - 2):
+            shift = (max_lines - 1) - (view_hight - 2)
+
+        # Darstellbaren Einträge normal =  view_hight - top-indicator - bottom-indicator - empty line
+        data_bottom = shift + (view_hight - 3)
+        if shift == 0:
+            # we do not need to print "x more lines above...", so we have one more entry line
+            data_bottom += 1
+        else:
+            print(f'\033[K{shift} more lines above...')
+
+        if data_bottom + 1 >= len(options):
+            data_bottom = len(options)
+
+        for i in range(shift, data_bottom):
+            option = options[i]
+            console_columns = shutil.get_terminal_size().columns - 5
             printable_option = option.expandtabs().replace('\n', ' ').replace('\r', ' ')
             if len(printable_option) > console_columns:
                 printable_option = printable_option[: (console_columns - 2)] + '..'
@@ -139,6 +174,11 @@ def select(
             elif i in caption_indices:
                 print('\033[K{}{}'.format(caption_prefix, printable_option))
 
+        if data_bottom != len(options):
+            print(f'{len(options) - data_bottom} more lines below...\033[K')
+
+        lines_printed = max(3, view_hight)
+
         keypress = readchar.readkey()
         if keypress in DefaultKeys.up:
             new_index = selected_index
@@ -146,13 +186,20 @@ def select(
                 new_index -= 1
                 if new_index not in caption_indices:
                     selected_index = new_index
+                    if selected_index < shift:
+                        if shift == 2:
+                            shift = 0
+                        else:
+                            shift = selected_index
                     break
         elif keypress in DefaultKeys.down:
             new_index = selected_index
-            while new_index < len(options) - 1:
+            while new_index < max_index - 1:
                 new_index += 1
                 if new_index not in caption_indices:
                     selected_index = new_index
+                    if selected_index >= data_bottom and data_bottom != max_index:
+                        shift = selected_index - (view_hight - 4)
                     break
         elif keypress in DefaultKeys.confirm or confirm_on_select and keypress in DefaultKeys.select:
             break
@@ -176,6 +223,7 @@ def select_multiple(
     hide_confirm: bool = False,
     deselected_confirm_label: str = '\033[1m(( confirm ))\033[0m',
     selected_confirm_label: str = '\033[1;32m{{ confirm }}\033[0m',
+    reserved_lines: int = 3,
 ) -> List[int]:
     """Select multiple options from a list.
     Args:
@@ -204,19 +252,53 @@ def select_multiple(
             if not selected ((( confirm ))).
         selected_confirm_label (str, optional): The confirm label
             if selected ({{ confirm }}).
+        reserved_lines (int, optional): How many lines of the terminal are
+            reserved and should not be used.
     Returns:
         List[int]: The indices that have been selected
     """
-    print('\n' * (len(options) - 1))
     if caption_indices is None:
         caption_indices = []
     if ticked_indices is None:
         ticked_indices = []
     max_index = len(options) - (1 if hide_confirm else 0)
+    max_lines = len(options) + 2  # Last two line are for confirm / error / bottom-indicator + empty line
     error_message = ''
+
+    # Lines that were output in the previous interation
+    lines_printed = 0
+    # By how many entries is the list shifted
+    shift = 0
+
     while True:
-        print(f'\033[{len(options) + 2}A')
-        for i, option in enumerate(options):
+        print(f'\033[{lines_printed}A')
+
+        console_lines = shutil.get_terminal_size().lines
+        # Extra empty line for correct terminal behavior
+        view_hight = max(0, min(console_lines - reserved_lines, max_lines))
+        # View consists of
+        # (top-indicator)
+        # entries
+        # (bottom-indicator / error / confirm)
+        # empty line
+
+        #  Darstellbaren Einträge =  view_hight - bottom-indicator/confirm/error - top-indicator
+        if shift > (max_lines - 1) - (view_hight - 2):
+            shift = (max_lines - 1) - (view_hight - 2)
+
+        # Darstellbaren Einträge normal =  view_hight - top-indicator - bottom-indicator/confirm/error - empty line
+        data_bottom = shift + (view_hight - 3)
+        if shift == 0:
+            # we do not need to print "x more lines above...", so we have one more entry line
+            data_bottom += 1
+        else:
+            print(f'\033[K{shift} more lines above...')
+
+        if data_bottom > len(options):
+            data_bottom = len(options)
+
+        for i in range(shift, data_bottom):
+            option = options[i]
             console_columns = shutil.get_terminal_size().columns - 5
             printable_option = option.expandtabs().replace('\n', ' ').replace('\r', ' ')
             if len(printable_option) > console_columns:
@@ -236,13 +318,21 @@ def select_multiple(
                 else:
                     prefix = deselected_unticked_prefix
             print('\033[K{}{}'.format(prefix, printable_option))
-        if hide_confirm:
-            print(f'{error_message}\033[K')
-        else:
-            if cursor_index == max_index:
-                print(f'{selected_confirm_label} {error_message}\033[K')
+
+        if data_bottom == len(options):
+            # we do not need to print "x more lines below...", instead we print the confirm label or an error
+            if hide_confirm:
+                print(f'{error_message}\033[K')
             else:
-                print(f'{deselected_confirm_label} {error_message}\033[K')
+                if cursor_index == max_index:
+                    print(f'{selected_confirm_label} {error_message}\033[K')
+                else:
+                    print(f'{deselected_confirm_label} {error_message}\033[K')
+        else:
+            print(f'{len(options) - data_bottom} more lines below... {error_message}\033[K')
+
+        lines_printed = max(3, view_hight)
+
         error_message = ''
         keypress = readchar.readkey()
         if keypress in DefaultKeys.up:
@@ -251,6 +341,11 @@ def select_multiple(
                 new_index -= 1
                 if new_index not in caption_indices:
                     cursor_index = new_index
+                    if cursor_index < shift:
+                        if shift == 2:
+                            shift = 0
+                        else:
+                            shift = cursor_index
                     break
         elif keypress in DefaultKeys.down:
             new_index = cursor_index
@@ -258,6 +353,8 @@ def select_multiple(
                 new_index += 1
                 if new_index not in caption_indices:
                     cursor_index = new_index
+                    if cursor_index >= data_bottom and data_bottom != len(options):
+                        shift = cursor_index - (view_hight - 4)
                     break
         elif keypress in DefaultKeys.select:
             if cursor_index in ticked_indices:
@@ -276,7 +373,7 @@ def select_multiple(
             else:
                 break
         elif keypress in DefaultKeys.select_all:
-            for i in range(0, max_index+1):
+            for i in range(0, len(options)):
                 if i not in ticked_indices:
                     ticked_indices.append(i)
         elif keypress in DefaultKeys.interrupt:
