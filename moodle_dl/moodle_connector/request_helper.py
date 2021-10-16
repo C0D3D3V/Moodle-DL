@@ -49,7 +49,7 @@ class RequestHelper:
 
         if log_responses_to is not None:
             self.log_responses = True
-            with open(self.log_responses_to, 'w') as response_log_file:
+            with open(self.log_responses_to, 'w', encoding='utf-8') as response_log_file:
                 response_log_file.write('JSON Log:\n\n')
 
         logging.getLogger("requests").setLevel(logging.WARNING)
@@ -139,7 +139,7 @@ class RequestHelper:
 
         json_result = self._initial_parse(response)
         if self.log_responses and function not in ['tool_mobile_get_autologin_key']:
-            with open(self.log_responses_to, 'a') as response_log_file:
+            with open(self.log_responses_to, 'a', encoding='utf-8') as response_log_file:
                 response_log_file.write('URL: {}\n'.format(response.url))
                 response_log_file.write('Function: {}\n\n'.format(function))
                 response_log_file.write('Data: {}\n\n'.format(data))

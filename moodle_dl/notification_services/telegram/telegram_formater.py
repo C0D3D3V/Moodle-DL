@@ -62,7 +62,7 @@ class TelegramFormater:
 
                 if file.content_type == 'description':
                     try:
-                        with open(saved_to_path, 'r') as description_file:
+                        with open(saved_to_path, 'r', encoding='utf-8') as description_file:
                             description_lines = description_file.read().splitlines()
                     except Exception:
                         description_lines = []
