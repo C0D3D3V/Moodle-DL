@@ -37,31 +37,26 @@ class ConsoleService(NotificationService):
             print(COLOR_SEQ % BLUE + course.fullname + RESET_SEQ)
 
             for file in course.files:
+                saved_to_path = file.saved_to
+                if file.new_file is not None:
+                    saved_to_path = file.new_file.saved_to
                 if file.modified:
-                    print(COLOR_SEQ % YELLOW + '≠\t' + file.saved_to + RESET_SEQ)
-
+                    print(COLOR_SEQ % YELLOW + '≠\t' + saved_to_path + RESET_SEQ)
                 elif file.moved:
                     if file.new_file is not None:
                         print(
                             COLOR_SEQ % CYAN
                             + '<->\t'
-                            + (
-                                file.saved_to
-                                + RESET_SEQ
-                                + COLOR_SEQ % GREEN
-                                + ' ==> '
-                                + file.new_file.saved_to
-                                + RESET_SEQ
-                            )
+                            + (file.saved_to + RESET_SEQ + COLOR_SEQ % GREEN + ' ==> ' + saved_to_path + RESET_SEQ)
                         )
                     else:
-                        print(COLOR_SEQ % CYAN + '<->\t' + file.saved_to + RESET_SEQ)
+                        print(COLOR_SEQ % CYAN + '<->\t' + saved_to_path + RESET_SEQ)
 
                 elif file.deleted:
-                    print(COLOR_SEQ % MAGENTA + '-\t' + file.saved_to + RESET_SEQ)
+                    print(COLOR_SEQ % MAGENTA + '-\t' + saved_to_path + RESET_SEQ)
 
                 else:
-                    print(COLOR_SEQ % GREEN + '+\t' + file.saved_to + RESET_SEQ)
+                    print(COLOR_SEQ % GREEN + '+\t' + saved_to_path + RESET_SEQ)
             print('\n')
 
     def notify_about_error(self, error_description: str):
