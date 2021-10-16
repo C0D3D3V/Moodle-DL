@@ -1,3 +1,5 @@
+import os
+import certifi
 import asyncio
 
 import aioxmpp
@@ -10,11 +12,22 @@ class XmppShooter:
     and then log out.
     """
 
+    @staticmethod
+    def my_ssl_factory():
+        ctx = aioxmpp.security_layer.default_ssl_context()
+        ctx.load_verify_locations(certifi.where())
+        return ctx
+
     def __init__(self, jid, password, recipient):
         self.g_jid = aioxmpp.JID.fromstr(jid)
-        self.g_security_layer = aioxmpp.make_security_layer(password)
+        self.g_security_layer = aioxmpp.make_security_layer(password)._replace(
+            ssl_context_factory=self.my_ssl_factory,
+        )
 
         self.to_jid = aioxmpp.JID.fromstr(recipient)
+
+        if os.name == 'nt':
+            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
     def send(self, message):
         asyncio.run(self.async_send_messages([message]))
