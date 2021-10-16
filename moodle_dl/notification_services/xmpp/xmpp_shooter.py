@@ -1,6 +1,6 @@
 import os
-import certifi
 import asyncio
+import certifi
 
 import aioxmpp
 
