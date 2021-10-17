@@ -25,6 +25,7 @@ class ResultsHandler:
         self.course_forums = {}
         self.course_quizzes = {}
         self.course_lessons = {}
+        self.course_workshops = {}
 
     def setVersion(self, version: int):
         self.version = version
@@ -118,17 +119,23 @@ class ResultsHandler:
 
                 files += self._handle_files(section_name, module_name, module_modname, module_id, forum_files)
             elif module_modname == 'quiz':
-                # find quizzes with same module_id
+                # find quizze with same module_id
                 quizze = self.course_quizzes.get(module_id, {})
                 quizze_files = quizze.get('files', [])
 
                 files += self._handle_files(section_name, module_name, module_modname, module_id, quizze_files)
             elif module_modname == 'lesson':
-                # find lessons with same module_id
+                # find lesson with same module_id
                 lesson = self.course_lessons.get(module_id, {})
                 lesson_files = lesson.get('files', [])
 
                 files += self._handle_files(section_name, module_name, module_modname, module_id, lesson_files)
+            elif module_modname == 'workshop':
+                # find workshop with same module_id
+                workshop = self.course_workshops.get(module_id, {})
+                workshop_files = workshop.get('files', [])
+
+                files += self._handle_files(section_name, module_name, module_modname, module_id, workshop_files)
             else:
                 logging.debug('Got unhandled module: name=%s mod=%s url=%s', module_name, module_modname, module_url)
 
@@ -401,7 +408,13 @@ class ResultsHandler:
         return files
 
     def set_fetch_addons(
-        self, course_assignments: {}, course_databases: {}, course_forums: {}, course_quizzes: {}, course_lessons: {}
+        self,
+        course_assignments: {},
+        course_databases: {},
+        course_forums: {},
+        course_quizzes: {},
+        course_lessons: {},
+        course_workshops: {},
     ):
         """
         Sets the optional data that will be added to the result list
@@ -411,12 +424,14 @@ class ResultsHandler:
         @params course_forums: The dictionary of forums per course
         @params course_quizzes: The dictionary of quizzes per course
         @params course_lessons: The dictionary of lessons per course
+        @params course_workshops: The dictionary of lessons per course
         """
         self.course_assignments = course_assignments
         self.course_databases = course_databases
         self.course_forums = course_forums
         self.course_quizzes = course_quizzes
         self.course_lessons = course_lessons
+        self.course_workshops = course_workshops
 
     def fetch_files(self, course_id: str) -> [File]:
         """

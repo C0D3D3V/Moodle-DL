@@ -54,6 +54,7 @@ class ConfigService:
         self._select_should_download_forums()
         self._select_should_download_quizzes()
         self._select_should_download_lessons()
+        self._select_should_download_workshops()
         self._select_should_download_linked_files()
         self._select_should_download_also_with_cookie()
 
@@ -345,6 +346,25 @@ class ConfigService:
         )
 
         self.config_helper.set_property('download_lessons', download_lessons)
+
+    def _select_should_download_workshops(self):
+        """
+        Asks the user if workshops should be downloaded
+        """
+        download_workshops = self.config_helper.get_download_workshops()
+
+        self.section_seperator()
+        Log.info(
+            'Workshops function according to the peer review process.'
+            + ' Students can make submissions and have to assess submissions of other students. '
+        )
+        print('')
+
+        download_workshops = cutie.prompt_yes_or_no(
+            Log.special_str('Do you want to download workshops of your courses?'), default_is_yes=download_workshops
+        )
+
+        self.config_helper.set_property('download_workshops', download_workshops)
 
     def _select_should_download_descriptions(self):
         """

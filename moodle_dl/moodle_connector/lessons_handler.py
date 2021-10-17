@@ -94,7 +94,7 @@ class LessonsHandler:
                  indexed by courses, then lessons
         """
         # do this only if version is greater then 3.3
-        # because mod_quiz_get_user_attempts will fail
+        # because mod_lesson_get_user_attempt will fail
         if self.version < 2017051500:
             return lessons
 
@@ -122,7 +122,10 @@ class LessonsHandler:
                     end='',
                 )
 
-                attempt_result = self.request_helper.post_REST('mod_lesson_get_user_attempt', data)
+                try:
+                    attempt_result = self.request_helper.post_REST('mod_lesson_get_user_attempt', data)
+                except RequestRejectedError:
+                    continue
 
                 lesson_files = self._get_files_of_attempt(attempt_result, lesson.get('name', ''))
                 lesson['files'] += lesson_files
