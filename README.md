@@ -41,7 +41,7 @@ If you run the program on **Windows**, please use [Powershell or CMD](https://ww
       - select the courses that will be downloaded.
       - rename each course individually.
       - decide if subfolders should be created inside a course folder.
-      - set whether submissions (files uploaded to assignments by yourself or a teacher), descriptions, links inside descriptions, databases and forum discussions should be downloaded.
+      - set whether submissions (files uploaded to assignments by yourself or a teacher), descriptions, links inside descriptions, databases, quizzes and forum discussions should be downloaded.
       - set if external linked files should be downloaded (files like youtube videos).
       - set if files on moodle that require a cookie should be downloaded.
       - to add extra courses to your download list which you can see but you are not enrolled in, check out [this wiki entry](https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Download-public-courses).

@@ -1,9 +1,13 @@
+import sys
 import shutil
 import logging
 
 from pathlib import Path
 from getpass import getpass
 from urllib.parse import urlparse
+from distutils.version import StrictVersion
+
+from youtube_dl.utils import determine_ext
 
 from moodle_dl.utils import cutie
 from moodle_dl.utils.logger import Log
@@ -15,6 +19,8 @@ from moodle_dl.moodle_connector import sso_token_receiver
 from moodle_dl.moodle_connector.cookie_handler import CookieHandler
 from moodle_dl.moodle_connector.results_handler import ResultsHandler
 from moodle_dl.moodle_connector.forums_handler import ForumsHandler
+from moodle_dl.moodle_connector.quizzes_handler import QuizzesHandler
+from moodle_dl.moodle_connector.lessons_handler import LessonsHandler
 from moodle_dl.moodle_connector.databases_handler import DatabasesHandler
 from moodle_dl.moodle_connector.assignments_handler import AssignmentsHandler
 from moodle_dl.moodle_connector.first_contact_handler import FirstContactHandler
@@ -63,7 +69,16 @@ class MoodleService:
             if not use_stored_url:
                 moodle_url = input('URL of Moodle:   ')
 
-                if not moodle_url.startswith('https://'):
+                use_http = False
+                if moodle_url.startswith('http://'):
+                    Log.error(
+                        'Warning: You have entered an insecure URL! Are you sure that the Moodle is'
+                        + ' not accessible via `https://`? All your data will be transferred'
+                        + ' insecurely! If your Moodle is accessible via `https://`, then run'
+                        + ' the process again using `https://` to protect your data.'
+                    )
+                    use_http = True
+                elif not moodle_url.startswith('https://'):
                     Log.error('The url of your moodle must start with `https://`')
                     continue
 
@@ -74,6 +89,7 @@ class MoodleService:
             else:
                 moodle_domain = self.config_helper.get_moodle_domain()
                 moodle_path = self.config_helper.get_moodle_path()
+                use_http = self.config_helper.get_use_http()
 
             if username is not None:
                 moodle_username = username
@@ -88,7 +104,12 @@ class MoodleService:
 
             try:
                 moodle_token, moodle_privatetoken = login_helper.obtain_login_token(
-                    moodle_username, moodle_password, moodle_domain, moodle_path, self.skip_cert_verify
+                    moodle_username,
+                    moodle_password,
+                    moodle_domain,
+                    moodle_path,
+                    self.skip_cert_verify,
+                    use_http,
                 )
 
             except RequestRejectedError as error:
@@ -99,7 +120,7 @@ class MoodleService:
                 Log.error(str(error))
 
         if automated is True and moodle_token is None:
-            exit(1)
+            sys.exit(1)
 
         # Saves the created token and the successful Moodle parameters.
         self.config_helper.set_property('token', moodle_token)
@@ -107,6 +128,8 @@ class MoodleService:
             self.config_helper.set_property('privatetoken', moodle_privatetoken)
         self.config_helper.set_property('moodle_domain', moodle_domain)
         self.config_helper.set_property('moodle_path', moodle_path)
+        if use_http is True:
+            self.config_helper.set_property('use_http', use_http)
 
         return moodle_token
 
@@ -128,10 +151,20 @@ class MoodleService:
             moodle_domain = self.config_helper.get_moodle_domain()
             moodle_path = self.config_helper.get_moodle_path()
 
-        version = RequestHelper(moodle_domain, moodle_path, '', self.skip_cert_verify).get_simple_moodle_version()
+        use_http = self.config_helper.get_use_http()
+        scheme = 'https://'
+        if use_http:
+            scheme = 'http://'
 
-        if version > 3.8:
-            print(
+        version = RequestHelper(
+            moodle_domain,
+            moodle_path,
+            skip_cert_verify=self.skip_cert_verify,
+            use_http=use_http,
+        ).get_simple_moodle_version()
+
+        if StrictVersion(version) > StrictVersion("3.8.1"):
+            Log.warning(
                 'Between version 3.81 and 3.82 a change was added to'
                 + ' Moodle so that automatic copying of the SSO token'
                 + ' might not work.'
@@ -146,7 +179,7 @@ class MoodleService:
 
         if do_automatic:
             print(
-                'https://'
+                scheme
                 + moodle_domain
                 + moodle_path
                 + 'admin/tool/mobile/launch.php?service='
@@ -156,7 +189,7 @@ class MoodleService:
             moodle_token = sso_token_receiver.receive_token()
         else:
             print(
-                'https://'
+                scheme
                 + moodle_domain
                 + moodle_path
                 + 'admin/tool/mobile/launch.php?service='
@@ -211,8 +244,16 @@ class MoodleService:
         privatetoken = self.config_helper.get_privatetoken()
         moodle_domain = self.config_helper.get_moodle_domain()
         moodle_path = self.config_helper.get_moodle_path()
+        use_http = self.config_helper.get_use_http()
 
-        request_helper = RequestHelper(moodle_domain, moodle_path, token, self.skip_cert_verify, self.log_responses_to)
+        request_helper = RequestHelper(
+            moodle_domain,
+            moodle_path,
+            token,
+            self.skip_cert_verify,
+            self.log_responses_to,
+            use_http,
+        )
         first_contact_handler = FirstContactHandler(request_helper)
         results_handler = ResultsHandler(request_helper, moodle_domain, moodle_path)
 
@@ -222,6 +263,8 @@ class MoodleService:
         download_submissions = self.config_helper.get_download_submissions()
         download_databases = self.config_helper.get_download_databases()
         download_forums = self.config_helper.get_download_forums()
+        download_quizzes = self.config_helper.get_download_quizzes()
+        download_lessons = self.config_helper.get_download_lessons()
         download_also_with_cookie = self.config_helper.get_download_also_with_cookie()
 
         courses = []
@@ -238,6 +281,8 @@ class MoodleService:
         assignments_handler = AssignmentsHandler(request_helper, version)
         databases_handler = DatabasesHandler(request_helper, version)
         forums_handler = ForumsHandler(request_helper, version)
+        quizzes_handler = QuizzesHandler(request_helper, version)
+        lessons_handler = LessonsHandler(request_helper, version)
         results_handler.setVersion(version)
 
         if download_also_with_cookie:
@@ -269,6 +314,14 @@ class MoodleService:
             last_timestamps_per_forum = self.recorder.get_last_timestamps_per_forum()
             forums = forums_handler.fetch_forums_posts(forums, last_timestamps_per_forum)
 
+        quizzes = quizzes_handler.fetch_quizzes(courses)
+        if download_quizzes:
+            quizzes = quizzes_handler.fetch_quizzes_files(userid, quizzes)
+
+        lessons = lessons_handler.fetch_lessons(courses)
+        if download_lessons:
+            lessons = lessons_handler.fetch_lessons_files(userid, lessons)
+
         courses = self.add_options_to_courses(courses)
         index = 0
         for course in courses:
@@ -293,7 +346,11 @@ class MoodleService:
             course_assignments = assignments.get(course.id, {})
             course_databases = databases.get(course.id, {})
             course_forums = forums.get(course.id, {})
-            results_handler.set_fetch_addons(course_assignments, course_databases, course_forums)
+            course_quizzes = quizzes.get(course.id, {})
+            course_lessons = lessons.get(course.id, {})
+            results_handler.set_fetch_addons(
+                course_assignments, course_databases, course_forums, course_quizzes, course_lessons
+            )
             course.files = results_handler.fetch_files(course)
 
             filtered_courses.append(course)
@@ -345,6 +402,9 @@ class MoodleService:
         download_descriptions = config_helper.get_download_descriptions()
         download_links_in_descriptions = config_helper.get_download_links_in_descriptions()
         download_databases = config_helper.get_download_databases()
+        download_quizzes = config_helper.get_download_quizzes()
+        download_lessons = config_helper.get_download_lessons()
+        exclude_file_extensions = config_helper.get_exclude_file_extensions()
         download_also_with_cookie = config_helper.get_download_also_with_cookie()
         if cookie_handler is not None:
             download_also_with_cookie = cookie_handler.test_cookies()
@@ -415,10 +475,34 @@ class MoodleService:
                         course_files.append(file)
                 course.files = course_files
 
+            if not download_quizzes:
+                # Filter Quiz Files
+                course_files = []
+                for file in course.files:
+                    if not (file.module_modname.endswith('quiz') and file.deleted):
+                        course_files.append(file)
+                course.files = course_files
+
+            if not download_lessons:
+                # Filter Lesson Files
+                course_files = []
+                for file in course.files:
+                    if not (file.module_modname.endswith('lesson') and file.deleted):
+                        course_files.append(file)
+                course.files = course_files
+
             if not download_also_with_cookie:
                 course_files = []
                 for file in course.files:
                     if not file.module_modname.startswith('cookie_mod-'):
+                        course_files.append(file)
+                course.files = course_files
+
+            if len(exclude_file_extensions) > 0:
+                # Exclude files whose file extension is blacklisted.
+                course_files = []
+                for file in course.files:
+                    if not (determine_ext(file.content_filename) in exclude_file_extensions):
                         course_files.append(file)
                 course.files = course_files
 

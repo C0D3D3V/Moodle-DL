@@ -31,20 +31,25 @@ class RequestHelper:
         token: str = '',
         skip_cert_verify: bool = False,
         log_responses_to: str = None,
+        use_http: bool = False,
     ):
         self.token = token
         self.moodle_domain = moodle_domain
         self.moodle_path = moodle_path
 
         self.verify = not skip_cert_verify
-        self.url_base = 'https://' + moodle_domain + moodle_path
+
+        scheme = 'https://'
+        if use_http:
+            scheme = 'http://'
+        self.url_base = scheme + moodle_domain + moodle_path
 
         self.log_responses_to = log_responses_to
         self.log_responses = False
 
         if log_responses_to is not None:
             self.log_responses = True
-            with open(self.log_responses_to, 'w') as response_log_file:
+            with open(self.log_responses_to, 'w', encoding='utf-8') as response_log_file:
                 response_log_file.write('JSON Log:\n\n')
 
         logging.getLogger("requests").setLevel(logging.WARNING)
@@ -134,7 +139,7 @@ class RequestHelper:
 
         json_result = self._initial_parse(response)
         if self.log_responses and function not in ['tool_mobile_get_autologin_key']:
-            with open(self.log_responses_to, 'a') as response_log_file:
+            with open(self.log_responses_to, 'a', encoding='utf-8') as response_log_file:
                 response_log_file.write('URL: {}\n'.format(response.url))
                 response_log_file.write('Function: {}\n\n'.format(function))
                 response_log_file.write('Data: {}\n\n'.format(data))
@@ -226,12 +231,7 @@ class RequestHelper:
             if match:
                 version_string = match.group(1)
                 break
-
-        majorVersion = version_string.split('.')[0]
-        minorVersion = version_string[len(majorVersion) :].replace('.', '')
-
-        version = float(majorVersion + '.' + minorVersion)
-        return version
+        return version_string.strip()
 
     def _initial_parse(self, response) -> object:
         """

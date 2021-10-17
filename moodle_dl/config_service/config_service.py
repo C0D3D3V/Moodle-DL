@@ -1,3 +1,4 @@
+import sys
 import shutil
 
 from moodle_dl.utils import cutie
@@ -24,8 +25,9 @@ class ConfigService:
         token = self.config_helper.get_token()
         moodle_domain = self.config_helper.get_moodle_domain()
         moodle_path = self.config_helper.get_moodle_path()
+        use_http = self.config_helper.get_use_http()
 
-        request_helper = RequestHelper(moodle_domain, moodle_path, token, self.skip_cert_verify)
+        request_helper = RequestHelper(moodle_domain, moodle_path, token, self.skip_cert_verify, use_http=use_http)
         first_contact_handler = FirstContactHandler(request_helper)
 
         courses = []
@@ -42,7 +44,7 @@ class ConfigService:
 
         except (RequestRejectedError, ValueError, RuntimeError, ConnectionError) as error:
             Log.error('Error while communicating with the Moodle System! (%s)' % (error))
-            exit(1)
+            sys.exit(1)
 
         courseids = self._select_courses_to_download(courses)
 
@@ -56,6 +58,8 @@ class ConfigService:
         self._select_should_download_links_in_descriptions()
         self._select_should_download_databases()
         self._select_should_download_forums()
+        self._select_should_download_quizzes()
+        self._select_should_download_lessons()
         self._select_should_download_linked_files()
         self._select_should_download_also_with_cookie()
 
@@ -348,6 +352,46 @@ class ConfigService:
         )
 
         self.config_helper.set_property('download_forums', download_forums)
+
+    def _select_should_download_quizzes(self):
+        """
+        Asks the user if quizzes should be downloaded
+        """
+        download_quizzes = self.config_helper.get_download_quizzes()
+
+        self.section_seperator()
+        Log.info(
+            'Quizzes are tests that a student must complete in a course and are graded on.'
+            + ' Only quizzes that are in progress or have been completed will be downloaded.'
+        )
+        print('')
+
+        download_quizzes = cutie.prompt_yes_or_no(
+            Log.special_str('Do you want to download quizzes of your courses?'), default_is_yes=download_quizzes
+        )
+
+        self.config_helper.set_property('download_quizzes', download_quizzes)
+
+    def _select_should_download_lessons(self):
+        """
+        Asks the user if lessons should be downloaded
+        """
+        download_lessons = self.config_helper.get_download_lessons()
+
+        self.section_seperator()
+        Log.info(
+            'Lessons are a kind of self-teaching with pages of information and other pages with questions to answer.'
+            + ' A student can be graded on their answers after completing a lesson. Currently, only lessons without'
+            + ' the answers are downloaded. The answers are potentially also available for download,'
+            + ' but this has not been implemented.'
+        )
+        print('')
+
+        download_lessons = cutie.prompt_yes_or_no(
+            Log.special_str('Do you want to download lessons of your courses?'), default_is_yes=download_lessons
+        )
+
+        self.config_helper.set_property('download_lessons', download_lessons)
 
     def _select_should_download_descriptions(self):
         """

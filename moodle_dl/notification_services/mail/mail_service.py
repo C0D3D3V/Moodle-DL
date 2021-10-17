@@ -4,6 +4,7 @@ import traceback
 from getpass import getpass
 
 from moodle_dl.utils import cutie
+from moodle_dl.utils.logger import Log
 from moodle_dl.state_recorder.course import Course
 from moodle_dl.download_service.url_target import URLTarget
 from moodle_dl.notification_services.mail.mail_shooter import MailShooter
@@ -48,6 +49,7 @@ class MailService(NotificationService):
                     mail_shooter.send(target, 'Hey!', welcome_content[0], welcome_content[1])
                 except BaseException as e:
                     print('Error while sending the test mail: %s' % (str(e)))
+                    continue
                 else:
                     input(
                         'Please check if you received the Welcome-Mail.'
@@ -93,6 +95,7 @@ class MailService(NotificationService):
 
         try:
             logging.debug('Sending Notification via Mail...')
+            Log.debug('Sending Notification via Mail... (Please wait)')
 
             mail_shooter = MailShooter(
                 mail_cfg['sender'],

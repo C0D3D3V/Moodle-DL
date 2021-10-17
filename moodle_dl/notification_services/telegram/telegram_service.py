@@ -2,15 +2,12 @@ import logging
 import traceback
 
 from moodle_dl.utils import cutie
+from moodle_dl.utils.logger import Log
 from moodle_dl.state_recorder.course import Course
 from moodle_dl.download_service.url_target import URLTarget
 from moodle_dl.notification_services.telegram.telegram_shooter import TelegramShooter
 from moodle_dl.notification_services.notification_service import NotificationService
-from moodle_dl.notification_services.telegram.telegram_formater import (
-    create_full_moodle_diff_messages,
-    create_full_error_messages,
-    create_full_failed_downloads_messages,
-)
+from moodle_dl.notification_services.telegram.telegram_formater import TelegramFormater as TF
 
 
 class TelegramService(NotificationService):
@@ -41,6 +38,7 @@ class TelegramService(NotificationService):
                     telegram_shooter.send('This is a Testmessage from Moodle Downloader!')
                 except BaseException as e:
                     print('Error while sending the test message: %s' % (str(e)))
+                    continue
 
                 else:
                     input(
@@ -73,23 +71,27 @@ class TelegramService(NotificationService):
             logging.debug('Telegram-Notifications not configured, skipping.')
             return False
 
-    def _send_message(self, message_content: str):
+    def _send_messages(self, messages: [str]):
         """
         Sends an message
         """
-        if not self._is_configured():
+        if not self._is_configured() or messages is None or len(messages) == 0:
             return
 
         telegram_cfg = self.config_helper.get_property('telegram')
 
-        try:
-            logging.debug('Sending Notification via Telegram...')
-            telegram_shooter = TelegramShooter(telegram_cfg['token'], telegram_cfg['chat_id'])
-            telegram_shooter.send(message_content)
-        except BaseException as e:
-            error_formatted = traceback.format_exc()
-            logging.error('While sending notification:\n%s' % (error_formatted), extra={'exception': e})
-            raise e  # to be properly notified via Sentry
+        logging.debug('Sending Notification via Telegram...')
+        Log.debug('Sending Notification via Telegram... (Please wait)')
+
+        telegram_shooter = TelegramShooter(telegram_cfg['token'], telegram_cfg['chat_id'])
+
+        for message_content in messages:
+            try:
+                telegram_shooter.send(message_content)
+            except BaseException as e:
+                error_formatted = traceback.format_exc()
+                logging.error('While sending notification:\n%s' % (error_formatted), extra={'exception': e})
+                raise e  # to be properly notified via Sentry
 
     def notify_about_changes_in_moodle(self, changes: [Course]) -> None:
         """
@@ -99,10 +101,9 @@ class TelegramService(NotificationService):
         if not self._is_configured():
             return
 
-        messages = create_full_moodle_diff_messages(changes)
+        messages = TF.create_full_moodle_diff_messages(changes)
 
-        for message_content in messages:
-            self._send_message(message_content)
+        self._send_messages(messages)
 
     def notify_about_error(self, error_description: str):
         """
@@ -116,10 +117,9 @@ class TelegramService(NotificationService):
 
         if not telegram_cfg.get('send_error_msg', True):
             return
-        messages = create_full_error_messages(error_description)
+        messages = TF.create_full_error_messages(error_description)
 
-        for message_content in messages:
-            self._send_message(message_content)
+        self._send_messages(messages)
 
     def notify_about_failed_downloads(self, failed_downloads: [URLTarget]):
         """
@@ -133,7 +133,6 @@ class TelegramService(NotificationService):
 
         if not telegram_cfg.get('send_error_msg', True):
             return
-        messages = create_full_failed_downloads_messages(failed_downloads)
+        messages = TF.create_full_failed_downloads_messages(failed_downloads)
 
-        for message_content in messages:
-            self._send_message(message_content)
+        self._send_messages(messages)

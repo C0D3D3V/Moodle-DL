@@ -1,21 +1,53 @@
-from moodle_dl.notification_services.xmpp.xmpp_bot import XmppBot
+import os
+import asyncio
+import certifi
+
+import aioxmpp
 
 
 class XmppShooter:
+
     """
-    Encapsulates the sending of notification-messages.
+    A basic XMPP shooter that will log in, send messages,
+    and then log out.
     """
 
-    def __init__(self, xmpp_sender: str, xmpp_password: str, xmpp_target: str):
-        self.xmpp_sender = xmpp_sender
-        self.xmpp_password = xmpp_password
-        self.xmpp_target = xmpp_target
+    @staticmethod
+    def my_ssl_factory():
+        ctx = aioxmpp.security_layer.default_ssl_context()
+        ctx.load_verify_locations(certifi.where())
+        return ctx
 
-    def send(self, message: str):
-        xmpp = XmppBot(self.xmpp_sender, self.xmpp_password, self.xmpp_target, message)
-        xmpp.register_plugin('xep_0030')  # Service Discovery
-        xmpp.register_plugin('xep_0199')  # XMPP Ping
+    def __init__(self, jid, password, recipient):
+        self.g_jid = aioxmpp.JID.fromstr(jid)
+        self.g_security_layer = aioxmpp.make_security_layer(password)._replace(
+            ssl_context_factory=self.my_ssl_factory,
+        )
 
-        # Connect to the XMPP server and start processing XMPP stanzas.
-        xmpp.connect()
-        xmpp.process(forever=False)
+        self.to_jid = aioxmpp.JID.fromstr(recipient)
+
+        if os.name == 'nt':
+            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+    def send(self, message):
+        asyncio.run(self.async_send_messages([message]))
+
+    def send_messages(self, messages):
+        asyncio.run(self.async_send_messages(messages))
+
+    async def async_send_messages(self, messages):
+        client = aioxmpp.Client(
+            self.g_jid,
+            self.g_security_layer,
+        )
+        client.resumption_timeout = 0
+
+        async with client.connected() as stream:
+            for message_content in messages:
+                msg = aioxmpp.Message(
+                    to=self.to_jid,
+                    type_=aioxmpp.MessageType.CHAT,
+                )
+                msg.body[None] = message_content
+
+                await stream.send(msg)

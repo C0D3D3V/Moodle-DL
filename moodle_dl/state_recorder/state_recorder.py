@@ -466,10 +466,6 @@ class StateRecorder:
         return changed_courses
 
     def changes_of_new_version(self, current_courses: [Course]) -> [Course]:
-        # The database should only have one entry for one file,
-        # no matter if it is deleted or modified, so is it easier
-        # to track changes
-
         # all changes are stored inside changed_courses,
         # as a list of changed courses
         changed_courses = []

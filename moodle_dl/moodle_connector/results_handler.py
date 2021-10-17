@@ -1,4 +1,5 @@
 import re
+import html
 import logging
 import hashlib
 import urllib.parse as urlparse
@@ -22,6 +23,8 @@ class ResultsHandler:
         self.course_assignments = {}
         self.course_databases = {}
         self.course_forums = {}
+        self.course_quizzes = {}
+        self.course_lessons = {}
 
     def setVersion(self, version: int):
         self.version = version
@@ -90,16 +93,16 @@ class ResultsHandler:
             if module_modname in ['moodecvideo', 'page']:
                 module_modname = 'index_mod-' + module_modname
 
-            if module_modname in ['kalvidres']:
-                module_modname = 'cookie_mod-' + module_modname
-                files += self._handle_cookie_mod(section_name, module_name, module_modname, module_id, module_url)
-
             if module_description is not None:
                 files += self._handle_description(
                     section_name, module_name, module_modname, module_id, module_description
                 )
 
-            if module_modname.startswith(('resource', 'folder', 'url', 'index_mod')):
+            if module_modname in ['kalvidres', 'helixmedia', 'lti']:
+                module_modname = 'cookie_mod-' + module_modname
+                files += self._handle_cookie_mod(section_name, module_name, module_modname, module_id, module_url)
+
+            elif module_modname.startswith(('resource', 'folder', 'url', 'index_mod')):
                 files += self._handle_files(section_name, module_name, module_modname, module_id, module_contents)
 
             elif module_modname == 'assign':
@@ -118,11 +121,25 @@ class ResultsHandler:
                 files += self._handle_files(section_name, module_name, module_modname, module_id, database_files)
 
             elif module_modname == 'forum':
-                # find forums with same module_id
-                forums = self.course_forums.get(module_id, {})
-                forums_files = forums.get('files', [])
+                # find forum with same module_id
+                forum = self.course_forums.get(module_id, {})
+                forum_files = forum.get('files', [])
 
-                files += self._handle_files(section_name, module_name, module_modname, module_id, forums_files)
+                files += self._handle_files(section_name, module_name, module_modname, module_id, forum_files)
+            elif module_modname == 'quiz':
+                # find quizzes with same module_id
+                quizze = self.course_quizzes.get(module_id, {})
+                quizze_files = quizze.get('files', [])
+
+                files += self._handle_files(section_name, module_name, module_modname, module_id, quizze_files)
+            elif module_modname == 'lesson':
+                # find lessons with same module_id
+                lesson = self.course_lessons.get(module_id, {})
+                lesson_files = lesson.get('files', [])
+
+                files += self._handle_files(section_name, module_name, module_modname, module_id, lesson_files)
+            else:
+                logging.debug('Got unhandled module: name=%s mod=%s url=%s', module_name, module_modname, module_url)
 
         return files
 
@@ -138,14 +155,27 @@ class ResultsHandler:
         if not isinstance(description, str):
             return description
 
+        # to avoid changing encodings (see issue #96) we unencode and unquote everything
+        description = html.unescape(description)
+        description = urlparse.unquote(description)
+
+        # ids can change very quickly
         description = re.sub(r'id="[^"]*"', "", description)
         description = re.sub(r"id='[^']*'", "", description)
-        
+
+        # Embedded images from Moodle can change their timestemp (is such a theme feature)
+        # We change every timestemp to -1 the default.
+        description = re.sub(
+            r"\/theme\/image.php\/(\w+)\/(\w+)\/\d+\/",
+            r"/theme/image.php/\g<1>/\g<2>/-1/",
+            description,
+        )
+
         # some folder downloads inside a description file may have some session key inside which will always be different.
         # remove it, to prevent always tagging this file as "modified".
         description = re.sub(r'<input type="hidden" name="sesskey" value="[0-9a-zA-Z]*" \/>', "", description)
         description = re.sub(r"<input type='hidden' name='sesskey' value='[0-9a-zA-Z]*' \/>", "", description)
-        
+
         return description
 
     def _find_all_urls_in_description(
@@ -171,7 +201,9 @@ class ResultsHandler:
         """
 
         urls = list(set(re.findall(r'href=[\'"]?([^\'" >]+)', description)))
+        urls += list(set(re.findall(r'<a[^>]*>([^<]*)<\/a>', description)))
         urls += list(set(re.findall(r'src=[\'"]?([^\'" >]+)', description)))
+        urls = list(set(urls))
 
         result = []
         original_module_modname = module_modname
@@ -180,9 +212,21 @@ class ResultsHandler:
             if url == '':
                 continue
 
-            module_modname = 'url-description-' + original_module_modname
+            # To avoid different encodings and quotes and so that youtube-dl downloads correctly
+            # (See issues #96 and #103), we remove all encodings.
+            url = html.unescape(url)
+            url = urlparse.unquote(url)
 
             url_parts = urlparse.urlparse(url)
+            if url_parts.hostname == self.moodle_domain and url_parts.path.find('/theme/image.php/') >= 0:
+                url = re.sub(
+                    r"\/theme\/image.php\/(\w+)\/(\w+)\/\d+\/",
+                    r"/theme/image.php/\g<1>/\g<2>/-1/",
+                    url,
+                )
+
+            module_modname = 'url-description-' + original_module_modname
+
             if url_parts.hostname == self.moodle_domain and url_parts.path.find('/webservice/') >= 0:
                 module_modname = 'index_mod-description-' + original_module_modname
 
@@ -285,6 +329,9 @@ class ResultsHandler:
                 m.update(hashable_description.encode('utf-8'))
                 hash_description = m.hexdigest()
 
+            if content_type == 'html':
+                content_html = content.get('html', '')
+
             new_file = File(
                 module_id=module_id,
                 section_name=section_name,
@@ -305,6 +352,9 @@ class ResultsHandler:
                 files += self._find_all_urls_in_description(
                     section_name, module_name, module_modname, module_id, content_filepath, content_description
                 )
+
+            if content_type == 'html':
+                new_file.html_content = content_html
 
             files.append(new_file)
         return files
@@ -359,17 +409,23 @@ class ResultsHandler:
 
         return files
 
-    def set_fetch_addons(self, course_assignments: {}, course_databases: {}, course_forums: {}):
+    def set_fetch_addons(
+        self, course_assignments: {}, course_databases: {}, course_forums: {}, course_quizzes: {}, course_lessons: {}
+    ):
         """
         Sets the optional data that will be added to the result list
          during the process.
         @params course_assignments: The dictionary of assignments per course
         @params course_databases: The dictionary of databases per course
         @params course_forums: The dictionary of forums per course
+        @params course_quizzes: The dictionary of quizzes per course
+        @params course_lessons: The dictionary of lessons per course
         """
         self.course_assignments = course_assignments
         self.course_databases = course_databases
         self.course_forums = course_forums
+        self.course_quizzes = course_quizzes
+        self.course_lessons = course_lessons
 
     def fetch_files(self, course: Course) -> [File]:
         """

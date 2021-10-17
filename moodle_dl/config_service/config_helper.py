@@ -21,7 +21,7 @@ class ConfigHelper:
     def load(self):
         # Opens the configuration file and parse it to a JSON object
         try:
-            with open(self.config_path, 'r') as config_file:
+            with open(self.config_path, 'r', encoding='utf-8') as config_file:
                 config_raw = config_file.read()
                 self._whole_config = json.loads(config_raw)
         except IOError:
@@ -85,6 +85,20 @@ class ConfigHelper:
         # returns a stored boolean if forums should be downloaded
         try:
             return self.get_property('download_forums')
+        except ValueError:
+            return False
+
+    def get_download_quizzes(self) -> bool:
+        # returns a stored boolean if quizzes should be downloaded
+        try:
+            return self.get_property('download_quizzes')
+        except ValueError:
+            return False
+
+    def get_download_lessons(self) -> bool:
+        # returns a stored boolean if lessons should be downloaded
+        try:
+            return self.get_property('download_lessons')
         except ValueError:
             return False
 
@@ -160,8 +174,18 @@ class ConfigHelper:
         except ValueError:
             return False
 
+    def get_exclude_file_extensions(self) -> {}:
+        # returns a list of file extensions that should not be downloaded
+        try:
+            exclude_file_extensions = self.get_property('exclude_file_extensions')
+            if not type(exclude_file_extensions) is list:
+                exclude_file_extensions = [exclude_file_extensions]
+            return exclude_file_extensions
+        except ValueError:
+            return []
+
     def get_download_also_with_cookie(self) -> {}:
-        # returns if files for which a cookie is required should be downloaded.
+        # returns if files for which a cookie is required should be downloaded
         try:
             return self.get_property('download_also_with_cookie')
         except ValueError:
@@ -196,11 +220,28 @@ class ConfigHelper:
         except ValueError:
             options.update({'youtube_dl_options': {}})
 
+        try:
+            options.update({'videopasswords': self.get_property('videopasswords')})
+        except ValueError:
+            options.update({'videopasswords': {}})
+
+        try:
+            options.update({'external_file_downloaders': self.get_property('external_file_downloaders')})
+        except ValueError:
+            options.update({'external_file_downloaders': {}})
+
         return options
 
     def get_restricted_filenames(self) -> {}:
         # returns the filenames should be restricted
         try:
             return self.get_property('restricted_filenames')
+        except ValueError:
+            return False
+
+    def get_use_http(self) -> bool:
+        # returns a stored boolean if http should be used instead of https
+        try:
+            return self.get_property('use_http')
         except ValueError:
             return False
