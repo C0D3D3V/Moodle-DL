@@ -53,6 +53,7 @@ class ConfigService:
         self._select_should_download_databases()
         self._select_should_download_forums()
         self._select_should_download_quizzes()
+        self._select_should_download_lessons()
         self._select_should_download_linked_files()
         self._select_should_download_also_with_cookie()
 
@@ -323,6 +324,27 @@ class ConfigService:
         )
 
         self.config_helper.set_property('download_quizzes', download_quizzes)
+
+    def _select_should_download_lessons(self):
+        """
+        Asks the user if lessons should be downloaded
+        """
+        download_lessons = self.config_helper.get_download_lessons()
+
+        self.section_seperator()
+        Log.info(
+            'Lessons are a kind of self-teaching with pages of information and other pages with questions to answer.'
+            + ' A student can be graded on their answers after completing a lesson. Currently, only lessons without'
+            + ' the answers are downloaded. The answers are potentially also available for download,'
+            + ' but this has not been implemented.'
+        )
+        print('')
+
+        download_lessons = cutie.prompt_yes_or_no(
+            Log.special_str('Do you want to download lessons of your courses?'), default_is_yes=download_lessons
+        )
+
+        self.config_helper.set_property('download_lessons', download_lessons)
 
     def _select_should_download_descriptions(self):
         """

@@ -43,7 +43,7 @@ class QuizzesHandler:
         for quiz in quizzes:
             # This is the instance id with which we can make the API queries.
             quiz_id = quiz.get('id', 0)
-            quiz_name = quiz.get('name', 'quiz')
+            quiz_name = quiz.get('name', 'unnamed quiz')
             quiz_intro = quiz.get('intro', '')
             quiz_course_module_id = quiz.get('coursemodule', 0)
             quiz_introfiles = quiz.get('introfiles', [])

@@ -95,6 +95,13 @@ class ConfigHelper:
         except ValueError:
             return False
 
+    def get_download_lessons(self) -> bool:
+        # returns a stored boolean if lessons should be downloaded
+        try:
+            return self.get_property('download_lessons')
+        except ValueError:
+            return False
+
     def get_userid_and_version(self) -> (str, int):
         # returns the userid and a version
         try:

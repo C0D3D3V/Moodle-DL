@@ -20,6 +20,7 @@ from moodle_dl.moodle_connector.cookie_handler import CookieHandler
 from moodle_dl.moodle_connector.results_handler import ResultsHandler
 from moodle_dl.moodle_connector.forums_handler import ForumsHandler
 from moodle_dl.moodle_connector.quizzes_handler import QuizzesHandler
+from moodle_dl.moodle_connector.lessons_handler import LessonsHandler
 from moodle_dl.moodle_connector.databases_handler import DatabasesHandler
 from moodle_dl.moodle_connector.assignments_handler import AssignmentsHandler
 from moodle_dl.moodle_connector.first_contact_handler import FirstContactHandler
@@ -263,6 +264,7 @@ class MoodleService:
         download_databases = self.config_helper.get_download_databases()
         download_forums = self.config_helper.get_download_forums()
         download_quizzes = self.config_helper.get_download_quizzes()
+        download_lessons = self.config_helper.get_download_lessons()
         download_also_with_cookie = self.config_helper.get_download_also_with_cookie()
 
         courses = []
@@ -280,6 +282,7 @@ class MoodleService:
         databases_handler = DatabasesHandler(request_helper, version)
         forums_handler = ForumsHandler(request_helper, version)
         quizzes_handler = QuizzesHandler(request_helper, version)
+        lessons_handler = LessonsHandler(request_helper, version)
         results_handler.setVersion(version)
 
         if download_also_with_cookie:
@@ -315,6 +318,10 @@ class MoodleService:
         if download_quizzes:
             quizzes = quizzes_handler.fetch_quizzes_files(userid, quizzes)
 
+        lessons = lessons_handler.fetch_lessons(courses)
+        if download_lessons:
+            lessons = lessons_handler.fetch_lessons_files(userid, lessons)
+
         index = 0
         for course in courses:
             index += 1
@@ -339,7 +346,10 @@ class MoodleService:
             course_databases = databases.get(course.id, {})
             course_forums = forums.get(course.id, {})
             course_quizzes = quizzes.get(course.id, {})
-            results_handler.set_fetch_addons(course_assignments, course_databases, course_forums, course_quizzes)
+            course_lessons = lessons.get(course.id, {})
+            results_handler.set_fetch_addons(
+                course_assignments, course_databases, course_forums, course_quizzes, course_lessons
+            )
             course.files = results_handler.fetch_files(course.id)
 
             filtered_courses.append(course)
@@ -392,6 +402,7 @@ class MoodleService:
         download_links_in_descriptions = config_helper.get_download_links_in_descriptions()
         download_databases = config_helper.get_download_databases()
         download_quizzes = config_helper.get_download_quizzes()
+        download_lessons = config_helper.get_download_lessons()
         exclude_file_extensions = config_helper.get_exclude_file_extensions()
         download_also_with_cookie = config_helper.get_download_also_with_cookie()
         if cookie_handler is not None:
@@ -468,6 +479,14 @@ class MoodleService:
                 course_files = []
                 for file in course.files:
                     if not (file.module_modname.endswith('quiz') and file.deleted):
+                        course_files.append(file)
+                course.files = course_files
+
+            if not download_lessons:
+                # Filter Lesson Files
+                course_files = []
+                for file in course.files:
+                    if not (file.module_modname.endswith('lesson') and file.deleted):
                         course_files.append(file)
                 course.files = course_files
 

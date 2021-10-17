@@ -24,6 +24,7 @@ class ResultsHandler:
         self.course_databases = {}
         self.course_forums = {}
         self.course_quizzes = {}
+        self.course_lessons = {}
 
     def setVersion(self, version: int):
         self.version = version
@@ -111,17 +112,23 @@ class ResultsHandler:
                 files += self._handle_files(section_name, module_name, module_modname, module_id, database_files)
 
             elif module_modname == 'forum':
-                # find forums with same module_id
-                forums = self.course_forums.get(module_id, {})
-                forums_files = forums.get('files', [])
+                # find forum with same module_id
+                forum = self.course_forums.get(module_id, {})
+                forum_files = forum.get('files', [])
 
-                files += self._handle_files(section_name, module_name, module_modname, module_id, forums_files)
+                files += self._handle_files(section_name, module_name, module_modname, module_id, forum_files)
             elif module_modname == 'quiz':
                 # find quizzes with same module_id
-                quizzes = self.course_quizzes.get(module_id, {})
-                quizzes_files = quizzes.get('files', [])
+                quizze = self.course_quizzes.get(module_id, {})
+                quizze_files = quizze.get('files', [])
 
-                files += self._handle_files(section_name, module_name, module_modname, module_id, quizzes_files)
+                files += self._handle_files(section_name, module_name, module_modname, module_id, quizze_files)
+            elif module_modname == 'lesson':
+                # find lessons with same module_id
+                lesson = self.course_lessons.get(module_id, {})
+                lesson_files = lesson.get('files', [])
+
+                files += self._handle_files(section_name, module_name, module_modname, module_id, lesson_files)
             else:
                 logging.debug('Got unhandled module: name=%s mod=%s url=%s', module_name, module_modname, module_url)
 
@@ -393,7 +400,9 @@ class ResultsHandler:
 
         return files
 
-    def set_fetch_addons(self, course_assignments: {}, course_databases: {}, course_forums: {}, course_quizzes: {}):
+    def set_fetch_addons(
+        self, course_assignments: {}, course_databases: {}, course_forums: {}, course_quizzes: {}, course_lessons: {}
+    ):
         """
         Sets the optional data that will be added to the result list
          during the process.
@@ -401,11 +410,13 @@ class ResultsHandler:
         @params course_databases: The dictionary of databases per course
         @params course_forums: The dictionary of forums per course
         @params course_quizzes: The dictionary of quizzes per course
+        @params course_lessons: The dictionary of lessons per course
         """
         self.course_assignments = course_assignments
         self.course_databases = course_databases
         self.course_forums = course_forums
         self.course_quizzes = course_quizzes
+        self.course_lessons = course_lessons
 
     def fetch_files(self, course_id: str) -> [File]:
         """
