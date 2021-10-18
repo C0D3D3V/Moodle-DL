@@ -142,6 +142,19 @@ class LessonsHandler:
         # Grade is in: attempt_result.userstats.gradeinfo.earned  (max points: attempt_result.userstats.gradeinfo.total)
         # Take care, grade can be None
 
+        grade = attempt_result.get('userstats', {}).get('gradeinfo', {}).get('earned', None)
+        grade_total = attempt_result.get('userstats', {}).get('gradeinfo', {}).get('total', None)
+
+        if grade is not None and grade_total is not None:
+            grade_file = {
+                'filename': 'grade',
+                'filepath': '/',
+                'timemodified': 0,
+                'description': str(grade) + ' / ' + str(grade_total),
+                'type': 'description',
+            }
+            result.append(grade_file)
+
         # build lesson HTML
         lesson_html = moodle_html_header
         attempt_filename = PathTools.to_valid_name(lesson_name + '.html')

@@ -230,6 +230,28 @@ class WorkshopsHandler:
                 submission['files'] = reviewer_assessment_files
                 submissions.append(submission)
 
+        assessmentlongstrgrade = grades_result.get('assessmentlongstrgrade', '')
+        if assessmentlongstrgrade != '':
+            # Add Assessment Grade
+            assessmentlongstrgrade_file = {
+                'filename': 'Assessment grade',
+                'filepath': '/',
+                'description': assessmentlongstrgrade,
+                'type': 'description',
+            }
+            result.append(assessmentlongstrgrade_file)
+
+        submissionlongstrgrade = grades_result.get('submissionlongstrgrade', '')
+        if submissionlongstrgrade != '':
+            # Add Submission Grade
+            submissionlongstrgrade_file = {
+                'filename': 'Submission grade',
+                'filepath': '/',
+                'description': submissionlongstrgrade,
+                'type': 'description',
+            }
+            result.append(submissionlongstrgrade_file)
+
         for submission in submissions:
             submission_id = submission.get('id', 0)
             submission_timemodified = submission.get('timemodified', 0)
