@@ -20,12 +20,7 @@ class ResultsHandler:
         self.version = 2011120500
         self.moodle_domain = moodle_domain
         self.moodle_path = moodle_path
-        self.course_assignments = {}
-        self.course_databases = {}
-        self.course_forums = {}
-        self.course_quizzes = {}
-        self.course_lessons = {}
-        self.course_workshops = {}
+        self.course_fetch_addons = {}
 
     def setVersion(self, version: int):
         self.version = version
@@ -82,7 +77,10 @@ class ResultsHandler:
             module_description = module.get('description', None)
 
             # handle not supported modules that results in an index.html special
-            if module_modname in ['moodecvideo', 'page']:
+            if module_modname in ['moodecvideo']:
+                module_modname = 'index_mod-' + module_modname
+
+            if module_modname in ['page'] and self.version < 2017051500:
                 module_modname = 'index_mod-' + module_modname
 
             if module_description is not None:
@@ -97,45 +95,12 @@ class ResultsHandler:
             elif module_modname.startswith(('resource', 'folder', 'url', 'index_mod')):
                 files += self._handle_files(section_name, module_name, module_modname, module_id, module_contents)
 
-            elif module_modname == 'assign':
+            elif module_modname in self.course_fetch_addons:
+                # find addon with same module_id
+                addon = self.course_fetch_addons.get(module_modname, {}).get(module_id, {})
+                addon_files = addon.get('files', [])
 
-                # find assign with same module_id
-                assign = self.course_assignments.get(module_id, {})
-                assign_files = assign.get('files', [])
-
-                files += self._handle_files(section_name, module_name, module_modname, module_id, assign_files)
-            elif module_modname == 'data':
-
-                # find database with same module_id
-                database = self.course_databases.get(module_id, {})
-                database_files = database.get('files', [])
-
-                files += self._handle_files(section_name, module_name, module_modname, module_id, database_files)
-
-            elif module_modname == 'forum':
-                # find forum with same module_id
-                forum = self.course_forums.get(module_id, {})
-                forum_files = forum.get('files', [])
-
-                files += self._handle_files(section_name, module_name, module_modname, module_id, forum_files)
-            elif module_modname == 'quiz':
-                # find quizze with same module_id
-                quizze = self.course_quizzes.get(module_id, {})
-                quizze_files = quizze.get('files', [])
-
-                files += self._handle_files(section_name, module_name, module_modname, module_id, quizze_files)
-            elif module_modname == 'lesson':
-                # find lesson with same module_id
-                lesson = self.course_lessons.get(module_id, {})
-                lesson_files = lesson.get('files', [])
-
-                files += self._handle_files(section_name, module_name, module_modname, module_id, lesson_files)
-            elif module_modname == 'workshop':
-                # find workshop with same module_id
-                workshop = self.course_workshops.get(module_id, {})
-                workshop_files = workshop.get('files', [])
-
-                files += self._handle_files(section_name, module_name, module_modname, module_id, workshop_files)
+                files += self._handle_files(section_name, module_name, module_modname, module_id, addon_files)
             else:
                 logging.debug('Got unhandled module: name=%s mod=%s url=%s', module_name, module_modname, module_url)
 
@@ -184,6 +149,8 @@ class ResultsHandler:
         module_id: str,
         content_filepath: str,
         description: str,
+        no_search_for_moodle_urls: bool,
+        filter_urls_containing: [str],
     ) -> [File]:
         """Parses a description to find all urls in it. Then it creates for every url a file entry.
 
@@ -216,6 +183,19 @@ class ResultsHandler:
             url = urlparse.unquote(url)
 
             url_parts = urlparse.urlparse(url)
+            if (
+                url_parts.hostname == self.moodle_domain
+                or url_parts.netloc == self.moodle_domain
+                and no_search_for_moodle_urls
+            ):
+                # Skip if no moodle urls should be found
+                continue
+
+            for filter_str in filter_urls_containing:
+                # Skip url if a filter matches
+                if url.find(filter_str) >= 0:
+                    continue
+
             if url_parts.hostname == self.moodle_domain and url_parts.path.find('/theme/image.php/') >= 0:
                 url = re.sub(
                     r"\/theme\/image.php\/(\w+)\/(\w+)\/\d+\/",
@@ -311,6 +291,10 @@ class ResultsHandler:
             content_fileurl = content.get('fileurl', '')
             content_timemodified = content.get('timemodified', 0)
             content_isexternalfile = content.get('isexternalfile', False)
+            no_search_for_urls = content.get('no_search_for_urls', False)
+            no_search_for_moodle_urls = content.get('no_search_for_moodle_urls', False)
+            filter_urls_in_description_containing = content.get('filter_urls_in_description_containing', False)
+            content_no_hash = content.get('no_hash', False)
 
             if content_fileurl == '' and module_modname.startswith(('url', 'index_mod', 'cookie_mod')):
                 continue
@@ -320,7 +304,7 @@ class ResultsHandler:
                 content_filename = module_name
 
             hash_description = None
-            if content_type == 'description':
+            if content_type == 'description' and not content_no_hash:
                 content_description = content.get('description', '')
                 hashable_description = ResultsHandler._filter_changing_attributes(content_description)
                 m = hashlib.sha1()
@@ -347,8 +331,16 @@ class ResultsHandler:
 
             if content_type == 'description':
                 new_file.text_content = content_description
+            if content_type == 'description' and not no_search_for_urls:
                 files += self._find_all_urls_in_description(
-                    section_name, module_name, module_modname, module_id, content_filepath, content_description
+                    section_name,
+                    module_name,
+                    module_modname,
+                    module_id,
+                    content_filepath,
+                    content_description,
+                    no_search_for_moodle_urls,
+                    filter_urls_in_description_containing,
                 )
 
             if content_type == 'html':
@@ -398,40 +390,33 @@ class ResultsHandler:
             hash=hash_description,
         )
 
+        no_search_for_moodle_urls = False
+        filter_urls_in_description_containing = []
+
         description.text_content = module_description
         files += self._find_all_urls_in_description(
-            section_name, module_name, module_modname, module_id, content_filepath, module_description
+            section_name,
+            module_name,
+            module_modname,
+            module_id,
+            content_filepath,
+            module_description,
+            no_search_for_moodle_urls,
+            filter_urls_in_description_containing,
         )
 
         files.append(description)
 
         return files
 
-    def set_fetch_addons(
-        self,
-        course_assignments: {},
-        course_databases: {},
-        course_forums: {},
-        course_quizzes: {},
-        course_lessons: {},
-        course_workshops: {},
-    ):
+    def set_fetch_addons(self, course_fetch_addons: {}):
         """
         Sets the optional data that will be added to the result list
          during the process.
-        @params course_assignments: The dictionary of assignments per course
-        @params course_databases: The dictionary of databases per course
-        @params course_forums: The dictionary of forums per course
-        @params course_quizzes: The dictionary of quizzes per course
-        @params course_lessons: The dictionary of lessons per course
-        @params course_workshops: The dictionary of lessons per course
+        @params course_fetch_addons: The dictionary of assignments, databases, forums, quizzes, lessons,
+         workshops, pages, ... per course
         """
-        self.course_assignments = course_assignments
-        self.course_databases = course_databases
-        self.course_forums = course_forums
-        self.course_quizzes = course_quizzes
-        self.course_lessons = course_lessons
-        self.course_workshops = course_workshops
+        self.course_fetch_addons = course_fetch_addons
 
     def fetch_files(self, course_id: str) -> [File]:
         """

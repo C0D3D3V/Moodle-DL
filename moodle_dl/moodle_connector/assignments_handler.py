@@ -4,7 +4,7 @@ from moodle_dl.moodle_connector.request_helper import RequestHelper
 
 class AssignmentsHandler:
     """
-    Fetches and parses the various endpoints in Moodle.
+    Fetches and parses the various endpoints in Moodle for assignment entries.
     """
 
     def __init__(self, request_helper: RequestHelper, version: int):

@@ -5,7 +5,7 @@ from moodle_dl.moodle_connector.moodle_constants import moodle_html_footer, mood
 
 class WorkshopsHandler:
     """
-    Fetches and parses the various endpoints in Moodle for Workshops Entries.
+    Fetches and parses the various endpoints in Moodle for workshop entries.
     """
 
     def __init__(self, request_helper: RequestHelper, version: int):

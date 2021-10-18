@@ -4,7 +4,7 @@ from moodle_dl.state_recorder.course import Course
 
 class DatabasesHandler:
     """
-    Fetches and parses the various endpoints in Moodle.
+    Fetches and parses the various endpoints in Moodle for database entries.
     """
 
     def __init__(self, request_helper: RequestHelper, version: int):

@@ -141,7 +141,7 @@ class DownloadService:
         # If the file is located in a folder or in an assignment,
         # it should be saved in a sub-folder
         # (with the name of the module).
-        if file.module_modname.endswith(('assign', 'folder', 'data', 'forum', 'quiz', 'lesson', 'workshop')):
+        if file.module_modname.endswith(('assign', 'folder', 'data', 'forum', 'quiz', 'lesson', 'workshop', 'page')):
             file_path = file.content_filepath
             if file.content_type == 'submission_file':
                 file_path = os.path.join('/submissions/', file_path.strip('/'))

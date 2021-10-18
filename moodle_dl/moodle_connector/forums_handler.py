@@ -7,7 +7,7 @@ from moodle_dl.download_service.path_tools import PathTools
 
 class ForumsHandler:
     """
-    Fetches and parses the various endpoints in Moodle for Forum Entries.
+    Fetches and parses the various endpoints in Moodle for forum entries.
     """
 
     def __init__(self, request_helper: RequestHelper, version: int):

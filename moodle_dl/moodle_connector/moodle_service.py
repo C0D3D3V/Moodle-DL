@@ -18,6 +18,7 @@ from moodle_dl.moodle_connector import login_helper
 from moodle_dl.moodle_connector import sso_token_receiver
 from moodle_dl.moodle_connector.cookie_handler import CookieHandler
 from moodle_dl.moodle_connector.results_handler import ResultsHandler
+from moodle_dl.moodle_connector.pages_handler import PagesHandler
 from moodle_dl.moodle_connector.forums_handler import ForumsHandler
 from moodle_dl.moodle_connector.quizzes_handler import QuizzesHandler
 from moodle_dl.moodle_connector.lessons_handler import LessonsHandler
@@ -286,6 +287,7 @@ class MoodleService:
         quizzes_handler = QuizzesHandler(request_helper, version)
         lessons_handler = LessonsHandler(request_helper, version)
         workshops_handler = WorkshopsHandler(request_helper, version)
+        pages_handler = PagesHandler(request_helper, version)
         results_handler.setVersion(version)
 
         if download_also_with_cookie:
@@ -329,6 +331,8 @@ class MoodleService:
         if download_workshops:
             workshops = workshops_handler.fetch_workshops_files(userid, workshops)
 
+        pages = pages_handler.fetch_pages(courses)
+
         index = 0
         for course in courses:
             index += 1
@@ -349,20 +353,16 @@ class MoodleService:
 
             print(status_message + '\033[K', end='')
 
-            course_assignments = assignments.get(course.id, {})
-            course_databases = databases.get(course.id, {})
-            course_forums = forums.get(course.id, {})
-            course_quizzes = quizzes.get(course.id, {})
-            course_lessons = lessons.get(course.id, {})
-            course_workshops = workshops.get(course.id, {})
-            results_handler.set_fetch_addons(
-                course_assignments,
-                course_databases,
-                course_forums,
-                course_quizzes,
-                course_lessons,
-                course_workshops,
-            )
+            course_fetch_addons = {
+                'assign': assignments.get(course.id, {}),
+                'data': databases.get(course.id, {}),
+                'forum': forums.get(course.id, {}),
+                'quiz': quizzes.get(course.id, {}),
+                'lesson': lessons.get(course.id, {}),
+                'workshop': workshops.get(course.id, {}),
+                'page': pages.get(course.id, {}),
+            }
+            results_handler.set_fetch_addons(course_fetch_addons)
             course.files = results_handler.fetch_files(course.id)
 
             filtered_courses.append(course)
