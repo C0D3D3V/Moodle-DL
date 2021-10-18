@@ -291,10 +291,16 @@ class ResultsHandler:
             content_fileurl = content.get('fileurl', '')
             content_timemodified = content.get('timemodified', 0)
             content_isexternalfile = content.get('isexternalfile', False)
+
+            # description related
+            content_description = content.get('description', '')
             no_search_for_urls = content.get('no_search_for_urls', False)
             no_search_for_moodle_urls = content.get('no_search_for_moodle_urls', False)
             filter_urls_in_description_containing = content.get('filter_urls_in_description_containing', False)
             content_no_hash = content.get('no_hash', False)
+
+            # html related
+            content_html = content.get('html', '')
 
             if content_fileurl == '' and module_modname.startswith(('url', 'index_mod', 'cookie_mod')):
                 continue
@@ -305,14 +311,10 @@ class ResultsHandler:
 
             hash_description = None
             if content_type == 'description' and not content_no_hash:
-                content_description = content.get('description', '')
                 hashable_description = ResultsHandler._filter_changing_attributes(content_description)
                 m = hashlib.sha1()
                 m.update(hashable_description.encode('utf-8'))
                 hash_description = m.hexdigest()
-
-            if content_type == 'html':
-                content_html = content.get('html', '')
 
             new_file = File(
                 module_id=module_id,
