@@ -296,7 +296,7 @@ class ResultsHandler:
             content_description = content.get('description', '')
             no_search_for_urls = content.get('no_search_for_urls', False)
             no_search_for_moodle_urls = content.get('no_search_for_moodle_urls', False)
-            filter_urls_in_description_containing = content.get('filter_urls_in_description_containing', False)
+            filter_urls_in_description_containing = content.get('filter_urls_in_description_containing', [])
             content_no_hash = content.get('no_hash', False)
 
             # html related
