@@ -59,6 +59,8 @@ If you run the program on **Windows**, please use [Powershell or CMD](https://ww
 - `moodle-dl --manage-database`
     - To manage the offline database.
     - It allows you to delete entries from the database that are no longer available locally so that they can be downloaded again.
+- `moodle-dl --add-all-visible-courses`
+    - To add all courses visible to the moodle user to the configuration file.
 - `moodle-dl --version`
     - Print program version and exit
 - `moodle-dl --log-responses`
