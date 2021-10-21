@@ -440,23 +440,34 @@ class MoodleService:
                         break
                 if not_online:
                     Log.warning(f'The Moodle course with id {course.id} is no longer available online.')
-                    logging.warning(f'The Moodle course with id {course.id} is no longer available online.')
+                    logging.warning('The Moodle course with id %d is no longer available online.', course.id)
                     continue
 
-            if not download_submissions:
-                course_files = []
-                for file in course.files:
-                    if not (file.module_modname.endswith('assign') and file.deleted):
-                        course_files.append(file)
-                course.files = course_files
+            course_files = []
+            for file in course.files:
+                # Filter Files based on options
+                if (
+                    # Filter Assignment Submission Files
+                    (download_submissions or (not (file.module_modname.endswith('assign') and file.deleted)))
+                    # Filter Description Files
+                    and (download_descriptions or file.content_type != 'description')
+                    # Filter Database Files
+                    and (download_databases or file.content_type != 'database_file')
+                    # Filter Quiz Files
+                    and (download_quizzes or (not (file.module_modname.endswith('quiz') and file.deleted)))
+                    # Filter Lesson Files
+                    and (download_lessons or (not (file.module_modname.endswith('lesson') and file.deleted)))
+                    # Filter Workshops Files
+                    and (download_workshops or (not (file.module_modname.endswith('workshop') and file.deleted)))
+                    # Filter Files that requiere a Cookie
+                    and (download_also_with_cookie or (not file.module_modname.startswith('cookie_mod-')))
+                    # Exclude files whose file extension is blacklisted
+                    and (not (determine_ext(file.content_filename) in exclude_file_extensions))
+                ):
+                    course_files.append(file)
+            course.files = course_files
 
-            if not download_descriptions:
-                course_files = []
-                for file in course.files:
-                    if file.content_type != 'description':
-                        course_files.append(file)
-                course.files = course_files
-
+            # Filter Description URLs
             course_files = []
             for file in course.files:
                 if not file.content_type == 'description-url':
@@ -478,54 +489,7 @@ class MoodleService:
 
                     if add_description_url:
                         course_files.append(file)
-
             course.files = course_files
-
-            if not download_databases:
-                course_files = []
-                for file in course.files:
-                    if file.content_type != 'database_file':
-                        course_files.append(file)
-                course.files = course_files
-
-            if not download_quizzes:
-                # Filter Quiz Files
-                course_files = []
-                for file in course.files:
-                    if not (file.module_modname.endswith('quiz') and file.deleted):
-                        course_files.append(file)
-                course.files = course_files
-
-            if not download_lessons:
-                # Filter Lesson Files
-                course_files = []
-                for file in course.files:
-                    if not (file.module_modname.endswith('lesson') and file.deleted):
-                        course_files.append(file)
-                course.files = course_files
-
-            if not download_workshops:
-                # Filter Workshops Files
-                course_files = []
-                for file in course.files:
-                    if not (file.module_modname.endswith('workshop') and file.deleted):
-                        course_files.append(file)
-                course.files = course_files
-
-            if not download_also_with_cookie:
-                course_files = []
-                for file in course.files:
-                    if not file.module_modname.startswith('cookie_mod-'):
-                        course_files.append(file)
-                course.files = course_files
-
-            if len(exclude_file_extensions) > 0:
-                # Exclude files whose file extension is blacklisted.
-                course_files = []
-                for file in course.files:
-                    if not (determine_ext(file.content_filename) in exclude_file_extensions):
-                        course_files.append(file)
-                course.files = course_files
 
             if len(course.files) > 0:
                 filtered_changes.append(course)

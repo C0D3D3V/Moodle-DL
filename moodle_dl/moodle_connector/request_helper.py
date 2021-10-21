@@ -117,7 +117,7 @@ class RequestHelper:
 
         return response, session
 
-    def post_REST(self, function: str, data: {str: str} = None) -> object:
+    def post_REST(self, function: str, data: {str: str} = None, timeout: str = 60) -> object:
         """
         Sends a POST request to the REST endpoint of the Moodle system
         @param function: The Web service function to be called.
@@ -133,7 +133,7 @@ class RequestHelper:
         url = self._get_REST_POST_URL(self.url_base, function)
 
         try:
-            response = requests.post(url, data=data_urlencoded, headers=self.stdHeader, verify=self.verify, timeout=60)
+            response = requests.post(url, data=data_urlencoded, headers=self.stdHeader, verify=self.verify, timeout=timeout)
         except RequestException as error:
             raise ConnectionError("Connection error: %s" % str(error)) from None
 

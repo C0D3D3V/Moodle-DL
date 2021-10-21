@@ -1,6 +1,8 @@
 import sys
 import shutil
 
+from pathlib import Path
+
 from moodle_dl.utils import cutie
 from moodle_dl.utils.logger import Log
 from moodle_dl.state_recorder.course import Course
@@ -57,6 +59,101 @@ class ConfigService:
         self._select_should_download_workshops()
         self._select_should_download_linked_files()
         self._select_should_download_also_with_cookie()
+
+    def interactively_add_all_visible_courses(self):
+        """
+        Guides the user through the process of adding all visible courses
+        to the list of courses to download in the configuration
+        """
+
+        token = self.config_helper.get_token()
+        moodle_domain = self.config_helper.get_moodle_domain()
+        moodle_path = self.config_helper.get_moodle_path()
+        use_http = self.config_helper.get_use_http()
+
+        request_helper = RequestHelper(moodle_domain, moodle_path, token, self.skip_cert_verify, use_http=use_http)
+        first_contact_handler = FirstContactHandler(request_helper)
+
+        print('')
+        Log.info(
+            'It is possible to automatically complete the moodle-dl configuration'
+            + ' with all the courses you can see on your moodle. These are either'
+            + ' courses to which you have the appropriate rights to see the'
+            + ' course or the course is visible without enrollment.'
+        )
+
+        Log.critical(
+            'This process can take several minutes for large Moodels, as is common at'
+            + ' large universities. Timeout is set to 20 minutes.'
+        )
+
+        print('')
+
+        add_all_visible_courses = cutie.prompt_yes_or_no(
+            Log.special_str('Do you want to add all visible courses of your Moodle to the configuration?'),
+            default_is_yes=False,
+        )
+
+        if not add_all_visible_courses:
+            return
+        else:
+            Log.warning(
+                'Please wait for the result, this may take several minutes.'
+                + ' In addition to adding the courses to the configuration,'
+                + ' it will also create an `all_courses.json` file with all'
+                + ' the courses available on your Moodle.'
+            )
+
+        courses = []
+        all_visible_courses = []
+        try:
+            userid, version = self.config_helper.get_userid_and_version()
+            if userid is None or version is None:
+                userid, version = first_contact_handler.fetch_userid_and_version()
+            else:
+                first_contact_handler.version = version
+
+            courses = first_contact_handler.fetch_courses(userid)
+            log_all_courses_to = str(Path(self.storage_path) / 'all_courses.json')
+            all_visible_courses = first_contact_handler.fetch_all_visible_courses(log_all_courses_to)
+
+        except (RequestRejectedError, ValueError, RuntimeError, ConnectionError) as error:
+            Log.error('Error while communicating with the Moodle System! (%s)' % (error))
+            sys.exit(1)
+
+        # Filter out courses the user is enroled in
+        filtered_all_courses = []
+        for visible_course in all_visible_courses:
+            add_to_final_list = True
+            for course in courses:
+                if visible_course.id == course.id:
+                    add_to_final_list = False
+                    break
+            if add_to_final_list:
+                filtered_all_courses.append(visible_course)
+
+        # Update Public Courses IDs
+        download_public_course_ids = self.config_helper.get_download_public_course_ids()
+        # Update Course settings List for all new Courses
+        options_of_courses = self.config_helper.get_options_of_courses()
+        for course in filtered_all_courses:
+            current_course_settings = options_of_courses.get(str(course.id), None)
+
+            # create default settings
+            if current_course_settings is None:
+                current_course_settings = {
+                    'original_name': course.fullname,
+                    'overwrite_name_with': None,
+                    'create_directory_structure': True,
+                }
+
+            options_of_courses.update({str(course.id): current_course_settings})
+
+            if course.id not in download_public_course_ids:
+                download_public_course_ids.append(course.id)
+
+        self.config_helper.set_property('options_of_courses', options_of_courses)
+        self.config_helper.set_property('download_public_course_ids', download_public_course_ids)
 
     def _select_should_userid_and_version_be_saved(self, userid, version):
         """
