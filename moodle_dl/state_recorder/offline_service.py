@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 
 from moodle_dl.utils import cutie
+from moodle_dl.utils.logger import Log
 from moodle_dl.state_recorder.file import File
 from moodle_dl.moodle_connector.moodle_service import MoodleService
 from moodle_dl.config_service.config_helper import ConfigHelper
@@ -32,6 +33,12 @@ class OfflineService:
             'This management tool will navigate you through a menu to'
             + ' selectively remove file entries from the database so'
             + ' that these files can be downloaded again.'
+        )
+
+        Log.warning(
+            'Only files that are missing locally are displayed in this tool,'
+            + ' if no file is missing in a course, it is not listed here at all.'
+            + ' Furthermore, only courses that are selected for download are displayed.'
         )
 
         course_options = []
