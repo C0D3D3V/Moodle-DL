@@ -36,9 +36,15 @@ class OfflineService:
         )
 
         Log.warning(
-            'Only files that are missing locally are displayed in this tool,'
-            + ' if no file is missing in a course, it is not listed here at all.'
-            + ' Furthermore, only courses that are selected for download are displayed.'
+            'Only files that are missing locally but stored in the local'
+            + ' database are displayed in this tool. If a file is not missing'
+            + ' from a course, it will not be listed here at all.  Also, only'
+            + ' courses that are selected for download are displayed.'
+        )
+
+        Log.critical(
+            'For more complicated operations on the database a DB browser for SQLite'
+            + ' is advantageous (https://sqlitebrowser.org/).'
         )
 
         course_options = []
