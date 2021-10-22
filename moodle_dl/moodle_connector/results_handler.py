@@ -83,7 +83,16 @@ class ResultsHandler:
             if module_modname in ['page'] and self.version < 2017051500:
                 module_modname = 'index_mod-' + module_modname
 
-            if module_description is not None:
+            if module_description is not None and module_modname not in [
+                'page',
+                'forum',
+                'database',
+                'lesson',
+                'quiz',
+                'workshop',
+                'assign',
+            ]:
+                # Handle descriptions of Files, Labels and all that we do not handle in seperate modules
                 files += self._handle_description(
                     section_name, module_name, module_modname, module_id, module_description
                 )

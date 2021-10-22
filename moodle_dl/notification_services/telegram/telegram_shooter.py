@@ -73,7 +73,7 @@ class TelegramShooter:
             if not ok:
                 raise RequestRejectedError(
                     'The Telegram System rejected the Request.'
-                    + ' Details: {}'.format(response_extracted.get("description", 'None'))
+                    + ' Details: {}'.format(response_extracted.get('description', 'None'))
                 )
 
         return response_extracted

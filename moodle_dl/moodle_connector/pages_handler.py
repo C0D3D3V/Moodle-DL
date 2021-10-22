@@ -67,7 +67,7 @@ class PagesHandler:
 
             if page_content != '':
                 # Add content file
-                intro_file = {
+                content_file = {
                     'filename': page_name,
                     'filepath': '/',
                     'description': page_content,
@@ -76,7 +76,7 @@ class PagesHandler:
                     'type': 'description',
                     'timemodified': page_timemodified,
                 }
-                page_files.append(intro_file)
+                page_files.append(content_file)
 
             page_entry = {
                 page_course_module_id: {

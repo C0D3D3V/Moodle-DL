@@ -48,6 +48,7 @@ class AssignmentsHandler:
                 assign_rid = course_assign_obj.get('id', 0)
                 assign_name = course_assign_obj.get('name', '')
                 assign_timemodified = course_assign_obj.get('timemodified', 0)
+                assign_intro = course_assign_obj.get('intro', '')
 
                 assign_files = []
                 assign_files += course_assign_obj.get('introfiles', [])
@@ -58,6 +59,16 @@ class AssignmentsHandler:
                     file_type = assign_file.get('type', '')
                     if file_type is None or file_type == '':
                         assign_file.update({'type': 'assign_file'})
+
+                if assign_intro != '':
+                    # Add intro file
+                    intro_file = {
+                        'filename': 'Assignment intro',
+                        'filepath': '/',
+                        'description': assign_intro,
+                        'type': 'description',
+                    }
+                    assign_files.append(intro_file)
 
                 course_assigns.update(
                     {

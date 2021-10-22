@@ -53,6 +53,16 @@ class DatabasesHandler:
                 if file_type is None or file_type == '':
                     db_file.update({'type': 'database_introfile'})
 
+            if database_intro != '':
+                # Add Intro File
+                intro_file = {
+                    'filename': 'Database intro',
+                    'filepath': '/',
+                    'description': database_intro,
+                    'type': 'description',
+                }
+                database_introfiles.append(intro_file)
+
             database_entry = {
                 database_coursemodule: {
                     'id': database_id,

@@ -54,6 +54,16 @@ class ForumsHandler:
                 if file_type is None or file_type == '':
                     forum_file.update({'type': 'forum_introfile'})
 
+            if forum_intro != '':
+                # Add Intro File
+                intro_file = {
+                    'filename': 'Forum intro',
+                    'filepath': '/',
+                    'description': forum_intro,
+                    'type': 'description',
+                }
+                forum_introfiles.append(intro_file)
+
             forum_entry = {
                 forum_course_module_id: {
                     'id': forum_id,
