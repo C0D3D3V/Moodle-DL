@@ -6,7 +6,7 @@ from moodle_dl.moodle_connector.moodle_constants import moodle_html_footer, mood
 
 class LessonsHandler:
     """
-    Fetches and parses the various endpoints in Moodle for Lesson Entries.
+    Fetches and parses the various endpoints in Moodle for lesson entries.
     """
 
     def __init__(self, request_helper: RequestHelper, version: int):
@@ -94,7 +94,7 @@ class LessonsHandler:
                  indexed by courses, then lessons
         """
         # do this only if version is greater then 3.3
-        # because mod_quiz_get_user_attempts will fail
+        # because mod_lesson_get_user_attempt will fail
         if self.version < 2017051500:
             return lessons
 
@@ -122,7 +122,10 @@ class LessonsHandler:
                     end='',
                 )
 
-                attempt_result = self.request_helper.post_REST('mod_lesson_get_user_attempt', data)
+                try:
+                    attempt_result = self.request_helper.post_REST('mod_lesson_get_user_attempt', data)
+                except RequestRejectedError:
+                    continue
 
                 lesson_files = self._get_files_of_attempt(attempt_result, lesson.get('name', ''))
                 lesson['files'] += lesson_files
@@ -138,6 +141,19 @@ class LessonsHandler:
 
         # Grade is in: attempt_result.userstats.gradeinfo.earned  (max points: attempt_result.userstats.gradeinfo.total)
         # Take care, grade can be None
+
+        grade = attempt_result.get('userstats', {}).get('gradeinfo', {}).get('earned', None)
+        grade_total = attempt_result.get('userstats', {}).get('gradeinfo', {}).get('total', None)
+
+        if grade is not None and grade_total is not None:
+            grade_file = {
+                'filename': 'grade',
+                'filepath': '/',
+                'timemodified': 0,
+                'description': str(grade) + ' / ' + str(grade_total),
+                'type': 'description',
+            }
+            result.append(grade_file)
 
         # build lesson HTML
         lesson_html = moodle_html_header

@@ -7,7 +7,7 @@ from moodle_dl.download_service.path_tools import PathTools
 
 class ForumsHandler:
     """
-    Fetches and parses the various endpoints in Moodle for Forum Entries.
+    Fetches and parses the various endpoints in Moodle for forum entries.
     """
 
     def __init__(self, request_helper: RequestHelper, version: int):
@@ -53,6 +53,16 @@ class ForumsHandler:
                 file_type = forum_file.get('type', '')
                 if file_type is None or file_type == '':
                     forum_file.update({'type': 'forum_introfile'})
+
+            if forum_intro != '':
+                # Add Intro File
+                intro_file = {
+                    'filename': 'Forum intro',
+                    'filepath': '/',
+                    'description': forum_intro,
+                    'type': 'description',
+                }
+                forum_introfiles.append(intro_file)
 
             forum_entry = {
                 forum_course_module_id: {

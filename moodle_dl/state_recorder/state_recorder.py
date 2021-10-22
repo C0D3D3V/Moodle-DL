@@ -214,7 +214,7 @@ class StateRecorder:
         if (
             file1.content_type == 'description'
             and file1.content_type == file2.content_type
-            and file1.hash != file2.hash
+            and (file1.hash != file2.hash or file1.content_timemodified != file2.content_timemodified)
         ):
             return True
 

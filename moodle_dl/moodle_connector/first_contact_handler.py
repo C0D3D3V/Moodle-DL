@@ -1,3 +1,5 @@
+import json
+
 from moodle_dl.moodle_connector.request_helper import RequestHelper
 from moodle_dl.state_recorder.course import Course
 
@@ -42,11 +44,33 @@ class FirstContactHandler:
         """
         data = {'userid': userid}
 
-        result = self.request_helper.post_REST('core_enrol_get_users_courses', data)
+        courses = self.request_helper.post_REST('core_enrol_get_users_courses', data)
 
         results = []
-        for course in result:
+        for course in courses:
             results.append(Course(course.get('id', 0), course.get('fullname', '')))
+            # We could also extract here the course summary and intro files
+        return results
+
+    def fetch_all_visible_courses(self, log_all_courses_to: str = None) -> [Course]:
+        """
+        Queries the Moodle system for all courses available on the system and returns:
+        @return: A list of all visible courses
+        """
+        # API is only available since version 3.2
+        if self.version < 2016120500:
+            return []
+
+        result = self.request_helper.post_REST('core_course_get_courses_by_field', timeout=1200)
+        if log_all_courses_to is not None:
+            with open(log_all_courses_to, 'w', encoding='utf-8') as log_file:
+                log_file.write(json.dumps(result, indent=4, ensure_ascii=False))
+        courses = result.get('courses', [])
+
+        results = []
+        for course in courses:
+            if course.get('visible', 0) == 1:
+                results.append(Course(course.get('id', 0), course.get('fullname', '')))
         return results
 
     def fetch_courses_info(self, course_ids: [int]) -> [Course]:
@@ -65,12 +89,12 @@ class FirstContactHandler:
         }
 
         result = self.request_helper.post_REST('core_course_get_courses_by_field', data)
-        result = result.get('courses', [])
+        courses = result.get('courses', [])
 
         results = []
-        for course in result:
+        for course in courses:
             results.append(Course(course.get('id', 0), course.get('fullname', '')))
-        print("IOOOO ", result)
+            # We could also extract here the course summary and intro files
         return results
 
     def fetch_sections(self, course_id: int) -> []:

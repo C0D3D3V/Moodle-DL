@@ -18,9 +18,11 @@ from moodle_dl.moodle_connector import login_helper
 from moodle_dl.moodle_connector import sso_token_receiver
 from moodle_dl.moodle_connector.cookie_handler import CookieHandler
 from moodle_dl.moodle_connector.results_handler import ResultsHandler
+from moodle_dl.moodle_connector.pages_handler import PagesHandler
 from moodle_dl.moodle_connector.forums_handler import ForumsHandler
 from moodle_dl.moodle_connector.quizzes_handler import QuizzesHandler
 from moodle_dl.moodle_connector.lessons_handler import LessonsHandler
+from moodle_dl.moodle_connector.workshops_handler import WorkshopsHandler
 from moodle_dl.moodle_connector.databases_handler import DatabasesHandler
 from moodle_dl.moodle_connector.assignments_handler import AssignmentsHandler
 from moodle_dl.moodle_connector.first_contact_handler import FirstContactHandler
@@ -265,6 +267,7 @@ class MoodleService:
         download_forums = self.config_helper.get_download_forums()
         download_quizzes = self.config_helper.get_download_quizzes()
         download_lessons = self.config_helper.get_download_lessons()
+        download_workshops = self.config_helper.get_download_workshops()
         download_also_with_cookie = self.config_helper.get_download_also_with_cookie()
 
         courses = []
@@ -283,6 +286,8 @@ class MoodleService:
         forums_handler = ForumsHandler(request_helper, version)
         quizzes_handler = QuizzesHandler(request_helper, version)
         lessons_handler = LessonsHandler(request_helper, version)
+        workshops_handler = WorkshopsHandler(request_helper, version)
+        pages_handler = PagesHandler(request_helper, version)
         results_handler.setVersion(version)
 
         if download_also_with_cookie:
@@ -322,6 +327,12 @@ class MoodleService:
         if download_lessons:
             lessons = lessons_handler.fetch_lessons_files(userid, lessons)
 
+        workshops = workshops_handler.fetch_workshops(courses)
+        if download_workshops:
+            workshops = workshops_handler.fetch_workshops_files(userid, workshops)
+
+        pages = pages_handler.fetch_pages(courses)
+
         courses = self.add_options_to_courses(courses)
         index = 0
         for course in courses:
@@ -343,14 +354,16 @@ class MoodleService:
 
             print(status_message + '\033[K', end='')
 
-            course_assignments = assignments.get(course.id, {})
-            course_databases = databases.get(course.id, {})
-            course_forums = forums.get(course.id, {})
-            course_quizzes = quizzes.get(course.id, {})
-            course_lessons = lessons.get(course.id, {})
-            results_handler.set_fetch_addons(
-                course_assignments, course_databases, course_forums, course_quizzes, course_lessons
-            )
+            course_fetch_addons = {
+                'assign': assignments.get(course.id, {}),
+                'data': databases.get(course.id, {}),
+                'forum': forums.get(course.id, {}),
+                'quiz': quizzes.get(course.id, {}),
+                'lesson': lessons.get(course.id, {}),
+                'workshop': workshops.get(course.id, {}),
+                'page': pages.get(course.id, {}),
+            }
+            results_handler.set_fetch_addons(course_fetch_addons)
             course.files = results_handler.fetch_files(course)
 
             filtered_courses.append(course)
@@ -404,6 +417,7 @@ class MoodleService:
         download_databases = config_helper.get_download_databases()
         download_quizzes = config_helper.get_download_quizzes()
         download_lessons = config_helper.get_download_lessons()
+        download_workshops = config_helper.get_download_workshops()
         exclude_file_extensions = config_helper.get_exclude_file_extensions()
         download_also_with_cookie = config_helper.get_download_also_with_cookie()
         if cookie_handler is not None:
@@ -427,23 +441,34 @@ class MoodleService:
                         break
                 if not_online:
                     Log.warning(f'The Moodle course with id {course.id} is no longer available online.')
-                    logging.warning(f'The Moodle course with id {course.id} is no longer available online.')
+                    logging.warning('The Moodle course with id %d is no longer available online.', course.id)
                     continue
 
-            if not download_submissions:
-                course_files = []
-                for file in course.files:
-                    if not (file.module_modname.endswith('assign') and file.deleted):
-                        course_files.append(file)
-                course.files = course_files
+            course_files = []
+            for file in course.files:
+                # Filter Files based on options
+                if (
+                    # Filter Assignment Submission Files
+                    (download_submissions or (not (file.module_modname.endswith('assign') and file.deleted)))
+                    # Filter Description Files
+                    and (download_descriptions or file.content_type != 'description')
+                    # Filter Database Files
+                    and (download_databases or file.content_type != 'database_file')
+                    # Filter Quiz Files
+                    and (download_quizzes or (not (file.module_modname.endswith('quiz') and file.deleted)))
+                    # Filter Lesson Files
+                    and (download_lessons or (not (file.module_modname.endswith('lesson') and file.deleted)))
+                    # Filter Workshops Files
+                    and (download_workshops or (not (file.module_modname.endswith('workshop') and file.deleted)))
+                    # Filter Files that requiere a Cookie
+                    and (download_also_with_cookie or (not file.module_modname.startswith('cookie_mod-')))
+                    # Exclude files whose file extension is blacklisted
+                    and (not (determine_ext(file.content_filename) in exclude_file_extensions))
+                ):
+                    course_files.append(file)
+            course.files = course_files
 
-            if not download_descriptions:
-                course_files = []
-                for file in course.files:
-                    if file.content_type != 'description':
-                        course_files.append(file)
-                course.files = course_files
-
+            # Filter Description URLs
             course_files = []
             for file in course.files:
                 if not file.content_type == 'description-url':
@@ -465,46 +490,7 @@ class MoodleService:
 
                     if add_description_url:
                         course_files.append(file)
-
             course.files = course_files
-
-            if not download_databases:
-                course_files = []
-                for file in course.files:
-                    if file.content_type != 'database_file':
-                        course_files.append(file)
-                course.files = course_files
-
-            if not download_quizzes:
-                # Filter Quiz Files
-                course_files = []
-                for file in course.files:
-                    if not (file.module_modname.endswith('quiz') and file.deleted):
-                        course_files.append(file)
-                course.files = course_files
-
-            if not download_lessons:
-                # Filter Lesson Files
-                course_files = []
-                for file in course.files:
-                    if not (file.module_modname.endswith('lesson') and file.deleted):
-                        course_files.append(file)
-                course.files = course_files
-
-            if not download_also_with_cookie:
-                course_files = []
-                for file in course.files:
-                    if not file.module_modname.startswith('cookie_mod-'):
-                        course_files.append(file)
-                course.files = course_files
-
-            if len(exclude_file_extensions) > 0:
-                # Exclude files whose file extension is blacklisted.
-                course_files = []
-                for file in course.files:
-                    if not (determine_ext(file.content_filename) in exclude_file_extensions):
-                        course_files.append(file)
-                course.files = course_files
 
             if len(course.files) > 0:
                 filtered_changes.append(course)

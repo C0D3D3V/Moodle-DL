@@ -6,7 +6,7 @@ from moodle_dl.moodle_connector.moodle_constants import moodle_html_footer, mood
 
 class QuizzesHandler:
     """
-    Fetches and parses the various endpoints in Moodle for Quiz Entries.
+    Fetches and parses the various endpoints in Moodle for quiz entries.
     """
 
     def __init__(self, request_helper: RequestHelper, version: int):

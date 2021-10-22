@@ -150,6 +150,15 @@ def run_delete_old_files(storage_path):
     Log.success('All done.')
 
 
+def run_add_all_visible_courses(storage_path, skip_cert_verify):
+    config = ConfigHelper(storage_path)
+    config.load()  # because we do not want to override the other settings
+
+    ConfigService(config, storage_path, skip_cert_verify).interactively_add_all_visible_courses()
+
+    Log.success('Configuration successfully updated!')
+
+
 def run_change_notification_mail(storage_path):
     config = ConfigHelper(storage_path)
     config.load()
@@ -467,6 +476,13 @@ def get_parser():
         + ' along with the requested URL.',
     )
 
+    group.add_argument(
+        '--add-all-visible-courses',
+        default=False,
+        action='store_true',
+        help='To add all courses visible to the user to the configuration file.',
+    )
+
     parser.add_argument(
         '-p',
         '--path',
@@ -574,6 +590,7 @@ def main(args=None):
     ignore_ytdl_errors = args.ignore_ytdl_errors
     without_downloading_files = args.without_downloading_files
     log_responses = args.log_responses
+
     DownloadService.thread_count = args.threads
 
     if args.init:
@@ -592,5 +609,7 @@ def main(args=None):
         run_manage_database(storage_path)
     elif args.delete_old_files:
         run_delete_old_files(storage_path)
+    elif args.add_all_visible_courses:
+        run_add_all_visible_courses(storage_path, skip_cert_verify)
     else:
         run_main(storage_path, verbose, skip_cert_verify, ignore_ytdl_errors, without_downloading_files, log_responses)

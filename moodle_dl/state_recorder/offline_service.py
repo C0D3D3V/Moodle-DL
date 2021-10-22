@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 
 from moodle_dl.utils import cutie
+from moodle_dl.utils.logger import Log
 from moodle_dl.state_recorder.file import File
 from moodle_dl.moodle_connector.moodle_service import MoodleService
 from moodle_dl.config_service.config_helper import ConfigHelper
@@ -48,6 +49,19 @@ class OfflineService:
             + ' selectively remove file entries from the database so'
             + ' that these files can be downloaded again.'
         )
+
+        Log.warning(
+            'Only files that are missing locally but stored in the local'
+            + ' database are displayed in this tool. If a file is not missing'
+            + ' from a course, it will not be listed here at all.  Also, only'
+            + ' courses that are selected for download are displayed.'
+        )
+
+        Log.critical(
+            'For more complicated operations on the database a DB browser for SQLite'
+            + ' is advantageous (https://sqlitebrowser.org/).'
+        )
+
 
         print('Choose one of the courses:')
         print('[Confirm your selection with the Enter key]')

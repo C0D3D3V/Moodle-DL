@@ -4,7 +4,7 @@ from moodle_dl.state_recorder.course import Course
 
 class DatabasesHandler:
     """
-    Fetches and parses the various endpoints in Moodle.
+    Fetches and parses the various endpoints in Moodle for database entries.
     """
 
     def __init__(self, request_helper: RequestHelper, version: int):
@@ -52,6 +52,16 @@ class DatabasesHandler:
                 file_type = db_file.get('type', '')
                 if file_type is None or file_type == '':
                     db_file.update({'type': 'database_introfile'})
+
+            if database_intro != '':
+                # Add Intro File
+                intro_file = {
+                    'filename': 'Database intro',
+                    'filepath': '/',
+                    'description': database_intro,
+                    'type': 'description',
+                }
+                database_introfiles.append(intro_file)
 
             database_entry = {
                 database_coursemodule: {

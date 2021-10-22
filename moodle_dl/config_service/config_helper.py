@@ -102,6 +102,13 @@ class ConfigHelper:
         except ValueError:
             return False
 
+    def get_download_workshops(self) -> bool:
+        # returns a stored boolean if workshops should be downloaded
+        try:
+            return self.get_property('download_workshops')
+        except ValueError:
+            return False
+
     def get_userid_and_version(self) -> (str, int):
         # returns the userid and a version
         try:

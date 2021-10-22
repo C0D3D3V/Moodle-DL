@@ -177,7 +177,7 @@ def select(
         if data_bottom != len(options):
             print(f'{len(options) - data_bottom} more lines below...\033[K')
 
-        lines_printed = max(3, view_hight)
+        lines_printed = view_hight
 
         keypress = readchar.readkey()
         if keypress in DefaultKeys.up:
@@ -331,7 +331,7 @@ def select_multiple(
         else:
             print(f'{len(options) - data_bottom} more lines below... {error_message}\033[K')
 
-        lines_printed = max(3, view_hight)
+        lines_printed = view_hight
 
         error_message = ''
         keypress = readchar.readkey()
