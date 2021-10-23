@@ -1,4 +1,4 @@
-from youtube_dl.YoutubeDL import YoutubeDL
+from yt_dlp.YoutubeDL import YoutubeDL
 
 from moodle_dl.ydl_extractors.zoomus import ZoomUSIE
 from moodle_dl.ydl_extractors.opencast import OpencastIE, OpencastPlaylistIE

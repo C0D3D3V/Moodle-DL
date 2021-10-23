@@ -5,13 +5,13 @@ from __future__ import unicode_literals
 import re
 import json
 
-from youtube_dl.compat import (
+from yt_dlp.compat import (
     compat_urllib_parse,
     compat_urllib_parse_urlparse,
 )
 
-from youtube_dl.extractor.common import InfoExtractor
-from youtube_dl.utils import (
+from yt_dlp.extractor.common import InfoExtractor
+from yt_dlp.utils import (
     ExtractorError,
     urlencode_postdata,
     js_to_json,

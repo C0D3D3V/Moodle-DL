@@ -2,9 +2,9 @@ from __future__ import unicode_literals
 
 import re
 
-from youtube_dl.extractor.common import InfoExtractor
-from youtube_dl.compat import compat_parse_qs
-from youtube_dl.utils import (
+from yt_dlp.extractor.common import InfoExtractor
+from yt_dlp.compat import compat_parse_qs
+from yt_dlp.utils import (
     determine_ext,
     ExtractorError,
     int_or_none,
