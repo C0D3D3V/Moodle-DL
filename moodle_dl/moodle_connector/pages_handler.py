@@ -67,13 +67,19 @@ class PagesHandler:
 
             if page_content != '':
                 # Add content file
+
+                # if page has no files, we should download the text content as file
+                type = 'description'
+                if not page_files:
+                    type = 'description-file'
+
                 content_file = {
                     'filename': page_name,
                     'filepath': '/',
                     'description': page_content,
                     'filter_urls_in_description_containing': ['/mod_page/content/'],
                     'no_hash': True,
-                    'type': 'description',
+                    'type': type,
                     'timemodified': page_timemodified,
                 }
                 page_files.append(content_file)
