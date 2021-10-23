@@ -63,6 +63,10 @@ class OfflineService:
         )
 
 
+        if not courses:
+            print('No files are missing locally but stored in the local database. Nothing to do.')
+            return
+
         print('Choose one of the courses:')
         print('[Confirm your selection with the Enter key]')
         print('')
