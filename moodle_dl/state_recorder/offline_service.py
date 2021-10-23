@@ -31,18 +31,12 @@ class OfflineService:
 
         course_options = []
         courses = []
-        changes = False
         for course in stored_files:
             for course_file in course.files:
                 if not os.path.exists(course_file.saved_to):
                     course_options.append(COLOR_SEQ % BLUE + course.fullname + RESET_SEQ)
                     courses.append(course)
-                    changes = True
                     break
-
-        if not changes:
-            print("No files to re-download. Delete a local file to use this tool")
-            return
 
         print(
             'This management tool will navigate you through a menu to'
@@ -61,7 +55,6 @@ class OfflineService:
             'For more complicated operations on the database a DB browser for SQLite'
             + ' is advantageous (https://sqlitebrowser.org/).'
         )
-
 
         if not courses:
             print('No files are missing locally but stored in the local database. Nothing to do.')
