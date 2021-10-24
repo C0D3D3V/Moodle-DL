@@ -21,7 +21,7 @@ from yt_dlp.utils import (
 )
 
 
-class Owncloud(InfoExtractor):
+class OwncloudIE(InfoExtractor):
     IE_NAME = 'owncloud'
     _INSTANCES_RE = r'''(?:
                             .*\.?sciebo\.de|

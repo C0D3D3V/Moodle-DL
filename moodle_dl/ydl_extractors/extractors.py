@@ -2,9 +2,9 @@ from yt_dlp.YoutubeDL import YoutubeDL
 
 from moodle_dl.ydl_extractors.zoomus import ZoomUSIE
 from moodle_dl.ydl_extractors.opencast import OpencastIE, OpencastPlaylistIE
-from moodle_dl.ydl_extractors.helixmedia import Helixmedia
-from moodle_dl.ydl_extractors.owncloud import Owncloud
-from moodle_dl.ydl_extractors.opencast_lti import OpencastLTI
+from moodle_dl.ydl_extractors.helixmedia import HelixmediaIE
+from moodle_dl.ydl_extractors.owncloud import OwncloudIE
+from moodle_dl.ydl_extractors.opencast_lti import OpencastLTIIE
 from moodle_dl.ydl_extractors.googledrive import GoogleDriveIE
 
 
@@ -13,12 +13,19 @@ def add_additional_extractors(ydl: YoutubeDL):
         OpencastIE(ydl),
         OpencastPlaylistIE(ydl),
         ZoomUSIE(ydl),
-        Helixmedia(ydl),
-        Owncloud(ydl),
-        OpencastLTI(ydl),
+        HelixmediaIE(ydl),
+        OwncloudIE(ydl),
+        OpencastLTIIE(ydl),
         GoogleDriveIE(ydl),
     ]
 
+    moodle_dl_ies = {}
+    moodle_dl_ies_instances = {}
     for extractor in additional_extractors:
-        ydl._ies.insert(0, extractor)
-        ydl._ies_instances[extractor.ie_key()] = extractor
+        ie_key = extractor.ie_key()
+        moodle_dl_ies[ie_key] = extractor
+        moodle_dl_ies_instances[ie_key] = extractor
+    moodle_dl_ies.update(ydl._ies)
+    moodle_dl_ies_instances.update(ydl._ies_instances)
+    ydl._ies = moodle_dl_ies
+    ydl._ies_instances = moodle_dl_ies_instances

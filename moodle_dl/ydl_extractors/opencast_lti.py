@@ -22,7 +22,7 @@ from yt_dlp.utils import (
 )
 
 
-class OpencastLTI(InfoExtractor):
+class OpencastLTIIE(InfoExtractor):
     IE_NAME = 'opencastLTI'
     _VALID_URL = r'(?P<scheme>https?://)(?P<host>[^/]+)(?P<path>.*)?/mod/lti/view.php\?.*?id=(?P<id>\d+)'
     _LAUNCH_FORM = 'ltiLaunchForm'
