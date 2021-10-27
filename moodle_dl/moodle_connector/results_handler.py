@@ -101,7 +101,7 @@ class ResultsHandler:
                 module_modname = 'cookie_mod-' + module_modname
                 files += self._handle_cookie_mod(section_name, module_name, module_modname, module_id, module_url)
 
-            elif module_modname.startswith(('resource', 'folder', 'url', 'index_mod')):
+            elif module_modname.startswith(('resource', 'folder', 'akarifolder', 'url', 'index_mod')):
                 files += self._handle_files(section_name, module_name, module_modname, module_id, module_contents)
 
             elif module_modname in self.course_fetch_addons:
