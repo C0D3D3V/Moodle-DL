@@ -305,6 +305,12 @@ class URLTarget(object):
             self.thread_report[self.thread_id]['percentage'] = 100
             self.thread_report[self.thread_id]['extra_totalsize'] = None
 
+    def yt_hook_after_move(self, final_filename: str):
+        rel_pos = final_filename.find(self.destination)
+        if rel_pos >= 0:
+            final_filename = final_filename[rel_pos:]
+        self.file.saved_to = final_filename
+
     def is_blocked_for_youtube_dl(self, url_to_download: str):
         url_parsed = urlparse.urlparse(url_to_download)
         if url_parsed.hostname.endswith('youtube.com') and url_parsed.path.startswith('/channel/'):
@@ -501,6 +507,7 @@ class URLTarget(object):
             ydl_opts = {
                 'logger': self.YtLogger(self),
                 'progress_hooks': [self.yt_hook],
+                'post_hooks': [self.yt_hook_after_move],
                 'outtmpl': outtmpl,
                 'nocheckcertificate': self.skip_cert_verify,
                 'retries': 10,
@@ -536,7 +543,8 @@ class URLTarget(object):
                     if ydl_results == 1:
                         pass
                     elif self.file.module_name != 'index_mod-page':
-                        self.file.saved_to = str(Path(self.destination) / self.filename)
+                        # we now set the saved_to path in yt_hook_after_move
+                        # self.file.saved_to = str(Path(self.destination) / self.filename)
                         self.file.time_stamp = int(time.time())
 
                         self.success = True
