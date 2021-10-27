@@ -7,7 +7,7 @@ from getpass import getpass
 from urllib.parse import urlparse
 from distutils.version import StrictVersion
 
-from youtube_dl.utils import determine_ext
+from yt_dlp.utils import determine_ext
 
 from moodle_dl.utils import cutie
 from moodle_dl.utils.logger import Log

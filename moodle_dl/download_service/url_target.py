@@ -22,9 +22,9 @@ from email.utils import unquote
 
 import requests
 import html2text
-import youtube_dl
+import yt_dlp
 
-from youtube_dl.utils import format_bytes, timeconvert
+from yt_dlp.utils import format_bytes, timeconvert
 from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema, RequestException
 
 from moodle_dl.state_recorder.file import File
@@ -515,7 +515,7 @@ class URLTarget(object):
             if cookies_path is not None and os.path.isfile(cookies_path):
                 ydl_opts.update({'cookiefile': cookies_path})
 
-            ydl = youtube_dl.YoutubeDL(ydl_opts)
+            ydl = yt_dlp.YoutubeDL(ydl_opts)
             add_additional_extractors(ydl)
 
             videopasswords = self.options.get('videopasswords', {})
