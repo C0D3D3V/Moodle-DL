@@ -71,12 +71,13 @@ class PagesHandler:
                 # if page has no files, we should download the text content as file
                 type = 'description'
                 if not page_files:
-                    type = 'description-file'
+                    type = 'html'
+                    page_name += '.html'
 
                 content_file = {
                     'filename': page_name,
                     'filepath': '/',
-                    'description': page_content,
+                    type: page_content,
                     'filter_urls_in_description_containing': ['/mod_page/content/'],
                     'no_hash': True,
                     'type': type,

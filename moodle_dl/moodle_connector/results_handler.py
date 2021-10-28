@@ -118,11 +118,7 @@ class ResultsHandler:
                 addon = self.course_fetch_addons.get(module_modname, {}).get(module_id, {})
                 addon_files = addon.get('files', [])
 
-                if len(addon_files) == 1 and addon_files[0].get('type') == 'description-file':
-                    files += self._handle_files(section_name, module_name, 'index_mod-page', module_id, module_contents)
-
-                else:
-                    files += self._handle_files(section_name, module_name, module_modname, module_id, addon_files)
+                files += self._handle_files(section_name, module_name, module_modname, module_id, addon_files)
             else:
                 logging.debug('Got unhandled module: name=%s mod=%s url=%s', module_name, module_modname, module_url)
 
