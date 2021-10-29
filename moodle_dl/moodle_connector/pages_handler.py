@@ -72,7 +72,6 @@ class PagesHandler:
                 type = 'description'
                 if not page_files:
                     type = 'html'
-                    page_name += '.html'
 
                 content_file = {
                     'filename': page_name,

@@ -137,7 +137,7 @@ class QuizzesHandler:
             attempt_state = attempt.get('state', 'unknown')
 
             attempt_filename = PathTools.to_valid_name(
-                quiz_name + ' (attempt ' + str(attempt_id) + ' ' + attempt_state + ').html'
+                quiz_name + ' (attempt ' + str(attempt_id) + ' ' + attempt_state + ')'
             )
 
             shorted_quiz_name = quiz_name

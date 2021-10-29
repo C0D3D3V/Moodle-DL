@@ -676,19 +676,18 @@ class URLTarget(object):
         if self.file.content_type == 'description' and not ignore_attributes:
             self.file.saved_to = str(Path(self.destination) / (self.filename + '.md'))
 
-            self.file.saved_to = self._rename_if_exists(self.file.saved_to)
+        elif self.file.content_type == 'html' and not ignore_attributes:
+            self.file.saved_to = str(Path(self.destination) / (self.filename + '.html'))
 
         elif self.file.module_modname.startswith('url') and not ignore_attributes:
             self.file.saved_to = str(Path(self.destination) / (self.filename + '.desktop'))
             if os.name == 'nt' or platform.system() == "Darwin":
                 self.file.saved_to = str(Path(self.destination) / (self.filename + '.URL'))
 
-            self.file.saved_to = self._rename_if_exists(self.file.saved_to)
-
         else:  # normal path
             self.file.saved_to = str(Path(self.destination) / self.filename)
 
-            self.file.saved_to = self._rename_if_exists(self.file.saved_to)
+        self.file.saved_to = self._rename_if_exists(self.file.saved_to)
 
     def create_description(self):
         """
