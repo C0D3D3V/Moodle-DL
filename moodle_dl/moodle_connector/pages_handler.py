@@ -81,6 +81,7 @@ class PagesHandler:
                     'no_hash': True,
                     'type': type,
                     'timemodified': page_timemodified,
+                    'filesize': len(page_content)
                 }
                 page_files.append(content_file)
 
