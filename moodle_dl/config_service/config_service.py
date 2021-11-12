@@ -153,7 +153,7 @@ class ConfigService:
                     'create_directory_structure': True,
                 }
 
-            options_of_courses.update({str(course.id): current_course_settings})
+                options_of_courses.update({str(course.id): current_course_settings})
 
             if course.id not in download_public_course_ids:
                 download_public_course_ids.append(course.id)

@@ -8,7 +8,7 @@ import threading
 from queue import Queue
 import certifi
 
-from youtube_dl.utils import format_bytes
+from yt_dlp.utils import format_bytes
 
 from moodle_dl.utils.logger import Log
 from moodle_dl.state_recorder.course import Course, File

@@ -1,7 +1,7 @@
 import html
 
 from pathlib import Path
-from youtube_dl.utils import sanitize_filename
+from yt_dlp.utils import sanitize_filename
 
 
 class PathTools:

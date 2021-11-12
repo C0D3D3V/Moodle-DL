@@ -3,8 +3,8 @@ from __future__ import unicode_literals
 
 import re
 
-from youtube_dl.extractor.common import InfoExtractor
-from youtube_dl.utils import (
+from yt_dlp.extractor.common import InfoExtractor
+from yt_dlp.utils import (
     determine_ext,
     parse_iso8601,
     parse_resolution,
