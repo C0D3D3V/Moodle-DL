@@ -54,7 +54,7 @@ class ResultsHandler:
         """
         files = []
         for section in course_sections:
-            section_id = section.get('id', '')
+            section_id = section.get('id', 0)
             section_name = section.get('name', '')
             section_modules = section.get('modules', [])
             section_summary = section.get('summary', '')
