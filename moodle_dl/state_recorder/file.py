@@ -162,7 +162,7 @@ class File:
 
         message += 'module_id: %s' % (self.module_id)
         message += ', section_name: "%s"' % (PathTools.to_valid_name(self.section_name))
-        message += ', section_id: "%s"' % (PathTools.to_valid_name(self.section_id))
+        message += ', section_id: "%s"' % (self.section_id)
         message += ', module_name: "%s"' % (PathTools.to_valid_name(self.module_name))
         message += ', content_filepath: %s' % (self.content_filepath)
         message += ', content_filename: "%s"' % (PathTools.to_valid_name(self.content_filename))
