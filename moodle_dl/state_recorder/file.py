@@ -6,6 +6,7 @@ class File:
         self,
         module_id: int,
         section_name: str,
+        section_id: int,
         module_name: str,
         content_filepath: str,
         content_filename: str,
@@ -30,6 +31,7 @@ class File:
 
         self.module_id = module_id
         self.section_name = section_name
+        self.section_id = section_id
         self.module_name = module_name
 
         self.content_filepath = content_filepath
@@ -92,6 +94,7 @@ class File:
             'file_id': self.file_id,
             'module_id': self.module_id,
             'section_name': self.section_name,
+            'section_id': self.section_id,
             'module_name': self.module_name,
             'content_filepath': self.content_filepath,
             'content_filename': self.content_filename,
@@ -118,6 +121,7 @@ class File:
             file_id=row['file_id'],
             module_id=row['module_id'],
             section_name=row['section_name'],
+            section_id=row['section_id'],
             module_name=row['module_name'],
             content_filepath=row['content_filepath'],
             content_filename=row['content_filename'],
@@ -138,14 +142,14 @@ class File:
         )
 
     INSERT = """INSERT INTO files
-            (course_id, course_fullname, module_id, section_name,
+            (course_id, course_fullname, module_id, section_name, section_id,
             module_name, content_filepath, content_filename,
             content_fileurl, content_filesize, content_timemodified,
             module_modname, content_type, content_isexternalfile,
             saved_to, time_stamp, modified, moved, deleted, notified,
             hash, old_file_id)
             VALUES (:course_id, :course_fullname, :module_id,
-            :section_name, :module_name, :content_filepath,
+            :section_name, :section_id, :module_name, :content_filepath,
             :content_filename, :content_fileurl, :content_filesize,
             :content_timemodified, :module_modname, :content_type,
             :content_isexternalfile, :saved_to, :time_stamp,
@@ -158,6 +162,7 @@ class File:
 
         message += 'module_id: %s' % (self.module_id)
         message += ', section_name: "%s"' % (PathTools.to_valid_name(self.section_name))
+        message += ', section_id: "%s"' % (PathTools.to_valid_name(self.section_id))
         message += ', module_name: "%s"' % (PathTools.to_valid_name(self.module_name))
         message += ', content_filepath: %s' % (self.content_filepath)
         message += ', content_filename: "%s"' % (PathTools.to_valid_name(self.content_filename))

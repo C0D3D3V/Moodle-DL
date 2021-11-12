@@ -373,8 +373,8 @@ class MoodleService:
         changes = self.recorder.changes_of_new_version(filtered_courses)
 
         # Filter changes
-        changes = self.filter_courses(changes, self.config_helper, cookie_handler, courses_list + public_courses_list)
         changes = self.add_options_to_courses(changes)
+        changes = self.filter_courses(changes, self.config_helper, cookie_handler, courses_list + public_courses_list)
 
         return changes
 
@@ -464,6 +464,8 @@ class MoodleService:
                     and (download_also_with_cookie or (not file.module_modname.startswith('cookie_mod-')))
                     # Exclude files whose file extension is blacklisted
                     and (not (determine_ext(file.content_filename) in exclude_file_extensions))
+                    # Exclude files that are in excluded sections
+                    and (ResultsHandler.should_download_section(file.section_id, course.excluded_sections))
                 ):
                     course_files.append(file)
             course.files = course_files
