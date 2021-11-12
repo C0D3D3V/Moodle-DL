@@ -338,12 +338,6 @@ def run_main(
 
 
 def _dir_path(path):
-    # Working around MAX_PATH limitation on Windows (see
-    # http://msdn.microsoft.com/en-us/library/windows/desktop/aa365247(v=vs.85).aspx)
-    if os.name == 'nt':
-        absfilepath = os.path.abspath(path)
-        path = '\\\\?\\' + absfilepath
-
     if os.path.isdir(path):
         return path
     else:
@@ -355,6 +349,18 @@ def check_debug():
     if 'pydevd' in sys.modules:
         IS_DEBUG = True
         Log.debug('[RUNNING IN DEBUG-MODE!]')
+
+
+def _max_path_length_workaround(path):
+    # Working around MAX_PATH limitation on Windows (see
+    # http://msdn.microsoft.com/en-us/library/windows/desktop/aa365247(v=vs.85).aspx)
+    if os.name == 'nt':
+        absfilepath = os.path.abspath(path)
+        path = '\\\\?\\' + absfilepath
+        Log.debug("Using absolute paths")
+    else:
+        Log.info("You are not on Windows, you don't need to use this workaround")
+    return path
 
 
 def get_parser():
@@ -498,6 +504,18 @@ def get_parser():
     )
 
     parser.add_argument(
+        '--max-path-length-workaround',
+        default=False,
+        action='store_true',
+        help=(
+            'If this flag is set, all path are made absolute '
+            + 'in order to workaround the max_path limitation on Windows.'
+            + 'To use relative paths on Windows you should disable the max_path limitation'
+            + 'https://docs.microsoft.com/it-it/windows/win32/fileio/maximum-file-path-limitation'
+        ),
+    )
+
+    parser.add_argument(
         '-t',
         '--threads',
         default=5,
@@ -585,7 +603,10 @@ def main(args=None):
     verbose = args.verbose
     username = args.username
     password = args.password
-    storage_path = ".\\"  # args.path
+    if args.max_path_length_workaround:
+        storage_path = _max_path_length_workaround(args.path)
+    else:
+        storage_path = args.path
     skip_cert_verify = args.skip_cert_verify
     ignore_ytdl_errors = args.ignore_ytdl_errors
     without_downloading_files = args.without_downloading_files
