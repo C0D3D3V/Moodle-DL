@@ -59,6 +59,8 @@ If you run the program on **Windows**, please use [Powershell or CMD](https://ww
 - `moodle-dl --manage-database`
     - To manage the offline database.
     - It allows you to delete entries from the database that are no longer available locally so that they can be downloaded again.
+- `moodle-dl --delete-old-files`
+    - To delete old versions of updated files.
 - `moodle-dl --add-all-visible-courses`
     - To add all courses visible to the moodle user to the configuration file.
 - `moodle-dl --version`
@@ -85,6 +87,10 @@ Options can be combined with all the actions mentioned above.
     - Can be used to automate the `--new-token` process. 
     - Specify password to skip the query when creating a new token.
     - If the password contains special characters like spaces you can enclose it in quotation marks
+- `--max-path-length-workaround`
+    - If this flag is set, all path are made absolute in order to work around the max_path limitation on Windows.
+    - To use relative paths on Windows you should [disable the max_path limitation](https://docs.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=cmd).
+    - Default: False
 - `--skip-cert-verify`
     - This flag is used to skip the certification verification while sending requests to Moodle and all other websites.
     - Warning: This might lead to security flaws and should only be used in non-production environments.

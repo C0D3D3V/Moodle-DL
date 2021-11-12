@@ -140,6 +140,16 @@ def run_manage_database(storage_path):
     Log.success('All done.')
 
 
+def run_delete_old_files(storage_path):
+    config = ConfigHelper(storage_path)
+    config.load()  # Not really needed, we check all local courses
+
+    offline_service = OfflineService(config, storage_path)
+    offline_service.delete_old_files()
+
+    Log.success('All done.')
+
+
 def run_add_all_visible_courses(storage_path, skip_cert_verify):
     config = ConfigHelper(storage_path)
     config.load()  # because we do not want to override the other settings
@@ -328,12 +338,6 @@ def run_main(
 
 
 def _dir_path(path):
-    # Working around MAX_PATH limitation on Windows (see
-    # http://msdn.microsoft.com/en-us/library/windows/desktop/aa365247(v=vs.85).aspx)
-    if os.name == 'nt':
-        absfilepath = os.path.abspath(path)
-        path = '\\\\?\\' + absfilepath
-
     if os.path.isdir(path):
         return path
     else:
@@ -345,6 +349,18 @@ def check_debug():
     if 'pydevd' in sys.modules:
         IS_DEBUG = True
         Log.debug('[RUNNING IN DEBUG-MODE!]')
+
+
+def _max_path_length_workaround(path):
+    # Working around MAX_PATH limitation on Windows (see
+    # http://msdn.microsoft.com/en-us/library/windows/desktop/aa365247(v=vs.85).aspx)
+    if os.name == 'nt':
+        absfilepath = os.path.abspath(path)
+        path = '\\\\?\\' + absfilepath
+        Log.debug("Using absolute paths")
+    else:
+        Log.info("You are not on Windows, you don't need to use this workaround")
+    return path
 
 
 def get_parser():
@@ -447,6 +463,17 @@ def get_parser():
     )
 
     group.add_argument(
+        '-dof',
+        '--delete-old-files',
+        action='store_true',
+        help=(
+            'This option lets you delete old copies of files.'
+            + ' It allows you to delete entries from the database'
+            + ' and from local file system.'
+        ),
+    )
+
+    group.add_argument(
         '--log-responses',
         default=False,
         action='store_true',
@@ -473,6 +500,18 @@ def get_parser():
             + ' existing directory in which you have read and'
             + ' write access. (default: current working'
             + ' directory)'
+        ),
+    )
+
+    parser.add_argument(
+        '--max-path-length-workaround',
+        default=False,
+        action='store_true',
+        help=(
+            'If this flag is set, all path are made absolute '
+            + 'in order to workaround the max_path limitation on Windows.'
+            + 'To use relative paths on Windows you should disable the max_path limitation'
+            + 'https://docs.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation'
         ),
     )
 
@@ -564,7 +603,10 @@ def main(args=None):
     verbose = args.verbose
     username = args.username
     password = args.password
-    storage_path = args.path
+    if args.max_path_length_workaround:
+        storage_path = _max_path_length_workaround(args.path)
+    else:
+        storage_path = args.path
     skip_cert_verify = args.skip_cert_verify
     ignore_ytdl_errors = args.ignore_ytdl_errors
     without_downloading_files = args.without_downloading_files
@@ -586,6 +628,8 @@ def main(args=None):
         run_change_notification_xmpp(storage_path)
     elif args.manage_database:
         run_manage_database(storage_path)
+    elif args.delete_old_files:
+        run_delete_old_files(storage_path)
     elif args.add_all_visible_courses:
         run_add_all_visible_courses(storage_path, skip_cert_verify)
     else:

@@ -70,11 +70,12 @@ class PagesHandler:
                 content_file = {
                     'filename': page_name,
                     'filepath': '/',
-                    'description': page_content,
+                    'html': page_content,
                     'filter_urls_in_description_containing': ['/mod_page/content/'],
                     'no_hash': True,
-                    'type': 'description',
+                    'type': 'html',
                     'timemodified': page_timemodified,
+                    'filesize': len(page_content)
                 }
                 page_files.append(content_file)
 

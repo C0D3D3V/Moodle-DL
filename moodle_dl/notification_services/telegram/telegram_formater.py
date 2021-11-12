@@ -1,3 +1,5 @@
+import re
+
 from moodle_dl.state_recorder.course import Course
 from moodle_dl.download_service.url_target import URLTarget
 
@@ -17,7 +19,8 @@ class TelegramFormater:
             str: The new message
         """
         # Replace Telegram Entities
-        new_line = new_line.replace('<', '&lt;').replace('>', '&gt')
+        new_line = re.sub("<(?!/b>|b>)", '&lt;', new_line)
+        new_line = re.sub("(?<!</b)(?<!<b)>", '&gt;', new_line)
         if len(one_msg_content) + len(new_line) >= 4096:
             msg_list.append(one_msg_content)
             return new_line
@@ -42,7 +45,7 @@ class TelegramFormater:
         one_msg_content = '%s new Changes in the Moodle courses!' % (diff_count)
 
         for course in changed_courses:
-            new_line = '\r\n\r\n\r\n👉 **' + course.fullname + '**\r\n'
+            new_line = '\r\n\r\n\r\n👉 <b>' + course.fullname + '</b>\r\n'
             one_msg_content = cls.append_with_limit(new_line, one_msg_content, result_list)
 
             for file in course.files:

@@ -4,7 +4,7 @@ import logging
 import hashlib
 import urllib.parse as urlparse
 
-
+from moodle_dl.state_recorder.course import Course
 from moodle_dl.state_recorder.file import File
 from moodle_dl.moodle_connector.request_helper import RequestHelper
 
@@ -37,7 +37,15 @@ class ResultsHandler:
 
         return inWhitelist and not inBlacklist
 
-    def _get_files_in_sections(self, course_sections: []) -> [File]:
+    @staticmethod
+    def should_download_section(section_id: int, dont_download_sections_ids: [int]) -> bool:
+        """
+        Checks if a section is not in Blacklist
+        """
+
+        return section_id not in dont_download_sections_ids or len(dont_download_sections_ids) == 0
+
+    def _get_files_in_sections(self, course_sections: [], excluded_sections: [int]) -> [File]:
         """
         Iterates over all sections of a course to find files (or modules).
         @param course_sections: The course object returned by Moodle,
@@ -46,22 +54,24 @@ class ResultsHandler:
         """
         files = []
         for section in course_sections:
+            section_id = section.get('id', '')
             section_name = section.get('name', '')
             section_modules = section.get('modules', [])
             section_summary = section.get('summary', '')
             if section_summary is not None and section_summary != '':
                 files += self._handle_description(
-                    section_name, 'Section summary', 'section_summary', 0, section_summary
+                    section_name, section_id, 'Section summary', 'section_summary', 0, section_summary
                 )
 
-            files += self._get_files_in_modules(section_name, section_modules)
+            files += self._get_files_in_modules(section_name, section_id, section_modules)
 
         return files
 
-    def _get_files_in_modules(self, section_name: str, section_modules: []) -> [File]:
+    def _get_files_in_modules(self, section_name: str, section_id: int, section_modules: []) -> [File]:
         """
         Iterates over all modules to find files (or content) in them.
         @param section_name: The name of the section to be iterated over.
+        @param section_id: The id of the section to be iterated over.
         @param section_modules: The modules of the section.
         @return: A list of files of the section.
         """
@@ -94,22 +104,28 @@ class ResultsHandler:
             ]:
                 # Handle descriptions of Files, Labels and all that we do not handle in seperate modules
                 files += self._handle_description(
-                    section_name, module_name, module_modname, module_id, module_description
+                    section_name, section_id, module_name, module_modname, module_id, module_description
                 )
 
             if module_modname in ['kalvidres', 'helixmedia', 'lti']:
                 module_modname = 'cookie_mod-' + module_modname
-                files += self._handle_cookie_mod(section_name, module_name, module_modname, module_id, module_url)
+                files += self._handle_cookie_mod(
+                    section_name, section_id, module_name, module_modname, module_id, module_url
+                )
 
             elif module_modname.startswith(('resource', 'folder', 'akarifolder', 'url', 'index_mod')):
-                files += self._handle_files(section_name, module_name, module_modname, module_id, module_contents)
+                files += self._handle_files(
+                    section_name, section_id, module_name, module_modname, module_id, module_contents
+                )
 
             elif module_modname in self.course_fetch_addons:
                 # find addon with same module_id
                 addon = self.course_fetch_addons.get(module_modname, {}).get(module_id, {})
                 addon_files = addon.get('files', [])
 
-                files += self._handle_files(section_name, module_name, module_modname, module_id, addon_files)
+                files += self._handle_files(
+                    section_name, section_id, module_name, module_modname, module_id, addon_files
+                )
             else:
                 logging.debug('Got unhandled module: name=%s mod=%s url=%s', module_name, module_modname, module_url)
 
@@ -153,6 +169,7 @@ class ResultsHandler:
     def _find_all_urls_in_description(
         self,
         section_name: str,
+        section_id: int,
         module_name: str,
         module_modname: str,
         module_id: str,
@@ -165,6 +182,7 @@ class ResultsHandler:
 
         Args:
             section_name (str): The name of the course section
+            section_id (int): The id of the course section
             module_name (str): Name of the Module
             module_modname (str): Type of the Module
             module_id (str): Module Id
@@ -235,6 +253,7 @@ class ResultsHandler:
             new_file = File(
                 module_id=module_id,
                 section_name=section_name,
+                section_id=section_id,
                 module_name=module_name,
                 content_filepath=content_filepath,
                 content_filename=fist_guess_filename,
@@ -250,7 +269,7 @@ class ResultsHandler:
         return result
 
     def _handle_cookie_mod(
-        self, section_name: str, module_name: str, module_modname: str, module_id: str, module_url: str
+        self, section_name: str, section_id: int, module_name: str, module_modname: str, module_id: str, module_url: str
     ) -> [File]:
         """
         Creates a list of files out of a cookie module
@@ -263,6 +282,7 @@ class ResultsHandler:
         new_file = File(
             module_id=module_id,
             section_name=section_name,
+            section_id=section_id,
             module_name=module_name,
             content_filepath='/',
             content_filename=module_name,
@@ -279,7 +299,13 @@ class ResultsHandler:
         return files
 
     def _handle_files(
-        self, section_name: str, module_name: str, module_modname: str, module_id: str, module_contents: []
+        self,
+        section_name: str,
+        section_id: int,
+        module_name: str,
+        module_modname: str,
+        module_id: str,
+        module_contents: [],
     ) -> [File]:
         """
         Iterates over all files that are in a module or assignment and
@@ -328,6 +354,7 @@ class ResultsHandler:
             new_file = File(
                 module_id=module_id,
                 section_name=section_name,
+                section_id=section_id,
                 module_name=module_name,
                 content_filepath=content_filepath,
                 content_filename=content_filename,
@@ -345,6 +372,7 @@ class ResultsHandler:
             if content_type == 'description' and not no_search_for_urls:
                 files += self._find_all_urls_in_description(
                     section_name,
+                    section_id,
                     module_name,
                     module_modname,
                     module_id,
@@ -361,7 +389,13 @@ class ResultsHandler:
         return files
 
     def _handle_description(
-        self, section_name: str, module_name: str, module_modname: str, module_id: str, module_description: str
+        self,
+        section_name: str,
+        section_id: int,
+        module_name: str,
+        module_modname: str,
+        module_id: str,
+        module_description: str,
     ) -> [File]:
         """
         Creates a description file
@@ -389,6 +423,7 @@ class ResultsHandler:
         description = File(
             module_id=module_id,
             section_name=section_name,
+            section_id=section_id,
             module_name=module_name,
             content_filepath=content_filepath,
             content_filename=content_filename,
@@ -407,6 +442,7 @@ class ResultsHandler:
         description.text_content = module_description
         files += self._find_all_urls_in_description(
             section_name,
+            section_id,
             module_name,
             module_modname,
             module_id,
@@ -429,7 +465,7 @@ class ResultsHandler:
         """
         self.course_fetch_addons = course_fetch_addons
 
-    def fetch_files(self, course_id: str) -> [File]:
+    def fetch_files(self, course: Course) -> [File]:
         """
         Queries the Moodle system for all the files that
         are present in a course
@@ -437,9 +473,9 @@ class ResultsHandler:
         @return: A list of Files
         """
 
-        data = {'courseid': course_id}
+        data = {'courseid': course.id}
         course_sections = self.request_helper.post_REST('core_course_get_contents', data)
 
-        files = self._get_files_in_sections(course_sections)
+        files = self._get_files_in_sections(course_sections, course.excluded_sections)
 
         return files

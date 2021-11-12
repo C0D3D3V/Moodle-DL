@@ -159,6 +159,17 @@ class StateRecorder:
 
                 conn.commit()
 
+            if current_version == 4:
+                # Add section_id Column
+                sql_create_section_id_column = """ALTER TABLE files
+                ADD COLUMN section_id integer DEFAULT 0 NOT NULL;
+                """
+                c.execute(sql_create_section_id_column)
+
+                c.execute('PRAGMA user_version = 5;')
+                current_version = 5
+                conn.commit()
+
             conn.commit()
             logging.debug('Database Version: %s', str(current_version))
 
@@ -205,8 +216,8 @@ class StateRecorder:
 
         # Not sure if this would be a good idea
         #  or file1.module_name != file2.module_name)
-        if (file1.content_fileurl != file2.content_fileurl or file1.content_filesize != file2.content_filesize) and (
-            file1.content_timemodified != file2.content_timemodified
+        if file1.content_filesize != file2.content_filesize or (
+            file1.content_fileurl != file2.content_fileurl and file1.content_timemodified != file2.content_timemodified
         ):
             return True
         if (
@@ -285,6 +296,52 @@ class StateRecorder:
 
             for file_row in file_rows:
                 notify_file = File.fromRow(file_row)
+                course.files.append(notify_file)
+
+            stored_courses.append(course)
+
+        conn.close()
+        return stored_courses
+
+    def get_old_files(self) -> [Course]:
+        # get all stored files (that are not yet deleted)
+        conn = sqlite3.connect(self.db_file)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        stored_courses = []
+
+        cursor.execute(
+            """SELECT DISTINCT course_id, course_fullname
+            FROM files WHERE old_file_id IS NOT NULL"""
+        )
+
+        course_rows = cursor.fetchall()
+        for course_row in course_rows:
+            course = Course(course_row['course_id'], course_row['course_fullname'])
+
+            cursor.execute(
+                """SELECT *
+                FROM files
+                WHERE course_id = ?
+                AND old_file_id IS NOT NULL""",
+                (course.id,),
+            )
+
+            updated_files = cursor.fetchall()
+
+            course.files = []
+
+            for updated_file in updated_files:
+                cursor.execute(
+                    """SELECT *
+                    FROM files
+                    WHERE file_id = ?""",
+                    (updated_file['old_file_id'],),
+                )
+
+                old_file = cursor.fetchone()
+
+                notify_file = File.fromRow(old_file)
                 course.files.append(notify_file)
 
             stored_courses.append(course)
@@ -591,6 +648,14 @@ class StateRecorder:
         cursor = conn.cursor()
 
         for file in files:
+            cursor.execute(
+                """UPDATE files
+                SET old_file_id = NULL
+                WHERE old_file_id = ?
+                """,
+                (file.file_id,),
+            )
+
             data = {}
             data.update(file.getMap())
 

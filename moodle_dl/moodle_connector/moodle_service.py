@@ -333,6 +333,7 @@ class MoodleService:
 
         pages = pages_handler.fetch_pages(courses)
 
+        courses = self.add_options_to_courses(courses)
         index = 0
         for course in courses:
             index += 1
@@ -363,7 +364,7 @@ class MoodleService:
                 'page': pages.get(course.id, {}),
             }
             results_handler.set_fetch_addons(course_fetch_addons)
-            course.files = results_handler.fetch_files(course.id)
+            course.files = results_handler.fetch_files(course)
 
             filtered_courses.append(course)
         print('')
@@ -372,9 +373,8 @@ class MoodleService:
         changes = self.recorder.changes_of_new_version(filtered_courses)
 
         # Filter changes
-        changes = self.filter_courses(changes, self.config_helper, cookie_handler, courses_list + public_courses_list)
-
         changes = self.add_options_to_courses(changes)
+        changes = self.filter_courses(changes, self.config_helper, cookie_handler, courses_list + public_courses_list)
 
         return changes
 
@@ -388,6 +388,7 @@ class MoodleService:
             if options is not None:
                 course.overwrite_name_with = options.get('overwrite_name_with', None)
                 course.create_directory_structure = options.get('create_directory_structure', True)
+                course.excluded_sections = options.get("excluded_sections", [])
 
         return courses
 
@@ -463,6 +464,8 @@ class MoodleService:
                     and (download_also_with_cookie or (not file.module_modname.startswith('cookie_mod-')))
                     # Exclude files whose file extension is blacklisted
                     and (not (determine_ext(file.content_filename) in exclude_file_extensions))
+                    # Exclude files that are in excluded sections
+                    and (ResultsHandler.should_download_section(file.section_id, course.excluded_sections))
                 ):
                     course_files.append(file)
             course.files = course_files

@@ -157,7 +157,7 @@ class LessonsHandler:
 
         # build lesson HTML
         lesson_html = moodle_html_header
-        attempt_filename = PathTools.to_valid_name(lesson_name + '.html')
+        attempt_filename = PathTools.to_valid_name(lesson_name)
         lesson_is_empty = True
         for i, answerpage in enumerate(answerpages):
             page_id = answerpage.get('page', {}).get('id', 0)
