@@ -103,8 +103,15 @@ class FirstContactHandler:
         @param course_id: The id of the requested course.
         @return: A List of all section dictionaries
         """
-
-        data = {'courseid': course_id, 'excludemodules': True, 'excludecontents': True}
+        data = {'courseid': course_id}
+        if self.version >= 2015051100:
+            data = {
+                'courseid': course_id,
+                'options[0][name]': 'excludemodules',
+                'options[0][value]': 'true',
+                'options[1][name]': 'excludecontents',
+                'options[1][value]': 'true',
+            }
         course_sections = self.request_helper.post_REST('core_course_get_contents', data)
 
         sections = []
