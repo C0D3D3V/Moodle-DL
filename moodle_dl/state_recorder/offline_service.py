@@ -133,6 +133,7 @@ class OfflineService:
         stored_files = self.state_recorder.get_old_files()
 
         if len(stored_files) <= 0:
+            print('No old copies of files found. Nothing to do.')
             return
 
         print(
