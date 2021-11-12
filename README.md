@@ -89,7 +89,7 @@ Options can be combined with all the actions mentioned above.
     - If the password contains special characters like spaces you can enclose it in quotation marks
 - `--max-path-length-workaround`
     - If this flag is set, all path are made absolute in order to work around the max_path limitation on Windows.
-    - To use relative paths on Windows you should [disable the max_path limitation](https://docs.microsoft.com/it-it/windows/win32/fileio/maximum-file-path-limitation).
+    - To use relative paths on Windows you should [disable the max_path limitation](https://docs.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=cmd).
     - Default: False
 - `--skip-cert-verify`
     - This flag is used to skip the certification verification while sending requests to Moodle and all other websites.
