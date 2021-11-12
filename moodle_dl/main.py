@@ -511,7 +511,7 @@ def get_parser():
             'If this flag is set, all path are made absolute '
             + 'in order to workaround the max_path limitation on Windows.'
             + 'To use relative paths on Windows you should disable the max_path limitation'
-            + 'https://docs.microsoft.com/it-it/windows/win32/fileio/maximum-file-path-limitation'
+            + 'https://docs.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation'
         ),
     )
 
