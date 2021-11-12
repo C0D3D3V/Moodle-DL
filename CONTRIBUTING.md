@@ -4,7 +4,7 @@
 
 All members of the project community must abide by the [Contributor Covenant, version 2.0](CODE_OF_CONDUCT.md).
 Only by respecting each other we can develop a productive, collaborative community.
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported by contacting [moodle-dl@vogt.ml](mailto:moodle-dl@vogt.ml) and/or a project maintainer.
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported by contacting [moodle-dl@ist-ein-knaller.de](mailto:moodle-dl@ist-ein-knaller.de) and/or a project maintainer.
 
 We appreciate your courtesy of avoiding political questions here. Issues which are not related to the project itself will be closed by our community managers.
 
@@ -60,7 +60,7 @@ The following rule governs documentation contributions:
 
 * Create _Work In Progress [WIP]_ pull requests only if you need clarification or an explicit review before you can continue your work item.
 
-* If your patch is not getting reviewed or you need a specific person to review it, you can @-reply a reviewer asking for a review in the pull request or a comment, or you can ask for a review by contacting us via [email](mailto:moodle-dl@vogt.ml).
+* If your patch is not getting reviewed or you need a specific person to review it, you can @-reply a reviewer asking for a review in the pull request or a comment, or you can ask for a review by contacting us via [email](mailto:moodle-dl@ist-ein-knaller.de).
 
 * Post review:
   * If a review requires you to change your commit(s), please test the changes again.
