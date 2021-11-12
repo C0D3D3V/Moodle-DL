@@ -97,14 +97,14 @@ class FirstContactHandler:
             # We could also extract here the course summary and intro files
         return results
 
-    def fetch_sections(self, course_id: int) -> []:
+    def fetch_sections(self, course_id: int) -> [{}]:
         """
-        TODO
-        @param course_id:
-        @return:
+        Fetches the Sections List for a course from the Moodle system
+        @param course_id: The id of the requested course.
+        @return: A List of all section dictionaries
         """
 
-        data = {'courseid': course_id}
+        data = {'courseid': course_id, 'excludemodules': True, 'excludecontents': True}
         course_sections = self.request_helper.post_REST('core_course_get_contents', data)
 
         sections = []

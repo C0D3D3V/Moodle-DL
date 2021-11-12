@@ -43,16 +43,15 @@ class ConfigService:
 
             courses = first_contact_handler.fetch_courses(userid)
 
-
         except (RequestRejectedError, ValueError, RuntimeError, ConnectionError) as error:
             Log.error('Error while communicating with the Moodle System! (%s)' % (error))
             sys.exit(1)
 
-        courseids = self._select_courses_to_download(courses)
+        course_ids = self._select_courses_to_download(courses)
 
         sections = {}
-        for id in courseids:
-            sections[id] = first_contact_handler.fetch_sections(id)
+        for course_id in course_ids:
+            sections[course_id] = first_contact_handler.fetch_sections(course_id)
 
         self._set_options_of_courses(courses, sections)
         self._select_should_download_submissions()
@@ -233,7 +232,7 @@ class ConfigService:
         self.config_helper.remove_property('dont_download_course_ids')
         return download_course_ids
 
-    def _select_sections_to_download(self, sections: [str], excluded: [str]) -> [int]:
+    def _select_sections_to_download(self, sections: [{}], excluded: [int]) -> [int]:
         """
         Asks the user for the sections that should be downloaded.
         @param sections: All available sections
@@ -299,7 +298,7 @@ class ConfigService:
                             'original_name': course.fullname,
                             'overwrite_name_with': None,
                             'create_directory_structure': True,
-                            'exclude': []
+                            'excluded_sections': [],
                         }
 
                     # create list of options
@@ -332,7 +331,7 @@ class ConfigService:
                 sel = choices_courses[selected_course - 1]
                 self._change_settings_of(sel, options_of_courses, sections[sel.id])
 
-    def _change_settings_of(self, course: Course, options_of_courses: {}, sections: [str]):
+    def _change_settings_of(self, course: Course, options_of_courses: {}, sections: [{}]):
         """
         Ask for a new Name for the course.
         Then asks if a file structure should be created.
@@ -346,7 +345,7 @@ class ConfigService:
                 'original_name': course.fullname,
                 'overwrite_name_with': None,
                 'create_directory_structure': True,
-                'exclude': [],
+                'excluded_sections': [],
             }
 
         changed = False
@@ -376,13 +375,13 @@ class ConfigService:
             changed = True
             current_course_settings.update({'create_directory_structure': create_directory_structure})
 
-        excluded_sections = current_course_settings.get('exclude', [])
+        excluded_sections = current_course_settings.get('excluded_sections', [])
 
         dont_download_section_ids = self._select_sections_to_download(sections, excluded_sections)
 
-        if dont_download_section_ids is not current_course_settings.get('exclude', True):
+        if dont_download_section_ids is not current_course_settings.get('excluded_sections', []):
             changed = True
-            current_course_settings.update({'exclude': dont_download_section_ids})
+            current_course_settings.update({'excluded_sections': dont_download_section_ids})
 
         if changed:
             options_of_courses.update({str(course.id): current_course_settings})
