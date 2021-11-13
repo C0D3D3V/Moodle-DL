@@ -65,8 +65,9 @@ class TelegramFormater:
 
                 one_msg_content = cls.append_with_limit(new_line, one_msg_content, result_list)
 
-                if file.content_type == 'description' or (
-                    file.content_type == 'html' and file.module_modname == 'page'
+                if (not file.moved and not file.deleted) and (
+                    file.content_type == 'description'
+                    or (file.content_type == 'html' and file.module_modname == 'page')
                 ):
                     text_lines = []
                     try:
