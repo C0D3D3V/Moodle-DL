@@ -20,3 +20,10 @@ class XmppFormater(TelegramFormater):
             return new_line
         else:
             return one_msg_content + new_line
+
+    @classmethod
+    def make_bold(cls, string: str) -> str:
+        """
+        Makes a string bold in a xmpp message
+        """
+        return '*' + string + '*'

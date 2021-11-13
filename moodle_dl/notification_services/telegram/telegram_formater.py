@@ -30,6 +30,13 @@ class TelegramFormater:
             return one_msg_content + new_line
 
     @classmethod
+    def make_bold(cls, string: str) -> str:
+        """
+        Makes a string bold in a telegram message
+        """
+        return '<b>' + string + '</b>'
+
+    @classmethod
     def create_full_moodle_diff_messages(cls, changed_courses: [Course]) -> [str]:
         """
         Creates telegram messages with all changed files. This includes new,
@@ -47,7 +54,7 @@ class TelegramFormater:
         one_msg_content = '%s new Changes in the Moodle courses!' % (diff_count)
 
         for course in changed_courses:
-            new_line = '\r\n\r\n\r\n👉 <b>' + course.fullname + '</b>\r\n'
+            new_line = '\r\n\r\n\r\n👉 ' + cls.make_bold(course.fullname) + '\r\n'
             one_msg_content = cls.append_with_limit(new_line, one_msg_content, result_list)
 
             for file in course.files:
