@@ -1,5 +1,7 @@
 import re
 
+import html2text
+
 from moodle_dl.state_recorder.course import Course
 from moodle_dl.download_service.url_target import URLTarget
 
@@ -63,16 +65,27 @@ class TelegramFormater:
 
                 one_msg_content = cls.append_with_limit(new_line, one_msg_content, result_list)
 
-                if file.content_type == 'description':
+                if file.content_type == 'description' or (
+                    file.content_type == 'html' and file.module_modname == 'page'
+                ):
+                    text_lines = []
                     try:
-                        with open(saved_to_path, 'r', encoding='utf-8') as description_file:
-                            description_lines = description_file.read().splitlines()
-                    except Exception:
-                        description_lines = []
+                        with open(saved_to_path, 'r', encoding='utf-8') as content_file:
+                            content = content_file.read()
 
-                    if len(description_lines) > 0:
+                            if file.content_type == 'html':
+                                h2t_handler = html2text.HTML2Text()
+                                content = h2t_handler.handle(content).strip()
+                                if content == '':
+                                    continue
+
+                            text_lines = content.splitlines()
+                    except Exception:
+                        text_lines = []
+
+                    if len(text_lines) > 0:
                         one_msg_content = cls.append_with_limit('\r\n👇\r\n', one_msg_content, result_list)
-                        for new_line in description_lines:
+                        for new_line in text_lines:
                             new_line = new_line + '\r\n'
                             one_msg_content = cls.append_with_limit(new_line, one_msg_content, result_list)
                         one_msg_content = cls.append_with_limit('👆\r\n', one_msg_content, result_list)
