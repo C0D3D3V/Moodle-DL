@@ -450,8 +450,12 @@ class MoodleService:
                 if (
                     # Filter Assignment Submission Files
                     (download_submissions or (not (file.module_modname.endswith('assign') and file.deleted)))
-                    # Filter Description Files
-                    and (download_descriptions or file.content_type != 'description')
+                    # Filter Description Files (except the forum posts)
+                    and (
+                        download_descriptions
+                        or file.content_type != 'description'
+                        or (file.module_modname == 'forum' and file.content_type == 'description')
+                    )
                     # Filter Database Files
                     and (download_databases or file.content_type != 'database_file')
                     # Filter Quiz Files
