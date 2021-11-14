@@ -79,20 +79,30 @@ def run_init(storage_path, use_sso=False, skip_cert_verify=False):
     Log.success('Configuration finished and saved!')
 
     if os.name != 'nt':
-        if storage_path == '.':
+        working_dir = os.path.abspath(storage_path)
+        moodle_dl_path = os.path.abspath(sys.argv[0])
+        if sys.platform == "darwin":
             Log.info(
                 '  To set a cron-job for this program on your Unix-System:\n'
                 + '    1. `crontab -e`\n'
-                + '    2. Add `*/15 * * * * cd "{}" && moodle-dl`\n'.format(os.getcwd())
+                + '    2. Add `*/15 * * * * cd "{}" && {}`\n'.format(working_dir, moodle_dl_path)
                 + '    3. Save and you\'re done!'
             )
         else:
             Log.info(
                 '  To set a cron-job for this program on your Unix-System:\n'
                 + '    1. `crontab -e`\n'
-                + '    2. Add `*/15 * * * * cd "{}" && moodle-dl -p "{}"`\n'.format(os.getcwd(), storage_path)
+                + '    2. Add `*/15 * * * * cd "{}" && moodle-dl`\n'.format(working_dir)
                 + '    3. Save and you\'re done!'
             )
+
+        Log.info(
+            'For more ways to run `moodle-dl` periodically, take a look at the wiki (https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Start-Moodle-dl-periodically-or-via-Telegram)'
+        )
+    else:
+        Log.info(
+            'If you want to run moodle-dl periodically, you can take a look at the wiki (https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Start-Moodle-dl-periodically-or-via-Telegram)'
+        )
 
     print('')
 
