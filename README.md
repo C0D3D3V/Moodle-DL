@@ -11,6 +11,11 @@
 
 
 ### Setup
+
+<a href="https://repology.org/metapackage/moodle-dl/versions">
+    <img src="https://repology.org/badge/vertical-allrepos/moodle-dl.svg?header=" alt="Packaging status" align="right">
+</a>
+
 If you use *Arch Linux*, you can install the package [from AUR](https://aur.archlinux.org/packages/moodle-dl-git/), otherwise you can follow this procedure:
 
 1. Install [Python](https://www.python.org/) >=3.7
