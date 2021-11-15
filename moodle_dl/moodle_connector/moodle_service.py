@@ -158,20 +158,26 @@ class MoodleService:
         if use_http:
             scheme = 'http://'
 
-        version = RequestHelper(
-            moodle_domain,
-            moodle_path,
-            skip_cert_verify=self.skip_cert_verify,
-            use_http=use_http,
-        ).get_simple_moodle_version()
+        atomatic_procedure_warning = (
+            'Between version 3.81 and 3.82 a change was added to'
+            + ' Moodle so that automatic copying of the SSO token'
+            + ' might not work.'
+        )
+        try:
+            version = RequestHelper(
+                moodle_domain,
+                moodle_path,
+                skip_cert_verify=self.skip_cert_verify,
+                use_http=use_http,
+            ).get_simple_moodle_version()
 
-        if StrictVersion(version) > StrictVersion("3.8.1"):
+            if StrictVersion(version) > StrictVersion("3.8.1"):
+                Log.warning(atomatic_procedure_warning + '\nYou can still try it, your version is: ' + str(version))
+
+        except ConnectionError:
             Log.warning(
-                'Between version 3.81 and 3.82 a change was added to'
-                + ' Moodle so that automatic copying of the SSO token'
-                + ' might not work.'
-                + '\nYou can still try it, your version is: '
-                + str(version)
+                atomatic_procedure_warning
+                + '\nThe version of your Moodle could not be detected, you can still try the automatic procedure.'
             )
 
         print(' If you want to copy the login-token manual, you will be guided through the manual copy process.')
