@@ -444,7 +444,7 @@ class URLTarget(object):
         external_file_downloader = external_file_downloaders.get(url_parsed.netloc, "")
         if isHTML and external_file_downloader != "":
             # This link is to be downloaded from an external program.
-            cmd = external_file_downloader.replace('%U', url_to_download)
+            cmd = external_file_downloader.replace('%U', self.file.content_fileurl)
             logging.debug(
                 'T%s - Run external downloader using the following command: `%s`',
                 self.thread_id,
