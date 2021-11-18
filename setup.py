@@ -20,7 +20,7 @@ setup(
     long_description_content_type='text/markdown',
     url='https://github.com/C0D3D3V/Moodle-Downloader-2',
     author='C0D3D3V',
-    author_email='c0d3d3v@mag-keinen-spam.de',
+    author_email='moodle-dl@ist-ein-knaller.de',
     license='GPL-3.0',
     packages=find_packages(),
     include_package_data=True,
