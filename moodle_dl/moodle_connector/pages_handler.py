@@ -71,11 +71,11 @@ class PagesHandler:
                     'filename': page_name,
                     'filepath': '/',
                     'html': page_content,
-                    'filter_urls_in_description_containing': ['/mod_page/content/'],
+                    'filter_urls_during_search_containing': ['/mod_page/content/'],
                     'no_hash': True,
                     'type': 'html',
                     'timemodified': page_timemodified,
-                    'filesize': len(page_content)
+                    'filesize': len(page_content),
                 }
                 page_files.append(content_file)
 

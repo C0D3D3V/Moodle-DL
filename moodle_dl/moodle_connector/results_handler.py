@@ -113,7 +113,19 @@ class ResultsHandler:
                     section_name, section_id, module_name, module_modname, module_id, module_url
                 )
 
-            elif module_modname.startswith(('resource', 'folder', 'akarifolder', 'url', 'index_mod')):
+            elif module_modname.startswith(('resource', 'akarifolder', 'url', 'index_mod')):
+                files += self._handle_files(
+                    section_name, section_id, module_name, module_modname, module_id, module_contents
+                )
+
+            elif module_modname.startswith(('folder')):
+                # Modules whose content is directly linked, and additional content exists in their module.
+                if module_modname in self.course_fetch_addons:
+                    # find addon with same module_id
+                    addon = self.course_fetch_addons.get(module_modname, {}).get(module_id, {})
+                    addon_files = addon.get('files', [])
+                    module_contents += addon_files
+
                 files += self._handle_files(
                     section_name, section_id, module_name, module_modname, module_id, module_contents
                 )
@@ -166,7 +178,7 @@ class ResultsHandler:
 
         return description
 
-    def _find_all_urls_in_description(
+    def _find_all_urls(
         self,
         section_name: str,
         section_id: int,
@@ -174,11 +186,11 @@ class ResultsHandler:
         module_modname: str,
         module_id: str,
         content_filepath: str,
-        description: str,
+        content_html: str,
         no_search_for_moodle_urls: bool,
         filter_urls_containing: [str],
     ) -> [File]:
-        """Parses a description to find all urls in it. Then it creates for every url a file entry.
+        """Parses a html string to find all urls in it. Then it creates for every url a file entry.
 
         Args:
             section_name (str): The name of the course section
@@ -186,15 +198,15 @@ class ResultsHandler:
             module_name (str): Name of the Module
             module_modname (str): Type of the Module
             module_id (str): Module Id
-            description (str): The descrption string
+            content_html (str): The html string
 
         Returns:
             [File]: A list of created file entries.
         """
 
-        urls = list(set(re.findall(r'href=[\'"]?([^\'" >]+)', description)))
-        urls += list(set(re.findall(r'<a[^>]*>([^<]*)<\/a>', description)))
-        urls += list(set(re.findall(r'src=[\'"]?([^\'" >]+)', description)))
+        urls = list(set(re.findall(r'href=[\'"]?([^\'" >]+)', content_html)))
+        urls += list(set(re.findall(r'<a[^>]*>(http[^<]*)<\/a>', content_html)))
+        urls += list(set(re.findall(r'src=[\'"]?([^\'" >]+)', content_html)))
         urls = list(set(urls))
 
         result = []
@@ -331,7 +343,7 @@ class ResultsHandler:
             content_description = content.get('description', '')
             no_search_for_urls = content.get('no_search_for_urls', False)
             no_search_for_moodle_urls = content.get('no_search_for_moodle_urls', False)
-            filter_urls_in_description_containing = content.get('filter_urls_in_description_containing', [])
+            filter_urls_during_search_containing = content.get('filter_urls_during_search_containing', [])
             content_no_hash = content.get('no_hash', False)
 
             # html related
@@ -369,21 +381,22 @@ class ResultsHandler:
 
             if content_type == 'description':
                 new_file.text_content = content_description
-            if content_type == 'description' and not no_search_for_urls:
-                files += self._find_all_urls_in_description(
+                content_html = content_description
+            if content_type == 'html':
+                new_file.html_content = content_html
+
+            if content_type in ['description', 'html'] and not no_search_for_urls:
+                files += self._find_all_urls(
                     section_name,
                     section_id,
                     module_name,
                     module_modname,
                     module_id,
                     content_filepath,
-                    content_description,
+                    content_html,
                     no_search_for_moodle_urls,
-                    filter_urls_in_description_containing,
+                    filter_urls_during_search_containing,
                 )
-
-            if content_type == 'html':
-                new_file.html_content = content_html
 
             files.append(new_file)
         return files
@@ -437,10 +450,10 @@ class ResultsHandler:
         )
 
         no_search_for_moodle_urls = False
-        filter_urls_in_description_containing = []
+        filter_urls_during_search_containing = []
 
         description.text_content = module_description
-        files += self._find_all_urls_in_description(
+        files += self._find_all_urls(
             section_name,
             section_id,
             module_name,
@@ -449,7 +462,7 @@ class ResultsHandler:
             content_filepath,
             module_description,
             no_search_for_moodle_urls,
-            filter_urls_in_description_containing,
+            filter_urls_during_search_containing,
         )
 
         files.append(description)

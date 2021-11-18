@@ -202,6 +202,7 @@ class LessonsHandler:
                 'timemodified': 0,
                 'html': lesson_html,
                 'type': 'html',
+                'no_search_for_urls': True,
             }
             result.append(attempt_file)
 

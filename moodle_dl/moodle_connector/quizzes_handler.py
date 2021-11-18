@@ -188,6 +188,7 @@ class QuizzesHandler:
                 'timemodified': 0,
                 'html': quiz_html,
                 'type': 'html',
+                'no_search_for_urls': True,
             }
             result.append(attempt_file)
 

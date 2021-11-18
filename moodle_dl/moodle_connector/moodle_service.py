@@ -20,6 +20,7 @@ from moodle_dl.moodle_connector.cookie_handler import CookieHandler
 from moodle_dl.moodle_connector.results_handler import ResultsHandler
 from moodle_dl.moodle_connector.pages_handler import PagesHandler
 from moodle_dl.moodle_connector.forums_handler import ForumsHandler
+from moodle_dl.moodle_connector.folders_handler import FoldersHandler
 from moodle_dl.moodle_connector.quizzes_handler import QuizzesHandler
 from moodle_dl.moodle_connector.lessons_handler import LessonsHandler
 from moodle_dl.moodle_connector.workshops_handler import WorkshopsHandler
@@ -294,6 +295,8 @@ class MoodleService:
         lessons_handler = LessonsHandler(request_helper, version)
         workshops_handler = WorkshopsHandler(request_helper, version)
         pages_handler = PagesHandler(request_helper, version)
+        folders_handler = FoldersHandler(request_helper, version)
+
         results_handler.setVersion(version)
 
         if download_also_with_cookie:
@@ -339,6 +342,8 @@ class MoodleService:
 
         pages = pages_handler.fetch_pages(courses)
 
+        folders = folders_handler.fetch_folders(courses)
+
         courses = self.add_options_to_courses(courses)
         index = 0
         for course in courses:
@@ -368,6 +373,7 @@ class MoodleService:
                 'lesson': lessons.get(course.id, {}),
                 'workshop': workshops.get(course.id, {}),
                 'page': pages.get(course.id, {}),
+                'folder': folders.get(course.id, {}),
             }
             results_handler.set_fetch_addons(course_fetch_addons)
             course.files = results_handler.fetch_files(course)
