@@ -84,7 +84,7 @@ def run_init(storage_path, use_sso=False, skip_cert_verify=False):
         Log.info(
             '  To set a cron-job for this program on your Unix-System:\n'
             + '    1. `crontab -e`\n'
-            + '    2. Add `*/15 * * * * cd "{}" && {} >/dev/null 2>&1`\n'.format(working_dir, moodle_dl_path)
+            + '    2. Add `*/15 * * * * cd "{}" && "{}" >/dev/null 2>&1`\n'.format(working_dir, moodle_dl_path)
             + '    3. Save and you\'re done!'
         )
 
