@@ -45,13 +45,16 @@ class FakeDownloadService:
 
                     file.saved_to = str(Path(save_destination) / filename)
 
-                    if file.module_modname.startswith('url'):
+                    if file.content_type == 'description':
+                        file.saved_to = str(Path(save_destination) / (filename + '.md'))
+
+                    elif file.content_type == 'html':
+                        file.saved_to = str(Path(save_destination) / (filename + '.html'))
+
+                    elif file.module_modname.startswith('url'):
                         file.saved_to = str(Path(save_destination) / (filename + '.desktop'))
                         if os.name == 'nt' or platform.system() == "Darwin":
                             file.saved_to = str(Path(save_destination) / (filename + '.URL'))
-
-                    if file.content_type == 'description':
-                        file.saved_to = str(Path(save_destination) / (filename + '.md'))
 
                     self.state_recorder.save_file(file, course.id, course.fullname)
 
