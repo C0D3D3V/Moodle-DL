@@ -466,7 +466,7 @@ class MoodleService:
                     and (
                         download_descriptions
                         or file.content_type != 'description'
-                        or (file.module_modname == 'forum' and file.content_type == 'description')
+                        or (file.module_modname == 'forum' and file.content_type == 'description' and file.content_filename != 'Forum intro')
                     )
                     # Filter Database Files
                     and (download_databases or file.content_type != 'database_file')
