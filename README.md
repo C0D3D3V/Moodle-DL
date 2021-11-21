@@ -1,22 +1,32 @@
-# Moodle Downloader 2
+<div align="center">
+    <br>
+    <h2>Moodle Downloader 2</h2>
+    <h3>for Moodle™</h3>
+    <small>Because manually downloading all the course files every few days is just <del>way too easy</del> inefficient.</small> 
+    <br>
+    <small>Built with ❤︎</small>
+</div>
 
-> Because manually downloading all the course files every few days is just ~~way too easy~~ inefficient.
+---
 
 
-### Features
-- Watch your Moodle account for any added or changed files in your enrolled courses.
-- Optionally get notified via mail, XMPP or [Telegram](https://telegram.org/apps) about these changes.
-- Save yourself precious time through all these nice features.
-- Do not miss any files, if files are deleted online, they are still available offline.
+
+### Hey 👋.
+
+Moodle Downloader 2 in short `moodle-dl` is a console application that can download all the files from your Moodle courses that are necessary for your daily study routine. Furthermore, moodle-dl can notify you about various activities on your Moodle server. Notifications can be sent to **all your favorite messaging channels ❤️ such as Telegram, XMPP, Mail**. The current implementation includes: 
+
+- Download files, assignments including submissions, forums, workshops, lessons, quizzes, descriptions, as well as external links.
+- Notifications about all downloaded files
+- Text from your Moodle courses (like pages, descriptions or forum-posts) will be directly attached to the notifications, so you can read them directly in your messaging app.
+- A configuration wizard, with that all settings can be done very easily.
+- Running moodle-dl again will only download files that have not been downloaded yet. Do not miss any files, if files are deleted online, they are still available offline.
+- It is possible to download Moodle courses you are enrolled in, as well as courses that are publicly visible to you.
 
 
-### Setup
-
-<a href="https://repology.org/metapackage/moodle-dl/versions">
-    <img src="https://repology.org/badge/vertical-allrepos/moodle-dl.svg?header=" alt="Packaging status" align="right">
-</a>
-
-On the right side you can see in which Linux distributions moodle-dl can be installed via the package manager. If your operating system is not listed, you can proceed as follows:
+## 🚀 Setup
+[![Deploy with Docker](https://img.shields.io/badge/deploy%20with-docker-0db7ed)](https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Run-with-Docker)
+[![latest packaged version(s)](https://repology.org/badge/latest-versions/moodle-dl.svg)](https://repology.org/project/moodle-dl/versions)
+[![Packaging status](https://repology.org/badge/tiny-repos/moodle-dl.svg)](https://repology.org/project/moodle-dl/versions)
 
 1. Install [Python](https://www.python.org/) >=3.7
 2. Install [ffmpeg](https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Installing-ffmpeg)
@@ -26,10 +36,7 @@ On the right side you can see in which Linux distributions moodle-dl can be inst
 
 
 If you run the program on **Windows**, please use [Powershell or CMD](https://www.isunshare.com/windows-10/5-ways-to-open-windows-powershell-in-windows-10.html). Please do not use a mintty like MINGW or similar.
-
-<sup>[Click here for an alternative setup with Docker](https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Run-with-Docker)</sup>
-
-
+ 
 
 ### Usage
 - `moodle-dl`
@@ -124,13 +131,11 @@ Options can be combined with all the actions mentioned above.
 ---
 
 
-### Contributing
-I'm open for all forks, feedback and Pull Requests ;)
+## 🏆 Contributing
 
-I am happy about every contribution to the project. 
-Because my studies are slowly coming to an end, I am looking for a new Contributor/Maintainer for this project. So if someone is interested in continuing the project or adding a lot new features, please feel free to contact me by mail. 
+Do you have a great new feature idea or just want to be part of the project ? Awesome! Every contribution is welcome! If you want to find out more about how to contribute to the project, please checkout our [CONTRIBUTING.md](CONTRIBUTING.md)!
 
-### License
-This project is licensed under the terms of the *GNU General Public License v3.0*. For further information, please look [here](http://choosealicense.com/licenses/gpl-3.0/) or [here<sup>(DE)</sup>](http://www.gnu.org/licenses/gpl-3.0.de.html).
 
-To mention here is, that this project is based on a project from [LucaVazz](https://github.com/LucaVazz/DualisWatcher). He did a very great job creating a "DualisWatcher".  
+## ⚖️ License
+
+This project is licensed under the GPL-3.0 License - see the [LICENSE.md](LICENSE.md) file for details
