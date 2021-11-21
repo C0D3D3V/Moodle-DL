@@ -18,7 +18,7 @@ Moodle Downloader 2 in short `moodle-dl` is a console application that can downl
 - Download files, assignments including submissions, forums, workshops, lessons, quizzes, descriptions, as well as external links.
 - Notifications about all downloaded files
 - Text from your Moodle courses (like pages, descriptions or forum-posts) will be directly attached to the notifications, so you can read them directly in your messaging app.
-- A configuration wizard, with that all settings can be done very easily.
+- A configuration wizard is also included, allowing all settings to be made very easily.
 - Running moodle-dl again will only download files that have not been downloaded yet. Do not miss any files, if files are deleted online, they are still available offline.
 - It is possible to download Moodle courses you are enrolled in, as well as courses that are publicly visible to you.
 
