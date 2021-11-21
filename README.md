@@ -1,7 +1,6 @@
 <div align="center">
     <br>
     <h2>Moodle Downloader 2</h2>
-    <h3>for Moodle™</h3>
     <small>Because manually downloading all the course files every few days is just <del>way too easy</del> inefficient.</small> 
     <br>
     <small>Built with ❤︎</small>
