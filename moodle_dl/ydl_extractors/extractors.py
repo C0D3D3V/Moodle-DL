@@ -3,6 +3,7 @@ from yt_dlp.YoutubeDL import YoutubeDL
 from moodle_dl.ydl_extractors.zoomus import ZoomUSIE
 from moodle_dl.ydl_extractors.opencast import OpencastIE, OpencastPlaylistIE
 from moodle_dl.ydl_extractors.helixmedia import HelixmediaIE
+from moodle_dl.ydl_extractors.kalvidres import KalvidresIE
 from moodle_dl.ydl_extractors.owncloud import OwncloudIE
 from moodle_dl.ydl_extractors.opencast_lti import OpencastLTIIE
 from moodle_dl.ydl_extractors.googledrive import GoogleDriveIE
@@ -14,6 +15,7 @@ def add_additional_extractors(ydl: YoutubeDL):
         OpencastPlaylistIE(ydl),
         ZoomUSIE(ydl),
         HelixmediaIE(ydl),
+        KalvidresIE(ydl),
         OwncloudIE(ydl),
         OpencastLTIIE(ydl),
         GoogleDriveIE(ydl),
