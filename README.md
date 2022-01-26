@@ -10,7 +10,7 @@
 
 
 
-Moodle Downloader 2 in short `moodle-dl` is a console application that can download all the files from your Moodle courses that are necessary for your daily study routine. Furthermore, moodle-dl can notify you about various activities on your Moodle server. Notifications can be sent to Telegram, XMPP and Mail. The current implementation includes: 
+`moodle-dl` is a console application that can download all the files from your Moodle courses that are necessary for your daily study routine. Furthermore, moodle-dl can notify you about various activities on your Moodle server. Notifications can be sent to Telegram, XMPP and Mail. The current implementation includes: 
 
 - Download files, assignments including submissions, forums, workshops, lessons, quizzes, descriptions, as well as external links.
 - Notifications about all downloaded files
