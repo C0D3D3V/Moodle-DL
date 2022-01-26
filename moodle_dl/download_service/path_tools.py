@@ -1,7 +1,8 @@
+import os
 import html
 
 from pathlib import Path
-from yt_dlp.utils import sanitize_filename
+from yt_dlp.utils import sanitize_filename, remove_start
 
 
 class PathTools:
@@ -40,6 +41,25 @@ class PathTools:
         return name
 
     @staticmethod
+    def sanitize_path(path: str):
+        """
+        @param path: A path to sanitize.
+        @return: A path where every part was sanitized using to_valid_name.
+        """
+        drive_or_unc, _ = os.path.splitdrive(path)
+        norm_path = os.path.normpath(remove_start(path, drive_or_unc)).split(os.path.sep)
+        if drive_or_unc:
+            norm_path.pop(0)
+
+        sanitized_path = [
+            path_part if path_part in ['.', '..'] else PathTools.to_valid_name(path_part) for path_part in norm_path
+        ]
+
+        if drive_or_unc:
+            sanitized_path.insert(0, drive_or_unc + os.path.sep)
+        return os.path.join(*sanitized_path)
+
+    @staticmethod
     def path_of_file_in_module(
         storage_path: str, course_fullname: str, file_section_name: str, file_module_name: str, file_path: str
     ):
@@ -59,7 +79,7 @@ class PathTools:
             / PathTools.to_valid_name(course_fullname)
             / PathTools.to_valid_name(file_section_name)
             / PathTools.to_valid_name(file_module_name)
-            / file_path.strip('/')
+            / PathTools.sanitize_path(file_path).strip('/')
         )
         return path
 
@@ -79,7 +99,7 @@ class PathTools:
             / storage_path
             / PathTools.to_valid_name(course_fullname)
             / PathTools.to_valid_name(file_section_name)
-            / file_path.strip('/')
+            / PathTools.anitize_path(file_path).strip('/')
         )
         return path
 
@@ -92,5 +112,10 @@ class PathTools:
         @param file_path: The additional path of a file (subdirectory).
         @return: A path where the file should be saved.
         """
-        path = str(Path(storage_path) / storage_path / PathTools.to_valid_name(course_fullname) / file_path.strip('/'))
+        path = str(
+            Path(storage_path)
+            / storage_path
+            / PathTools.to_valid_name(course_fullname)
+            / PathTools.sanitize_path(file_path).strip('/')
+        )
         return path
