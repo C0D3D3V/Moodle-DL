@@ -461,9 +461,9 @@ class URLTarget(object):
                     universal_newlines=True,
                 )
 
-                for line in p.stdout:
+                for lines in p.stdout:
                     # line = line.decode('utf-8', 'replace')
-                    self.thread_report[self.thread_id]['external_dl'] = line.replace('\n', '').replace('\r', '')
+                    self.thread_report[self.thread_id]['external_dl'] = lines.splitlines()[-1]
 
                 _, stderr = p.communicate()
 
