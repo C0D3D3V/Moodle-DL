@@ -99,7 +99,7 @@ class PathTools:
             / storage_path
             / PathTools.to_valid_name(course_fullname)
             / PathTools.to_valid_name(file_section_name)
-            / PathTools.anitize_path(file_path).strip('/')
+            / PathTools.sanitize_path(file_path).strip('/')
         )
         return path
 
