@@ -11,7 +11,6 @@ import logging
 from http.cookiejar import MozillaCookieJar
 from requests.exceptions import RequestException
 
-import moodle_dl.utils.logger
 
 
 class RequestHelper:
