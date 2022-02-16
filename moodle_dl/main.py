@@ -13,7 +13,6 @@ import sentry_sdk
 
 import moodle_dl.utils.process_lock as process_lock
 
-
 try:
     # In unix readline needs to be loaded so that
     # arrowkeys work in input
@@ -189,14 +188,13 @@ def run_change_notification_xmpp(storage_path):
 
 
 def run_main(
-    storage_path,
-    verbose=False,
-    skip_cert_verify=False,
-    ignore_ytdl_errors=False,
-    without_downloading_files=False,
-    log_responses=False,
+        storage_path,
+        verbose=False,
+        skip_cert_verify=False,
+        ignore_ytdl_errors=False,
+        without_downloading_files=False,
+        log_responses=False,
 ):
-
     log_formatter = logging.Formatter('%(asctime)s  %(levelname)s  {%(module)s}  %(message)s', '%Y-%m-%d %H:%M:%S')
     log_file = os.path.join(storage_path, 'MoodleDownloader.log')
     log_handler = RotatingFileHandler(
@@ -264,7 +262,28 @@ def run_main(
         msg_checking_for_changes = 'Checking for changes for the configured Moodle-Account....'
         logging.debug(msg_checking_for_changes)
         Log.debug(msg_checking_for_changes)
-        changed_courses = moodle.fetch_state()
+        """
+        As discussed in https://github.com/C0D3D3V/Moodle-Downloader-2/issues/131, there are situations where the 
+        connection aborts. Since the solution is to restart the downloader, we do that here. 
+        """
+        i = 0
+        retries = 5
+        while True:
+            i = i + 1
+            try:
+                changed_courses = moodle.fetch_state()
+                break
+            except ConnectionError as e:
+                if i <= retries:
+                    logging.debug(
+                        "Whilst we were checking for changes there was a ConnectionError (This is the "
+                        + str(i) + "th time). We try it again.")
+                    continue
+                else:
+                    logging.error(
+                        "There where at least " + str(retries) + "errors whilst checking for changes, therefore we "
+                                                                 "abort.")
+                    raise e
 
         if log_responses:
             msg_responses_logged = (
@@ -383,12 +402,12 @@ def get_parser():
         '--init',
         action='store_true',
         help=(
-            'Guides you trough the configuration of the'
-            + ' software, including the activation of'
-            + ' mail-notifications and obtainment of a'
-            + ' login-token for your Moodle-Account. It'
-            + ' does not fetch the current state of your'
-            + ' Moodle-Account.'
+                'Guides you trough the configuration of the'
+                + ' software, including the activation of'
+                + ' mail-notifications and obtainment of a'
+                + ' login-token for your Moodle-Account. It'
+                + ' does not fetch the current state of your'
+                + ' Moodle-Account.'
         ),
     )
 
@@ -397,11 +416,11 @@ def get_parser():
         '--config',
         action='store_true',
         help=(
-            'Guides you through the additional'
-            + ' configuration of the software. This'
-            + ' includes the selection of the courses to'
-            + ' be downloaded and various configuration'
-            + ' options for these courses.'
+                'Guides you through the additional'
+                + ' configuration of the software. This'
+                + ' includes the selection of the courses to'
+                + ' be downloaded and various configuration'
+                + ' options for these courses.'
         ),
     )
 
@@ -410,12 +429,12 @@ def get_parser():
         '--new-token',
         action='store_true',
         help=(
-            'Overrides the login-token with a newly obtained'
-            + ' one. It does not fetch the current state of your'
-            + ' Moodle-Account. Use it if at any point in time,'
-            + ' for whatever reason, the saved token gets'
-            + ' rejected by Moodle. It does not affect the rest'
-            + ' of the config.'
+                'Overrides the login-token with a newly obtained'
+                + ' one. It does not fetch the current state of your'
+                + ' Moodle-Account. Use it if at any point in time,'
+                + ' for whatever reason, the saved token gets'
+                + ' rejected by Moodle. It does not affect the rest'
+                + ' of the config.'
         ),
     )
 
@@ -424,9 +443,9 @@ def get_parser():
         '--change-notification-mail',
         action='store_true',
         help=(
-            'Activate/deactivate/change the settings for'
-            + ' receiving notifications via e-mail. It does not'
-            + ' affect the rest of the config.'
+                'Activate/deactivate/change the settings for'
+                + ' receiving notifications via e-mail. It does not'
+                + ' affect the rest of the config.'
         ),
     )
 
@@ -435,9 +454,9 @@ def get_parser():
         '--change-notification-telegram',
         action='store_true',
         help=(
-            'Activate/deactivate/change the settings for'
-            + ' receiving notifications via Telegram. It does not'
-            + ' affect the rest of the config.'
+                'Activate/deactivate/change the settings for'
+                + ' receiving notifications via Telegram. It does not'
+                + ' affect the rest of the config.'
         ),
     )
 
@@ -446,9 +465,9 @@ def get_parser():
         '--change-notification-xmpp',
         action='store_true',
         help=(
-            'Activate/deactivate/change the settings for'
-            + ' receiving notifications via XMPP. It does not'
-            + ' affect the rest of the config.'
+                'Activate/deactivate/change the settings for'
+                + ' receiving notifications via XMPP. It does not'
+                + ' affect the rest of the config.'
         ),
     )
 
@@ -457,10 +476,10 @@ def get_parser():
         '--manage-database',
         action='store_true',
         help=(
-            'This option lets you manage the offline database.'
-            + ' It allows you to delete entries from the database'
-            + ' that are no longer available locally so that they'
-            + ' can be downloaded again.'
+                'This option lets you manage the offline database.'
+                + ' It allows you to delete entries from the database'
+                + ' that are no longer available locally so that they'
+                + ' can be downloaded again.'
         ),
     )
 
@@ -469,9 +488,9 @@ def get_parser():
         '--delete-old-files',
         action='store_true',
         help=(
-            'This option lets you delete old copies of files.'
-            + ' It allows you to delete entries from the database'
-            + ' and from local file system.'
+                'This option lets you delete old copies of files.'
+                + ' It allows you to delete entries from the database'
+                + ' and from local file system.'
         ),
     )
 
@@ -480,8 +499,8 @@ def get_parser():
         default=False,
         action='store_true',
         help='To generate a responses.log file'
-        + ' in which all JSON responses from Moodles are logged'
-        + ' along with the requested URL.',
+             + ' in which all JSON responses from Moodles are logged'
+             + ' along with the requested URL.',
     )
 
     group.add_argument(
@@ -497,11 +516,11 @@ def get_parser():
         default='.',
         type=_dir_path,
         help=(
-            'Sets the location of the configuration,'
-            + ' logs and downloaded files. PATH must be an'
-            + ' existing directory in which you have read and'
-            + ' write access. (default: current working'
-            + ' directory)'
+                'Sets the location of the configuration,'
+                + ' logs and downloaded files. PATH must be an'
+                + ' existing directory in which you have read and'
+                + ' write access. (default: current working'
+                + ' directory)'
         ),
     )
 
@@ -510,10 +529,10 @@ def get_parser():
         default=False,
         action='store_true',
         help=(
-            'If this flag is set, all path are made absolute '
-            + 'in order to workaround the max_path limitation on Windows.'
-            + 'To use relative paths on Windows you should disable the max_path limitation'
-            + 'https://docs.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation'
+                'If this flag is set, all path are made absolute '
+                + 'in order to workaround the max_path limitation on Windows.'
+                + 'To use relative paths on Windows you should disable the max_path limitation'
+                + 'https://docs.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation'
         ),
     )
 
@@ -554,8 +573,8 @@ def get_parser():
         default=False,
         action='store_true',
         help='If this flag is set, the SSL certificate '
-        + 'is not verified. This option should only be used in '
-        + 'non production environments.',
+             + 'is not verified. This option should only be used in '
+             + 'non production environments.',
     )
 
     parser.add_argument(
@@ -564,9 +583,9 @@ def get_parser():
         default=False,
         action='store_true',
         help='If this option is set, errors that occur when downloading with the help of Youtube-dl are ignored. '
-        + 'Thus, no further attempt will be made to download the file using youtube-dl. '
-        + 'By default, youtube-dl errors are critical, so the download of the corresponding file '
-        + 'will be aborted and when you run moodle-dl again, the download will be repeated.',
+             + 'Thus, no further attempt will be made to download the file using youtube-dl. '
+             + 'By default, youtube-dl errors are critical, so the download of the corresponding file '
+             + 'will be aborted and when you run moodle-dl again, the download will be repeated.',
     )
 
     parser.add_argument(
@@ -574,8 +593,8 @@ def get_parser():
         default=False,
         action='store_true',
         help='If this flag is set, no files are downloaded.'
-        + ' This allows the local database to be updated without'
-        + ' having to download all files.',
+             + ' This allows the local database to be updated without'
+             + ' having to download all files.',
     )
 
     parser.add_argument(
@@ -584,9 +603,9 @@ def get_parser():
         default=False,
         action='store_true',
         help='This flag can be used together with --init and -nt. If'
-        + ' this flag is set, you will be guided through the'
-        + ' Single Sign On (SSO) login process during'
-        + ' initialization or new token retrieval.',
+             + ' this flag is set, you will be guided through the'
+             + ' Single Sign On (SSO) login process during'
+             + ' initialization or new token retrieval.',
     )
 
     return parser
