@@ -2,12 +2,16 @@ import re
 import os
 import json
 import urllib
+from time import sleep
+
 import urllib3
 import requests
 import logging
 
 from http.cookiejar import MozillaCookieJar
 from requests.exceptions import RequestException
+
+import moodle_dl.utils.logger
 
 
 class RequestHelper:
@@ -131,11 +135,22 @@ class RequestHelper:
 
         data_urlencoded = self._get_POST_DATA(function, self.token, data)
         url = self._get_REST_POST_URL(self.url_base, function)
-
-        try:
-            response = requests.post(url, data=data_urlencoded, headers=self.stdHeader, verify=self.verify, timeout=timeout)
-        except RequestException as error:
-            raise ConnectionError("Connection error: %s" % str(error)) from None
+        i = 0
+        maxretries = 5
+        while True:
+            i = i + 1
+            try:
+                response = requests.post(url, data=data_urlencoded, headers=self.stdHeader, verify=self.verify, timeout=timeout)
+                break
+            except requests.ConnectionError as error:
+                if i <= maxretries:
+                    logging.debug("The " + str(i) + "th Connection Error occurred, retrying. %s" % str(error))
+                    sleep(1)
+                    continue
+                else:
+                    raise ConnectionError("Connection error: %s" % str(error)) from None
+            except RequestException as error:
+                raise ConnectionError("Connection error: %s" % str(error)) from None
 
         json_result = self._initial_parse(response)
         if self.log_responses and function not in ['tool_mobile_get_autologin_key']:
