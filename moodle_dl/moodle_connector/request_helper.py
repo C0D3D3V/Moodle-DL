@@ -135,6 +135,12 @@ class RequestHelper:
 
         data_urlencoded = self._get_POST_DATA(function, self.token, data)
         url = self._get_REST_POST_URL(self.url_base, function)
+        """ 
+        As discussed in issue #131, it occurs, that the POST-REQUEST fails, which results automatically in a failure. 
+        In the following lines of code, the Post-Request will be retried. 
+        The loop terminates, since in every loop the variable i is incremented and goes strictly in the direction of 
+        the variable maxretries or the loop breaks if the response is successful.        
+        """
         i = 0
         maxretries = 5
         while True:
@@ -143,6 +149,10 @@ class RequestHelper:
                 response = requests.post(url, data=data_urlencoded, headers=self.stdHeader, verify=self.verify, timeout=timeout)
                 break
             except requests.ConnectionError as error:
+                """
+                We treat requests.ConnectionErrors here specially, since they normally mean, that something went rong, 
+                which could be fixed by a restart.  
+                """
                 if i <= maxretries:
                     logging.debug("The " + str(i) + "th Connection Error occurred, retrying. %s" % str(error))
                     sleep(1)
