@@ -12,7 +12,6 @@ from http.cookiejar import MozillaCookieJar
 from requests.exceptions import RequestException
 
 
-
 class RequestHelper:
     """
     Encapsulates the recurring logic for sending out requests to the
@@ -127,6 +126,11 @@ class RequestHelper:
         @param data: The optional data is added to the POST body.
         @return: The JSON response returned by the Moodle system, already
         checked for errors.
+
+        As discussed in issue #131, it occurs, that the POST-REQUEST fails, which results automatically in a failure.
+        In the following lines of code, the Post-Request will be retried.
+        The loop terminates, since in every loop the variable i is incremented and goes strictly in the direction of
+        the variable maxretries or the loop breaks if the response is successful.
         """
 
         if self.token is None:
@@ -134,39 +138,34 @@ class RequestHelper:
 
         data_urlencoded = self._get_POST_DATA(function, self.token, data)
         url = self._get_REST_POST_URL(self.url_base, function)
-        """ 
-        As discussed in issue #131, it occurs, that the POST-REQUEST fails, which results automatically in a failure. 
-        In the following lines of code, the Post-Request will be retried. 
-        The loop terminates, since in every loop the variable i is incremented and goes strictly in the direction of 
-        the variable maxretries or the loop breaks if the response is successful.        
-        """
-        i = 0
+
+        error_ctr = 0
         maxretries = 5
         while True:
-            i = i + 1
             try:
-                response = requests.post(url, data=data_urlencoded, headers=self.stdHeader, verify=self.verify, timeout=timeout)
+                response = requests.post(
+                    url, data=data_urlencoded, headers=self.stdHeader, verify=self.verify, timeout=timeout
+                )
                 break
-            except requests.ConnectionError as error:
-                """
-                We treat requests.ConnectionErrors here specially, since they normally mean, that something went rong, 
-                which could be fixed by a restart.  
-                """
-                if i <= maxretries:
-                    logging.debug("The " + str(i) + "th Connection Error occurred, retrying. %s" % str(error))
+            except (requests.ConnectionError, requests.Timeout) as error:
+                # We treat requests.ConnectionErrors here specially, since they normally mean, that something went rong,
+                # which could be fixed by a restart.
+                error_ctr += 1
+                if error_ctr < maxretries:
+                    logging.debug("The %sth Connection Error occurred, retrying. %s", error_ctr, str(error))
                     sleep(1)
                     continue
                 else:
-                    raise ConnectionError("Connection error: %s" % str(error)) from None
+                    raise ConnectionError(f"Connection error: {error}") from None
             except RequestException as error:
-                raise ConnectionError("Connection error: %s" % str(error)) from None
+                raise ConnectionError(f"Connection error: {error}") from None
 
         json_result = self._initial_parse(response)
         if self.log_responses and function not in ['tool_mobile_get_autologin_key']:
             with open(self.log_responses_to, 'a', encoding='utf-8') as response_log_file:
-                response_log_file.write('URL: {}\n'.format(response.url))
-                response_log_file.write('Function: {}\n\n'.format(function))
-                response_log_file.write('Data: {}\n\n'.format(data))
+                response_log_file.write(f'URL: {response.url}\n')
+                response_log_file.write(f'Function: {function}\n\n')
+                response_log_file.write(f'Data: {data}\n\n')
                 response_log_file.write(json.dumps(json_result, indent=4, ensure_ascii=False))
                 response_log_file.write('\n\n\n')
 
@@ -270,7 +269,7 @@ class RequestHelper:
         # Try to parse the JSON
         try:
             response_extracted = response.json()
-        except ValueError as error:
+        except ValueError:
             raise RequestRejectedError('The Moodle Mobile API does not appear to be available at this time.') from None
         except Exception as error:
             raise RequestRejectedError(
@@ -299,7 +298,8 @@ class RequestHelper:
 
             if errorcode == 'invalidtoken':
                 raise RequestRejectedError(
-                    'Your Moodle token has expired. To create a new one run "moodle-dl -nt -u USERNAME -pw PASSWORD" or "moodle-dl -nt -sso"'
+                    'Your Moodle token has expired.'
+                    + ' To create a new one run "moodle-dl -nt -u USERNAME -pw PASSWORD" or "moodle-dl -nt -sso"'
                 )
 
             raise RequestRejectedError(

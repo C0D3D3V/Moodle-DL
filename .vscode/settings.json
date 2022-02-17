@@ -6,7 +6,11 @@
     "python.linting.pylintArgs": [
         "--enable=W0614",
         "--enable=W0611",
+        "--disable=C0103",
+        "--disable=C0111",
         "--disable=C0114",
+        "--disable=C0115",
+        "--disable=C0116",
         "--disable=raise-missing-from",
         "--disable=unnecessary-pass",
         "--max-line-length=120"
@@ -17,7 +21,6 @@
         "--ignore=E203",
         "--ignore=E266",
         "--ignore=W503",
-        "--max-complexity = 18"
     ],
     "python.formatting.provider": "black",
     "python.formatting.blackArgs": [
