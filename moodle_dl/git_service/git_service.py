@@ -1,5 +1,6 @@
 import git
 
+import datetime
 class git_service:
     def __init__(self, courses, storage_path: str):
         self.storage_path = storage_path
@@ -22,4 +23,4 @@ class git_service:
     def commit_all_changes(self, courses):
         for course in courses:
             repo = git.Repo(course.fullname)
-            repo.index.commit()
+            repo.index.commit(datetime.datetime.now().strftime("%c"))
