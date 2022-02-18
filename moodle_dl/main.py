@@ -285,7 +285,7 @@ def run_main(
             downloader = DownloadService(changed_courses, moodle, storage_path, skip_cert_verify, ignore_ytdl_errors)
         downloader.run()
         failed_downloads = downloader.get_failed_url_targets()
-
+        #TODO: commit changes to git
         changed_courses_to_notify = moodle.recorder.changes_to_notify()
 
         if len(changed_courses_to_notify) > 0:
