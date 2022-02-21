@@ -3,6 +3,7 @@ import threading
 
 from queue import Queue, Empty
 
+from moodle_dl.git_service import git_service
 from moodle_dl.state_recorder.state_recorder import StateRecorder
 
 
@@ -58,7 +59,7 @@ class Downloader(threading.Thread):
                 logging.debug('T%s - URLTarget reports success!', self.thread_id)
                 self.db_lock.acquire()
                 self.state_recorder.save_file(url_target.file, url_target.course.id, url_target.course.fullname)
-                git_service.add_file_to_git(url_target.course, url_target.destination)
+                # git_service.git_service.add_file_to_git(url_target.course, url_target.destination)
                 self.db_lock.release()
                 self.report['success'].append(url_target)
 
