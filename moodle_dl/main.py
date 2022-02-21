@@ -288,7 +288,7 @@ def run_main(
             downloader = DownloadService(changed_courses, moodle, storage_path, skip_cert_verify, ignore_ytdl_errors)
         downloader.run()
         failed_downloads = downloader.get_failed_url_targets()
-
+        #TODO: make the usage of git optional and create think about dependency management
         git = git_service.git_service(changed_courses, storage_path)
         git.add_all_files_to_git(changed_courses)
         git.commit_all_changes(changed_courses)
