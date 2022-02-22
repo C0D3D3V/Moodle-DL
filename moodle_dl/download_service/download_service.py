@@ -126,13 +126,18 @@ class DownloadService:
         logging.debug('Queue contains %s URLTargets', self.total_files)
 
     @staticmethod
+    def get_folder(course):
+        if course.overwrite_name_with is not None:
+            return course.overwrite_name_with
+        else:
+            return course.fullname
+
+    @staticmethod
     def gen_path(storage_path: str, course: Course, file: File):
         """
         Generates the directory path where a file should be stored
         """
-        course_name = course.fullname
-        if course.overwrite_name_with is not None:
-            course_name = course.overwrite_name_with
+        course_name = DownloadService.get_folder(course)
 
         # if a flat path is requested
         if not course.create_directory_structure:
