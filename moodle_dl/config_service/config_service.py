@@ -634,15 +634,15 @@ class ConfigService:
         Asks the user if we shall use the git integration:
         """
         should_use_git = self.config_helper.get_use_git()
-        should_use_git = cutie.prompt_yes_or_no("Shall we use git?")
+        should_use_git = cutie.prompt_yes_or_no(Log.special_str("Shall we use git?"),default_is_yes=True)
         self.config_helper.set_property('git_usage', should_use_git)
         if should_use_git:
-            Log.info("What level of git usage shall we use?\n "
+            Log.special("What level of git usage shall we use?\n "
                      "Everything --> Commit whole folder with any changes you made\n"
                      "Changes --> Commit only changes made by the downloader")
             options=["Everything", "Changes"]
-            cutie.select(options, "Everything")
-            self.config_helper.set_property("git_level")
+            git_level =cutie.select(options, selected_index=0)
+            self.config_helper.set_property("git_level", git_level)
 
 
     def section_seperator(self):
