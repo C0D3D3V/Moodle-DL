@@ -3,6 +3,7 @@ import threading
 
 from queue import Queue, Empty
 
+
 from moodle_dl.git_service import git_service
 from moodle_dl.state_recorder.state_recorder import StateRecorder
 
@@ -56,12 +57,20 @@ class Downloader(threading.Thread):
 
             # If a download was successful, store it in the database.
             elif response is True:
-                logging.debug('T%s - URLTarget reports success!', self.thread_id)
+                logging.debug("T%s - URLTarget reports success!", self.thread_id)
                 self.db_lock.acquire()
-                self.state_recorder.save_file(url_target.file, url_target.course.id, url_target.course.fullname)
-                # git_service.git_service.add_file_to_git(url_target.course, url_target.destination)
+                self.state_recorder.save_file(
+                    url_target.file, url_target.course.id, url_target.course.fullname
+                )
+                from moodle_dl.download_service.download_service import DownloadService
+                git_service.git_service.add_file_to_git(
+                    url_target.course,
+                    url_target.file.saved_to.replace(
+                        DownloadService.get_folder(url_target.course) + "/", "", 1
+                    ),
+                )
                 self.db_lock.release()
-                self.report['success'].append(url_target)
+                self.report["success"].append(url_target)
 
             self.queue.task_done()
 
