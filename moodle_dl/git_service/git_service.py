@@ -9,7 +9,6 @@ import moodle_dl.download_service.download_service as dl
 class git_service:
     def __init__(self, courses, storage_path: str):
         self.storage_path = storage_path
-
         for course in courses:
             folder = dl.DownloadService.get_folder(course)
             try:
@@ -26,8 +25,8 @@ class git_service:
             except git.exc.InvalidGitRepositoryError:
                 self.init_git(self, course)
                 repo = git.Repo(course.fullname)
-
-    def init_git(self, course):
+    @staticmethod
+    def init_git(course):
         folder = dl.DownloadService.get_folder(course)
         git.Repo.init(folder, mkdir=True)
     def add_all_files_to_git(self, courses):
@@ -35,12 +34,13 @@ class git_service:
             folder = dl.DownloadService.get_folder(course)
             repo = git.Repo(folder)
             repo.index.add(repo.untracked_files)
-    def add_file_to_git(self, course, path, file=None):
+    @staticmethod
+    def add_file_to_git(course, path, file=None):
         folder = dl.DownloadService.get_folder(course)
         try:
             repo = git.Repo(folder)
         except git.exc.InvalidGitRepositoryError:
-            self.init_git(folder)
+            git_service.init_git(course)
             repo = git.Repo(folder)
         repo.index.add(path)
 
