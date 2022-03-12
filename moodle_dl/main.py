@@ -291,7 +291,7 @@ def run_main(
         #TODO: make the usage of git optional and think about dependency management
         if config.get_property("git_usage"):
             git = git_service.git_service(changed_courses, storage_path)
-            if config.get_property("git_level") == "Everything":
+            if config.get_property("git_level") == 1:
                 git.add_all_files_to_git(changed_courses)
             git.commit_all_changes(changed_courses)
 
