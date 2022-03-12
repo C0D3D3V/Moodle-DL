@@ -641,7 +641,8 @@ class ConfigService:
                      "Everything --> Commit whole folder with any changes you made\n"
                      "Changes --> Commit only changes made by the downloader")
             options=["Everything", "Changes"]
-            cutie.select_multiple(options, "Everything")
+            cutie.select(options, "Everything")
+            self.config_helper.set_property("git_level")
 
 
     def section_seperator(self):
