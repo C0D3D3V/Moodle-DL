@@ -634,10 +634,15 @@ class ConfigService:
         Asks the user if we shall use the git integration:
         """
         should_use_git = self.config_helper.get_use_git()
-        Log.info("Shall we use git? There are three options: Yes (commit all files changed files), Only files changed by moodle-dl, No")
-        options = ["True", "part", "False"]
-        should_use_git = cutie.select(options, selected_index=options.index(should_use_git))
+        should_use_git = cutie.prompt_yes_or_no("Shall we use git?")
         self.config_helper.set_property('git_usage', should_use_git)
+        if should_use_git:
+            Log.info("What level of git usage shall we use?\n "
+                     "Everything --> Commit whole folder with any changes you made\n"
+                     "Changes --> Commit only changes made by the downloader")
+            options=["Everything", "Changes"]
+            cutie.select_multiple(options, "Everything")
+
 
     def section_seperator(self):
         """Print a seperator line."""
