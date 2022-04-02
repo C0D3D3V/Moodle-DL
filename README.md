@@ -38,10 +38,10 @@ If you run the program on **Windows**, please use [Powershell or CMD](https://ww
 ### Usage
 - `moodle-dl`
     - Fetches the current state of your Moodle Account, saves it and detects any changes.
-    - If configured, it also sends out a notifications.
-    - It prints the changes into the console
+    - If configured, it also sends out notifications.
+    - It prints the changes into the console.
 - `moodle-dl --init`
-    - Guides you trough the configuration of the software, including the activation of notifications and obtainment of a login-token for your Moodle-Account.
+    - Guides you through the configuration of the software, including the activation of notifications and obtainment of a login-token for your Moodle-Account.
     - After the necessary configuration, further additional configurations can be made. 
     - If you have to log in with Single Sign On (SSO), you can set the option `--sso` additionally.
 - `moodle-dl --config`
