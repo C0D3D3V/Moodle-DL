@@ -33,7 +33,6 @@ setup(
     install_requires=[
         'sentry_sdk>=0.13.5',
         'colorama>=0.4.3',
-        'readchar>=2.0.1',
         'yt_dlp>=2021.10.22',
         'certifi>=2020.4.5.2',
         'html2text>=2020.1.16',

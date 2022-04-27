@@ -16,7 +16,7 @@ import getpass
 from typing import List, Optional
 from colorama import init
 
-import readchar
+import moodle_dl.utils.readchar as readchar
 
 
 terminal = os.getenv('TERM')
