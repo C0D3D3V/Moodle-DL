@@ -5,7 +5,6 @@ LF = "\x0a"
 CR = "\x0d"
 ENTER = LF
 BACKSPACE = "\x7F"
-SUPR = ""
 SPACE = "\x20"
 ESC = "\x1b"
 TAB = "\x09"
