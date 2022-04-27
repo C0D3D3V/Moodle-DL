@@ -429,19 +429,20 @@ def prompt_yes_or_no(
             is_yes = not is_yes
             is_selected = True
             current_message = yes_text if is_yes else no_text
-        elif keypress in DefaultKeys.delete:
-            if current_message:
-                current_message = current_message[:-1]
         elif keypress in DefaultKeys.interrupt:
             raise KeyboardInterrupt
         elif keypress in DefaultKeys.confirm:
             if is_selected:
                 break
-        elif keypress in DefaultKeys.tab:
-            if is_selected:
-                current_message = yes_text if is_yes else no_text
         elif keypress is not None:
-            current_message += keypress
+            if keypress in DefaultKeys.tab:
+                pass
+            elif keypress in DefaultKeys.delete:
+                if current_message:
+                    current_message = current_message[:-1]
+            else:
+                current_message += keypress
+
             match_yes = yes_text
             match_no = no_text
             match_text = current_message
@@ -457,6 +458,9 @@ def prompt_yes_or_no(
                 is_yes = True
             else:
                 is_selected = False
+
+            if keypress in DefaultKeys.tab and is_selected:
+                current_message = yes_text if is_yes else no_text
         print()
     print('\033[K\n\033[K\n\033[K\n\033[3A')
     return is_selected and is_yes
