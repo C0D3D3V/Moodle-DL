@@ -197,7 +197,15 @@ class ConfigHelper:
             return self.get_property('download_also_with_cookie')
         except ValueError:
             return False
-
+    def get_use_git(self) -> {}:
+        """
+        Returns if and how we shall use git
+        :return:
+        """
+        try:
+            return self.get_property('git_usage')
+        except ValueError:
+            return "True"
     def get_download_options(self) -> {}:
         # returns the option dictionary for downloading files
         options = {}

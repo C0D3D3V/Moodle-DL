@@ -64,6 +64,7 @@ class ConfigService:
         self._select_should_download_workshops()
         self._select_should_download_linked_files()
         self._select_should_download_also_with_cookie()
+        self._should_use_git()
 
     def interactively_add_all_visible_courses(self):
         """
@@ -628,6 +629,21 @@ class ConfigService:
         )
 
         self.config_helper.set_property('download_also_with_cookie', download_also_with_cookie)
+    def _should_use_git(self):
+        """
+        Asks the user if we shall use the git integration:
+        """
+        should_use_git = self.config_helper.get_use_git()
+        should_use_git = cutie.prompt_yes_or_no(Log.special_str("Shall we use git?"),default_is_yes=True)
+        self.config_helper.set_property('git_usage', should_use_git)
+        if should_use_git:
+            Log.special("What level of git usage shall we use?\n "
+                     "Everything --> Commit whole folder with any changes you made\n"
+                     "Changes --> Commit only changes made by the downloader")
+            options=["Everything", "Changes"]
+            git_level =cutie.select(options, selected_index=0)
+            self.config_helper.set_property("git_level", git_level)
+
 
     def section_seperator(self):
         """Print a seperator line."""

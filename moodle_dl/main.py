@@ -12,7 +12,7 @@ from shutil import which
 import sentry_sdk
 
 import moodle_dl.utils.process_lock as process_lock
-
+from moodle_dl.git_service import git_service
 
 try:
     # In unix readline needs to be loaded so that
@@ -36,6 +36,7 @@ from moodle_dl.notification_services.xmpp.xmpp_service import XmppService
 from moodle_dl.download_service.fake_download_service import FakeDownloadService
 from moodle_dl.notification_services.console.console_service import ConsoleService
 from moodle_dl.notification_services.telegram.telegram_service import TelegramService
+
 
 IS_DEBUG = False
 
@@ -264,7 +265,9 @@ def run_main(
         msg_checking_for_changes = 'Checking for changes for the configured Moodle-Account....'
         logging.debug(msg_checking_for_changes)
         Log.debug(msg_checking_for_changes)
+
         changed_courses = moodle.fetch_state()
+
 
         if log_responses:
             msg_responses_logged = (
@@ -285,6 +288,12 @@ def run_main(
             downloader = DownloadService(changed_courses, moodle, storage_path, skip_cert_verify, ignore_ytdl_errors)
         downloader.run()
         failed_downloads = downloader.get_failed_url_targets()
+        #TODO: make the usage of git optional and think about dependency management
+        if config.get_property("git_usage"):
+            git = git_service.git_service(changed_courses, storage_path)
+            if config.get_property("git_level") == 1:
+                git.add_all_files_to_git(changed_courses)
+            git.commit_all_changes(changed_courses)
 
         changed_courses_to_notify = moodle.recorder.changes_to_notify()
 
