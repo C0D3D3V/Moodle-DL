@@ -18,42 +18,36 @@ class ConfigService:
         self.storage_path = storage_path
         self.skip_cert_verify = skip_cert_verify
 
-    def interactively_acquire_config(self):
-        """
-        Guides the user through the process of configuring the downloader
-        for the courses to be downloaded and in what way
-        """
-
         token = self.config_helper.get_token()
         moodle_domain = self.config_helper.get_moodle_domain()
         moodle_path = self.config_helper.get_moodle_path()
         use_http = self.config_helper.get_use_http()
 
         request_helper = RequestHelper(moodle_domain, moodle_path, token, self.skip_cert_verify, use_http=use_http)
-        first_contact_handler = FirstContactHandler(request_helper)
+        self.first_contact_handler = FirstContactHandler(request_helper)
 
+    def interactively_acquire_config(self):
+        """
+        Guides the user through the process of configuring the downloader
+        for the courses to be downloaded and in what way
+        """
         courses = []
         try:
             userid, version = self.config_helper.get_userid_and_version()
             if userid is None or version is None:
-                userid, version = first_contact_handler.fetch_userid_and_version()
+                userid, version = self.first_contact_handler.fetch_userid_and_version()
                 self._select_should_userid_and_version_be_saved(userid, version)
             else:
-                first_contact_handler.version = version
+                self.first_contact_handler.version = version
 
-            courses = first_contact_handler.fetch_courses(userid)
+            courses = self.first_contact_handler.fetch_courses(userid)
 
         except (RequestRejectedError, ValueError, RuntimeError, ConnectionError) as error:
-            Log.error('Error while communicating with the Moodle System! (%s)' % (error))
+            Log.error(f'Error while communicating with the Moodle System! ({error})')
             sys.exit(1)
 
-        course_ids = self._select_courses_to_download(courses)
-
-        sections = {}
-        for course_id in course_ids:
-            sections[course_id] = first_contact_handler.fetch_sections(course_id)
-
-        self._set_options_of_courses(courses, sections)
+        self._select_courses_to_download(courses)
+        self._set_options_of_courses(courses)
         self._select_should_download_submissions()
         self._select_should_download_descriptions()
         self._select_should_download_links_in_descriptions()
@@ -70,15 +64,6 @@ class ConfigService:
         Guides the user through the process of adding all visible courses
         to the list of courses to download in the configuration
         """
-
-        token = self.config_helper.get_token()
-        moodle_domain = self.config_helper.get_moodle_domain()
-        moodle_path = self.config_helper.get_moodle_path()
-        use_http = self.config_helper.get_use_http()
-
-        request_helper = RequestHelper(moodle_domain, moodle_path, token, self.skip_cert_verify, use_http=use_http)
-        first_contact_handler = FirstContactHandler(request_helper)
-
         print('')
         Log.info(
             'It is possible to automatically complete the moodle-dl configuration'
@@ -114,16 +99,16 @@ class ConfigService:
         try:
             userid, version = self.config_helper.get_userid_and_version()
             if userid is None or version is None:
-                userid, version = first_contact_handler.fetch_userid_and_version()
+                userid, version = self.first_contact_handler.fetch_userid_and_version()
             else:
-                first_contact_handler.version = version
+                self.first_contact_handler.version = version
 
-            courses = first_contact_handler.fetch_courses(userid)
+            courses = self.first_contact_handler.fetch_courses(userid)
             log_all_courses_to = str(Path(self.storage_path) / 'all_courses.json')
-            all_visible_courses = first_contact_handler.fetch_all_visible_courses(log_all_courses_to)
+            all_visible_courses = self.first_contact_handler.fetch_all_visible_courses(log_all_courses_to)
 
         except (RequestRejectedError, ValueError, RuntimeError, ConnectionError) as error:
-            Log.error('Error while communicating with the Moodle System! (%s)' % (error))
+            Log.error(f'Error while communicating with the Moodle System! ({error})')
             sys.exit(1)
 
         # Filter out courses the user is enroled in
@@ -260,7 +245,7 @@ class ConfigService:
 
         return dont_download_section_ids
 
-    def _set_options_of_courses(self, courses: [Course], sections: []):
+    def _set_options_of_courses(self, courses: [Course]):
         """
         Let the user set special options for every single course
         """
@@ -329,9 +314,9 @@ class ConfigService:
                 break
             else:
                 sel = choices_courses[selected_course - 1]
-                self._change_settings_of(sel, options_of_courses, sections[sel.id])
+                self._change_settings_of(sel, options_of_courses)
 
-    def _change_settings_of(self, course: Course, options_of_courses: {}, sections: [{}]):
+    def _change_settings_of(self, course: Course, options_of_courses: {}):
         """
         Ask for a new Name for the course.
         Then asks if a file structure should be created.
@@ -351,7 +336,7 @@ class ConfigService:
         changed = False
 
         # Ask for new name
-        overwrite_name_with = input('Enter a new name for this Course [leave blank for "%s"]:   ' % (course.fullname,))
+        overwrite_name_with = input(f'Enter a new name for this Course [leave blank for "{course.fullname}"]:   ')
 
         if overwrite_name_with == '':
             overwrite_name_with = None
@@ -377,11 +362,27 @@ class ConfigService:
 
         excluded_sections = current_course_settings.get('excluded_sections', [])
 
-        dont_download_section_ids = self._select_sections_to_download(sections, excluded_sections)
+        change_excluded_sections_promt = 'Do you want to exclude individual sections of this course from download?'
+        if len(excluded_sections) > 0:
+            change_excluded_sections_promt = (
+                'Do you want to change the selection of sections that should not be'
+                + f' downloaded? Currently {len(excluded_sections)} sections of this course are excluded from download.'
+            )
 
-        if dont_download_section_ids is not current_course_settings.get('excluded_sections', []):
-            changed = True
-            current_course_settings.update({'excluded_sections': dont_download_section_ids})
+        change_excluded_sections = cutie.prompt_yes_or_no(
+            Log.special_str(change_excluded_sections_promt),
+            default_is_yes=(len(excluded_sections) > 0),
+        )
+
+        if change_excluded_sections:
+            Log.info('Please wait for a moment, the information about the course sections gets downloaded.')
+            sections = self.first_contact_handler.fetch_sections(course.id)
+
+            dont_download_section_ids = self._select_sections_to_download(sections, excluded_sections)
+
+            if dont_download_section_ids != current_course_settings.get('excluded_sections', []):
+                changed = True
+                current_course_settings.update({'excluded_sections': dont_download_section_ids})
 
         if changed:
             options_of_courses.update({str(course.id): current_course_settings})
@@ -549,7 +550,7 @@ class ConfigService:
         self.section_seperator()
         Log.info(
             'In the descriptions of files, sections, assignments or courses the teacher can add links to webpages,'
-            + ' files or videos. That links can pont to a internal page on moodle or to an external webpage.'
+            + ' files or videos. That links can point to a internal page on moodle or to an external webpage.'
         )
         print('')
 

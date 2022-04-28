@@ -45,7 +45,7 @@ class ResultsHandler:
 
         return section_id not in dont_download_sections_ids or len(dont_download_sections_ids) == 0
 
-    def _get_files_in_sections(self, course_sections: [], excluded_sections: [int]) -> [File]:
+    def _get_files_in_sections(self, course_sections: []) -> [File]:
         """
         Iterates over all sections of a course to find files (or modules).
         @param course_sections: The course object returned by Moodle,
@@ -171,8 +171,8 @@ class ResultsHandler:
             description,
         )
 
-        # some folder downloads inside a description file may have some session key inside which will always be different.
-        # remove it, to prevent always tagging this file as "modified".
+        # some folder downloads inside a description file may have some session key inside which will always be
+        # different. We remove it, to prevent always tagging this file as "modified".
         description = re.sub(r'<input type="hidden" name="sesskey" value="[0-9a-zA-Z]*" \/>', "", description)
         description = re.sub(r"<input type='hidden' name='sesskey' value='[0-9a-zA-Z]*' \/>", "", description)
 
@@ -489,6 +489,6 @@ class ResultsHandler:
         data = {'courseid': course.id}
         course_sections = self.request_helper.post_REST('core_course_get_contents', data)
 
-        files = self._get_files_in_sections(course_sections, course.excluded_sections)
+        files = self._get_files_in_sections(course_sections)
 
         return files
