@@ -30,7 +30,7 @@ class FirstContactHandler:
         try:
             version = int(version.split('.')[0])
         except Exception as e:
-            raise RuntimeError('Error could not parse version string: "%s" Error: %s' % (version, e))
+            raise RuntimeError(f'Error could not parse version string: "{version}" Error: {e}')
 
         self.version = version
         return userid, version

@@ -141,9 +141,7 @@ class URLTarget(object):
 
         while os.path.exists(new_path):
             count += 1
-
-            new_filename = '%s_%02d%s' % (filename, count, file_extension)
-
+            new_filename = f'{filename}_{count:02d}{file_extension}'
             new_path = str(Path(destination) / new_filename)
 
         return new_path
@@ -161,7 +159,7 @@ class URLTarget(object):
 
         logging.debug('T%s - Seting up target file: "%s"', self.thread_id, new_path)
         try:
-            open(new_path, 'a').close()
+            open(new_path, 'a', encoding='utf-8').close()
         except Exception as e:
             self.fs_lock.release()
             logging.error('T%s - Failed seting up target file: "%s"', self.thread_id, new_path)
@@ -186,10 +184,9 @@ class URLTarget(object):
 
         logging.debug('T%s - Renaming old file', self.thread_id)
 
-        count = 1
         content_filename = os.path.basename(old_path)
         filename, file_extension = os.path.splitext(content_filename)
-        content_filename = '%s_old%s' % (filename, file_extension)
+        content_filename = f'{filename}_old{file_extension}'
 
         destination = os.path.dirname(old_path)
         new_path = str(Path(destination) / content_filename)
@@ -201,7 +198,7 @@ class URLTarget(object):
         try:
             shutil.move(old_path, new_path)
             self.file.old_file.saved_to = new_path
-        except Exception:
+        except OSError:
             logging.warning('T%s - Failed to renaming old file "%s" to "%s"', self.thread_id, old_path, new_path)
             self.fs_lock.release()
             return False
@@ -335,7 +332,7 @@ class URLTarget(object):
             if self.file.content_timemodified is not None and self.file.content_timemodified > 0:
                 os.utime(self.file.saved_to, (time.time(), self.file.content_timemodified))
 
-        except Exception:
+        except OSError:
             logging.debug('T%s - Could not change utime', self.thread_id)
 
     def try_download_link(
@@ -366,14 +363,15 @@ class URLTarget(object):
             if cookies_path is None or not os.path.isfile(cookies_path):
                 self.success = False
                 raise ValueError(
-                    'Moodle Cookies are missing. Run `moodle-dl -nt` to set a privatetoken for cookie generation (If necessary additionally `-sso`)'
+                    'Moodle Cookies are missing. Run `moodle-dl -nt` to set a privatetoken for cookie generation'
+                    + '(If necessary additionally `-sso`)'
                 )
 
         if delete_if_successful:
             # if temporary file is not needed delete it as soon as possible
             try:
                 os.remove(self.file.saved_to)
-            except Exception as e:
+            except OSError as e:
                 logging.warning(
                     'T%s - Could not delete %s before download is started. Error: %s',
                     self.thread_id,
@@ -405,7 +403,7 @@ class URLTarget(object):
             self.success = True
             return False
         except RequestException as error:
-            raise ConnectionError("Connection error: %s" % str(error)) from None
+            raise ConnectionError(f"Connection error: {str(error)}") from None
 
         if not response.ok:
             # The URL reports an HTTP error, so we give up trying to download the URL.
@@ -469,7 +467,7 @@ class URLTarget(object):
 
                 if p.returncode != 0:
                     external_dl_failed_with_error = True
-            except Exception as e:
+            except (subprocess.SubprocessError, ValueError, TypeError) as e:
                 stderr = str(e)
                 external_dl_failed_with_error = True
 
@@ -479,7 +477,7 @@ class URLTarget(object):
                     # cleanup the url-link file
                     try:
                         os.remove(self.file.saved_to)
-                    except Exception as e:
+                    except OSError as e:
                         logging.warning(
                             'T%s - Could not delete %s after external downloader failed. Error: %s',
                             self.thread_id,
@@ -527,7 +525,7 @@ class URLTarget(object):
 
             videopasswords = self.options.get('videopasswords', {})
             password_list = videopasswords.get(url_parsed.netloc, [])
-            if not type(password_list) is list:
+            if not isinstance(password_list, list):
                 password_list = [password_list]
 
             idx_pw = 0
@@ -569,7 +567,7 @@ class URLTarget(object):
                     # cleanup the url-link file
                     try:
                         os.remove(self.file.saved_to)
-                    except Exception as e:
+                    except OSError as e:
                         logging.warning(
                             'T%s - Could not delete %s after youtube-dl failed. Error: %s',
                             self.thread_id,
@@ -787,11 +785,11 @@ class URLTarget(object):
 
                 self.fs_lock.release()
                 return True
-            except Exception as e:
+            except OSError as e:
                 logging.warning('T%s - Moving the old file %s failed!  Error: %s', self.thread_id, old_path, e)
 
             self.fs_lock.release()
-        except Exception as e:
+        except OSError as e:
             logging.warning('T%s - Moving the old file %s failed unexpectedly!  Error: %s', self.thread_id, old_path, e)
 
         return False
@@ -801,7 +799,7 @@ class URLTarget(object):
         logging.debug('T%s - Data-URL detected', self.thread_id)
         try:
             os.remove(self.file.saved_to)
-        except Exception as e:
+        except OSError as e:
             logging.warning(
                 'T%s - Could not delete %s before storing data url. Error: %s',
                 self.thread_id,
@@ -912,7 +910,7 @@ class URLTarget(object):
             filesize = 0
             try:
                 filesize = os.path.getsize(self.file.saved_to)
-            except Exception:
+            except OSError:
                 pass
 
             logging.error('T%s - Error while trying to download file: %s', self.thread_id, self)
@@ -923,7 +921,7 @@ class URLTarget(object):
                     # remove touched file
                     if os.path.exists(self.file.saved_to):
                         os.remove(self.file.saved_to)
-                except Exception as e:
+                except OSError as e:
                     logging.warning(
                         'T%s - Could not delete %s after thread failed. Error: %s',
                         self.thread_id,
@@ -989,7 +987,7 @@ class URLTarget(object):
                     try:
                         block = fp.read(bs)
                     except (socket.timeout, socket.error) as error:
-                        raise ConnectionError("Connection error: %s" % str(error)) from None
+                        raise ConnectionError(f"Connection error: {str(error)}") from None
 
                     if not block:
                         break
@@ -1000,7 +998,7 @@ class URLTarget(object):
                         reporthook(blocknum, bs, size)
 
         if size >= 0 and read < size:
-            raise ContentTooShortError('retrieval incomplete: got only %i out of %i bytes' % (read, size), result)
+            raise ContentTooShortError(f'retrieval incomplete: got only {read} out of {size} bytes', result)
 
         end = time.time()
         logging.debug(
@@ -1016,9 +1014,9 @@ class URLTarget(object):
         if hours > 99:
             return '--:--:--'
         if hours == 0:
-            return '%02d:%02d' % (mins, secs)
+            return f'{int(mins):02d}:{int(secs):02d}'
         else:
-            return '%02d:%02d:%02d' % (hours, mins, secs)
+            return f'{int(hours):02d}:{int(mins):02d}:{int(secs):02d}'
 
     def __str__(self):
         # URLTarget to string

@@ -2,13 +2,14 @@ import re
 import os
 import json
 import urllib
+import logging
+
 from time import sleep
+from http.cookiejar import MozillaCookieJar
 
 import urllib3
 import requests
-import logging
 
-from http.cookiejar import MozillaCookieJar
 from requests.exceptions import RequestException
 
 
@@ -83,7 +84,7 @@ class RequestHelper:
         try:
             response = session.post(url, data=data_urlencoded, headers=self.stdHeader, verify=self.verify, timeout=60)
         except RequestException as error:
-            raise ConnectionError("Connection error: %s" % str(error)) from None
+            raise ConnectionError(f"Connection error: {str(error)}") from None
 
         if cookie_jar_path is not None:
             for cookie in session.cookies:
@@ -112,7 +113,7 @@ class RequestHelper:
         try:
             response = session.get(url, headers=self.stdHeader, verify=self.verify, timeout=60)
         except RequestException as error:
-            raise ConnectionError("Connection error: %s" % str(error)) from None
+            raise ConnectionError(f"Connection error: {str(error)}") from None
 
         if cookie_jar_path is not None:
             session.cookies.save(ignore_discard=True, ignore_expires=True)
@@ -178,7 +179,7 @@ class RequestHelper:
         @params: The necessary parameters for a REST URL
         @return: A formatted URL
         """
-        url = '%swebservice/rest/server.php?moodlewsrestformat=json&wsfunction=%s' % (url_base, function)
+        url = f'{url_base}webservice/rest/server.php?moodlewsrestformat=json&wsfunction={function}'
 
         return url
 
@@ -209,14 +210,14 @@ class RequestHelper:
         """
         try:
             response = requests.post(
-                '%slogin/token.php' % (self.url_base),
+                f'{self.url_base}login/token.php',
                 data=urllib.parse.urlencode(data),
                 headers=self.stdHeader,
                 verify=self.verify,
                 timeout=60,
             )
         except RequestException as error:
-            raise ConnectionError("Connection error: %s" % str(error)) from None
+            raise ConnectionError(f"Connection error: {str(error)}") from None
 
         return self._initial_parse(response)
 
@@ -226,9 +227,9 @@ class RequestHelper:
         if response.status_code != 200:
             raise RequestRejectedError(
                 'An Unexpected Error happened on side of the Moodle System!'
-                + (' Status-Code: %s' % str(response.status_code))
-                + ('\nHeader: %s' % response.headers)
-                + ('\nResponse: %s' % response.text)
+                + f' Status-Code: {str(response.status_code)}'
+                + f'\nHeader: {response.headers}'
+                + f'\nResponse: {response.text}'
             )
 
     def get_simple_moodle_version(self) -> float:
@@ -239,11 +240,11 @@ class RequestHelper:
                  parsed from the change-log
         """
 
-        url = '%slib/upgrade.txt' % (self.url_base)
+        url = f'{self.url_base}lib/upgrade.txt'
         try:
             response = requests.get(url, headers=self.stdHeader, verify=self.verify, timeout=60)
         except RequestException as error:
-            raise ConnectionError("Connection error: %s" % str(error)) from None
+            raise ConnectionError(f"Connection error: {str(error)}") from None
 
         self._check_response_code(response)
 
@@ -275,7 +276,7 @@ class RequestHelper:
             raise RequestRejectedError(
                 'An Unexpected Error occurred while trying'
                 + ' to parse the json response! Moodle'
-                + ' response: %s.\nError: %s' % (response.text, error)
+                + f' response: {response.text}.\nError: {error}'
             ) from None
         # Check for known errors
         if 'error' in response_extracted:
@@ -287,8 +288,8 @@ class RequestHelper:
 
             raise RequestRejectedError(
                 'The Moodle System rejected the Request.'
-                + (' Details: %s (Errorcode: %s, ' % (error, errorcode))
-                + ('Stacktrace: %s, Debuginfo: %s, Reproductionlink: %s)' % (stacktrace, debuginfo, reproductionlink))
+                + f' Details: {error} (Errorcode: {errorcode}, '
+                + f'Stacktrace: {stacktrace}, Debuginfo: {debuginfo}, Reproductionlink: {reproductionlink})'
             )
 
         if 'exception' in response_extracted:
@@ -304,7 +305,7 @@ class RequestHelper:
 
             raise RequestRejectedError(
                 'The Moodle System rejected the Request.'
-                + ' Details: %s (Errorcode: %s, Message: %s)' % (exception, errorcode, message)
+                + f' Details: {exception} (Errorcode: {errorcode}, Message: {message})'
             )
 
         return response_extracted
@@ -316,7 +317,9 @@ class RequestHelper:
         @returns: the url encoded data
         """
 
-        def recursion(data, base=[]):
+        def recursion(data, base=None):
+            if base is None:
+                base = []
             pairs = []
 
             for key, value in data.items():
@@ -327,10 +330,10 @@ class RequestHelper:
                     new_pair = None
                     if len(new_base) > 1:
                         first = urllib.parse.quote(new_base.pop(0))
-                        rest = map(lambda x: urllib.parse.quote(x), new_base)
-                        new_pair = '%s[%s]=%s' % (first, ']['.join(rest), urllib.parse.quote(str(value)))
+                        rest = map(urllib.parse.quote, new_base)
+                        new_pair = f"{first}[{']['.join(rest)}]={urllib.parse.quote(str(value))}"
                     else:
-                        new_pair = '%s=%s' % (urllib.parse.quote(str(key)), urllib.parse.quote(str(value)))
+                        new_pair = f'{urllib.parse.quote(str(key))}={urllib.parse.quote(str(value))}'
                     pairs.append(new_pair)
             return pairs
 

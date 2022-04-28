@@ -51,7 +51,7 @@ class TelegramFormater:
             diff_count += len(course.files)
 
         result_list = []
-        one_msg_content = '%s new Changes in the Moodle courses!' % (diff_count)
+        one_msg_content = f'{diff_count} new Changes in the Moodle courses!'
 
         for course in changed_courses:
             new_line = '\r\n\r\n\r\n👉 ' + cls.make_bold(course.fullname) + '\r\n'
@@ -88,7 +88,7 @@ class TelegramFormater:
                                     continue
 
                             text_lines = content.splitlines()
-                    except Exception:
+                    except OSError:
                         text_lines = []
 
                     if len(text_lines) > 0:
@@ -126,14 +126,16 @@ class TelegramFormater:
         if len(failed_downloads) == 0:
             return result_list
 
-        one_msg_content = '⁉️ Error while trying to download files, look at the log for more details.\r\nList of failed downloads:\r\n\r\n'
+        one_msg_content = (
+            '⁉️ Error while trying to download files, look at the log for more details.'
+            + '\r\nList of failed downloads:\r\n\r\n'
+        )
         for url_target in failed_downloads:
-            new_line = '⚠️ %s:\r\n%s\r\n\r\n' % (url_target.file.content_filename, url_target.error)
+            new_line = f'⚠️ {url_target.file.content_filename}:\r\n{url_target.error}\r\n\r\n'
             if url_target.file.content_filename != url_target.file.content_fileurl:
-                new_line = '⚠️ %s (%s):\r\n%s\r\n\r\n' % (
-                    url_target.file.content_filename,
-                    url_target.file.content_fileurl,
-                    url_target.error,
+                new_line = (
+                    f'⚠️ {url_target.file.content_filename} ({url_target.file.content_fileurl}):'
+                    + f'\r\n{url_target.error}\r\n\r\n'
                 )
 
             one_msg_content = cls.append_with_limit(new_line, one_msg_content, result_list)

@@ -3,6 +3,8 @@ import traceback
 
 from getpass import getpass
 
+import aioxmpp
+
 from moodle_dl.utils import cutie
 from moodle_dl.utils.logger import Log
 from moodle_dl.state_recorder.course import Course
@@ -34,8 +36,14 @@ class XmppService(NotificationService):
                 try:
                     xmpp_shooter = XmppShooter(sender, password, target)
                     xmpp_shooter.send('This is a Testmessage from Moodle Downloader!')
-                except BaseException as e:
-                    print('Error while sending the test message: %s' % (str(e)))
+                except (
+                    ConnectionError,
+                    aioxmpp.errors.StanzaError,
+                    aioxmpp.errors.UserError,
+                    OSError,
+                    RuntimeError,
+                ) as e:
+                    print(f'Error while sending the test message: {str(e)}')
                     continue
 
                 else:
@@ -87,7 +95,7 @@ class XmppService(NotificationService):
             xmpp.send_messages(messages)
         except BaseException as e:
             error_formatted = traceback.format_exc()
-            logging.error('While sending notification:\n%s' % (error_formatted), extra={'exception': e})
+            logging.error('While sending notification:\n%s', error_formatted, extra={'exception': e})
             raise e  # to be properly notified via Sentry
 
     def notify_about_changes_in_moodle(self, changes: [Course]) -> None:

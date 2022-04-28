@@ -12,7 +12,6 @@ from yt_dlp.utils import (
     ExtractorError,
     int_or_none,
     url_or_none,
-    parse_filesize,
     urlencode_postdata,
     HEADRequest,
     determine_ext,
@@ -23,26 +22,22 @@ from yt_dlp.utils import (
 
 class OwncloudIE(InfoExtractor):
     IE_NAME = 'owncloud'
-    _INSTANCES_RE = r'''(?:
+
+    _VALID_URL = r'''(?x)
+            (?P<server>https?://(?:
                             .*\.?sciebo\.de|
                             cloud\.uni-koblenz-landau\.de
-                        )'''
-
-    _VALID_URL = (
-        r'''(?x)
-            (?P<server>https?://%s)/s/
+                        ))/s/
             (?P<id>[A-Za-z0-9\-_.]+)
             (?P<extra>/.*)?
         '''
-        % _INSTANCES_RE
-    )
 
     def _real_extract(self, url):
 
         mobj = re.match(self._VALID_URL, url)
         server = mobj.group('server')
         video_id = mobj.group('id')
-        url_extra = mobj.group('extra')
+        # url_extra = mobj.group('extra')
 
         landing_url = server + '/s/' + video_id
         landing_webpage, urlh = self._download_webpage_handle(url, landing_url, 'Downloading Owncloud landing page')
@@ -151,5 +146,5 @@ class OwncloudIE(InfoExtractor):
             default="The password is wrong. Try again.",
         )
         if password_protected is not None:
-            raise ExtractorError('Login failed, %s said: %r' % (self.IE_NAME, warning), expected=True)
+            raise ExtractorError(f'Login failed, {self.IE_NAME} said: {warning!r}', expected=True)
         return validation_response, urlh

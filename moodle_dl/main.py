@@ -8,11 +8,9 @@ import argparse
 import traceback
 
 from shutil import which
+from logging.handlers import RotatingFileHandler
 
 import sentry_sdk
-
-import moodle_dl.utils.process_lock as process_lock
-
 
 try:
     # In unix readline needs to be loaded so that
@@ -21,7 +19,8 @@ try:
 except ImportError:
     pass
 
-from logging.handlers import RotatingFileHandler
+import moodle_dl.utils.process_lock as process_lock
+
 from moodle_dl.utils import cutie
 from moodle_dl.utils.logger import Log
 from moodle_dl.version import __version__
@@ -84,16 +83,18 @@ def run_init(storage_path, use_sso=False, skip_cert_verify=False):
         Log.info(
             '  To set a cron-job for this program on your Unix-System:\n'
             + '    1. `crontab -e`\n'
-            + '    2. Add `*/15 * * * * cd "{}" && "{}" >/dev/null 2>&1`\n'.format(working_dir, moodle_dl_path)
+            + f'    2. Add `*/15 * * * * cd "{working_dir}" && "{moodle_dl_path}" >/dev/null 2>&1`\n'
             + '    3. Save and you\'re done!'
         )
 
         Log.info(
-            'For more ways to run `moodle-dl` periodically, take a look at the wiki (https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Start-Moodle-dl-periodically-or-via-Telegram)'
+            'For more ways to run `moodle-dl` periodically, take a look at the wiki'
+            + ' (https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Start-Moodle-dl-periodically-or-via-Telegram)'
         )
     else:
         Log.info(
-            'If you want to run moodle-dl periodically, you can take a look at the wiki (https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Start-Moodle-dl-periodically-or-via-Telegram)'
+            'If you want to run moodle-dl periodically, you can take a look at the wiki '
+            + '(https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Start-Moodle-dl-periodically-or-via-Telegram)'
         )
 
     print('')
@@ -235,7 +236,7 @@ def run_main(
 
         config = ConfigHelper(storage_path)
         config.load()
-    except BaseException as e:
+    except ValueError as e:
         logging.error('Error while trying to load the Configuration! %s Exiting...', e, extra={'exception': e})
         Log.error('Error while trying to load the Configuration!')
         sys.exit(1)
@@ -245,7 +246,7 @@ def run_main(
         sentry_dsn = config.get_property('sentry_dsn')
         if sentry_dsn:
             sentry_sdk.init(sentry_dsn)
-    except BaseException:
+    except (ValueError, sentry_sdk.utils.BadDsn, sentry_sdk.utils.ServerlessTimeoutWarning):
         pass
 
     mail_service = MailService(config)
@@ -323,7 +324,7 @@ def run_main(
             sentry_sdk.capture_exception(e)
 
         if verbose:
-            Log.critical('Exception:\n%s' % (error_formatted))
+            Log.critical(f'Exception:\n{error_formatted}')
 
         short_error = str(e)
         if not short_error or short_error.isspace():
@@ -343,7 +344,7 @@ def _dir_path(path):
     if os.path.isdir(path):
         return path
     else:
-        raise argparse.ArgumentTypeError('"%s" is not a valid path. Make sure the directory exists.' % (str(path)))
+        raise argparse.ArgumentTypeError(f'"{str(path)}" is not a valid path. Make sure the directory exists.')
 
 
 def check_debug():

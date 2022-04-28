@@ -275,7 +275,6 @@ class ResultsHandler:
                 module_modname=module_modname,
                 content_type='description-url',
                 content_isexternalfile=True,
-                hash=None,
             )
             result.append(new_file)
         return result
@@ -304,7 +303,6 @@ class ResultsHandler:
             module_modname=module_modname,
             content_type='cookie_mod',
             content_isexternalfile=True,
-            hash=None,
         )
 
         files.append(new_file)
@@ -376,7 +374,7 @@ class ResultsHandler:
                 module_modname=module_modname,
                 content_type=content_type,
                 content_isexternalfile=content_isexternalfile,
-                hash=hash_description,
+                file_hash=hash_description,
             )
 
             if content_type == 'description':
@@ -446,7 +444,7 @@ class ResultsHandler:
             module_modname=module_modname,
             content_type=content_type,
             content_isexternalfile=content_isexternalfile,
-            hash=hash_description,
+            file_hash=hash_description,
         )
 
         no_search_for_moodle_urls = False

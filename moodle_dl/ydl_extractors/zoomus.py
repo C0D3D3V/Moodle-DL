@@ -71,5 +71,5 @@ class ZoomUSIE(InfoExtractor):
 
         if validation_response['errorCode'] != 0:
             raise ExtractorError(
-                'Login failed, %s said: %r' % (self.IE_NAME, validation_response['errorMessage']), expected=True
+                f"Login failed, {self.IE_NAME} said: {validation_response['errorMessage']!r}", expected=True
             )

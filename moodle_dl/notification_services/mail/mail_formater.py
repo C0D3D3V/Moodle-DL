@@ -6,14 +6,6 @@ from email.utils import make_msgid
 from moodle_dl.state_recorder.course import Course
 from moodle_dl.download_service.url_target import URLTarget
 
-"""
-Encapsulates the formatting of the various notification-mails.
-"""
-
-# for the following template strings, viewer discretion is advised.
-# No, I personally don't want to write them with these ugly table layouts and
-# inline styles. But the mail clients leave me no other choice...
-
 main_wrapper = Template(
     '''
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
@@ -289,7 +281,7 @@ def create_full_moodle_diff_mail(changed_courses: [Course]) -> (str, {str: str})
 
     full_content = _finish_with_main_wrapper(
         full_content,
-        'Changes were found in %s courses:' % (count) if count > 1 else 'Changes were noted in the following course:',
+        f'Changes were found in {count} courses:' if count > 1 else 'Changes were noted in the following course:',
     )
 
     return full_content

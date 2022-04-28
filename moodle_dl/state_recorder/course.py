@@ -18,14 +18,10 @@ class Course:
     def __str__(self):
         message = 'Course ('
 
-        message += 'id: %s' % (self.id)
-        message += ', fullname: "%s"' % (self.fullname)
-        message += ', overwrite_name_with: "%s"' % (PathTools.to_valid_name(self.overwrite_name_with))
-        message += ', create_directory_structure: %s' % (self.create_directory_structure)
-        message += ', files: %s' % (len(self.files))
-
-        # for i, file in enumerate(self.files):
-        #     message += ', file[%i]: %s' % (i, file)
-
+        message += f'id: {self.id}'
+        message += f', fullname: "{self.fullname}"'
+        message += f', overwrite_name_with: "{PathTools.to_valid_name(self.overwrite_name_with)}"'
+        message += f', create_directory_structure: {self.create_directory_structure}'
+        message += f', files: {len(self.files)}'
         message += ')'
         return message

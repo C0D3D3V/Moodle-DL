@@ -25,13 +25,13 @@ class TelegramShooter:
     def send(self, message: str):
         payload = {'chat_id': self.telegram_chatid, 'text': message, 'parse_mode': 'HTML'}
 
-        url = 'https://api.telegram.org/bot%s/sendMessage' % (self.telegram_token)
+        url = f'https://api.telegram.org/bot{self.telegram_token}/sendMessage'
         data_urlencoded = urllib.parse.urlencode(payload)
 
         try:
             response = requests.post(url, data=data_urlencoded, headers=self.stdHeader, timeout=60)
         except RequestException as error:
-            raise ConnectionError("Connection error: %s" % str(error)) from None
+            raise ConnectionError(f"Connection error: {str(error)}") from None
 
         self._check_errors(response)
 
@@ -42,9 +42,9 @@ class TelegramShooter:
             raise RuntimeError(
                 'An Unexpected Error happened on side of the'
                 + ' Telegram System!'
-                + (' Status-Code: %s' % str(response.status_code))
-                + ('\nHeader: %s' % response.headers)
-                + ('\nResponse: %s' % response.text)
+                + f' Status-Code: {str(response.status_code)}'
+                + f'\nHeader: {response.headers}'
+                + f'\nResponse: {response.text}'
             )
 
     def _check_errors(self, response) -> object:
@@ -64,7 +64,7 @@ class TelegramShooter:
             raise RuntimeError(
                 'An Unexpected Error occurred while trying'
                 + ' to parse the json response! Telegram'
-                + ' response: %s.\nError: %s' % (response.read(), error)
+                + f' response: {response.read()}.\nError: {error}'
             )
         # Check for known errors
         if "ok" in response_extracted:
@@ -73,7 +73,7 @@ class TelegramShooter:
             if not ok:
                 raise RequestRejectedError(
                     'The Telegram System rejected the Request.'
-                    + ' Details: {}'.format(response_extracted.get('description', 'None'))
+                    + f" Details: {response_extracted.get('description', 'None')}"
                 )
 
         return response_extracted

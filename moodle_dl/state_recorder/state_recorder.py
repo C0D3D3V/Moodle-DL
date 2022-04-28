@@ -176,7 +176,7 @@ class StateRecorder:
             conn.close()
 
         except Error as error:
-            raise RuntimeError('Could not create database! Error: %s' % (error))
+            raise RuntimeError(f'Could not create database! Error: {error}')
 
     def __files_have_same_type(self, file1: File, file2: File) -> bool:
         # Returns True if the files have the same type attributes

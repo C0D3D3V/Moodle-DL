@@ -5,7 +5,7 @@ from moodle_dl.utils import cutie
 from moodle_dl.utils.logger import Log
 from moodle_dl.state_recorder.course import Course
 from moodle_dl.download_service.url_target import URLTarget
-from moodle_dl.notification_services.telegram.telegram_shooter import TelegramShooter
+from moodle_dl.notification_services.telegram.telegram_shooter import TelegramShooter, RequestRejectedError
 from moodle_dl.notification_services.notification_service import NotificationService
 from moodle_dl.notification_services.telegram.telegram_formater import TelegramFormater as TF
 
@@ -36,8 +36,8 @@ class TelegramService(NotificationService):
                 try:
                     telegram_shooter = TelegramShooter(telegram_token, telegram_chatID)
                     telegram_shooter.send('This is a Testmessage from Moodle Downloader!')
-                except BaseException as e:
-                    print('Error while sending the test message: %s' % (str(e)))
+                except (ConnectionError, RuntimeError, RequestRejectedError) as e:
+                    print(f'Error while sending the test message: {str(e)}')
                     continue
 
                 else:
@@ -90,7 +90,7 @@ class TelegramService(NotificationService):
                 telegram_shooter.send(message_content)
             except BaseException as e:
                 error_formatted = traceback.format_exc()
-                logging.error('While sending notification:\n%s' % (error_formatted), extra={'exception': e})
+                logging.error('While sending notification:\n%s', error_formatted, extra={'exception': e})
                 raise e  # to be properly notified via Sentry
 
     def notify_about_changes_in_moodle(self, changes: [Course]) -> None:

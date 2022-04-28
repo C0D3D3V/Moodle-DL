@@ -18,7 +18,7 @@ def lock(dir_path: str):
     """Test if a lock is already set in a directory, if not it creates the lock."""
     path = Path(dir_path) / 'running.lock'
     if Path(path).exists():
-        raise LockError('A downloader is already running. Delete {} if you think this is wrong.'.format(str(path)))
+        raise LockError(f'A downloader is already running. Delete {str(path)} if you think this is wrong.')
     Path(path).touch()
 
 
@@ -27,5 +27,5 @@ def unlock(dir_path: str):
     path = Path(dir_path) / 'running.lock'
     try:
         Path(path).unlink()
-    except Exception:
+    except OSError:
         pass

@@ -22,7 +22,7 @@ class File:
         moved: int = 0,
         deleted: int = 0,
         notified: int = 0,
-        hash: str = None,
+        file_hash: str = None,
         file_id: int = None,
         old_file_id: int = None,
     ):
@@ -75,7 +75,7 @@ class File:
         else:
             self.notified = False
 
-        self.hash = hash
+        self.hash = file_hash
 
         # For Textlable
         self.text_content = None
@@ -137,7 +137,7 @@ class File:
             moved=row['moved'],
             deleted=row['deleted'],
             notified=row['notified'],
-            hash=row['hash'],
+            file_hash=row['hash'],
             old_file_id=row['old_file_id'],
         )
 
@@ -160,28 +160,28 @@ class File:
     def __str__(self):
         message = 'File ('
 
-        message += 'module_id: %s' % (self.module_id)
-        message += ', section_name: "%s"' % (PathTools.to_valid_name(self.section_name))
-        message += ', section_id: "%s"' % (self.section_id)
-        message += ', module_name: "%s"' % (PathTools.to_valid_name(self.module_name))
-        message += ', content_filepath: %s' % (self.content_filepath)
-        message += ', content_filename: "%s"' % (PathTools.to_valid_name(self.content_filename))
-        message += ', content_fileurl: "%s"' % (self.content_fileurl)
-        message += ', content_filesize: %s' % (self.content_filesize)
-        message += ', content_timemodified: %s' % (self.content_timemodified)
-        message += ', module_modname: %s' % (self.module_modname)
-        message += ', content_type: %s' % (self.content_type)
-        message += ', content_isexternalfile: %s' % (self.content_isexternalfile)
+        message += f'module_id: {self.module_id}'
+        message += f', section_name: "{PathTools.to_valid_name(self.section_name)}"'
+        message += f', section_id: "{self.section_id}"'
+        message += f', module_name: "{PathTools.to_valid_name(self.module_name)}"'
+        message += f', content_filepath: {self.content_filepath}'
+        message += f', content_filename: "{PathTools.to_valid_name(self.content_filename)}"'
+        message += f', content_fileurl: "{self.content_fileurl}"'
+        message += f', content_filesize: {self.content_filesize}'
+        message += f', content_timemodified: {self.content_timemodified}'
+        message += f', module_modname: {self.module_modname}'
+        message += f', content_type: {self.content_type}'
+        message += f', content_isexternalfile: {self.content_isexternalfile}'
 
-        message += ', saved_to: "%s"' % (self.saved_to)
-        message += ', time_stamp: %s' % (self.time_stamp)
-        message += ', modified: %s' % (self.modified)
-        message += ', moved: %s' % (self.moved)
-        message += ', deleted: %s' % (self.deleted)
-        message += ', notified: %s' % (self.notified)
-        message += ', hash: %s' % (self.hash)
-        message += ', file_id: %s' % (self.file_id)
-        message += ', old_file_id: %s' % (self.old_file_id)
+        message += f', saved_to: "{self.saved_to}"'
+        message += f', time_stamp: {self.time_stamp}'
+        message += f', modified: {self.modified}'
+        message += f', moved: {self.moved}'
+        message += f', deleted: {self.deleted}'
+        message += f', notified: {self.notified}'
+        message += f', hash: {self.hash}'
+        message += f', file_id: {self.file_id}'
+        message += f', old_file_id: {self.old_file_id}'
 
         message += ')'
         return message

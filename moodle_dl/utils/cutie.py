@@ -168,11 +168,9 @@ def select(
                 printable_option = printable_option[: (console_columns - 2)] + '..'
 
             if i not in caption_indices:
-                print(
-                    '\033[K{}{}'.format(selected_prefix if i == selected_index else deselected_prefix, printable_option)
-                )
+                print(f'\033[K{selected_prefix if i == selected_index else deselected_prefix}{printable_option}')
             elif i in caption_indices:
-                print('\033[K{}{}'.format(caption_prefix, printable_option))
+                print(f'\033[K{caption_prefix}{printable_option}')
 
         if data_bottom != len(options):
             print(f'{len(options) - data_bottom} more lines below...\033[K')
@@ -317,7 +315,7 @@ def select_multiple(
                     prefix = deselected_ticked_prefix
                 else:
                     prefix = deselected_unticked_prefix
-            print('\033[K{}{}'.format(prefix, printable_option))
+            print(f'\033[K{prefix}{printable_option}')
 
         if data_bottom == len(options):
             # we do not need to print "x more lines below...", instead we print the confirm label or an error

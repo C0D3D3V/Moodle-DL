@@ -87,11 +87,12 @@ class GoogleDriveIE(InfoExtractor):
     @staticmethod
     def _extract_url(webpage):
         mobj = re.search(
-            r'<iframe[^>]+src="https?://(?:video\.google\.com/get_player\?.*?docid=|(?:docs|drive)\.google\.com/file/d/)(?P<id>[a-zA-Z0-9_-]{28,})',
+            r'''(?x)<iframe[^>]+src="https?://(?:video\.google\.com
+            /get_player\?.*?docid=|(?:docs|drive)\.google\.com/file/d/)(?P<id>[a-zA-Z0-9_-]{28,})''',
             webpage,
         )
         if mobj:
-            return 'https://drive.google.com/file/d/%s' % mobj.group('id')
+            return f"https://drive.google.com/file/d/{mobj.group('id')}"
 
     def _download_subtitles_xml(self, video_id, subtitles_id, hl):
         if self._captions_xml:
@@ -148,17 +149,23 @@ class GoogleDriveIE(InfoExtractor):
             captions[caption_lang_code] = caption_format_data
         return captions
 
-    def _get_subtitles(self, video_id, subtitles_id, hl):
-        if not subtitles_id or not hl:
+    def _get_subtitles(self, *args, **kwargs):
+        if len(args) != 3:
             return
+        video_id = args[0]
+        subtitles_id = args[1]
+        hl = args[2]
         self._download_subtitles_xml(video_id, subtitles_id, hl)
         if not self._captions_xml:
             return
         return self._get_captions_by_type(video_id, subtitles_id, 'subtitles')
 
-    def _get_automatic_captions(self, video_id, subtitles_id, hl):
-        if not subtitles_id or not hl:
+    def _get_automatic_captions(self, *args, **kwargs):
+        if len(args) != 3:
             return
+        video_id = args[0]
+        subtitles_id = args[1]
+        hl = args[2]
         self._download_subtitles_xml(video_id, subtitles_id, hl)
         if not self._captions_xml:
             return
@@ -187,7 +194,7 @@ class GoogleDriveIE(InfoExtractor):
         use_old_webpage = False
         if not title and reason:
             use_old_webpage = True
-            webpage = self._download_webpage('http://docs.google.com/file/d/%s' % video_id, video_id)
+            webpage = self._download_webpage(f'http://docs.google.com/file/d/{video_id}', video_id)
 
             title = self._search_regex(
                 r'"title"\s*,\s*"([^"]+)', webpage, 'title', default=None
@@ -263,8 +270,8 @@ class GoogleDriveIE(InfoExtractor):
             return self._request_webpage(
                 source_url,
                 video_id,
-                note='Requesting %s file' % kind,
-                errnote='Unable to request %s file' % kind,
+                note=f'Requesting {kind} file',
+                errnote=f'Unable to request {kind} file',
                 fatal=False,
             )
 

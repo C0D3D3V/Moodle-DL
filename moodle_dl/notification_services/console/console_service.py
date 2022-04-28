@@ -60,7 +60,7 @@ class ConsoleService(NotificationService):
             print('\n')
 
     def notify_about_error(self, error_description: str):
-        Log.error('The following error occurred during execution:\n%s' % (error_description))
+        Log.error(f'The following error occurred during execution:\n{error_description}')
 
     def notify_about_failed_downloads(self, failed_downloads: [URLTarget]):
         if len(failed_downloads) > 0:

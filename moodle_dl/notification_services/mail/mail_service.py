@@ -47,8 +47,8 @@ class MailService(NotificationService):
                 mail_shooter = MailShooter(sender, server_host, int(server_port), username, password)
                 try:
                     mail_shooter.send(target, 'Hey!', welcome_content[0], welcome_content[1])
-                except BaseException as e:
-                    print('Error while sending the test mail: %s' % (str(e)))
+                except OSError as e:
+                    print(f'Error while sending the test mail: {str(e)}')
                     continue
                 else:
                     input(
@@ -124,7 +124,7 @@ class MailService(NotificationService):
         for course in changes:
             diff_count += len(course.files)
 
-        self._send_mail('%s new Changes in the Moodle courses!' % (diff_count), mail_content)
+        self._send_mail(f'{diff_count} new Changes in the Moodle courses!', mail_content)
 
     def notify_about_error(self, error_description: str):
         """

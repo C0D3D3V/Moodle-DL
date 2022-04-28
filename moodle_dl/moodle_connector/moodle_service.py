@@ -116,9 +116,9 @@ class MoodleService:
                 )
 
             except RequestRejectedError as error:
-                Log.error('Login Failed! (%s) Please try again.' % (error))
+                Log.error(f'Login Failed! ({error}) Please try again.')
             except (ValueError, RuntimeError) as error:
-                Log.error('Error while communicating with the Moodle System! (%s) Please try again.' % (error))
+                Log.error(f'Error while communicating with the Moodle System! ({error}) Please try again.')
             except ConnectionError as error:
                 Log.error(str(error))
 
@@ -358,7 +358,7 @@ class MoodleService:
 
             into = '\rDownloading course information'
 
-            status_message = into + ' %3d/%3d [%-17s|%6s]' % (index, len(courses), shorted_course_name, course.id)
+            status_message = into + f' {index:3d}/{len(courses):3d} [{shorted_course_name:<17}|{course.id:6}]'
 
             if len(status_message) > limits.columns:
                 status_message = status_message[0 : limits.columns]
@@ -483,7 +483,7 @@ class MoodleService:
                     # Filter Files that requiere a Cookie
                     and (download_also_with_cookie or (not file.module_modname.startswith('cookie_mod-')))
                     # Exclude files whose file extension is blacklisted
-                    and (not (determine_ext(file.content_filename) in exclude_file_extensions))
+                    and (determine_ext(file.content_filename) not in exclude_file_extensions)
                     # Exclude files that are in excluded sections
                     and (ResultsHandler.should_download_section(file.section_id, course.excluded_sections))
                 ):

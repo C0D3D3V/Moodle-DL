@@ -11,6 +11,7 @@
         "--disable=C0114",
         "--disable=C0115",
         "--disable=C0116",
+        "--disable=W0223",
         "--disable=raise-missing-from",
         "--disable=unnecessary-pass",
         "--max-line-length=120"

@@ -11,7 +11,7 @@ elif sys.platform in ("win32", "cygwin"):
     from moodle_dl.utils.readchar.read_windows import readchar, readkey
     from moodle_dl.utils.readchar import key_windows as key
 else:
-    raise NotImplementedError("The platform %s is not supported yet" % sys.platform)
+    raise NotImplementedError(f"The platform {sys.platform} is not supported yet")
 
 
-__all__ = [readchar, readkey, key]
+__all__ = ["readchar", "readkey", "key"]

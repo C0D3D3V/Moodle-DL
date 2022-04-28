@@ -38,7 +38,7 @@ class ConfigHelper:
         try:
             return self._whole_config[key]
         except KeyError:
-            raise ValueError('The %s-Property is not yet configured!' % (key))
+            raise ValueError(f'The {key}-Property is not yet configured!')
 
     def set_property(self, key: str, value: any):
         # sets a property in the JSON object
@@ -185,7 +185,7 @@ class ConfigHelper:
         # returns a list of file extensions that should not be downloaded
         try:
             exclude_file_extensions = self.get_property('exclude_file_extensions')
-            if not type(exclude_file_extensions) is list:
+            if not isinstance(exclude_file_extensions, list):
                 exclude_file_extensions = [exclude_file_extensions]
             return exclude_file_extensions
         except ValueError:
