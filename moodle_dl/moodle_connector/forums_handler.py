@@ -118,8 +118,12 @@ class ForumsHandler:
                     }
 
                     print(
-                        '\rDownloading forum discussions %3d/%3d [%6s|%6s|p%s]\033[K'
-                        % (counter, total, course_id, real_id, page_num),
+                        (
+                            '\r'
+                            + 'Downloading forum discussions'
+                            + f' {counter:3d}/{total:3d}'
+                            + f' [{course_id:6}|{real_id:6}|p{page_num}]\033[K'
+                        ),
                         end='',
                     )
 
@@ -173,8 +177,12 @@ class ForumsHandler:
             discussion_created = discussion.get('created', 0)
 
             print(
-                '\rDownloading posts of discussion [%-17s|%6s] %3d/%3d\033[K'
-                % (shorted_discussion_name, discussion_id, i, len(latest_discussions) - 1),
+                (
+                    '\r'
+                    + 'Downloading posts of discussion'
+                    + f' [{shorted_discussion_name:<17}|{discussion_id:6}]'
+                    + f' {i:3d}/{(len(latest_discussions) - 1):3d}\033[K'
+                ),
                 end='',
             )
 

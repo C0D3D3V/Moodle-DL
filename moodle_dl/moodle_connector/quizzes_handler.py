@@ -116,8 +116,12 @@ class QuizzesHandler:
                     shorted_quiz_name = shorted_quiz_name[:15] + '..'
 
                 print(
-                    '\rDownloading quiz infos %3d/%3d [%-17s|%6s]\033[K'
-                    % (counter, total, shorted_quiz_name, course_id),
+                    (
+                        '\r'
+                        + 'Downloading quiz infos'
+                        + f' {counter:3d}/{total:3d}'
+                        + f' [{shorted_quiz_name:<17}|{course_id:6}]\033[K'
+                    ),
                     end='',
                 )
 
@@ -132,7 +136,7 @@ class QuizzesHandler:
     def _get_files_of_attempts(self, attempts: [], quiz_name: str) -> []:
         result = []
 
-        for i, attempt in enumerate(attempts):
+        for attempt in attempts:
             attempt_id = attempt.get('id', 0)
             attempt_state = attempt.get('state', 'unknown')
 
@@ -143,12 +147,6 @@ class QuizzesHandler:
             shorted_quiz_name = quiz_name
             if len(shorted_quiz_name) > 17:
                 shorted_quiz_name = shorted_quiz_name[:15] + '..'
-
-            # print(
-            #     '\rDownloading attempt of quiz [%-17s|%6s] %3d/%3d\033[K'
-            #     % (shorted_quiz_name, attempt_id, i, len(attempts) - 1),
-            #     end='',
-            # )
 
             data = {'attemptid': attempt_id}
 

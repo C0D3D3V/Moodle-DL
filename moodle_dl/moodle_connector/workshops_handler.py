@@ -1,6 +1,5 @@
 from moodle_dl.moodle_connector.request_helper import RequestHelper, RequestRejectedError
 from moodle_dl.state_recorder.course import Course
-from moodle_dl.moodle_connector.moodle_constants import moodle_html_footer, moodle_html_header
 
 
 class WorkshopsHandler:
@@ -144,15 +143,19 @@ class WorkshopsHandler:
                 counter += 1
                 workshop = workshops[course_id][workshop_id]
                 real_id = workshop.get('id', 0)
-                data = {'workshopid': real_id}
+                data = {'workshopid': real_id, 'userid': userid}
 
                 shorted_workshop_name = workshop.get('name', '')
                 if len(shorted_workshop_name) > 17:
                     shorted_workshop_name = shorted_workshop_name[:15] + '..'
 
                 print(
-                    '\rDownloading workshop infos %3d/%3d [%-17s|%6s]\033[K'
-                    % (counter, total, shorted_workshop_name, course_id),
+                    (
+                        '\r'
+                        + 'Downloading workshop infos'
+                        + f' {counter:3d}/{total:3d}'
+                        + f' [{shorted_workshop_name:<17}|{course_id:6}]\033[K'
+                    ),
                     end='',
                 )
 

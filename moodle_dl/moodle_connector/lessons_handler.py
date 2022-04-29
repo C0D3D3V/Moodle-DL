@@ -117,8 +117,12 @@ class LessonsHandler:
                     shorted_lesson_name = shorted_lesson_name[:15] + '..'
 
                 print(
-                    '\rDownloading lesson infos %3d/%3d [%-17s|%6s]\033[K'
-                    % (counter, total, shorted_lesson_name, course_id),
+                    (
+                        '\r'
+                        + 'Downloading lesson infos'
+                        + f' {counter:3d}/{total:3d}'
+                        + f' [{shorted_lesson_name:<17}|{course_id:6}]\033[K'
+                    ),
                     end='',
                 )
 
@@ -159,19 +163,13 @@ class LessonsHandler:
         lesson_html = moodle_html_header
         attempt_filename = PathTools.to_valid_name(lesson_name)
         lesson_is_empty = True
-        for i, answerpage in enumerate(answerpages):
+        for answerpage in answerpages:
             page_id = answerpage.get('page', {}).get('id', 0)
             lesson_id = answerpage.get('page', {}).get('lessonid', 0)
 
             shorted_lesson_name = lesson_name
             if len(shorted_lesson_name) > 17:
                 shorted_lesson_name = shorted_lesson_name[:15] + '..'
-
-            # print(
-            #     '\rDownloading page of lesson [%-17s] %3d/%3d\033[K'
-            #     % (shorted_lesson_name, i, len(answerpages) - 1),
-            #     end='',
-            # )
 
             data = {'lessonid': lesson_id, 'pageid': page_id, 'returncontents': 1}
 
