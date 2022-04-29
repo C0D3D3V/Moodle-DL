@@ -47,7 +47,7 @@ class CookieHandler:
 
         logging.debug('Testing cookies with this URL %s', self.moodle_test_url)
 
-        response, session = self.request_helper.get_URL(self.moodle_test_url, self.cookies_path)
+        response, dummy = self.request_helper.get_URL(self.moodle_test_url, self.cookies_path)
 
         response_text = response.text
 
@@ -90,7 +90,7 @@ class CookieHandler:
         post_data = {'key': autologin_key.get('key', ''), 'userid': userid}
         url = autologin_key.get('autologinurl', '')
 
-        cookies_response, cookies_session = self.request_helper.post_URL(url, post_data, self.cookies_path)
+        cookies_response, dummy = self.request_helper.post_URL(url, post_data, self.cookies_path)
 
         logging.debug('Autologin redirected to %s', cookies_response.url)
 

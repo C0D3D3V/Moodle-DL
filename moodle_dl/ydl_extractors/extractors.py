@@ -27,6 +27,10 @@ def add_additional_extractors(ydl: YoutubeDL):
         ie_key = extractor.ie_key()
         moodle_dl_ies[ie_key] = extractor
         moodle_dl_ies_instances[ie_key] = extractor
+
+    # We access protected member variables of the yt-dlp to add the extractors afterwards.
+    # TODO: Use the new possibilities yt-dlp offers to add the extractors to yt-dlp.
+    # pylint: disable=protected-access
     moodle_dl_ies.update(ydl._ies)
     moodle_dl_ies_instances.update(ydl._ies_instances)
     ydl._ies = moodle_dl_ies

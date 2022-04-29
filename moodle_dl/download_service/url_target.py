@@ -535,7 +535,7 @@ class URLTarget(object):
 
                 self.youtube_dl_failed_with_error = False
                 # we restart youtube-dl, so we need to reset the return code
-                ydl._download_retcode = 0
+                ydl._download_retcode = 0  # pylint: disable=protected-access
                 try:
                     ydl_results = ydl.download([url_to_download])
                     if ydl_results == 1:

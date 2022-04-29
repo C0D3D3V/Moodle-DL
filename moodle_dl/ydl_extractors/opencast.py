@@ -38,8 +38,8 @@ class OpencastBaseIE(InfoExtractor):
                         )'''
     _UUID_RE = r'[\da-fA-F]{8}-[\da-fA-F]{4}-[\da-fA-F]{4}-[\da-fA-F]{4}-[\da-fA-F]{12}'
 
-    def _call_api(self, host, video_id, path, note=None, errnote=None, fatal=True):
-        return self._download_json(self._API_BASE % (host, video_id), video_id, note=note, errnote=errnote, fatal=fatal)
+    def _call_api(self, url, video_id, note=None, errnote=None, fatal=True):
+        return self._download_json(url, video_id, note=note, errnote=errnote, fatal=fatal)
 
     def _parse_mediapackage(self, video):
         tracks = video.get('media', {}).get('track', [])
@@ -147,13 +147,10 @@ class OpencastBaseIE(InfoExtractor):
 
 
 class OpencastIE(OpencastBaseIE):
-    _VALID_URL = r'''(?x)
-                    https?://(?P<host>%s)/paella/ui/watch.html\?.*?
-                    id=(?P<id>%s)
-                    ''' % (
-        OpencastBaseIE._INSTANCES_RE,
-        OpencastBaseIE._UUID_RE,
-    )
+    _VALID_URL = fr'''(?x)
+                    https?://(?P<host>{OpencastBaseIE._INSTANCES_RE})/paella/ui/watch.html\?.*?
+                    id=(?P<id>{OpencastBaseIE._UUID_RE})
+                    '''
 
     _API_BASE = 'https://%s/search/episode.json?id=%s'
 
@@ -175,7 +172,7 @@ class OpencastIE(OpencastBaseIE):
         host = mobj.group('host')
         video_id = mobj.group('id')
 
-        api_json = self._call_api(host, video_id, '', note='Downloading video JSON')
+        api_json = self._call_api(self._API_BASE % (host, video_id), video_id, note='Downloading video JSON')
 
         search_results = api_json.get('search-results', {})
         if 'result' not in search_results:
@@ -192,19 +189,19 @@ class OpencastIE(OpencastBaseIE):
 
 
 class OpencastPlaylistIE(OpencastBaseIE):
-    _VALID_URL = r'''(?x)
-                    https?://(?P<host>%s)/engage/ui/index.html\?.*?
-                    epFrom=(?P<id>%s)
-                    ''' % (
-        OpencastBaseIE._INSTANCES_RE,
-        OpencastBaseIE._UUID_RE,
-    )
+    _VALID_URL = fr'''(?x)
+                    https?://(?P<host>{OpencastBaseIE._INSTANCES_RE})/engage/ui/index.html\?.*?
+                    epFrom=(?P<id>{OpencastBaseIE._UUID_RE})
+                    '''
 
     _API_BASE = 'https://%s/search/episode.json?sid=%s'
 
     _TESTS = [
         {
-            'url': 'https://oc-video1.ruhr-uni-bochum.de/engage/ui/index.html?epFrom=cf68a4a1-36b1-4a53-a6ba-61af5705a0d0',
+            'url': (
+                'https://oc-video1.ruhr-uni-bochum.de/engage/ui/index.html?'
+                + 'epFrom=cf68a4a1-36b1-4a53-a6ba-61af5705a0d0'
+            ),
             'info_dict': {
                 'id': 'cf68a4a1-36b1-4a53-a6ba-61af5705a0d0',
                 'title': 'Kryptographie - WiSe 15/16',
@@ -212,7 +209,10 @@ class OpencastPlaylistIE(OpencastBaseIE):
             'playlist_mincount': 28,
         },
         {
-            'url': 'https://oc-video.ruhr-uni-bochum.de/engage/ui/index.html?e=1&p=1&epFrom=b1a54262-3684-403f-9731-8e77c3766f9a',
+            'url': (
+                'https://oc-video.ruhr-uni-bochum.de/engage/ui/index.html?e=1&p=1&epFrom='
+                + 'b1a54262-3684-403f-9731-8e77c3766f9a'
+            ),
             'info_dict': {
                 'id': 'b1a54262-3684-403f-9731-8e77c3766f9a',
                 'title': 'inSTUDIES-Social movements and prefigurative politics in a global perspective',
@@ -226,7 +226,7 @@ class OpencastPlaylistIE(OpencastBaseIE):
         host = mobj.group('host')
         video_id = mobj.group('id')
 
-        api_json = self._call_api(host, video_id, '', note='Downloading video JSON')
+        api_json = self._call_api(self._API_BASE % (host, video_id), video_id, note='Downloading video JSON')
 
         search_results = api_json.get('search-results', {})
         if 'result' not in search_results:

@@ -30,7 +30,7 @@ class TransferServer(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(('Moodle Downloader - Token was successfully transferred.').encode('utf-8'))
 
-    def log_message(self, format, *args):
+    def log_message(self, format, *args):  # pylint: disable=redefined-builtin
         return
 
 
