@@ -10,7 +10,6 @@ import certifi
 
 from yt_dlp.utils import format_bytes
 
-from moodle_dl.utils.logger import Log
 from moodle_dl.state_recorder.course import Course, File
 from moodle_dl.download_service.path_tools import PathTools
 from moodle_dl.download_service.url_target import URLTarget
@@ -231,7 +230,7 @@ class DownloadService:
             if len(thread_current_url) + 13 > limits.columns:
                 thread_current_url = thread_current_url[0 : limits.columns - 15] + '..'
 
-            threads_status_message += '\033[KT%2i: %3i%% - %s\n' % (i, thread_percentage, thread_current_url)
+            threads_status_message += f'\033[KT{int(i):2}: {int(thread_percentage):3}% - {thread_current_url}\n'
 
             threads_total_downloaded += self.thread_report[i]['total']
 
@@ -248,13 +247,12 @@ class DownloadService:
 
         # The overall progress also includes the total size that needs to be
         # downloaded and the size that has already been downloaded.
-        progressmessage_line = 'Total: %3s%% %12s/%12s' % (
-            percentage,
-            format_bytes(threads_total_downloaded),
-            format_bytes(self.total_to_download),
+        progressmessage_line = (
+            f'Total: {percentage:3}%'
+            + f' {format_bytes(threads_total_downloaded):>12} / {format_bytes(self.total_to_download):<12}'
         )
 
-        progressmessage_line += ' | Files: %5s/%5s' % (len(self.report['success']), self.total_files)
+        progressmessage_line += f" | Files: {len(self.report['success']):>5} / {self.total_files:<5}"
 
         diff_to_last_status = threads_total_downloaded - self.last_threads_total_downloaded
 
@@ -282,8 +280,9 @@ class DownloadService:
     @staticmethod
     def format_speed(speed):
         if speed is None:
-            return '%10s' % '---b/s'
-        return '%10s' % ('%s/s' % format_bytes(speed))
+            return f"{'---b/s':10}"
+        speed_text = format_bytes(speed) + '/s'
+        return f'{speed_text:10}'
 
     def _clear_status_message(self):
         print(f'\033[{len(self.threads)}A\r', end='')

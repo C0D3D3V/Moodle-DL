@@ -114,7 +114,7 @@ class DatabasesHandler:
                 if not access.get('timeavailable', False):
                     continue
 
-                print(intro + ' %3d/%3d [%6s|%6s]\033[K' % (counter, total, course_id, real_id), end='')
+                print(intro + f' {counter:3}/{total:3} [{course_id:6}|{real_id:6}]\033[K', end='')
 
                 data.update({'returncontents': 1})
 

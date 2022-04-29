@@ -197,7 +197,7 @@ class ConfigService:
         choices = []
         defaults = []
         for i, course in enumerate(courses):
-            choices.append(('%5i\t%s' % (course.id, course.fullname)))
+            choices.append(f'{int(course.id):5}\t{course.fullname}')
 
             if ResultsHandler.should_download_course(course.id, download_course_ids, dont_download_course_ids):
                 defaults.append(i)
@@ -228,7 +228,7 @@ class ConfigService:
         defaults = []
         for i, section in enumerate(sections):
             section_id = section.get("id")
-            choices.append(('%5i\t%s' % (section_id, section.get("name"))))
+            choices.append(f"{int(section_id):5}\t{section.get('name')}")
 
             if ResultsHandler.should_download_section(section_id, excluded):
                 defaults.append(i)
@@ -294,13 +294,13 @@ class ConfigService:
                     if overwrite_name_with is not None and overwrite_name_with != course.fullname:
                         choices.append(
                             (
-                                '%5i\t%s (%s) cfs=%s'
-                                % (course.id, overwrite_name_with, course.fullname, create_directory_structure)
+                                f'{int(course.id):5}\t{overwrite_name_with} ({course.fullname})'
+                                + f' cfs={create_directory_structure}'
                             )
                         )
 
                     else:
-                        choices.append(('%5i\t%s  cfs=%s' % (course.id, course.fullname, create_directory_structure)))
+                        choices.append(f'{int(course.id):5}\t{course.fullname}  cfs={create_directory_structure}')
 
                     choices_courses.append(course)
 
