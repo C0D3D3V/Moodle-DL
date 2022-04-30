@@ -18,13 +18,13 @@
 - Running moodle-dl again will only download files that have not been downloaded yet. Do not miss any files, if files are deleted online, they are still available offline.
 - It is possible to download Moodle courses you are enrolled in, as well as courses that are publicly visible to you.
 
-Development discussions happen on [Discord in the developer channel](https://discord.gg/mFhZWYFySq).
+Development discussions happen on [Discord in the developer channel](https://discord.gg/HNg7CsqEnZ).
 
 ## 🚀 Setup
 [![Deploy with Docker](https://img.shields.io/badge/deploy%20with-docker-0db7ed)](https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Run-with-Docker)
 [![latest packaged version(s)](https://repology.org/badge/latest-versions/moodle-dl.svg)](https://repology.org/project/moodle-dl/versions)
 [![Packaging status](https://repology.org/badge/tiny-repos/moodle-dl.svg)](https://repology.org/project/moodle-dl/versions)
-[![Discord Shield](https://discordapp.com/api/guilds/969140782655242281/widget.png?style=shield)](https://discord.gg/mFhZWYFySq)
+[![Discord Shield](https://discordapp.com/api/guilds/969140782655242281/widget.png?style=shield)](https://discord.gg/HNg7CsqEnZ)
 
 1. Install [Python](https://www.python.org/) >=3.7
 2. Install [ffmpeg](https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Installing-ffmpeg)
