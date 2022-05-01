@@ -189,33 +189,57 @@ class ConfigService:
 
         print('')
         Log.info(
-            'To avoid downloading all the Moodle courses you are enrolled in, you can select which ones you want'
-            + ' to download here. '
+            'To avoid downloading all Moodle courses you are enrolled in, you can select which courses you want'
+            + ' to download here. You can either create a whitelist or a blacklist for this purpose.'
+            + '\n\n- With a whitelist only the courses you have selected will be downloaded,'
+            + ' any courses you enroll in in the future will not be downloaded automatically unless'
+            + ' you add them to the list.'
+            + '\n- With a blacklist all selected courses will not be downloaded, all other courses that are not'
+            + ' on the list will be downloaded, but if you enroll in a new course online in the future that is not'
+            + ' on your blacklist it will automatically be downloaded as well. '
         )
         print('')
+        use_whitelist = len(dont_download_course_ids) == 0
+
+        use_whitelist = cutie.prompt_yes_or_no(
+            Log.special_str('Do you want to create a whitelist or blacklist for your courses?'),
+            default_is_yes=use_whitelist,
+            yes_text='Whitelist',
+            no_text='Blacklist',
+        )
 
         choices = []
         defaults = []
         for i, course in enumerate(courses):
             choices.append(f'{int(course.id):5}\t{course.fullname}')
 
-            if ResultsHandler.should_download_course(course.id, download_course_ids, dont_download_course_ids):
+            should_download = ResultsHandler.should_download_course(
+                course.id, download_course_ids, dont_download_course_ids
+            )
+            if should_download and use_whitelist:
+                defaults.append(i)
+            elif not should_download and not use_whitelist:
                 defaults.append(i)
 
-        Log.special('Which of the courses should be downloaded?')
+        if use_whitelist:
+            Log.special('Which of the courses should be downloaded?')
+        else:
+            Log.special('Which of the courses should NOT be downloaded?')
         Log.info('[You can select with the space bar and confirm your selection with the enter key]')
         print('')
         selected_courses = cutie.select_multiple(options=choices, ticked_indices=defaults)
 
-        download_course_ids = []
+        course_ids = []
         for i, course in enumerate(courses):
             if i in selected_courses:
-                download_course_ids.append(course.id)
+                course_ids.append(course.id)
 
-        self.config_helper.set_property('download_course_ids', download_course_ids)
-
-        self.config_helper.remove_property('dont_download_course_ids')
-        return download_course_ids
+        if use_whitelist:
+            self.config_helper.set_property('download_course_ids', course_ids)
+            self.config_helper.remove_property('dont_download_course_ids')
+        elif not use_whitelist:
+            self.config_helper.set_property('dont_download_course_ids', course_ids)
+            self.config_helper.remove_property('download_course_ids')
 
     def _select_sections_to_download(self, sections: [{}], excluded: [int]) -> [int]:
         """
