@@ -4,7 +4,7 @@
 import sys
 
 
-if sys.platform.startswith("linux"):
+if sys.platform.startswith("linux") or sys.platform == "darwin":
     from moodle_dl.utils.readchar.read_linux import readchar, readkey
     from moodle_dl.utils.readchar import key_linux as key
 elif sys.platform in ("win32", "cygwin"):
