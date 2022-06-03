@@ -1,3 +1,5 @@
+import re
+
 from moodle_dl.moodle_connector.request_helper import RequestHelper, RequestRejectedError
 from moodle_dl.state_recorder.course import Course
 from moodle_dl.download_service.path_tools import PathTools
@@ -163,13 +165,23 @@ class LessonsHandler:
         lesson_html = moodle_html_header
         attempt_filename = PathTools.to_valid_name(lesson_name)
         lesson_is_empty = True
-        for answerpage in answerpages:
+        for counter, answerpage in enumerate(answerpages):
             page_id = answerpage.get('page', {}).get('id', 0)
             lesson_id = answerpage.get('page', {}).get('lessonid', 0)
 
             shorted_lesson_name = lesson_name
             if len(shorted_lesson_name) > 17:
                 shorted_lesson_name = shorted_lesson_name[:15] + '..'
+
+            print(
+                (
+                    '\r'
+                    + 'Downloading lesson pages'
+                    + f' {counter + 1:3d}/{len(answerpages):3d}'
+                    + f' [{shorted_lesson_name:<17}|{lesson_id:6}]\033[K'
+                ),
+                end='',
+            )
 
             data = {'lessonid': lesson_id, 'pageid': page_id, 'returncontents': 1}
 
@@ -190,7 +202,24 @@ class LessonsHandler:
                 file_type = page_file.get('type', '')
                 if file_type is None or file_type == '':
                     page_file.update({'type': 'lesson_file'})
-                result.append(page_file)
+
+            for page_file in page_files:
+                new_page_file = True
+                for attempt_file in result:
+                    if re.sub(r"\/page_contents\/\d+\/", "/", attempt_file.get('fileurl', '')) == re.sub(
+                        r"\/page_contents\/\d+\/", "/", page_file.get('fileurl', '')
+                    ):
+                        if (
+                            attempt_file.get('filesize', 0) == page_file.get('filesize', 0)
+                            # sometimes the teacher adds the same file for multiple answer pages with a
+                            # different timestamp
+                            # and attempt_file.get('timemodified', 0) == page_file.get('timemodified', 0)
+                            and attempt_file.get('filename', '') == page_file.get('filename', '')
+                        ):
+                            new_page_file = False
+                            break
+                if new_page_file:
+                    result.append(page_file)
 
         if not lesson_is_empty:
             lesson_html += moodle_html_footer
@@ -199,6 +228,7 @@ class LessonsHandler:
                 'filepath': '/',
                 'timemodified': 0,
                 'html': lesson_html,
+                'filter_urls_during_search_containing': ['/mod_lesson/page_contents/'],
                 'type': 'html',
                 'no_search_for_urls': True,
             }

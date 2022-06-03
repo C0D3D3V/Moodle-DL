@@ -65,6 +65,8 @@ class ResultsHandler:
 
             files += self._get_files_in_modules(section_name, section_id, section_modules)
 
+        files += self._get_files_not_on_main_page()
+
         return files
 
     def _get_files_in_modules(self, section_name: str, section_id: int, section_modules: []) -> [File]:
@@ -123,6 +125,7 @@ class ResultsHandler:
                 if module_modname in self.course_fetch_addons:
                     # find addon with same module_id
                     addon = self.course_fetch_addons.get(module_modname, {}).get(module_id, {})
+                    addon['on_main_page'] = True
                     addon_files = addon.get('files', [])
                     module_contents += addon_files
 
@@ -133,6 +136,7 @@ class ResultsHandler:
             elif module_modname in self.course_fetch_addons:
                 # find addon with same module_id
                 addon = self.course_fetch_addons.get(module_modname, {}).get(module_id, {})
+                addon['on_main_page'] = True
                 addon_files = addon.get('files', [])
 
                 files += self._handle_files(
@@ -140,6 +144,67 @@ class ResultsHandler:
                 )
             else:
                 logging.debug('Got unhandled module: name=%s mod=%s url=%s', module_name, module_modname, module_url)
+
+        return files
+
+    def _get_modplural(self, modname: str) -> str:
+        modplural_dict = {
+            'assign': 'Assignments',
+            'database': 'Databases',
+            'folder': 'Folders',
+            'forum': 'Forums',
+            'lesson': 'Lessons',
+            'page': 'Pages',
+            'quiz': 'Quizzes',
+            'workshop': 'Workshops',
+        }
+        if modname in modplural_dict:
+            return modplural_dict[modname]
+        else:
+            return modname.capitalize()
+
+    def _get_files_not_on_main_page(self) -> [File]:
+        """
+        Iterates over all addons to find files (or content) that are not listed on the main page.
+        @return: A list of files of addons not on the main pange.
+        """
+        files = []
+        for addon_modname in self.course_fetch_addons:
+            section_name = f"{self._get_modplural(addon_modname)} not on main page"
+            section_id = -1
+
+            for addon_module_id in self.course_fetch_addons[addon_modname]:
+                addon = self.course_fetch_addons[addon_modname][addon_module_id]
+                if 'on_main_page' in addon:
+                    continue
+
+                module_name = addon.get('name', '')
+                module_modname = addon_modname
+                module_id = addon.get('id', 0)
+                module_intro = addon.get('intro', None)
+                module_contents = addon.get('files', [])
+
+                # Handle not supported modules that results in an index.html special
+                if module_modname in ['page'] and self.version < 2017051500:
+                    module_modname = 'index_mod-' + module_modname
+
+                if module_intro is not None and module_modname not in [
+                    'page',
+                    'forum',
+                    'database',
+                    'lesson',
+                    'quiz',
+                    'workshop',
+                    'assign',
+                ]:
+                    # Handle descriptions of Files, Labels and all that we do not handle in seperate modules
+                    files += self._handle_description(
+                        section_name, section_id, module_name, module_modname, module_id, module_intro
+                    )
+
+                files += self._handle_files(
+                    section_name, section_id, module_name, module_modname, module_id, module_contents
+                )
 
         return files
 

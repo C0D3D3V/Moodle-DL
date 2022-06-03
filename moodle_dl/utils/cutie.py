@@ -18,7 +18,6 @@ from colorama import init
 
 import moodle_dl.utils.readchar as readchar
 
-
 terminal = os.getenv('TERM')
 if terminal is None:
     init()

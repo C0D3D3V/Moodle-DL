@@ -168,7 +168,7 @@ class ForumsHandler:
     def _get_files_of_discussions(self, latest_discussions: []) -> []:
         result = []
 
-        for i, discussion in enumerate(latest_discussions):
+        for counter, discussion in enumerate(latest_discussions):
             valid_subject = PathTools.to_valid_name(discussion.get('subject', ''))
             shorted_discussion_name = valid_subject
             if len(shorted_discussion_name) > 17:
@@ -181,7 +181,7 @@ class ForumsHandler:
                     '\r'
                     + 'Downloading posts of discussion'
                     + f' [{shorted_discussion_name:<17}|{discussion_id:6}]'
-                    + f' {i:3d}/{(len(latest_discussions) - 1):3d}\033[K'
+                    + f' {counter + 1:3d}/{len(latest_discussions):3d}\033[K'
                 ),
                 end='',
             )
@@ -216,8 +216,22 @@ class ForumsHandler:
                     datetime.utcfromtimestamp(discussion_created).strftime('%y-%m-%d') + ' ' + valid_subject
                 )
 
-                post_files = post.get('messageinlinefiles', [])
-                post_files += post.get('attachments', [])
+                post_files = post.get('attachments', [])
+                for inlinefile in post.get('messageinlinefiles', []):
+                    new_inlinefile = True
+                    for attachment in post_files:
+                        if attachment.get('fileurl', '').replace('attachment', 'post') == inlinefile.get('fileurl', ''):
+                            if (
+                                attachment.get('filesize', 0) == inlinefile.get('filesize', 0)
+                                # we assume that inline attachments can have different timestamps than the actual
+                                # attachment. However, they are still the same file.
+                                # and attachment.get('timemodified', 0) == inlinefile.get('timemodified', 0)
+                                and attachment.get('filename', '') == inlinefile.get('filename', '')
+                            ):
+                                new_inlinefile = False
+                                break
+                    if new_inlinefile:
+                        post_files.append(inlinefile)
 
                 post_file = {
                     'filename': post_filename,
