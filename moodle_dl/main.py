@@ -34,6 +34,7 @@ from moodle_dl.notification_services.mail.mail_service import MailService
 from moodle_dl.notification_services.xmpp.xmpp_service import XmppService
 from moodle_dl.download_service.fake_download_service import FakeDownloadService
 from moodle_dl.notification_services.console.console_service import ConsoleService
+from moodle_dl.notification_services.discord.discord_service import DiscordService
 from moodle_dl.notification_services.telegram.telegram_service import TelegramService
 
 IS_DEBUG = False
@@ -59,6 +60,7 @@ def run_init(storage_path, use_sso=False, skip_cert_verify=False):
         if not do_override_input:
             sys.exit(0)
 
+    DiscordService(config).interactively_configure()
     MailService(config).interactively_configure()
     TelegramService(config).interactively_configure()
     XmppService(config).interactively_configure()
@@ -162,6 +164,15 @@ def run_add_all_visible_courses(storage_path, skip_cert_verify):
     Log.success('Configuration successfully updated!')
 
 
+def run_change_discord_notification(storage_path):
+    config = ConfigHelper(storage_path)
+    config.load()
+
+    DiscordService(config).interactively_configure()
+
+    Log.success('Configuration successfully updated!')
+
+
 def run_change_notification_mail(storage_path):
     config = ConfigHelper(storage_path)
     config.load()
@@ -249,6 +260,7 @@ def run_main(
     except (ValueError, sentry_sdk.utils.BadDsn, sentry_sdk.utils.ServerlessTimeoutWarning):
         pass
 
+    discord_service = DiscordService(config)
     mail_service = MailService(config)
     tg_service = TelegramService(config)
     xmpp_service = XmppService(config)
@@ -291,6 +303,7 @@ def run_main(
 
         if len(changed_courses_to_notify) > 0:
             console_service.notify_about_changes_in_moodle(changed_courses_to_notify)
+            discord_service.notify_about_changes_in_moodle(changed_courses_to_notify)
             mail_service.notify_about_changes_in_moodle(changed_courses_to_notify)
             tg_service.notify_about_changes_in_moodle(changed_courses_to_notify)
             xmpp_service.notify_about_changes_in_moodle(changed_courses_to_notify)
@@ -304,6 +317,7 @@ def run_main(
 
         if len(failed_downloads) > 0:
             console_service.notify_about_failed_downloads(failed_downloads)
+            discord_service.notify_about_failed_downloads(failed_downloads)
             mail_service.notify_about_failed_downloads(failed_downloads)
             tg_service.notify_about_failed_downloads(failed_downloads)
             xmpp_service.notify_about_failed_downloads(failed_downloads)
@@ -331,6 +345,7 @@ def run_main(
             short_error = traceback.format_exc(limit=1)
 
         console_service.notify_about_error(short_error)
+        discord_service.notify_about_error(short_error)
         mail_service.notify_about_error(short_error)
         tg_service.notify_about_error(short_error)
         xmpp_service.notify_about_error(short_error)
@@ -417,6 +432,17 @@ def get_parser():
             + ' for whatever reason, the saved token gets'
             + ' rejected by Moodle. It does not affect the rest'
             + ' of the config.'
+        ),
+    )
+
+    group.add_argument(
+        '-cd',
+        '--change-notification-discord',
+        action='store_true',
+        help=(
+                'Activate/deactivate/change the settings for'
+                + ' receiving notifications via Discord. It does not'
+                + ' affect the rest of the config.'
         ),
     )
 
@@ -623,6 +649,8 @@ def main(args=None):
         run_configure(storage_path, skip_cert_verify)
     elif args.new_token:
         run_new_token(storage_path, use_sso, username, password, skip_cert_verify)
+    elif args.change_notification_discord:
+        run_change_discord_notification(storage_path)
     elif args.change_notification_mail:
         run_change_notification_mail(storage_path)
     elif args.change_notification_telegram:

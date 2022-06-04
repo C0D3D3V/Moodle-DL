@@ -1,7 +1,4 @@
-import re
-
 from moodle_dl.state_recorder.course import Course
-from moodle_dl.download_service.url_target import URLTarget
 
 
 class DiscordFormatter:
@@ -70,45 +67,3 @@ class DiscordFormatter:
             embeds.append(new_embed)
 
         return embeds
-
-    @classmethod
-    def create_full_error_messages(cls, details) -> [str]:
-        """
-        Creates error messages
-        """
-        result_list = []
-
-        one_msg_content = '🛑 The following error occurred during execution:\r\n'
-        for new_line in details.splitlines():
-            new_line = new_line + '\r\n'
-            one_msg_content = cls.append_with_limit(new_line, one_msg_content, result_list)
-
-        result_list.append(one_msg_content)
-        return result_list
-
-    @classmethod
-    def create_full_failed_downloads_messages(cls, failed_downloads: [URLTarget]) -> [str]:
-        """
-        Creates messages with all failed downloads
-        """
-
-        result_list = []
-        if len(failed_downloads) == 0:
-            return result_list
-
-        one_msg_content = (
-                '⁉️ Error while trying to download files, look at the log for more details.'
-                + '\r\nList of failed downloads:\r\n\r\n'
-        )
-        for url_target in failed_downloads:
-            new_line = f'⚠️ {url_target.file.content_filename}:\r\n{url_target.error}\r\n\r\n'
-            if url_target.file.content_filename != url_target.file.content_fileurl:
-                new_line = (
-                        f'⚠️ {url_target.file.content_filename} ({url_target.file.content_fileurl}):'
-                        + f'\r\n{url_target.error}\r\n\r\n'
-                )
-
-            one_msg_content = cls.append_with_limit(new_line, one_msg_content, result_list)
-
-        result_list.append(one_msg_content)
-        return result_list
