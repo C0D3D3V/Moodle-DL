@@ -223,9 +223,9 @@ class ConfigHelper:
             options.update({'cookies_path': None})
 
         try:
-            options.update({'youtube_dl_options': self.get_property('youtube_dl_options')})
+            options.update({'yt_dlp_options': self.get_property('yt_dlp_options')})
         except ValueError:
-            options.update({'youtube_dl_options': {}})
+            options.update({'yt_dlp_options': {}})
 
         try:
             options.update({'videopasswords': self.get_property('videopasswords')})

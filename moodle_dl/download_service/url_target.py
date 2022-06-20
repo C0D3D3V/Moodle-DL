@@ -80,7 +80,7 @@ class URLTarget(object):
         self.downloaded = 0
 
         # For yt-dlp errors
-        self.youtube_dl_failed_with_error = False
+        self.yt_dlp_failed_with_error = False
 
     def add_progress(self, count: int, block_size: int, total_size: int):
         """
@@ -252,7 +252,7 @@ class URLTarget(object):
                 return
             # This is a critical error, with high probability the link can be downloaded at a later time.
             logging.error('T%s - yt-dlp Error: %s', self.thread_id, msg)
-            self.url_target.youtube_dl_failed_with_error = True
+            self.url_target.yt_dlp_failed_with_error = True
 
     def yt_hook(self, d):
         downloaded_bytes = d.get('downloaded_bytes', 0)
@@ -308,7 +308,7 @@ class URLTarget(object):
             final_filename = final_filename[rel_pos:]
         self.file.saved_to = final_filename
 
-    def is_blocked_for_youtube_dl(self, url_to_download: str):
+    def is_blocked_for_yt_dlp(self, url_to_download: str):
         url_parsed = urlparse.urlparse(url_to_download)
         if url_parsed.hostname.endswith('youtube.com') and url_parsed.path.startswith('/channel/'):
             # We do not want to download whole channels
@@ -495,7 +495,7 @@ class URLTarget(object):
                 self.success = True
                 return True
 
-        elif isHTML and not self.is_blocked_for_youtube_dl(url_to_download):
+        elif isHTML and not self.is_blocked_for_yt_dlp(url_to_download):
 
             filename_tmpl = self.filename + ' - %(title)s (%(id)s).%(ext)s'
             if self.file.content_type == 'description-url':
@@ -514,8 +514,8 @@ class URLTarget(object):
                 'addmetadata': True,
             }
 
-            youtube_dl_options = self.options.get('youtube_dl_options', {})
-            ydl_opts.update(youtube_dl_options)
+            yt_dlp_options = self.options.get('yt_dlp_options', {})
+            ydl_opts.update(yt_dlp_options)
 
             if cookies_path is not None and os.path.isfile(cookies_path):
                 ydl_opts.update({'cookiefile': cookies_path})
@@ -533,7 +533,7 @@ class URLTarget(object):
                 if idx_pw + 1 <= len(password_list):
                     ydl.params['videopassword'] = password_list[idx_pw]
 
-                self.youtube_dl_failed_with_error = False
+                self.yt_dlp_failed_with_error = False
                 # we restart yt-dlp, so we need to reset the return code
                 ydl._download_retcode = 0  # pylint: disable=protected-access
                 try:
@@ -555,14 +555,14 @@ class URLTarget(object):
                         self.thread_id,
                         e,
                     )
-                    self.youtube_dl_failed_with_error = True
+                    self.yt_dlp_failed_with_error = True
                 idx_pw += 1
                 if idx_pw + 1 > len(password_list):
                     break
 
             # if we want we could save ydl.cookiejar (Also the cookiejar of moodle-dl)
 
-            if self.youtube_dl_failed_with_error is True and not self.options.get('ignore_ytdl_errors', False):
+            if self.yt_dlp_failed_with_error is True and not self.options.get('ignore_ytdl_errors', False):
                 if not delete_if_successful:
                     # cleanup the url-link file
                     try:
@@ -829,7 +829,7 @@ class URLTarget(object):
         self.thread_report[self.thread_id]['extra_totalsize'] = None
         self.thread_report[self.thread_id]['current_url'] = self.file.content_fileurl
         self.thread_report[self.thread_id]['external_dl'] = None
-        self.youtube_dl_failed_with_error = False
+        self.yt_dlp_failed_with_error = False
 
         try:
             logging.debug('T%s - Starting downloading of: %s', self.thread_id, self)
