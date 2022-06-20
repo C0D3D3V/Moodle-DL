@@ -281,7 +281,7 @@ class ResultsHandler:
             if url == '':
                 continue
 
-            # To avoid different encodings and quotes and so that youtube-dl downloads correctly
+            # To avoid different encodings and quotes and so that yt-dlp downloads correctly
             # (See issues #96 and #103), we remove all encodings.
             url = html.unescape(url)
             url = urlparse.unquote(url)

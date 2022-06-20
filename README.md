@@ -106,9 +106,9 @@ Options can be combined with all the actions mentioned above.
     - Warning: This might lead to security flaws and should only be used in non-production environments.
     - Default: False
 - `--ignore-ytdl-errors`
-    - If this option is set, errors that occur when downloading with the help of Youtube-dl are ignored. Thus, no further attempt will be made to download the file using youtube-dl. 
-    - By default, youtube-dl errors are critical, so the download of the corresponding file will be aborted and when you run moodle-dl again, the download will be repeated.  
-    - You can use this option if a download using youtube-dl fails repeatedly.
+    - If this option is set, errors that occur when downloading with the help of yt-dlp are ignored. Thus, no further attempt will be made to download the file using yt-dlp. 
+    - By default, yt-dlp errors are critical, so the download of the corresponding file will be aborted and when you run moodle-dl again, the download will be repeated.  
+    - You can use this option if a download using yt-dlp fails repeatedly.
 - `--without-downloading-files`
     - This flag is used to skip the downloading of files.
     - This allows the local database to be updated to the latest version of Moodle without having to download all files.

@@ -79,7 +79,7 @@ class URLTarget(object):
         # Total downloaded.
         self.downloaded = 0
 
-        # For Youtube-dl errors
+        # For yt-dlp errors
         self.youtube_dl_failed_with_error = False
 
     def add_progress(self, count: int, block_size: int, total_size: int):
@@ -208,7 +208,7 @@ class URLTarget(object):
 
     class YtLogger(object):
         """
-        Just a logger for Youtube-DL
+        Just a logger for yt-dlp
         """
 
         def __init__(self, url_target):
@@ -229,29 +229,29 @@ class URLTarget(object):
             if msg.find('ETA') >= 0:
                 return
             msg = self.clean_msg(msg)
-            logging.debug('T%s - youtube-dl Debug: %s', self.thread_id, msg)
+            logging.debug('T%s - yt-dlp Debug: %s', self.thread_id, msg)
             pass
 
         def warning(self, msg):
             msg = self.clean_msg(msg)
             if msg.find('Falling back') >= 0:
-                logging.debug('T%s - youtube-dl Warning: %s', self.thread_id, msg)
+                logging.debug('T%s - yt-dlp Warning: %s', self.thread_id, msg)
                 return
             if msg.find('Requested formats are incompatible for merge') >= 0:
-                logging.debug('T%s - youtube-dl Warning: %s', self.thread_id, msg)
+                logging.debug('T%s - yt-dlp Warning: %s', self.thread_id, msg)
                 return
-            logging.warning('T%s - youtube-dl Warning: %s', self.thread_id, msg)
+            logging.warning('T%s - yt-dlp Warning: %s', self.thread_id, msg)
 
         def error(self, msg):
             msg = self.clean_msg(msg)
             if msg.find('Unsupported URL') >= 0:
-                logging.debug('T%s - youtube-dl Error: %s', self.thread_id, msg)
+                logging.debug('T%s - yt-dlp Error: %s', self.thread_id, msg)
                 return
             if msg.find('no suitable InfoExtractor') >= 0:
-                logging.debug('T%s - youtube-dl Error: %s', self.thread_id, msg)
+                logging.debug('T%s - yt-dlp Error: %s', self.thread_id, msg)
                 return
             # This is a critical error, with high probability the link can be downloaded at a later time.
-            logging.error('T%s - youtube-dl Error: %s', self.thread_id, msg)
+            logging.error('T%s - yt-dlp Error: %s', self.thread_id, msg)
             self.url_target.youtube_dl_failed_with_error = True
 
     def yt_hook(self, d):
@@ -534,7 +534,7 @@ class URLTarget(object):
                     ydl.params['videopassword'] = password_list[idx_pw]
 
                 self.youtube_dl_failed_with_error = False
-                # we restart youtube-dl, so we need to reset the return code
+                # we restart yt-dlp, so we need to reset the return code
                 ydl._download_retcode = 0  # pylint: disable=protected-access
                 try:
                     ydl_results = ydl.download([url_to_download])
@@ -551,7 +551,7 @@ class URLTarget(object):
                         break
                 except Exception as e:
                     logging.error(
-                        'T%s - Youtube-dl failed! Error: %s',
+                        'T%s - yt-dlp failed! Error: %s',
                         self.thread_id,
                         e,
                     )
@@ -569,14 +569,14 @@ class URLTarget(object):
                         os.remove(self.file.saved_to)
                     except OSError as e:
                         logging.warning(
-                            'T%s - Could not delete %s after youtube-dl failed. Error: %s',
+                            'T%s - Could not delete %s after yt-dlp failed. Error: %s',
                             self.thread_id,
                             self.file.saved_to,
                             e,
                         )
                 self.success = False
                 raise RuntimeError(
-                    'Youtube-dl could not download the URL. For details see youtube-dl error messages in the log file. '
+                    'yt-dlp could not download the URL. For details see yt-dlp error messages in the log file. '
                     + 'You can ignore this error by running `moodle-dl --ignore-ytdl-errors` once.'
                 )
 
