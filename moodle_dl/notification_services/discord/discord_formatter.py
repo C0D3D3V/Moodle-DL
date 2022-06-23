@@ -36,12 +36,10 @@ class DiscordFormatter:
                 if file.new_file is not None:
                     saved_to_path = file.new_file.saved_to
 
-                field_name = 'Initialised'
-                new_embed['color'] = '13948116'  # neutral grey
-                if file.new_file:
-                    field_name = 'Added'
-                    new_embed['color'] = '7268279'  # emerald green
-                elif file.modified:
+                field_name = 'Added'
+                new_embed['color'] = '7268279'  # emerald green
+
+                if file.modified:
                     field_name = 'Modified'
                     new_embed['color'] = '16628340'  # orange
                 elif file.moved:
