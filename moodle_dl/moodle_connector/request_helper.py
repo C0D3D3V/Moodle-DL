@@ -138,7 +138,7 @@ class RequestHelper:
             raise ValueError('The required Token is not set!')
 
         data_urlencoded = self._get_POST_DATA(function, self.token, data)
-        url = self._get_REST_POST_URL(self.url_base, function)
+        url = self._get_REST_POST_URL(self.url_base, function, self.token, data)
 
         error_ctr = 0
         maxretries = 5
@@ -173,18 +173,27 @@ class RequestHelper:
         return json_result
 
     @staticmethod
-    def _get_REST_POST_URL(url_base: str, function: str) -> str:
+    def _get_REST_POST_URL(url_base: str, function: str, token: str, data_obj: {str, str}) -> str:
         """
         Generates an URL for a REST-POST request
         @params: The necessary parameters for a REST URL
         @return: A formatted URL
         """
-        url = f'{url_base}webservice/rest/server.php?moodlewsrestformat=json&wsfunction={function}'
+        data = {'moodlewsrestformat': 'json'}
+
+        if data_obj is not None:
+            data.update(data_obj)
+
+        data.update({'wsfunction': function, 'wstoken': token})
+
+        url_parameters = RequestHelper.recursive_urlencode(data)
+
+        url = f'{url_base}webservice/rest/server.php?{url_parameters}'
 
         return url
 
     @staticmethod
-    def _get_POST_DATA(function: str, token: str, data_obj: str) -> str:
+    def _get_POST_DATA(function: str, token: str, data_obj: {str: str}) -> str:
         """
         Generates the data for a REST-POST request
         @params: The necessary parameters for a REST URL
