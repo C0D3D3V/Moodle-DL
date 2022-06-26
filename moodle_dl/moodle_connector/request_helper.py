@@ -164,13 +164,17 @@ class RequestHelper:
         json_result = self._initial_parse(response)
         if self.log_responses and function not in ['tool_mobile_get_autologin_key']:
             with open(self.log_responses_to, 'a', encoding='utf-8') as response_log_file:
-                response_log_file.write(f'URL: {response.url}\n')
+                response_log_file.write(f'URL: {self.censor_secrets(response.url)}\n')
                 response_log_file.write(f'Function: {function}\n\n')
                 response_log_file.write(f'Data: {data}\n\n')
                 response_log_file.write(json.dumps(json_result, indent=4, ensure_ascii=False))
                 response_log_file.write('\n\n\n')
 
         return json_result
+
+    @staticmethod
+    def censor_secrets(text):
+        return re.sub(r'wstoken=\w+', 'wstoken=TOKEN', text)
 
     @staticmethod
     def _get_REST_POST_URL(url_base: str, function: str, token: str, data_obj: {str, str}) -> str:
