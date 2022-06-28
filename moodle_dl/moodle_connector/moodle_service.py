@@ -160,10 +160,11 @@ class MoodleService:
             scheme = 'http://'
 
         atomatic_procedure_warning = (
-            'Between version 3.81 and 3.82 a change was added to'
+            'Between version 3.8.1 and 3.8.2 a change was added to'
             + ' Moodle so that automatic copying of the SSO token'
             + ' might not work.'
         )
+        allow_automatic = True
         try:
             version = RequestHelper(
                 moodle_domain,
@@ -172,8 +173,14 @@ class MoodleService:
                 use_http=use_http,
             ).get_simple_moodle_version()
 
-            if StrictVersion(version) > StrictVersion("3.8.1"):
+            if StrictVersion(version) > StrictVersion("3.8.1") and StrictVersion(version) <= StrictVersion("3.8.2"):
                 Log.warning(atomatic_procedure_warning + '\nYou can still try it, your version is: ' + str(version))
+            if StrictVersion(version) > StrictVersion("3.8.2"):
+                Log.warning(
+                    'For your Moodle version there is currently no automatic way to copy the SSO token implemented,'
+                    + f' your version is: {str(version)}. You will have to proceed manually.'
+                )
+                allow_automatic = False
 
         except ConnectionError:
             Log.warning(
@@ -181,8 +188,10 @@ class MoodleService:
                 + '\nThe version of your Moodle could not be detected, you can still try the automatic procedure.'
             )
 
-        print(' If you want to copy the login-token manual, you will be guided through the manual copy process.')
-        do_automatic = cutie.prompt_yes_or_no('Do you want to try to receive the SSO token automatically?')
+        do_automatic = False
+        if allow_automatic:
+            print(' If you want to copy the login-token manual, you will be guided through the manual copy process.')
+            do_automatic = cutie.prompt_yes_or_no('Do you want to try to receive the SSO token automatically?')
 
         print('Please log into Moodle on this computer and then visit the following address in your web browser: ')
 
