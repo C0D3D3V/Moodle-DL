@@ -96,7 +96,6 @@ class PathTools:
         """
         path = str(
             Path(storage_path)
-            / storage_path
             / PathTools.to_valid_name(course_fullname)
             / PathTools.to_valid_name(file_section_name)
             / PathTools.sanitize_path(file_path).strip('/')
@@ -114,7 +113,6 @@ class PathTools:
         """
         path = str(
             Path(storage_path)
-            / storage_path
             / PathTools.to_valid_name(course_fullname)
             / PathTools.sanitize_path(file_path).strip('/')
         )
