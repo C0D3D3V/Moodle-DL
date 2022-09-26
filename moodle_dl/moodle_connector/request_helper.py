@@ -11,6 +11,7 @@ import urllib3
 import requests
 
 from requests.exceptions import RequestException
+from moodle_dl.moodle_connector.ssl_helper import custom_session
 
 
 class RequestHelper:
@@ -73,7 +74,7 @@ class RequestHelper:
         if data is not None:
             data_urlencoded = RequestHelper.recursive_urlencode(data)
 
-        session = requests.Session()
+        session = custom_session()
 
         if cookie_jar_path is not None:
             session.cookies = MozillaCookieJar(cookie_jar_path)
@@ -103,7 +104,7 @@ class RequestHelper:
         @return: The resulting Response object.
         """
 
-        session = requests.Session()
+        session = custom_session()
 
         if cookie_jar_path is not None:
             session.cookies = MozillaCookieJar(cookie_jar_path)
@@ -142,9 +143,10 @@ class RequestHelper:
 
         error_ctr = 0
         maxretries = 5
+        session = custom_session()
         while True:
             try:
-                response = requests.post(
+                response = session.post(
                     url, data=data_urlencoded, headers=self.stdHeader, verify=self.verify, timeout=timeout
                 )
                 break
@@ -208,8 +210,9 @@ class RequestHelper:
         @return: The JSON response returned by the Moodle System, already
         checked for errors.
         """
+        session = custom_session()
         try:
-            response = requests.post(
+            response = session.post(
                 f'{self.url_base}login/token.php',
                 data=urllib.parse.urlencode(data),
                 headers=self.stdHeader,
