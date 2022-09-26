@@ -182,7 +182,7 @@ class MoodleService:
                 )
                 allow_automatic = False
 
-        except ConnectionError:
+        except (ConnectionError, RequestRejectedError):
             Log.warning(
                 atomatic_procedure_warning
                 + '\nThe version of your Moodle could not be detected, you can still try the automatic procedure.'

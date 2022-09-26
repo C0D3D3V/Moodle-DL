@@ -96,7 +96,7 @@ class URLTarget(object):
             total_size = self.file.content_filesize
 
         percent = 100
-        if total_size != 0:
+        if total_size > 0:
             percent = int(self.downloaded * 100 / total_size)
 
         self.thread_report[self.thread_id]['percentage'] = percent

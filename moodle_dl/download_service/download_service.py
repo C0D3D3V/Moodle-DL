@@ -76,7 +76,6 @@ class DownloadService:
             {
                 'total': 0,
                 'percentage': 0,
-                'old_extra_totalsize': None,
                 'extra_totalsize': None,
                 'current_url': '',
                 'external_dl': None,
