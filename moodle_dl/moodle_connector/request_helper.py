@@ -235,7 +235,7 @@ class RequestHelper:
                 + f'\nResponse: {response.text}'
             )
 
-    def get_simple_moodle_version(self) -> float:
+    def get_simple_moodle_version(self) -> str:
         """
         Query the version by looking up the change-log (/lib/upgrade.txt)
         of the Moodle
