@@ -26,12 +26,15 @@ def configure_ssl_context(context):
     context.options |= 0x4 # set ssl.OP_LEGACY_SERVER_CONNECT bit (https://bugs.python.org/issue44888)
 
 
-def custom_session():
+def custom_session(verify_cert):
     """
     Defines a new session with custom SSL context to support edge cases with OpenSSL 3.X.X
     """
     session = requests.Session()
-    ctx = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+    if verify_cert:
+        ctx = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+    else:
+        ctx = ssl._create_unverified_context()
     configure_ssl_context(ctx)
     session.mount('https://', CustomHttpAdapter(ctx))
     return session

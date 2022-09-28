@@ -383,7 +383,7 @@ class URLTarget(object):
         isHTML = False
         new_filename = ""
         total_bytes_estimate = -1
-        session = custom_session()
+        session = custom_session(self.verify_cert)
 
         if cookies_path is not None:
             session.cookies = MozillaCookieJar(cookies_path)
@@ -394,7 +394,6 @@ class URLTarget(object):
             response = session.head(
                 url_to_download,
                 headers=RequestHelper.stdHeader,
-                verify=self.verify_cert,
                 allow_redirects=True,
                 timeout=60,
             )

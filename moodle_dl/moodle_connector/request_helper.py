@@ -74,7 +74,7 @@ class RequestHelper:
         if data is not None:
             data_urlencoded = RequestHelper.recursive_urlencode(data)
 
-        session = custom_session()
+        session = custom_session(self.verify)
 
         if cookie_jar_path is not None:
             session.cookies = MozillaCookieJar(cookie_jar_path)
@@ -83,7 +83,7 @@ class RequestHelper:
                 session.cookies.load(ignore_discard=True, ignore_expires=True)
 
         try:
-            response = session.post(url, data=data_urlencoded, headers=self.stdHeader, verify=self.verify, timeout=60)
+            response = session.post(url, data=data_urlencoded, headers=self.stdHeader, timeout=60)
         except RequestException as error:
             raise ConnectionError(f"Connection error: {str(error)}") from None
 
@@ -104,7 +104,7 @@ class RequestHelper:
         @return: The resulting Response object.
         """
 
-        session = custom_session()
+        session = custom_session(self.verify)
 
         if cookie_jar_path is not None:
             session.cookies = MozillaCookieJar(cookie_jar_path)
@@ -112,7 +112,7 @@ class RequestHelper:
             if os.path.exists(cookie_jar_path):
                 session.cookies.load(ignore_discard=True, ignore_expires=True)
         try:
-            response = session.get(url, headers=self.stdHeader, verify=self.verify, timeout=60)
+            response = session.get(url, headers=self.stdHeader, timeout=60)
         except RequestException as error:
             raise ConnectionError(f"Connection error: {str(error)}") from None
 
@@ -143,11 +143,11 @@ class RequestHelper:
 
         error_ctr = 0
         maxretries = 5
-        session = custom_session()
+        session = custom_session(self.verify)
         while True:
             try:
                 response = session.post(
-                    url, data=data_urlencoded, headers=self.stdHeader, verify=self.verify, timeout=timeout
+                    url, data=data_urlencoded, headers=self.stdHeader, timeout=timeout
                 )
                 break
             except (requests.ConnectionError, requests.Timeout) as error:
@@ -210,13 +210,12 @@ class RequestHelper:
         @return: The JSON response returned by the Moodle System, already
         checked for errors.
         """
-        session = custom_session()
+        session = custom_session(self.verify)
         try:
             response = session.post(
                 f'{self.url_base}login/token.php',
                 data=urllib.parse.urlencode(data),
                 headers=self.stdHeader,
-                verify=self.verify,
                 timeout=60,
             )
         except RequestException as error:
@@ -245,7 +244,8 @@ class RequestHelper:
 
         url = f'{self.url_base}lib/upgrade.txt'
         try:
-            response = requests.get(url, headers=self.stdHeader, verify=self.verify, timeout=60)
+            session = custom_session(self.verify)
+            response = session.get(url, headers=self.stdHeader, timeout=60)
         except RequestException as error:
             raise ConnectionError(f"Connection error: {str(error)}") from None
 
