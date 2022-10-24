@@ -1,3 +1,4 @@
+from typing import Dict, List
 from moodle_dl.state_recorder.course import Course
 from moodle_dl.moodle_connector.request_helper import RequestHelper
 
@@ -11,7 +12,7 @@ class PagesHandler:
         self.request_helper = request_helper
         self.version = version
 
-    def fetch_pages(self, courses: [Course]) -> {int: {int: {}}}:
+    def fetch_pages(self, courses: List[Course]) -> {int: {int: Dict}}:
         """
         Fetches the Pages List for all courses from the
         Moodle system

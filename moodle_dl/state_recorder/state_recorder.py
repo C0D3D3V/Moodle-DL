@@ -2,6 +2,7 @@ import sqlite3
 import logging
 
 from sqlite3 import Error
+from typing import Dict, List
 
 from moodle_dl.state_recorder.file import File
 from moodle_dl.state_recorder.course import Course
@@ -262,7 +263,7 @@ class StateRecorder:
 
         return False
 
-    def get_stored_files(self) -> [Course]:
+    def get_stored_files(self) -> List[Course]:
         # get all stored files (that are not yet deleted)
         conn = sqlite3.connect(self.db_file)
         conn.row_factory = sqlite3.Row
@@ -303,7 +304,7 @@ class StateRecorder:
         conn.close()
         return stored_courses
 
-    def get_old_files(self) -> [Course]:
+    def get_old_files(self) -> List[Course]:
         # get all stored files (that are not yet deleted)
         conn = sqlite3.connect(self.db_file)
         conn.row_factory = sqlite3.Row
@@ -349,7 +350,7 @@ class StateRecorder:
         conn.close()
         return stored_courses
 
-    def __get_modified_files(self, stored_courses: [Course], current_courses: [Course]) -> [Course]:
+    def __get_modified_files(self, stored_courses: List[Course], current_courses: List[Course]) -> List[Course]:
         # returns courses with modified and deleted files
         changed_courses = []
 
@@ -426,8 +427,8 @@ class StateRecorder:
         return changed_courses
 
     def __get_new_files(
-        self, changed_courses: [Course], stored_courses: [Course], current_courses: [Course]
-    ) -> [Course]:
+        self, changed_courses: List[Course], stored_courses: List[Course], current_courses: List[Course]
+    ) -> List[Course]:
         # check for new files
         for current_course in current_courses:
             # check if that file does not exist in stored
@@ -474,7 +475,7 @@ class StateRecorder:
                     matched_changed_course.files += changed_course.files
         return changed_courses
 
-    def changes_of_new_version(self, current_courses: [Course]) -> [Course]:
+    def changes_of_new_version(self, current_courses: List[Course]) -> List[Course]:
         # all changes are stored inside changed_courses,
         # as a list of changed courses
         changed_courses = []
@@ -499,7 +500,7 @@ class StateRecorder:
 
         return changed_courses
 
-    def get_last_timestamps_per_forum(self) -> {}:
+    def get_last_timestamps_per_forum(self) -> Dict:
         """Returns a dict of timestamps per forum cmid"""
 
         conn = sqlite3.connect(self.db_file)
@@ -522,7 +523,7 @@ class StateRecorder:
 
         return result_dict
 
-    def changes_to_notify(self) -> [Course]:
+    def changes_to_notify(self) -> List[Course]:
         changed_courses = []
 
         conn = sqlite3.connect(self.db_file)
@@ -572,7 +573,7 @@ class StateRecorder:
         conn.close()
         return changed_courses
 
-    def notified(self, courses: [Course]):
+    def notified(self, courses: List[Course]):
         # saves that a notification with the changes where send
 
         conn = sqlite3.connect(self.db_file)
@@ -622,7 +623,7 @@ class StateRecorder:
         conn.commit()
         conn.close()
 
-    def batch_delete_files(self, courses: [Course]):
+    def batch_delete_files(self, courses: List[Course]):
         conn = sqlite3.connect(self.db_file)
         cursor = conn.cursor()
 
@@ -643,7 +644,7 @@ class StateRecorder:
         conn.commit()
         conn.close()
 
-    def batch_delete_files_from_db(self, files: [File]):
+    def batch_delete_files_from_db(self, files: List[File]):
         conn = sqlite3.connect(self.db_file)
         cursor = conn.cursor()
 

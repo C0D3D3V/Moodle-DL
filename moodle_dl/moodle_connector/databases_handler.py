@@ -1,3 +1,4 @@
+from typing import Dict, List
 from moodle_dl.moodle_connector.request_helper import RequestHelper
 from moodle_dl.state_recorder.course import Course
 
@@ -11,7 +12,7 @@ class DatabasesHandler:
         self.request_helper = request_helper
         self.version = version
 
-    def fetch_databases(self, courses: [Course]) -> {int: {int: {}}}:
+    def fetch_databases(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
         """
         Fetches the Databases List for all courses from the
         Moodle system
@@ -80,7 +81,7 @@ class DatabasesHandler:
 
         return result
 
-    def fetch_database_files(self, databases: {int: {int: {}}}) -> {int: {int: {}}}:
+    def fetch_database_files(self, databases: Dict[int, Dict[int, Dict]]) -> Dict[int, Dict[int, Dict]]:
         """
         Fetches for the databases list of all courses the additionally
         entries. This is kind of waste of resources, because there
@@ -126,7 +127,7 @@ class DatabasesHandler:
         return databases
 
     @staticmethod
-    def _get_files_of_db_entries(entries: {}) -> []:
+    def _get_files_of_db_entries(entries: Dict) -> List:
         result = []
 
         entries_list = entries.get('entries', [])

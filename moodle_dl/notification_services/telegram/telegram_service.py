@@ -1,5 +1,6 @@
 import logging
 import traceback
+from typing import List
 
 from moodle_dl.utils import cutie
 from moodle_dl.utils.logger import Log
@@ -71,7 +72,7 @@ class TelegramService(NotificationService):
             logging.debug('Telegram-Notifications not configured, skipping.')
             return False
 
-    def _send_messages(self, messages: [str]):
+    def _send_messages(self, messages: List[str]):
         """
         Sends an message
         """
@@ -93,7 +94,7 @@ class TelegramService(NotificationService):
                 logging.error('While sending notification:\n%s', error_formatted, extra={'exception': e})
                 raise e  # to be properly notified via Sentry
 
-    def notify_about_changes_in_moodle(self, changes: [Course]) -> None:
+    def notify_about_changes_in_moodle(self, changes: List[Course]) -> None:
         """
         Sends out a notification about the downloaded changes.
         @param changes: A list of changed courses with changed files.
@@ -121,7 +122,7 @@ class TelegramService(NotificationService):
 
         self._send_messages(messages)
 
-    def notify_about_failed_downloads(self, failed_downloads: [URLTarget]):
+    def notify_about_failed_downloads(self, failed_downloads: List[URLTarget]):
         """
         Sends out an message about failed download if configured to send out error messages.
         @param failed_downloads: A list of failed URLTargets.

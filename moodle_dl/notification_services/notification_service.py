@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from typing import List
 
 from moodle_dl.state_recorder.course import Course
 from moodle_dl.download_service.url_target import URLTarget
@@ -23,7 +24,7 @@ class NotificationService:
         pass
 
     @abstractmethod
-    def notify_about_changes_in_moodle(self, changes: [Course]) -> None:
+    def notify_about_changes_in_moodle(self, changes: List[Course]) -> None:
         """
         Sends out a Notification to inform about detected changes for the
         Moodle-Account. The caller shouldn't care about if the sending was
@@ -43,7 +44,7 @@ class NotificationService:
         pass
 
     @abstractmethod
-    def notify_about_failed_downloads(self, failed_downloads: [URLTarget]) -> None:
+    def notify_about_failed_downloads(self, failed_downloads: List[URLTarget]) -> None:
         """
         Sends out a Notification to inform about failed downloads encountered during
         the execution of the program.

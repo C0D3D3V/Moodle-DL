@@ -6,6 +6,7 @@ import shutil
 import logging
 import threading
 from queue import Queue
+from typing import List
 import certifi
 
 from yt_dlp.utils import format_bytes
@@ -30,7 +31,7 @@ class DownloadService:
 
     def __init__(
         self,
-        courses: [Course],
+        courses: List[Course],
         moodle_service: MoodleService,
         storage_path: str,
         skip_cert_verify: bool = False,

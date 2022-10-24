@@ -1,3 +1,4 @@
+from typing import Dict, List
 from moodle_dl.state_recorder.course import Course
 from moodle_dl.moodle_connector.request_helper import RequestHelper
 
@@ -11,7 +12,7 @@ class AssignmentsHandler:
         self.request_helper = request_helper
         self.version = version
 
-    def fetch_assignments(self, courses: [Course]) -> {int: {int: {}}}:
+    def fetch_assignments(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
         """
         Fetches the Assignments List for all courses from the
         Moodle system
@@ -85,7 +86,7 @@ class AssignmentsHandler:
 
         return result
 
-    def fetch_submissions(self, userid: int, assignments: {int: {int: {}}}) -> {int: {int: {}}}:
+    def fetch_submissions(self, userid: int, assignments: Dict[int, Dict[int, Dict]]) -> Dict[int, Dict[int, Dict]]:
         """
         Fetches for the assignments list of all courses the additionally
         submissions. This is kind of waste of resources, because there
@@ -137,7 +138,7 @@ class AssignmentsHandler:
         return assignments
 
     @staticmethod
-    def _get_files_of_submission(submission: {}) -> []:
+    def _get_files_of_submission(submission: Dict) -> List:
         result = []
         # get own submissions
         lastattempt = submission.get('lastattempt', {})
@@ -155,7 +156,7 @@ class AssignmentsHandler:
         return result
 
     @staticmethod
-    def _get_grade_of_feedback(feedback: {}) -> []:
+    def _get_grade_of_feedback(feedback: Dict) -> List:
         result = []
 
         gradefordisplay = feedback.get('gradefordisplay', "")
@@ -176,7 +177,7 @@ class AssignmentsHandler:
         return result
 
     @staticmethod
-    def _get_files_of_plugins(obj: {}) -> []:
+    def _get_files_of_plugins(obj: Dict) -> List:
         result = []
         plugins = obj.get('plugins', [])
 

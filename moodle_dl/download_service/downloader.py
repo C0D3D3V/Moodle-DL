@@ -2,6 +2,7 @@ import logging
 import threading
 
 from queue import Queue, Empty
+from typing import List
 
 from moodle_dl.state_recorder.state_recorder import StateRecorder
 
@@ -15,7 +16,7 @@ class Downloader(threading.Thread):
     def __init__(
         self,
         queue: Queue,
-        report: [],
+        report: List,
         state_recorder: StateRecorder,
         thread_id: int,
         db_lock: threading.Lock,

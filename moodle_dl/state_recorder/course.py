@@ -1,9 +1,10 @@
+from typing import List
 from moodle_dl.state_recorder.file import File
 from moodle_dl.download_service.path_tools import PathTools
 
 
 class Course:
-    def __init__(self, _id: int, fullname: str, files: [File] = None):
+    def __init__(self, _id: int, fullname: str, files: List[File] = None):
         self.id = _id
         self.fullname = PathTools.to_valid_name(fullname)
         if files is not None:

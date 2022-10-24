@@ -4,6 +4,7 @@ import logging
 
 from pathlib import Path
 from getpass import getpass
+from typing import List
 from urllib.parse import urlparse
 from distutils.version import StrictVersion
 
@@ -249,7 +250,7 @@ class MoodleService:
 
         return moodle_token
 
-    def fetch_state(self) -> [Course]:
+    def fetch_state(self) -> List[Course]:
         """
         Gets the current status of the configured Moodle account and compares
         it with the last known status for changes. It does not change the
@@ -399,7 +400,7 @@ class MoodleService:
 
         return changes
 
-    def add_options_to_courses(self, courses: [Course]):
+    def add_options_to_courses(self, courses: List[Course]):
         """
         Updates a array of courses with its options
         """
@@ -415,11 +416,11 @@ class MoodleService:
 
     @staticmethod
     def filter_courses(
-        changes: [Course],
+        changes: List[Course],
         config_helper: ConfigHelper,
         cookie_handler: CookieHandler = None,
-        courses_list: [Course] = None,
-    ) -> [Course]:
+        courses_list: List[Course] = None,
+    ) -> List[Course]:
         """
         Filters the changes course list from courses that
         should not get downloaded
