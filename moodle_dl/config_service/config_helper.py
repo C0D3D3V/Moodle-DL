@@ -2,7 +2,7 @@ import os
 import json
 
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 
 class ConfigHelper:
@@ -110,7 +110,7 @@ class ConfigHelper:
         except ValueError:
             return False
 
-    def get_userid_and_version(self) -> (str, int):
+    def get_userid_and_version(self) -> Tuple[str, int]:
         # returns the userid and a version
         try:
             userid = self.get_property('userid')
