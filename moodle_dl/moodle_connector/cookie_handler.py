@@ -2,6 +2,7 @@ import os
 import logging
 
 from pathlib import Path
+from typing import Dict
 
 from moodle_dl.utils.logger import Log
 from moodle_dl.moodle_connector.request_helper import RequestHelper, RequestRejectedError
@@ -20,7 +21,7 @@ class CookieHandler:
 
         self.moodle_test_url = self.request_helper.url_base
 
-    def fetch_autologin_key(self, privatetoken: str) -> {str: str}:
+    def fetch_autologin_key(self, privatetoken: str) -> Dict[str, str]:
 
         # do this only if version is greater then 3.2
         # because tool_mobile_get_autologin_key will fail

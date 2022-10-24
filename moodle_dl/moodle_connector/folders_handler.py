@@ -1,4 +1,4 @@
-from typing import List
+from typing import Dict, List
 from moodle_dl.state_recorder.course import Course
 from moodle_dl.moodle_connector.request_helper import RequestHelper
 
@@ -12,7 +12,7 @@ class FoldersHandler:
         self.request_helper = request_helper
         self.version = version
 
-    def fetch_folders(self, courses: List[Course]) -> {int: {int: {}}}:
+    def fetch_folders(self, courses: List[Course]) ->  Dict[int, Dict[int, Dict]]:
         """
         Fetches the Folder List for all courses from the
         Moodle system

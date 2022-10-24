@@ -166,7 +166,7 @@ class ResultsHandler:
         else:
             return modname.capitalize()
 
-    def _get_files_not_on_main_page(self) -> [File]:
+    def _get_files_not_on_main_page(self) -> List[File]:
         """
         Iterates over all addons to find files (or content) that are not listed on the main page.
         @return: A list of files of addons not on the main pange.

@@ -1,6 +1,7 @@
 import re
 import os
 import json
+from typing import Dict
 import urllib
 import logging
 
@@ -61,7 +62,7 @@ class RequestHelper:
         urllib3.disable_warnings()
         # logging.captureWarnings(True)
 
-    def post_URL(self, url: str, data: {str: str} = None, cookie_jar_path: str = None):
+    def post_URL(self, url: str, data: Dict[str,str] = None, cookie_jar_path: str = None):
         """
         Sends a POST request to a specific URL, including saving of cookies in cookie jar.
         @param url: The url to which the request is sent. (the moodle base url is not added to the given URL)
@@ -121,7 +122,7 @@ class RequestHelper:
 
         return response, session
 
-    def post_REST(self, function: str, data: {str: str} = None, timeout: str = 60) -> object:
+    def post_REST(self, function: str, data: Dict[str,str] = None, timeout: str = 60) -> object:
         """
         Sends a POST request to the REST endpoint of the Moodle system
         @param function: The Web service function to be called.
@@ -201,7 +202,7 @@ class RequestHelper:
 
         return RequestHelper.recursive_urlencode(data)
 
-    def get_login(self, data: {str: str}) -> object:
+    def get_login(self, data: Dict[str,str]) -> object:
         """
         Sends a POST request to the login endpoint of the Moodle system to
         obtain a token in JSON format.
