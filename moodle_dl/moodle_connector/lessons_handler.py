@@ -1,4 +1,5 @@
 import re
+from typing import Dict, List
 
 from moodle_dl.moodle_connector.request_helper import RequestHelper, RequestRejectedError
 from moodle_dl.state_recorder.course import Course
@@ -15,7 +16,7 @@ class LessonsHandler:
         self.request_helper = request_helper
         self.version = version
 
-    def fetch_lessons(self, courses: [Course]) -> {int: {int: {}}}:
+    def fetch_lessons(self, courses: List[Course]) -> Dict[int,Dict[int,Dict]]:
         """
         Fetches the Lessons List for all courses from the
         Moodle system
@@ -85,7 +86,7 @@ class LessonsHandler:
 
         return result
 
-    def fetch_lessons_files(self, userid: int, lessons: {}) -> {}:
+    def fetch_lessons_files(self, userid: int, lessons: Dict) -> Dict:
         """
         Fetches for the lessons list of all courses the additionally
         entries. This is kind of waste of resources, because there
@@ -138,7 +139,7 @@ class LessonsHandler:
 
         return lessons
 
-    def _get_files_of_attempt(self, attempt_result: {}, lesson_name: str) -> []:
+    def _get_files_of_attempt(self, attempt_result: Dict, lesson_name: str) -> List:
         result = []
 
         answerpages = attempt_result.get('answerpages', [])

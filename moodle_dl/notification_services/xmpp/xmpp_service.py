@@ -2,6 +2,7 @@ import logging
 import traceback
 
 from getpass import getpass
+from typing import List
 
 import aioxmpp
 
@@ -78,7 +79,7 @@ class XmppService(NotificationService):
             logging.debug('XMPP-Notifications not configured, skipping.')
             return False
 
-    def _send_messages(self, messages: [str]):
+    def _send_messages(self, messages: List[str]):
         """
         Sends an message
         """
@@ -98,7 +99,7 @@ class XmppService(NotificationService):
             logging.error('While sending notification:\n%s', error_formatted, extra={'exception': e})
             raise e  # to be properly notified via Sentry
 
-    def notify_about_changes_in_moodle(self, changes: [Course]) -> None:
+    def notify_about_changes_in_moodle(self, changes: List[Course]) -> None:
         """
         Sends out a notification about the downloaded changes.
         @param changes: A list of changed courses with changed files.
@@ -126,7 +127,7 @@ class XmppService(NotificationService):
 
         self._send_messages(messages)
 
-    def notify_about_failed_downloads(self, failed_downloads: [URLTarget]):
+    def notify_about_failed_downloads(self, failed_downloads: List[URLTarget]):
         """
         Sends out an message about failed download if configured to send out error messages.
         @param failed_downloads: A list of failed URLTargets.

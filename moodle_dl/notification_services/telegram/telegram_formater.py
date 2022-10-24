@@ -1,4 +1,5 @@
 import re
+from typing import List
 
 import html2text
 
@@ -8,7 +9,7 @@ from moodle_dl.download_service.url_target import URLTarget
 
 class TelegramFormater:
     @staticmethod
-    def append_with_limit(new_line: str, one_msg_content: str, msg_list: [str]):
+    def append_with_limit(new_line: str, one_msg_content: str, msg_list: List[str]):
         """Appends a new line to a message string,
         if the string is to long it ist appended to the message list.
         Returns the new message string.
@@ -37,7 +38,7 @@ class TelegramFormater:
         return '<b>' + string + '</b>'
 
     @classmethod
-    def create_full_moodle_diff_messages(cls, changed_courses: [Course]) -> [str]:
+    def create_full_moodle_diff_messages(cls, changed_courses: List[Course]) -> List[str]:
         """
         Creates telegram messages with all changed files. This includes new,
         modified and deleted files. Files that have changed since the last message.
@@ -102,7 +103,7 @@ class TelegramFormater:
         return result_list
 
     @classmethod
-    def create_full_error_messages(cls, details) -> [str]:
+    def create_full_error_messages(cls, details) -> List[str]:
         """
         Creates error messages
         """
@@ -117,7 +118,7 @@ class TelegramFormater:
         return result_list
 
     @classmethod
-    def create_full_failed_downloads_messages(cls, failed_downloads: [URLTarget]) -> [str]:
+    def create_full_failed_downloads_messages(cls, failed_downloads: List[URLTarget]) -> List[str]:
         """
         Creates messages with all failed downloads
         """

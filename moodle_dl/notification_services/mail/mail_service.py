@@ -2,6 +2,7 @@ import logging
 import traceback
 
 from getpass import getpass
+from typing import List
 
 from moodle_dl.utils import cutie
 from moodle_dl.utils.logger import Log
@@ -110,7 +111,7 @@ class MailService(NotificationService):
             logging.error('While sending notification:\n%s', error_formatted, extra={'exception': e})
             raise e  # to be properly notified via Sentry
 
-    def notify_about_changes_in_moodle(self, changes: [Course]) -> None:
+    def notify_about_changes_in_moodle(self, changes: List[Course]) -> None:
         """
         Sends out a notification email about the downloaded changes.
         @param changes: A list of changed courses with changed files.
@@ -142,7 +143,7 @@ class MailService(NotificationService):
         mail_content = create_full_error_mail(error_description)
         self._send_mail('Error!', mail_content)
 
-    def notify_about_failed_downloads(self, failed_downloads: [URLTarget]):
+    def notify_about_failed_downloads(self, failed_downloads: List[URLTarget]):
         """
         Sends out an mail with all failed download if configured to send out error messages.
         @param failed_downloads: A list of failed URLTargets.

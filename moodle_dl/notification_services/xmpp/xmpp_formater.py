@@ -1,9 +1,10 @@
+from typing import List
 from moodle_dl.notification_services.telegram.telegram_formater import TelegramFormater
 
 
 class XmppFormater(TelegramFormater):
     @staticmethod
-    def append_with_limit(new_line: str, one_msg_content: str, msg_list: [str]):
+    def append_with_limit(new_line: str, one_msg_content: str, msg_list: List[str]):
         """Appends a new line to a message string,
         if the string is to long it ist appended to the message list.
         Returns the new message string.

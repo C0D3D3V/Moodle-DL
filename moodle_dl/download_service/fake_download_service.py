@@ -2,6 +2,7 @@ import os
 import platform
 
 from pathlib import Path
+from typing import List
 
 from moodle_dl.utils.logger import Log
 from moodle_dl.state_recorder.course import Course
@@ -17,7 +18,7 @@ class FakeDownloadService:
     can be created without actually downloading the files.
     """
 
-    def __init__(self, courses: [Course], moodle_service: MoodleService, storage_path: str):
+    def __init__(self, courses: List[Course], moodle_service: MoodleService, storage_path: str):
         """
         Initiates the FakeDownloadService with all files that
         need to be downloaded (saved in the database).

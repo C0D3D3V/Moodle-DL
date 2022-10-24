@@ -2,6 +2,7 @@ import os
 import json
 
 from pathlib import Path
+from typing import Dict, List
 
 
 class ConfigHelper:
@@ -160,28 +161,28 @@ class ConfigHelper:
         except ValueError:
             raise ValueError('Not yet configured!')
 
-    def get_options_of_courses(self) -> {}:
+    def get_options_of_courses(self) -> Dict:
         # returns a stored dictionary of options for courses
         try:
             return self.get_property('options_of_courses')
         except ValueError:
             return {}
 
-    def get_dont_download_course_ids(self) -> []:
+    def get_dont_download_course_ids(self) -> List:
         # returns a stored list of ids that should not be downloaded
         try:
             return self.get_property('dont_download_course_ids')
         except ValueError:
             return []
 
-    def get_download_linked_files(self) -> {}:
+    def get_download_linked_files(self) -> Dict:
         # returns if linked files should be downloaded
         try:
             return self.get_property('download_linked_files')
         except ValueError:
             return False
 
-    def get_exclude_file_extensions(self) -> {}:
+    def get_exclude_file_extensions(self) -> Dict:
         # returns a list of file extensions that should not be downloaded
         try:
             exclude_file_extensions = self.get_property('exclude_file_extensions')
@@ -191,14 +192,14 @@ class ConfigHelper:
         except ValueError:
             return []
 
-    def get_download_also_with_cookie(self) -> {}:
+    def get_download_also_with_cookie(self) -> Dict:
         # returns if files for which a cookie is required should be downloaded
         try:
             return self.get_property('download_also_with_cookie')
         except ValueError:
             return False
 
-    def get_download_options(self) -> {}:
+    def get_download_options(self) -> Dict:
         # returns the option dictionary for downloading files
         options = {}
         try:
@@ -239,7 +240,7 @@ class ConfigHelper:
 
         return options
 
-    def get_restricted_filenames(self) -> {}:
+    def get_restricted_filenames(self) -> Dict:
         # returns the filenames should be restricted
         try:
             return self.get_property('restricted_filenames')

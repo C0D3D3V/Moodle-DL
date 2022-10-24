@@ -1,4 +1,5 @@
 import json
+from typing import Dict, List
 
 from moodle_dl.moodle_connector.request_helper import RequestHelper
 from moodle_dl.state_recorder.course import Course
@@ -35,7 +36,7 @@ class FirstContactHandler:
         self.version = version
         return userid, version
 
-    def fetch_courses(self, userid: str) -> [Course]:
+    def fetch_courses(self, userid: str) -> List[Course]:
         """
         Queries the Moodle system for all courses the user
         is enrolled in.
@@ -52,7 +53,7 @@ class FirstContactHandler:
             # We could also extract here the course summary and intro files
         return results
 
-    def fetch_all_visible_courses(self, log_all_courses_to: str = None) -> [Course]:
+    def fetch_all_visible_courses(self, log_all_courses_to: str = None) -> List[Course]:
         """
         Queries the Moodle system for all courses available on the system and returns:
         @return: A list of all visible courses
@@ -73,7 +74,7 @@ class FirstContactHandler:
                 results.append(Course(course.get('id', 0), course.get('fullname', '')))
         return results
 
-    def fetch_courses_info(self, course_ids: [int]) -> [Course]:
+    def fetch_courses_info(self, course_ids: List[int]) -> List[Course]:
         """
         Queries the Moodle system for info about courses in a list.
         @param course_ids: A list of courses ids
@@ -97,7 +98,7 @@ class FirstContactHandler:
             # We could also extract here the course summary and intro files
         return results
 
-    def fetch_sections(self, course_id: int) -> [{}]:
+    def fetch_sections(self, course_id: int) -> List[Dict]:
         """
         Fetches the Sections List for a course from the Moodle system
         @param course_id: The id of the requested course.

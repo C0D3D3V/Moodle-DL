@@ -1,4 +1,5 @@
 import logging
+from typing import List
 
 from moodle_dl.utils.logger import Log
 from moodle_dl.state_recorder.course import Course
@@ -10,7 +11,7 @@ class ConsoleService(NotificationService):
     def interactively_configure(self) -> None:
         raise RuntimeError('Not yet implemendet!')
 
-    def notify_about_changes_in_moodle(self, changes: [Course]) -> None:
+    def notify_about_changes_in_moodle(self, changes: List[Course]) -> None:
         """
         Creates a terminal output about the downloaded changes.
         @param changes: A list of changed courses with changed files.
@@ -62,7 +63,7 @@ class ConsoleService(NotificationService):
     def notify_about_error(self, error_description: str):
         Log.error(f'The following error occurred during execution:\n{error_description}')
 
-    def notify_about_failed_downloads(self, failed_downloads: [URLTarget]):
+    def notify_about_failed_downloads(self, failed_downloads: List[URLTarget]):
         if len(failed_downloads) > 0:
             print('')
             Log.warning(

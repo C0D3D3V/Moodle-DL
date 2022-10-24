@@ -6,6 +6,7 @@ import time
 import shlex
 import socket
 import shutil
+from typing import Dict, List
 import urllib
 import logging
 import posixpath
@@ -46,11 +47,11 @@ class URLTarget(object):
         course: Course,
         destination: str,
         token: str,
-        thread_report: [],
+        thread_report: List,
         fs_lock: threading.Lock,
         ssl_context: ssl.SSLContext,
         skip_cert_verify: bool,
-        options: {},
+        options: Dict,
     ):
         """
         Initiating an URL target.

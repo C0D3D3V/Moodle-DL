@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Dict, List
 
 from moodle_dl.moodle_connector.request_helper import RequestHelper
 from moodle_dl.state_recorder.course import Course
@@ -14,7 +15,7 @@ class ForumsHandler:
         self.request_helper = request_helper
         self.version = version
 
-    def fetch_forums(self, courses: [Course]) -> {int: {int: {}}}:
+    def fetch_forums(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
         """
         Fetches the Databases List for all courses from the
         Moodle system
@@ -81,7 +82,7 @@ class ForumsHandler:
 
         return result
 
-    def fetch_forums_posts(self, forums: {}, last_timestamps_per_forum: {}) -> {}:
+    def fetch_forums_posts(self, forums: Dict, last_timestamps_per_forum: Dict) -> Dict:
         """
         Fetches for the forums list of all courses the additionally
         entries. This is kind of waste of resources, because there
@@ -165,7 +166,7 @@ class ForumsHandler:
 
         return forums
 
-    def _get_files_of_discussions(self, latest_discussions: []) -> []:
+    def _get_files_of_discussions(self, latest_discussions: List) -> List:
         result = []
 
         for counter, discussion in enumerate(latest_discussions):
