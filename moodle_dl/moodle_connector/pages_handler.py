@@ -12,7 +12,7 @@ class PagesHandler:
         self.request_helper = request_helper
         self.version = version
 
-    def fetch_pages(self, courses: List[Course]) -> Dict[int, Dict[int:Dict]]:
+    def fetch_pages(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
         """
         Fetches the Pages List for all courses from the
         Moodle system
