@@ -30,10 +30,16 @@ Development discussions happen on [Discord in the developer channel](https://dis
 2. Install [ffmpeg](https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Installing-ffmpeg)
 3. Run `pip install moodle-dl` as administrator. </br>
     <sup>(To upgrade from an older Version use `pip install -U moodle-dl` instead)</sup>
-4. Run `moodle-dl --init` in the desired download directory.
-
+4. **[Windows only]** If step 3 failed, You may need to install [Visual C++ compiler for Python](https://wiki.python.org/moin/WindowsCompilers#Microsoft_Visual_C.2B-.2B-_14.2_standalone:_Build_Tools_for_Visual_Studio_2019_.28x86.2C_x64.2C_ARM.2C_ARM64.29) to build all the dependencies successfully: 
+  - Download and Install Microsoft [Build Tools for Visual Studio 2019 from here](https://aka.ms/vs/16/release/vs_buildtools.exe)
+  - In Build tools, install C++ build tools and ensure the latest versions of MSVCv142 - VS 2019 C++ x64/x86 build tools and Windows 10 SDK are checked.
+  - In some very edge cases, you may also need [Visual C++ 14.0 Redistrubution Packages](https://aka.ms/vs/17/release/vc_redist.x64.exe)
 
 If you run the program on **Windows**, please use [Powershell or CMD](https://www.isunshare.com/windows-10/5-ways-to-open-windows-powershell-in-windows-10.html). Please do not use a mintty like MINGW or similar.
+
+5. Run `moodle-dl --init` in the desired download directory.
+6. Run `moodle-dl --help` to see all options
+
  
 
 ### Usage

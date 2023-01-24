@@ -29,9 +29,9 @@ class ConfigHelper:
             raise ValueError('No config found!')
 
     def _save(self):
+        config_formatted = json.dumps(self._whole_config, indent=4)
         # Saves the JSON object back to file
         with open(self.config_path, 'w+', encoding='utf-8') as config_file:
-            config_formatted = json.dumps(self._whole_config, indent=4)
             config_file.write(config_formatted)
 
     def get_property(self, key: str) -> any:
