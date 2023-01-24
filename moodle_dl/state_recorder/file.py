@@ -38,7 +38,9 @@ class File:
         self.content_filename = content_filename
         self.content_fileurl = content_fileurl
         self.content_filesize = content_filesize
-        self.content_timemodified = int(content_timemodified)
+        self.content_timemodified = 0
+        if content_timemodified is not None:
+            self.content_timemodified = int(content_timemodified)
 
         self.module_modname = module_modname
         self.content_type = content_type
