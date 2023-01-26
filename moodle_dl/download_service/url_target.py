@@ -27,12 +27,11 @@ import yt_dlp
 
 from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema, RequestException
 
-from moodle_dl.utils import format_bytes, timeconvert
+from moodle_dl.utils import format_bytes, timeconvert, SslHelper
 from moodle_dl.state_recorder.file import File
 from moodle_dl.state_recorder.course import Course
 from moodle_dl.download_service.path_tools import PathTools
 from moodle_dl.moodle_connector.request_helper import RequestHelper
-from moodle_dl.moodle_connector.ssl_helper import custom_session
 from moodle_dl.ydl_extractors.extractors import add_additional_extractors
 
 
@@ -384,7 +383,7 @@ class URLTarget(object):
         isHTML = False
         new_filename = ""
         total_bytes_estimate = -1
-        session = custom_session(self.verify_cert)
+        session = SslHelper.custom_session(self.verify_cert)
 
         if cookies_path is not None:
             session.cookies = MozillaCookieJar(cookies_path)

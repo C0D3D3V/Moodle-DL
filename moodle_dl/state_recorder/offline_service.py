@@ -11,10 +11,10 @@ from moodle_dl.state_recorder.state_recorder import StateRecorder
 
 
 class OfflineService:
-    def __init__(self, config_helper: ConfigHelper, storage_path: str):
-        self.config_helper = config_helper
-        self.storage_path = storage_path
-        self.state_recorder = StateRecorder(Path(storage_path) / 'moodle_state.db')
+    def __init__(self, config: ConfigHelper, opts):
+        self.config = config
+        self.opts = opts
+        self.state_recorder = StateRecorder(Path(opts.path) / 'moodle_state.db')
 
     def interactively_manage_database(self):
         RESET_SEQ = '\033[0m'
@@ -24,7 +24,7 @@ class OfflineService:
 
         stored_files = self.state_recorder.get_stored_files()
 
-        stored_files = MoodleService.filter_courses(stored_files, self.config_helper)
+        stored_files = MoodleService.filter_courses(stored_files, self.config)
 
         if len(stored_files) <= 0:
             return

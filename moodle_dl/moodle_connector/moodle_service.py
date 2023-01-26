@@ -29,25 +29,22 @@ from moodle_dl.moodle_connector.request_helper import RequestRejectedError, Requ
 
 
 class MoodleService:
-    def __init__(
-        self,
-        config_helper: ConfigHelper,
-        storage_path: str,
-        skip_cert_verify: bool = False,
-        log_responses: bool = False,
-    ):
-        self.config_helper = config_helper
-        self.storage_path = storage_path
-        self.recorder = StateRecorder(Path(storage_path) / 'moodle_state.db')
-        self.skip_cert_verify = skip_cert_verify
+    def __init__(self, config: ConfigHelper, opts):
+        self.config = config
+        self.opts = opts
+        self.recorder = StateRecorder(Path(opts.path) / 'moodle_state.db')
 
         self.log_responses_to = None
-        if log_responses:
-            self.log_responses_to = str(Path(storage_path) / 'responses.log')
+        if opts.log_responses:
+            self.log_responses_to = str(Path(opts.path) / 'responses.log')
 
-    def interactively_acquire_token(
-        self, use_stored_url: bool = False, username: str = None, password: str = None
-    ) -> str:
+    def interactively_acquire_token(self, use_stored_url: bool = False) -> str:
+        if self.opts.sso:
+            self.interactively_acquire_sso_token(use_stored_url=use_stored_url)
+        else:
+            self.interactively_acquire_normal_token(use_stored_url=use_stored_url)
+
+    def interactively_acquire_normal_token(self, use_stored_url: bool = False) -> str:
         """
         Walks the user through executing a login into the Moodle-System to get
         the Token and saves it.
@@ -56,7 +53,7 @@ class MoodleService:
 
         automated = False
         stop_automatic_generation = False
-        if username is not None and password is not None:
+        if self.opts.username is not None and self.opts.password is not None:
             automated = True
 
         if not automated:
@@ -88,18 +85,18 @@ class MoodleService:
                 moodle_domain, moodle_path = self._split_moodle_uri(moodle_uri)
 
             else:
-                moodle_domain = self.config_helper.get_moodle_domain()
-                moodle_path = self.config_helper.get_moodle_path()
-                use_http = self.config_helper.get_use_http()
+                moodle_domain = self.config.get_moodle_domain()
+                moodle_path = self.config.get_moodle_path()
+                use_http = self.config.get_use_http()
 
-            if username is not None:
-                moodle_username = username
+            if self.opts.username is not None:
+                moodle_username = self.opts.username
                 stop_automatic_generation = True
             else:
                 moodle_username = input('Username for Moodle:   ')
 
-            if password is not None:
-                moodle_password = password
+            if self.opts.password is not None:
+                moodle_password = self.opts.password
             else:
                 moodle_password = getpass('Password for Moodle [no output]:   ')
 
@@ -124,13 +121,15 @@ class MoodleService:
             sys.exit(1)
 
         # Saves the created token and the successful Moodle parameters.
-        self.config_helper.set_property('token', moodle_token)
+        self.config.set_property('token', moodle_token)
         if moodle_privatetoken is not None:
-            self.config_helper.set_property('privatetoken', moodle_privatetoken)
-        self.config_helper.set_property('moodle_domain', moodle_domain)
-        self.config_helper.set_property('moodle_path', moodle_path)
+            self.config.set_property('privatetoken', moodle_privatetoken)
+        self.config.set_property('moodle_domain', moodle_domain)
+        self.config.set_property('moodle_path', moodle_path)
         if use_http is True:
-            self.config_helper.set_property('use_http', use_http)
+            self.config.set_property('use_http', use_http)
+
+        Log.success('Token successfully saved!')
 
         return moodle_token
 
@@ -149,10 +148,10 @@ class MoodleService:
             moodle_domain, moodle_path = self._split_moodle_uri(moodle_uri)
 
         else:
-            moodle_domain = self.config_helper.get_moodle_domain()
-            moodle_path = self.config_helper.get_moodle_path()
+            moodle_domain = self.config.get_moodle_domain()
+            moodle_path = self.config.get_moodle_path()
 
-        use_http = self.config_helper.get_use_http()
+        use_http = self.config.get_use_http()
         scheme = 'https://'
         if use_http:
             scheme = 'http://'
@@ -239,11 +238,13 @@ class MoodleService:
                 raise ValueError('Invalid URL!')
 
         # Saves the created token and the successful Moodle parameters.
-        self.config_helper.set_property('token', moodle_token)
+        self.config.set_property('token', moodle_token)
         if moodle_privatetoken is not None:
-            self.config_helper.set_property('privatetoken', moodle_privatetoken)
-        self.config_helper.set_property('moodle_domain', moodle_domain)
-        self.config_helper.set_property('moodle_path', moodle_path)
+            self.config.set_property('privatetoken', moodle_privatetoken)
+        self.config.set_property('moodle_domain', moodle_domain)
+        self.config.set_property('moodle_path', moodle_path)
+
+        Log.success('Token successfully saved!')
 
         return moodle_token
 
@@ -256,11 +257,11 @@ class MoodleService:
         """
         logging.debug('Fetching current Moodle State...')
 
-        token = self.config_helper.get_token()
-        privatetoken = self.config_helper.get_privatetoken()
-        moodle_domain = self.config_helper.get_moodle_domain()
-        moodle_path = self.config_helper.get_moodle_path()
-        use_http = self.config_helper.get_use_http()
+        token = self.config.get_token()
+        privatetoken = self.config.get_privatetoken()
+        moodle_domain = self.config.get_moodle_domain()
+        moodle_path = self.config.get_moodle_path()
+        use_http = self.config.get_use_http()
 
         request_helper = RequestHelper(
             moodle_domain,
@@ -273,16 +274,16 @@ class MoodleService:
         first_contact_handler = FirstContactHandler(request_helper)
         results_handler = ResultsHandler(request_helper, moodle_domain, moodle_path)
 
-        download_course_ids = self.config_helper.get_download_course_ids()
-        download_public_course_ids = self.config_helper.get_download_public_course_ids()
-        dont_download_course_ids = self.config_helper.get_dont_download_course_ids()
-        download_submissions = self.config_helper.get_download_submissions()
-        download_databases = self.config_helper.get_download_databases()
-        download_forums = self.config_helper.get_download_forums()
-        download_quizzes = self.config_helper.get_download_quizzes()
-        download_lessons = self.config_helper.get_download_lessons()
-        download_workshops = self.config_helper.get_download_workshops()
-        download_also_with_cookie = self.config_helper.get_download_also_with_cookie()
+        download_course_ids = self.config.get_download_course_ids()
+        download_public_course_ids = self.config.get_download_public_course_ids()
+        dont_download_course_ids = self.config.get_dont_download_course_ids()
+        download_submissions = self.config.get_download_submissions()
+        download_databases = self.config.get_download_databases()
+        download_forums = self.config.get_download_forums()
+        download_quizzes = self.config.get_download_quizzes()
+        download_lessons = self.config.get_download_lessons()
+        download_workshops = self.config.get_download_workshops()
+        download_also_with_cookie = self.config.get_download_also_with_cookie()
 
         courses = []
         filtered_courses = []
@@ -290,7 +291,7 @@ class MoodleService:
 
         print('\rDownloading account information\033[K', end='')
 
-        userid, version = self.config_helper.get_userid_and_version()
+        userid, version = self.config.get_userid_and_version()
         if userid is None or version is None:
             userid, version = first_contact_handler.fetch_userid_and_version()
         else:
@@ -308,7 +309,7 @@ class MoodleService:
 
         if download_also_with_cookie:
             # generate a new cookie if necessary
-            cookie_handler = CookieHandler(request_helper, version, self.storage_path)
+            cookie_handler = CookieHandler(request_helper, version, self.opts.path)
             cookie_handler.check_and_fetch_cookies(privatetoken, userid)
 
         courses_list = first_contact_handler.fetch_courses(userid)
@@ -393,7 +394,7 @@ class MoodleService:
 
         # Filter changes
         changes = self.add_options_to_courses(changes)
-        changes = self.filter_courses(changes, self.config_helper, cookie_handler, courses_list + public_courses_list)
+        changes = self.filter_courses(changes, self.config, cookie_handler, courses_list + public_courses_list)
 
         return changes
 
@@ -401,7 +402,7 @@ class MoodleService:
         """
         Updates a array of courses with its options
         """
-        options_of_courses = self.config_helper.get_options_of_courses()
+        options_of_courses = self.config.get_options_of_courses()
         for course in courses:
             options = options_of_courses.get(str(course.id), None)
             if options is not None:

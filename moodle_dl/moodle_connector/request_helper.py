@@ -1,18 +1,19 @@
-import re
-import os
 import json
-from typing import Dict
-import urllib
 import logging
+import os
+import re
+import urllib
 
-from time import sleep
 from http.cookiejar import MozillaCookieJar
+from time import sleep
+from typing import Dict
 
-import urllib3
 import requests
+import urllib3
 
 from requests.exceptions import RequestException
-from moodle_dl.moodle_connector.ssl_helper import custom_session
+
+from moodle_dl.utils import SslHelper
 
 
 class RequestHelper:
@@ -75,7 +76,7 @@ class RequestHelper:
         if data is not None:
             data_urlencoded = RequestHelper.recursive_urlencode(data)
 
-        session = custom_session(self.verify)
+        session = SslHelper.custom_session(self.verify)
 
         if cookie_jar_path is not None:
             session.cookies = MozillaCookieJar(cookie_jar_path)
@@ -105,7 +106,7 @@ class RequestHelper:
         @return: The resulting Response object.
         """
 
-        session = custom_session(self.verify)
+        session = SslHelper.custom_session(self.verify)
 
         if cookie_jar_path is not None:
             session.cookies = MozillaCookieJar(cookie_jar_path)
@@ -144,7 +145,7 @@ class RequestHelper:
 
         error_ctr = 0
         maxretries = 5
-        session = custom_session(self.verify)
+        session = SslHelper.custom_session(self.verify)
         while True:
             try:
                 response = session.post(url, data=data_urlencoded, headers=self.stdHeader, timeout=timeout)
@@ -209,7 +210,7 @@ class RequestHelper:
         @return: The JSON response returned by the Moodle System, already
         checked for errors.
         """
-        session = custom_session(self.verify)
+        session = SslHelper.custom_session(self.verify)
         try:
             response = session.post(
                 f'{self.url_base}login/token.php',
@@ -243,7 +244,7 @@ class RequestHelper:
 
         url = f'{self.url_base}lib/upgrade.txt'
         try:
-            session = custom_session(self.verify)
+            session = SslHelper.custom_session(self.verify)
             response = session.get(url, headers=self.stdHeader, timeout=60)
         except RequestException as error:
             raise ConnectionError(f"Connection error: {str(error)}") from None

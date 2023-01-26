@@ -1,20 +1,19 @@
-import os
-import sys
-import time
-import shutil
 import logging
+import os
+import shutil
+import sys
 import threading
+import time
+
 from queue import Queue
 from typing import List
 
-from moodle_dl.utils import format_bytes
-
-from moodle_dl.state_recorder.course import Course, File
+from moodle_dl.download_service.downloader import Downloader
 from moodle_dl.download_service.path_tools import PathTools
 from moodle_dl.download_service.url_target import URLTarget
-from moodle_dl.download_service.downloader import Downloader
 from moodle_dl.moodle_connector.moodle_service import MoodleService
-from moodle_dl.moodle_connector.ssl_helper import get_ssl_context
+from moodle_dl.state_recorder.course import Course, File
+from moodle_dl.utils import format_bytes, SslHelper
 
 
 class DownloadService:
@@ -27,21 +26,14 @@ class DownloadService:
 
     thread_count = 5
 
-    def __init__(
-        self,
-        courses: List[Course],
-        moodle_service: MoodleService,
-        storage_path: str,
-        skip_cert_verify: bool = False,
-        ignore_ytdl_errors: bool = False,
-    ):
+    def __init__(self, courses: List[Course], moodle_service: MoodleService, opts):
         """
         Initiates the DownloadService with all files that
         need to be downloaded. A URLTarget is created for each file.
         @param courses: A list of courses that contains all modified files.
         @param moodle_service: A reference to the moodle_service, currently
                                only to get to the state_recorder and the token.
-        @param storage_path: The location where the files will be saved.
+        @param opts: Moodle-dl options
         """
 
         # How much threads should be created
@@ -52,7 +44,7 @@ class DownloadService:
         self.courses = courses
         self.state_recorder = moodle_service.recorder
         self.token = moodle_service.config_helper.get_token()
-        self.storage_path = storage_path
+        self.opts = opts
 
         # The wait queue for all URL targets to be downloaded.
         self.queue = Queue(0)
@@ -67,7 +59,7 @@ class DownloadService:
         # Sets the download options
         self.options = moodle_service.config_helper.get_download_options()
         # Add console parameters
-        self.options.update({'ignore_ytdl_errors': ignore_ytdl_errors})
+        self.options.update({'ignore_ytdl_errors': opts.ignore_ytdl_errors})
 
         # report is used to collect successful and failed downloads
         self.report = {'success': [], 'failure': []}
@@ -91,7 +83,7 @@ class DownloadService:
 
         # delete files, that should be deleted
         self.state_recorder.batch_delete_files(self.courses)
-        self.ssl_context = get_ssl_context(not skip_cert_verify, False)
+        self.ssl_context = SslHelper.get_ssl_context(not skip_cert_verify, False)
         self.skip_cert_verify = skip_cert_verify
 
         # Prepopulate queue with any files that were given
@@ -100,7 +92,7 @@ class DownloadService:
                 if file.deleted is False:
                     self.total_to_download += file.content_filesize
 
-                    save_destination = self.gen_path(self.storage_path, course, file)
+                    save_destination = self.gen_path(opts.path, course, file)
 
                     self.queue.put(
                         URLTarget(

@@ -493,7 +493,9 @@ class ProcessLock:
         """
         path = Path(dir_path) / 'running.lock'
         if Path(path).exists():
-            raise LockError(f'A downloader is already running. Delete {str(path)} if you think this is wrong.')
+            raise ProcessLock.LockError(
+                f'A downloader is already running. Delete {str(path)} if you think this is wrong.'
+            )
         Path(path).touch()
 
     @staticmethod

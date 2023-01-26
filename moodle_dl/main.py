@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# coding=utf-8
-
 import argparse
 import logging
 import os
@@ -31,10 +28,8 @@ from moodle_dl.notification_services.mail.mail_service import MailService
 from moodle_dl.notification_services.telegram.telegram_service import TelegramService
 from moodle_dl.notification_services.xmpp.xmpp_service import XmppService
 from moodle_dl.state_recorder.offline_service import OfflineService
-from moodle_dl.utils import PathTools, Log, Cutie, ProcessLock
+from moodle_dl.utils import Log, Cutie, ProcessLock, check_debug, check_verbose, PathTools as PT
 from moodle_dl.version import __version__
-
-IS_DEBUG = False
 
 
 class ReRaiseOnError(logging.StreamHandler):
@@ -48,35 +43,28 @@ class ReRaiseOnError(logging.StreamHandler):
             raise record.exception
 
 
-def run_init(storage_path, use_sso=False, skip_cert_verify=False):
-    config = ConfigHelper(storage_path)
-
+def run_init(config: ConfigHelper, opts):
     if config.is_present():
         do_override_input = Cutie.prompt_yes_or_no(Log.error_str('Do you want to override the existing config?'))
 
         if not do_override_input:
             sys.exit(0)
 
-    MailService(config).interactively_configure()
-    TelegramService(config).interactively_configure()
-    XmppService(config).interactively_configure()
+    notify_services = [MailService(config), TelegramService(config), XmppService(config)]
+    for service in notify_services:
+        service.interactively_configure()
 
     do_sentry = Cutie.prompt_yes_or_no('Do you want to configure Error Reporting via Sentry?')
     if do_sentry:
         sentry_dsn = input('Please enter your Sentry DSN:   ')
         config.set_property('sentry_dsn', sentry_dsn)
 
-    moodle = MoodleService(config, storage_path, skip_cert_verify)
-
-    if use_sso:
-        moodle.interactively_acquire_sso_token()
-    else:
-        moodle.interactively_acquire_token()
+    MoodleService(config, opts).interactively_acquire_token()
 
     Log.success('Configuration finished and saved!')
 
     if os.name != 'nt':
-        working_dir = os.path.abspath(storage_path)
+        working_dir = os.path.abspath(opts.path)
         moodle_dl_path = os.path.abspath(sys.argv[0])
         Log.info(
             '  To set a cron-job for this program on your Unix-System:\n'
@@ -100,102 +88,86 @@ def run_init(storage_path, use_sso=False, skip_cert_verify=False):
     Log.info('You can always do the additional configuration later with the --config option.')
 
     do_config = Cutie.prompt_yes_or_no('Do you want to make additional configurations now?')
-
     if do_config:
-        run_configure(storage_path, skip_cert_verify)
+        ConfigService(config, opts).interactively_acquire_config()
 
     print('')
     Log.success('All set and ready to go!')
 
 
-def run_configure(storage_path, skip_cert_verify=False):
-    config = ConfigHelper(storage_path)
-    config.load()  # because we do not want to override the other settings
+def run_main(config: ConfigHelper, opts):
+    setup_logger(opts.path)
 
-    ConfigService(config, storage_path, skip_cert_verify).interactively_acquire_config()
+    sentry_connected = False
+    try:
+        sentry_dsn = config.get_property('sentry_dsn')
+        if sentry_dsn:
+            sentry_sdk.init(sentry_dsn)
+            sentry_connected = True
+    except (ValueError, sentry_sdk.utils.BadDsn, sentry_sdk.utils.ServerlessTimeoutWarning):
+        pass
 
-    Log.success('Configuration successfully updated!')
+    notify_services = [ConsoleService(config), MailService(config), TelegramService(config), XmppService(config)]
 
+    # Todo: Change this
+    PT.restricted_filenames = config.get_restricted_filenames()
 
-def run_new_token(storage_path, use_sso=False, username: str = None, password: str = None, skip_cert_verify=False):
-    config = ConfigHelper(storage_path)
-    config.load()  # because we do not want to override the other settings
+    try:
+        moodle = MoodleService(config, opts)
 
-    moodle = MoodleService(config, storage_path, skip_cert_verify)
+        msg_checking_for_changes = 'Checking for changes for the configured Moodle-Account....'
+        logging.debug(msg_checking_for_changes)
+        Log.debug(msg_checking_for_changes)
+        changed_courses = moodle.fetch_state()
 
-    if use_sso:
-        moodle.interactively_acquire_sso_token(use_stored_url=True)
-    else:
-        moodle.interactively_acquire_token(use_stored_url=True, username=username, password=password)
+        if opts.log_responses:
+            msg_responses_logged = "All JSON-responses from Moodle have been written to the responses.log file."
+            logging.debug(msg_responses_logged)
+            Log.success(msg_responses_logged)
+            return
 
-    Log.success('New Token successfully saved!')
+        msg_start_downloading = 'Start downloading changed files...'
+        logging.debug(msg_start_downloading)
+        Log.debug(msg_start_downloading)
 
+        if opts.without_downloading_files:
+            downloader = FakeDownloadService(changed_courses, moodle, opts)
+        else:
+            downloader = DownloadService(changed_courses, moodle, opts)
+        downloader.run()
+        failed_downloads = downloader.get_failed_url_targets()
 
-def run_manage_database(storage_path):
-    config = ConfigHelper(storage_path)
-    config.load()  # because we want to only manage configured courses
+        changed_courses_to_notify = moodle.recorder.changes_to_notify()
 
-    offline_service = OfflineService(config, storage_path)
-    offline_service.interactively_manage_database()
+        if len(changed_courses_to_notify) > 0:
+            for service in notify_services:
+                service.notify_about_changes_in_moodle(changed_courses_to_notify)
 
-    Log.success('All done.')
+            moodle.recorder.notified(changed_courses_to_notify)
 
+        else:
+            logging.info('No changes found for the configured Moodle-Account.')
+            Log.warning('No changes found for the configured Moodle-Account.')
 
-def run_delete_old_files(storage_path):
-    config = ConfigHelper(storage_path)
-    config.load()  # Not really needed, we check all local courses
+        if len(failed_downloads) > 0:
+            for service in notify_services:
+                service.notify_about_failed_downloads(failed_downloads)
 
-    offline_service = OfflineService(config, storage_path)
-    offline_service.delete_old_files()
+    except BaseException as base_err:
+        if sentry_connected:
+            sentry_sdk.capture_exception(base_err)
 
-    Log.success('All done.')
+        short_error = str(base_err)
+        if not short_error or short_error.isspace():
+            short_error = traceback.format_exc(limit=1)
 
+        for service in notify_services:
+            service.notify_about_error(short_error)
 
-def run_add_all_visible_courses(storage_path, skip_cert_verify):
-    config = ConfigHelper(storage_path)
-    config.load()  # because we do not want to override the other settings
-
-    ConfigService(config, storage_path, skip_cert_verify).interactively_add_all_visible_courses()
-
-    Log.success('Configuration successfully updated!')
-
-
-def run_change_notification_mail(storage_path):
-    config = ConfigHelper(storage_path)
-    config.load()
-
-    MailService(config).interactively_configure()
-
-    Log.success('Configuration successfully updated!')
-
-
-def run_change_notification_telegram(storage_path):
-    config = ConfigHelper(storage_path)
-    config.load()
-
-    TelegramService(config).interactively_configure()
-
-    Log.success('Telegram Configuration successfully updated!')
-
-
-def run_change_notification_xmpp(storage_path):
-    config = ConfigHelper(storage_path)
-    config.load()
-
-    XmppService(config).interactively_configure()
-
-    Log.success('XMPP Configuration successfully updated!')
+        raise base_err
 
 
-def run_main(
-    storage_path,
-    verbose=False,
-    skip_cert_verify=False,
-    ignore_ytdl_errors=False,
-    without_downloading_files=False,
-    log_responses=False,
-):
-
+def setup_logger(storage_path: str):
     log_formatter = logging.Formatter('%(asctime)s  %(levelname)s  {%(module)s}  %(message)s', '%Y-%m-%d %H:%M:%S')
     log_file = os.path.join(storage_path, 'MoodleDownloader.log')
     log_handler = RotatingFileHandler(
@@ -203,139 +175,34 @@ def run_main(
     )
 
     log_handler.setFormatter(log_formatter)
-    if verbose:
+    IS_VERBOSE = check_verbose()
+    if IS_VERBOSE:
         log_handler.setLevel(logging.DEBUG)
     else:
         log_handler.setLevel(logging.INFO)
 
     app_log = logging.getLogger()
-    if verbose:
+    if IS_VERBOSE:
         app_log.setLevel(logging.DEBUG)
     else:
         app_log.setLevel(logging.INFO)
     app_log.addHandler(log_handler)
 
+    logging.getLogger("requests").setLevel(logging.WARNING)
+    logging.getLogger("urllib3").setLevel(logging.WARNING)
+    logging.getLogger('asyncio').setLevel(logging.WARNING)
+
     logging.info('--- moodle-dl started ---------------------')
     Log.info('Moodle Downloader starting...')
-    if verbose:
+    if IS_VERBOSE:
         logging.debug('moodle-dl version: %s', __version__)
         logging.debug('python version: %s', ".".join(map(str, sys.version_info[:3])))
         ffmpeg_available = which('ffmpeg') is not None
         logging.debug('Is ffmpeg available: %s', ffmpeg_available)
 
-    if IS_DEBUG:
+    if check_debug():
         logging.info('Debug-Mode detected. Errors will be re-risen.')
         app_log.addHandler(ReRaiseOnError())
-
-    try:
-        msg_load_config = 'Loading config...'
-        logging.debug(msg_load_config)
-        Log.debug(msg_load_config)
-
-        config = ConfigHelper(storage_path)
-        config.load()
-    except ValueError as e:
-        logging.error('Error while trying to load the Configuration! %s Exiting...', e, extra={'exception': e})
-        Log.error('Error while trying to load the Configuration!')
-        sys.exit(1)
-
-    r_client = False
-    try:
-        sentry_dsn = config.get_property('sentry_dsn')
-        if sentry_dsn:
-            sentry_sdk.init(sentry_dsn)
-    except (ValueError, sentry_sdk.utils.BadDsn, sentry_sdk.utils.ServerlessTimeoutWarning):
-        pass
-
-    mail_service = MailService(config)
-    tg_service = TelegramService(config)
-    xmpp_service = XmppService(config)
-    console_service = ConsoleService(config)
-
-    PathTools.restricted_filenames = config.get_restricted_filenames()
-
-    try:
-        if not IS_DEBUG:
-            ProcessLock.lock(storage_path)
-
-        moodle = MoodleService(config, storage_path, skip_cert_verify, log_responses)
-
-        msg_checking_for_changes = 'Checking for changes for the configured Moodle-Account....'
-        logging.debug(msg_checking_for_changes)
-        Log.debug(msg_checking_for_changes)
-        changed_courses = moodle.fetch_state()
-
-        if log_responses:
-            msg_responses_logged = (
-                "All JSON-responses from Moodle have been written to the responses.log file. Exiting..."
-            )
-            logging.debug(msg_responses_logged)
-            Log.success(msg_responses_logged)
-            ProcessLock.unlock(storage_path)
-            return
-
-        msg_start_downloading = 'Start downloading changed files...'
-        logging.debug(msg_start_downloading)
-        Log.debug(msg_start_downloading)
-
-        if without_downloading_files:
-            downloader = FakeDownloadService(changed_courses, moodle, storage_path)
-        else:
-            downloader = DownloadService(changed_courses, moodle, storage_path, skip_cert_verify, ignore_ytdl_errors)
-        downloader.run()
-        failed_downloads = downloader.get_failed_url_targets()
-
-        changed_courses_to_notify = moodle.recorder.changes_to_notify()
-
-        if len(changed_courses_to_notify) > 0:
-            console_service.notify_about_changes_in_moodle(changed_courses_to_notify)
-            mail_service.notify_about_changes_in_moodle(changed_courses_to_notify)
-            tg_service.notify_about_changes_in_moodle(changed_courses_to_notify)
-            xmpp_service.notify_about_changes_in_moodle(changed_courses_to_notify)
-
-            moodle.recorder.notified(changed_courses_to_notify)
-
-        else:
-            msg_no_changes = 'No changes found for the configured Moodle-Account.'
-            logging.info(msg_no_changes)
-            Log.warning(msg_no_changes)
-
-        if len(failed_downloads) > 0:
-            console_service.notify_about_failed_downloads(failed_downloads)
-            mail_service.notify_about_failed_downloads(failed_downloads)
-            tg_service.notify_about_failed_downloads(failed_downloads)
-            xmpp_service.notify_about_failed_downloads(failed_downloads)
-
-        ProcessLock.unlock(storage_path)
-
-        logging.debug('All done. Exiting...')
-        Log.success('All done. Exiting..')
-    except BaseException as e:
-        print('\n')
-        if not isinstance(e, ProcessLock.LockError):
-            ProcessLock.unlock(storage_path)
-
-        error_formatted = traceback.format_exc()
-        logging.error(error_formatted, extra={'exception': e})
-
-        if r_client:
-            sentry_sdk.capture_exception(e)
-
-        if verbose:
-            Log.critical(f'Exception:\n{error_formatted}')
-
-        short_error = str(e)
-        if not short_error or short_error.isspace():
-            short_error = traceback.format_exc(limit=1)
-
-        console_service.notify_about_error(short_error)
-        mail_service.notify_about_error(short_error)
-        tg_service.notify_about_error(short_error)
-        xmpp_service.notify_about_error(short_error)
-
-        logging.debug('Exception-Handling completed. Exiting...')
-
-        sys.exit(1)
 
 
 def _dir_path(path):
@@ -345,20 +212,13 @@ def _dir_path(path):
         raise argparse.ArgumentTypeError(f'"{str(path)}" is not a valid path. Make sure the directory exists.')
 
 
-def check_debug():
-    global IS_DEBUG
-    if 'pydevd' in sys.modules:
-        IS_DEBUG = True
-        Log.debug('[RUNNING IN DEBUG-MODE!]')
-
-
-def _max_path_length_workaround(path):
+def win_max_path_length_workaround(path):
     # Working around MAX_PATH limitation on Windows (see
     # http://msdn.microsoft.com/en-us/library/windows/desktop/aa365247(v=vs.85).aspx)
     if os.name == 'nt':
-        absfilepath = os.path.abspath(path)
-        path = '\\\\?\\' + absfilepath
-        Log.debug("Using absolute paths")
+        abs_file_path = PT.get_abs_path(path)
+        path = '\\\\?\\' + abs_file_path
+        Log.debug("Using windows max path length workaround")
     else:
         Log.info("You are not on Windows, you don't need to use this workaround")
     return path
@@ -374,57 +234,58 @@ def get_parser():
     group = parser.add_mutually_exclusive_group()
 
     group.add_argument(
-        '--version', action='version', version='moodle-dl ' + __version__, help='Print program version and exit'
+        '--version',
+        action='version',
+        version='moodle-dl ' + __version__,
+        help='Print program version and exit',
     )
 
     group.add_argument(
         '-i',
         '--init',
+        dest='init',
+        default=False,
         action='store_true',
         help=(
-            'Guides you trough the configuration of the'
-            + ' software, including the activation of'
-            + ' mail-notifications and obtainment of a'
-            + ' login-token for your Moodle-Account. It'
-            + ' does not fetch the current state of your'
-            + ' Moodle-Account.'
+            'Guides you trough the configuration of the software, including the activation of'
+            + ' notifications services and obtainment of a login-token for your Moodle-Account. It'
+            + ' does not fetch the current state of you Moodle-Account.'
         ),
     )
 
     group.add_argument(
         '-c',
         '--config',
+        dest='config',
+        default=False,
         action='store_true',
         help=(
-            'Guides you through the additional'
-            + ' configuration of the software. This'
-            + ' includes the selection of the courses to'
-            + ' be downloaded and various configuration'
-            + ' options for these courses.'
+            'Guides you through the additional configuration of the software. This includes'
+            + ' the selection of the courses to be downloaded and various configuration options for these courses.'
         ),
     )
 
     group.add_argument(
         '-nt',
         '--new-token',
+        dest='new_token',
+        default=False,
         action='store_true',
         help=(
-            'Overrides the login-token with a newly obtained'
-            + ' one. It does not fetch the current state of your'
-            + ' Moodle-Account. Use it if at any point in time,'
-            + ' for whatever reason, the saved token gets'
-            + ' rejected by Moodle. It does not affect the rest'
-            + ' of the config.'
+            'Overrides the login-token with a newly obtained one. It does not fetch the current state of your'
+            + ' Moodle-Account. Use it if at any point in time, for whatever reason, the saved token gets'
+            + ' rejected by Moodle. It does not affect the rest of the config.'
         ),
     )
 
     group.add_argument(
         '-cm',
         '--change-notification-mail',
+        dest='change_notification_mail',
+        default=False,
         action='store_true',
         help=(
-            'Activate/deactivate/change the settings for'
-            + ' receiving notifications via e-mail. It does not'
+            'Activate / deactivate / change the settings for receiving notifications via e-mail. It does not'
             + ' affect the rest of the config.'
         ),
     )
@@ -432,10 +293,11 @@ def get_parser():
     group.add_argument(
         '-ct',
         '--change-notification-telegram',
+        dest='change_notification_telegram',
+        default=False,
         action='store_true',
         help=(
-            'Activate/deactivate/change the settings for'
-            + ' receiving notifications via Telegram. It does not'
+            'Activate / deactivate / change the settings for receiving notifications via Telegram. It does not'
             + ' affect the rest of the config.'
         ),
     )
@@ -443,10 +305,11 @@ def get_parser():
     group.add_argument(
         '-cx',
         '--change-notification-xmpp',
+        dest='change_notification_xmpp',
+        default=False,
         action='store_true',
         help=(
-            'Activate/deactivate/change the settings for'
-            + ' receiving notifications via XMPP. It does not'
+            'Activate / deactivate / change the settings for receiving notifications via XMPP. It does not'
             + ' affect the rest of the config.'
         ),
     )
@@ -454,32 +317,33 @@ def get_parser():
     group.add_argument(
         '-md',
         '--manage-database',
+        dest='manage_database',
+        default=False,
         action='store_true',
         help=(
-            'This option lets you manage the offline database.'
-            + ' It allows you to delete entries from the database'
-            + ' that are no longer available locally so that they'
-            + ' can be downloaded again.'
+            'This option lets you manage the offline database. It allows you to delete entries from the database'
+            + ' that are no longer available locally so that they can be downloaded again.'
         ),
     )
 
     group.add_argument(
         '-dof',
         '--delete-old-files',
+        dest='delete_old_files',
+        default=False,
         action='store_true',
         help=(
-            'This option lets you delete old copies of files.'
-            + ' It allows you to delete entries from the database'
+            'This option lets you delete old copies of files. It allows you to delete entries from the database'
             + ' and from local file system.'
         ),
     )
 
     group.add_argument(
         '--log-responses',
+        dest='log_responses',
         default=False,
         action='store_true',
-        help='To generate a responses.log file'
-        + ' in which all JSON responses from Moodles are logged'
+        help='To generate a responses.log file in which all JSON responses from Moodles are logged'
         + ' along with the requested URL.',
     )
 
@@ -493,24 +357,23 @@ def get_parser():
     parser.add_argument(
         '-p',
         '--path',
+        dest='path',
         default='.',
         type=_dir_path,
         help=(
-            'Sets the location of the configuration,'
-            + ' logs and downloaded files. PATH must be an'
-            + ' existing directory in which you have read and'
-            + ' write access. (default: current working'
-            + ' directory)'
+            'Sets the location of the configuration, logs and downloaded files. PATH must be an'
+            + ' existing directory in which you have read and write access. (default: current working directory)'
         ),
     )
 
     parser.add_argument(
+        '--mpl',
         '--max-path-length-workaround',
+        dest='max_path_length_workaround',
         default=False,
         action='store_true',
         help=(
-            'If this flag is set, all path are made absolute '
-            + 'in order to workaround the max_path limitation on Windows.'
+            'If this flag is set, all path are made absolute in order to workaround the max_path limitation on Windows.'
             + 'To use relative paths on Windows you should disable the max_path limitation'
             + 'https://docs.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation'
         ),
@@ -519,14 +382,16 @@ def get_parser():
     parser.add_argument(
         '-t',
         '--threads',
+        dest='threads',
         default=5,
         type=int,
-        help=('Sets the number of download threads. (default: %(default)s)'),
+        help=('Sets the number of max parallel downloads. (default: %(default)s)'),
     )
 
     parser.add_argument(
         '-u',
         '--username',
+        dest='username',
         default=None,
         type=str,
         help=('Specify username to skip the query when creating a new token.'),
@@ -535,6 +400,7 @@ def get_parser():
     parser.add_argument(
         '-pw',
         '--password',
+        dest='password',
         default=None,
         type=str,
         help=('Specify password to skip the query when creating a new token.'),
@@ -543,6 +409,7 @@ def get_parser():
     parser.add_argument(
         '-v',
         '--verbose',
+        dest='verbose',
         default=False,
         action='store_true',
         help='Print various debugging information',
@@ -550,16 +417,17 @@ def get_parser():
 
     parser.add_argument(
         '--skip-cert-verify',
+        dest='skip_cert_verify',
         default=False,
         action='store_true',
-        help='If this flag is set, the SSL certificate '
-        + 'is not verified. This option should only be used in '
+        help='If this flag is set, TLS certificates are not verified. This option should only be used in '
         + 'non production environments.',
     )
 
     parser.add_argument(
         '-iye',
         '--ignore-ytdl-errors',
+        dest='ignore_ytdl_errors',
         default=False,
         action='store_true',
         help='If this option is set, errors that occur when downloading with the help of yt-dlp are ignored. '
@@ -570,69 +438,92 @@ def get_parser():
 
     parser.add_argument(
         '--without-downloading-files',
+        dest='without_downloading_files',
         default=False,
         action='store_true',
-        help='If this flag is set, no files are downloaded.'
-        + ' This allows the local database to be updated without'
+        help='If this flag is set, no files are downloaded. This allows the local database to be updated without'
         + ' having to download all files.',
     )
 
     parser.add_argument(
         '-sso',
         '--sso',
+        dest='sso',
         default=False,
         action='store_true',
-        help='This flag can be used together with --init and -nt. If'
-        + ' this flag is set, you will be guided through the'
-        + ' Single Sign On (SSO) login process during'
-        + ' initialization or new token retrieval.',
+        help='This flag can be used together with --init and -nt. If this flag is set, you will be guided through the'
+        + ' Single Sign On (SSO) login process during initialization or new token retrieval.',
     )
 
     return parser
+
+
+def pre_process_opts(opts):
+    if opts.max_path_length_workaround:
+        opts.path = win_max_path_length_workaround(opts.path)
 
 
 # --- called at the program invocation: -------------------------------------
 def main(args=None):
     """The main routine."""
     just_fix_windows_console()
-
-    check_debug()
-
     parser = get_parser()
-    args = parser.parse_args(args)
+    opts = parser.parse_args(args)  # opts is of type Namespace
+    pre_process_opts(opts)
 
-    use_sso = args.sso
-    verbose = args.verbose
-    username = args.username
-    password = args.password
-    if args.max_path_length_workaround:
-        storage_path = _max_path_length_workaround(args.path)
-    else:
-        storage_path = args.path
-    skip_cert_verify = args.skip_cert_verify
-    ignore_ytdl_errors = args.ignore_ytdl_errors
-    without_downloading_files = args.without_downloading_files
-    log_responses = args.log_responses
-
+    # Todo: Change this
     DownloadService.thread_count = args.threads
 
-    if args.init:
-        run_init(storage_path, use_sso, skip_cert_verify)
-    elif args.config:
-        run_configure(storage_path, skip_cert_verify)
-    elif args.new_token:
-        run_new_token(storage_path, use_sso, username, password, skip_cert_verify)
-    elif args.change_notification_mail:
-        run_change_notification_mail(storage_path)
-    elif args.change_notification_telegram:
-        run_change_notification_telegram(storage_path)
-    elif args.change_notification_xmpp:
-        run_change_notification_xmpp(storage_path)
-    elif args.manage_database:
-        run_manage_database(storage_path)
-    elif args.delete_old_files:
-        run_delete_old_files(storage_path)
-    elif args.add_all_visible_courses:
-        run_add_all_visible_courses(storage_path, skip_cert_verify)
+    config = ConfigHelper(opts.path)
+    if opts.init:
+        run_init(config, opts)
+        exit(0)
     else:
-        run_main(storage_path, verbose, skip_cert_verify, ignore_ytdl_errors, without_downloading_files, log_responses)
+        try:
+            config.load()
+        except ConfigHelper.NoConfigError as err_config:
+            Log.error(f'Error: {err_config!s}')
+            Log.warning('You can create a configuration with the --init option')
+            exit(-1)
+
+    try:
+        if not check_debug():
+            ProcessLock.lock(opts.path)
+
+        if opts.config:
+            ConfigService(config, opts).interactively_acquire_config()
+        elif opts.new_token:
+            MoodleService(config, opts).interactively_acquire_token(use_stored_url=True)
+        elif opts.change_notification_mail:
+            MailService(config).interactively_configure()
+        elif opts.change_notification_telegram:
+            TelegramService(config).interactively_configure()
+        elif opts.change_notification_xmpp:
+            XmppService(config).interactively_configure()
+        elif opts.manage_database:
+            OfflineService(config, opts).interactively_manage_database()
+        elif opts.delete_old_files:
+            OfflineService(config, opts).delete_old_files()
+        elif opts.add_all_visible_courses:
+            ConfigService(config, opts).interactively_add_all_visible_courses()
+        else:
+            run_main(config, opts)
+
+        Log.success('All done. Exiting..')
+        ProcessLock.unlock(opts.path)
+    except BaseException as base_err:
+        print('\n')
+        if not isinstance(base_err, ProcessLock.LockError):
+            ProcessLock.unlock(opts.path)
+
+        error_formatted = traceback.format_exc()
+        logging.error(error_formatted, extra={'exception': base_err})
+
+        if check_verbose() or check_debug():
+            Log.critical(f'{error_formatted}')
+        else:
+            Log.error(f'Exception: {base_err!s}')
+
+        logging.debug('Exception-Handling completed. Exiting...')
+
+        sys.exit(1)

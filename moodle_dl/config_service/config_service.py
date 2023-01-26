@@ -14,15 +14,14 @@ from moodle_dl.moodle_connector.request_helper import RequestRejectedError, Requ
 
 
 class ConfigService:
-    def __init__(self, config_helper: ConfigHelper, storage_path: str, skip_cert_verify: bool = False):
-        self.config_helper = config_helper
-        self.storage_path = storage_path
-        self.skip_cert_verify = skip_cert_verify
+    def __init__(self, config: ConfigHelper, opts):
+        self.config = config
+        self.opts = opts
 
-        token = self.config_helper.get_token()
-        moodle_domain = self.config_helper.get_moodle_domain()
-        moodle_path = self.config_helper.get_moodle_path()
-        use_http = self.config_helper.get_use_http()
+        token = self.config.get_token()
+        moodle_domain = self.config.get_moodle_domain()
+        moodle_path = self.config.get_moodle_path()
+        use_http = self.config.get_use_http()
 
         request_helper = RequestHelper(moodle_domain, moodle_path, token, self.skip_cert_verify, use_http=use_http)
         self.first_contact_handler = FirstContactHandler(request_helper)
@@ -34,7 +33,7 @@ class ConfigService:
         """
         courses = []
         try:
-            userid, version = self.config_helper.get_userid_and_version()
+            userid, version = self.config.get_userid_and_version()
             if userid is None or version is None:
                 userid, version = self.first_contact_handler.fetch_userid_and_version()
                 self._select_should_userid_and_version_be_saved(userid, version)
@@ -59,6 +58,8 @@ class ConfigService:
         self._select_should_download_workshops()
         self._select_should_download_linked_files()
         self._select_should_download_also_with_cookie()
+
+        Log.success('Configuration successfully updated!')
 
     def interactively_add_all_visible_courses(self):
         """
@@ -98,14 +99,14 @@ class ConfigService:
         courses = []
         all_visible_courses = []
         try:
-            userid, version = self.config_helper.get_userid_and_version()
+            userid, version = self.config.get_userid_and_version()
             if userid is None or version is None:
                 userid, version = self.first_contact_handler.fetch_userid_and_version()
             else:
                 self.first_contact_handler.version = version
 
             courses = self.first_contact_handler.fetch_courses(userid)
-            log_all_courses_to = str(Path(self.storage_path) / 'all_courses.json')
+            log_all_courses_to = str(Path(self.opts.path) / 'all_courses.json')
             all_visible_courses = self.first_contact_handler.fetch_all_visible_courses(log_all_courses_to)
 
         except (RequestRejectedError, ValueError, RuntimeError, ConnectionError) as error:
@@ -124,9 +125,9 @@ class ConfigService:
                 filtered_all_courses.append(visible_course)
 
         # Update Public Courses IDs
-        download_public_course_ids = self.config_helper.get_download_public_course_ids()
+        download_public_course_ids = self.config.get_download_public_course_ids()
         # Update Course settings List for all new Courses
-        options_of_courses = self.config_helper.get_options_of_courses()
+        options_of_courses = self.config.get_options_of_courses()
         for course in filtered_all_courses:
             current_course_settings = options_of_courses.get(str(course.id), None)
 
@@ -143,8 +144,10 @@ class ConfigService:
             if course.id not in download_public_course_ids:
                 download_public_course_ids.append(course.id)
 
-        self.config_helper.set_property('options_of_courses', options_of_courses)
-        self.config_helper.set_property('download_public_course_ids', download_public_course_ids)
+        self.config.set_property('options_of_courses', options_of_courses)
+        self.config.set_property('download_public_course_ids', download_public_course_ids)
+
+        Log.success('Configuration successfully updated!')
 
     def _select_should_userid_and_version_be_saved(self, userid, version):
         """
@@ -175,8 +178,8 @@ class ConfigService:
                 + ' and then run the configurator again!'
             )
 
-            self.config_helper.set_property('userid', userid)
-            self.config_helper.set_property('version', version)
+            self.config.set_property('userid', userid)
+            self.config.set_property('version', version)
 
         self.section_seperator()
 
@@ -185,8 +188,8 @@ class ConfigService:
         Asks the user for the courses that should be downloaded.
         @param courses: All available courses
         """
-        download_course_ids = self.config_helper.get_download_course_ids()
-        dont_download_course_ids = self.config_helper.get_dont_download_course_ids()
+        download_course_ids = self.config.get_download_course_ids()
+        dont_download_course_ids = self.config.get_dont_download_course_ids()
 
         print('')
         Log.info(
@@ -236,11 +239,11 @@ class ConfigService:
                 course_ids.append(course.id)
 
         if use_whitelist:
-            self.config_helper.set_property('download_course_ids', course_ids)
-            self.config_helper.remove_property('dont_download_course_ids')
+            self.config.set_property('download_course_ids', course_ids)
+            self.config.remove_property('dont_download_course_ids')
         elif not use_whitelist:
-            self.config_helper.set_property('dont_download_course_ids', course_ids)
-            self.config_helper.remove_property('download_course_ids')
+            self.config.set_property('dont_download_course_ids', course_ids)
+            self.config.remove_property('download_course_ids')
 
     def _select_sections_to_download(self, sections: List[Dict], excluded: List[int]) -> List[int]:
         """
@@ -274,8 +277,8 @@ class ConfigService:
         """
         Let the user set special options for every single course
         """
-        download_course_ids = self.config_helper.get_download_course_ids()
-        dont_download_course_ids = self.config_helper.get_dont_download_course_ids()
+        download_course_ids = self.config.get_download_course_ids()
+        dont_download_course_ids = self.config.get_dont_download_course_ids()
 
         self.section_seperator()
         Log.info(
@@ -293,7 +296,7 @@ class ConfigService:
             choices = []
             choices_courses = []
 
-            options_of_courses = self.config_helper.get_options_of_courses()
+            options_of_courses = self.config.get_options_of_courses()
 
             choices.append('None')
 
@@ -411,13 +414,13 @@ class ConfigService:
 
         if changed:
             options_of_courses.update({str(course.id): current_course_settings})
-            self.config_helper.set_property('options_of_courses', options_of_courses)
+            self.config.set_property('options_of_courses', options_of_courses)
 
     def _select_should_download_submissions(self):
         """
         Asks the user if submissions should be downloaded
         """
-        download_submissions = self.config_helper.get_download_submissions()
+        download_submissions = self.config.get_download_submissions()
 
         self.section_seperator()
         Log.info(
@@ -434,13 +437,13 @@ class ConfigService:
             default_is_yes=download_submissions,
         )
 
-        self.config_helper.set_property('download_submissions', download_submissions)
+        self.config.set_property('download_submissions', download_submissions)
 
     def _select_should_download_databases(self):
         """
         Asks the user if databases should be downloaded
         """
-        download_databases = self.config_helper.get_download_databases()
+        download_databases = self.config.get_download_databases()
 
         self.section_seperator()
         Log.info(
@@ -458,13 +461,13 @@ class ConfigService:
             Log.special_str('Do you want to download databases of your courses?'), default_is_yes=download_databases
         )
 
-        self.config_helper.set_property('download_databases', download_databases)
+        self.config.set_property('download_databases', download_databases)
 
     def _select_should_download_forums(self):
         """
         Asks the user if forums should be downloaded
         """
-        download_forums = self.config_helper.get_download_forums()
+        download_forums = self.config.get_download_forums()
 
         self.section_seperator()
         Log.info('In forums, students and teachers can discuss and exchange information together.')
@@ -474,13 +477,13 @@ class ConfigService:
             Log.special_str('Do you want to download forums of your courses?'), default_is_yes=download_forums
         )
 
-        self.config_helper.set_property('download_forums', download_forums)
+        self.config.set_property('download_forums', download_forums)
 
     def _select_should_download_quizzes(self):
         """
         Asks the user if quizzes should be downloaded
         """
-        download_quizzes = self.config_helper.get_download_quizzes()
+        download_quizzes = self.config.get_download_quizzes()
 
         self.section_seperator()
         Log.info(
@@ -493,13 +496,13 @@ class ConfigService:
             Log.special_str('Do you want to download quizzes of your courses?'), default_is_yes=download_quizzes
         )
 
-        self.config_helper.set_property('download_quizzes', download_quizzes)
+        self.config.set_property('download_quizzes', download_quizzes)
 
     def _select_should_download_lessons(self):
         """
         Asks the user if lessons should be downloaded
         """
-        download_lessons = self.config_helper.get_download_lessons()
+        download_lessons = self.config.get_download_lessons()
 
         self.section_seperator()
         Log.info(
@@ -514,13 +517,13 @@ class ConfigService:
             Log.special_str('Do you want to download lessons of your courses?'), default_is_yes=download_lessons
         )
 
-        self.config_helper.set_property('download_lessons', download_lessons)
+        self.config.set_property('download_lessons', download_lessons)
 
     def _select_should_download_workshops(self):
         """
         Asks the user if workshops should be downloaded
         """
-        download_workshops = self.config_helper.get_download_workshops()
+        download_workshops = self.config.get_download_workshops()
 
         self.section_seperator()
         Log.info(
@@ -533,13 +536,13 @@ class ConfigService:
             Log.special_str('Do you want to download workshops of your courses?'), default_is_yes=download_workshops
         )
 
-        self.config_helper.set_property('download_workshops', download_workshops)
+        self.config.set_property('download_workshops', download_workshops)
 
     def _select_should_download_descriptions(self):
         """
         Asks the user if descriptions should be downloaded
         """
-        download_descriptions = self.config_helper.get_download_descriptions()
+        download_descriptions = self.config.get_download_descriptions()
 
         self.section_seperator()
         Log.info(
@@ -564,13 +567,13 @@ class ConfigService:
             default_is_yes=download_descriptions,
         )
 
-        self.config_helper.set_property('download_descriptions', download_descriptions)
+        self.config.set_property('download_descriptions', download_descriptions)
 
     def _select_should_download_links_in_descriptions(self):
         """
         Asks the user if links in descriptions should be downloaded
         """
-        download_links_in_descriptions = self.config_helper.get_download_links_in_descriptions()
+        download_links_in_descriptions = self.config.get_download_links_in_descriptions()
 
         self.section_seperator()
         Log.info(
@@ -584,13 +587,13 @@ class ConfigService:
             default_is_yes=download_links_in_descriptions,
         )
 
-        self.config_helper.set_property('download_links_in_descriptions', download_links_in_descriptions)
+        self.config.set_property('download_links_in_descriptions', download_links_in_descriptions)
 
     def _select_should_download_linked_files(self):
         """
         Asks the user if linked files should be downloaded
         """
-        download_linked_files = self.config_helper.get_download_linked_files()
+        download_linked_files = self.config.get_download_linked_files()
 
         self.section_seperator()
         Log.info(
@@ -620,13 +623,13 @@ class ConfigService:
             default_is_yes=download_linked_files,
         )
 
-        self.config_helper.set_property('download_linked_files', download_linked_files)
+        self.config.set_property('download_linked_files', download_linked_files)
 
     def _select_should_download_also_with_cookie(self):
         """
         Ask the user whether files for which a cookie is required should be downloaded.
         """
-        download_also_with_cookie = self.config_helper.get_download_also_with_cookie()
+        download_also_with_cookie = self.config.get_download_also_with_cookie()
 
         self.section_seperator()
         Log.info(
@@ -640,7 +643,7 @@ class ConfigService:
             + ' As long as this option is activated, the file always contains a valid cookie.'
         )
 
-        if self.config_helper.get_privatetoken() is None:
+        if self.config.get_privatetoken() is None:
             Log.error(
                 'Currently no private token is stored in the configuration.'
                 + ' Create a private token with moodle-dl --new-token (if necessary with --sso)'
@@ -653,7 +656,7 @@ class ConfigService:
             default_is_yes=download_also_with_cookie,
         )
 
-        self.config_helper.set_property('download_also_with_cookie', download_also_with_cookie)
+        self.config.set_property('download_also_with_cookie', download_also_with_cookie)
 
     def section_seperator(self):
         """Print a seperator line."""

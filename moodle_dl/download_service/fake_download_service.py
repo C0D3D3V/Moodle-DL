@@ -4,11 +4,10 @@ import platform
 from pathlib import Path
 from typing import List
 
-from moodle_dl.utils import Log
-from moodle_dl.state_recorder.course import Course
-from moodle_dl.download_service.path_tools import PathTools
-from moodle_dl.moodle_connector.moodle_service import MoodleService
 from moodle_dl.download_service.download_service import DownloadService
+from moodle_dl.moodle_connector.moodle_service import MoodleService
+from moodle_dl.state_recorder.course import Course
+from moodle_dl.utils import Log, PathTools as PT
 
 
 class FakeDownloadService:
@@ -18,19 +17,19 @@ class FakeDownloadService:
     can be created without actually downloading the files.
     """
 
-    def __init__(self, courses: List[Course], moodle_service: MoodleService, storage_path: str):
+    def __init__(self, courses: List[Course], moodle_service: MoodleService, opts):
         """
         Initiates the FakeDownloadService with all files that
         need to be downloaded (saved in the database).
         @param courses: A list of courses that contains all modified files.
         @param moodle_service: A reference to the moodle_service, currently
                                only to get to the state_recorder.
-        @param storage_path: The location where the files would be saved.
+        @param opts: Moodle-dl options
         """
 
         self.courses = courses
         self.state_recorder = moodle_service.recorder
-        self.storage_path = storage_path
+        self.opts = opts
 
         # delete files, that should be deleted
         self.state_recorder.batch_delete_files(self.courses)
@@ -40,9 +39,9 @@ class FakeDownloadService:
             for file in course.files:
                 if file.deleted is False:
 
-                    save_destination = DownloadService.gen_path(self.storage_path, course, file)
+                    save_destination = DownloadService.gen_path(opts.path, course, file)
 
-                    filename = PathTools.to_valid_name(file.content_filename)
+                    filename = PT.to_valid_name(file.content_filename)
 
                     file.saved_to = str(Path(save_destination) / filename)
 

@@ -10,6 +10,11 @@ class ConfigHelper:
     Handles the saving, formatting and loading of the local configuration.
     """
 
+    class NoConfigError(ValueError):
+        """An Exception which gets thrown if config could not be loaded."""
+
+        pass
+
     def __init__(self, storage_path: str):
         self._whole_config = {}
         self.storage_path = storage_path
@@ -25,8 +30,8 @@ class ConfigHelper:
             with open(self.config_path, 'r', encoding='utf-8') as config_file:
                 config_raw = config_file.read()
                 self._whole_config = json.loads(config_raw)
-        except IOError:
-            raise ValueError('No config found!')
+        except (IOError, OSError) as err_load:
+            raise ConfigHelper.NoConfigError(f'Configuration could not be loaded from {self.config_path}\n{err_load!s}')
 
     def _save(self):
         config_formatted = json.dumps(self._whole_config, indent=4)
