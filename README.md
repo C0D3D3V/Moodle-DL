@@ -13,7 +13,7 @@
 
 - Download files, assignments including submissions, forums, workshops, lessons, quizzes, descriptions, as well as external links.
 - Notifications about all downloaded files
-- Text from your Moodle courses (like pages, descriptions or forum-posts) will be directly attached to the notifications, so you can read them directly in your messaging app.
+- Text from your Moodle courses (like pages, descriptions or forum posts) will be directly attached to the notifications, so you can read them directly in your messaging app.
 - A configuration wizard is also included, allowing all settings to be made very easily.
 - Running moodle-dl again will only download files that have not been downloaded yet. Do not miss any files, if files are deleted online, they are still available offline.
 - It is possible to download Moodle courses you are enrolled in, as well as courses that are publicly visible to you.
@@ -50,86 +50,32 @@ If you run the program on **Windows**, please use [Powershell or CMD](https://ww
  
 
 ### Usage
-- `moodle-dl`
-    - Fetches the current state of your Moodle Account, saves it and detects any changes.
-    - If configured, it also sends out notifications.
-    - It prints the changes into the console.
+If you don't want moodle-dl to use the current working directory, then you should set the `--path` option on all commands.
+
 - `moodle-dl --init`
-    - Guides you through the configuration of the software, including the activation of notifications and obtainment of a login-token for your Moodle-Account.
-    - After the necessary configuration, further additional configurations can be made. 
+    - Create an initial configuration. A CLI guide will lead you through the initial configuration.
     - If you have to log in with Single Sign On (SSO), you can set the option `--sso` additionally.
+    - If at any point in time, the saved token gets rejected by Moodle use `moodle-dl --new-token` instead
+    - To automate the login you can use the additional options `--username` and `--password` or `--token`.
+
+- `moodle-dl`
+    - After configuring moodle-dl, this command is sufficient to download all files from your Moodle account and notify you about the result.
+
 - `moodle-dl --config`
-    - Guides you through the additional configuration of the software.
-    - The guide allows you to
-      - select the courses that will be downloaded.
-      - rename each course individually.
-      - decide if subfolders should be created inside a course folder.
-      - set whether submissions (files uploaded to assignments by yourself or a teacher), descriptions, links inside descriptions, databases, quizzes, lessons, workshops and forum discussions should be downloaded.
-      - set if external linked files should be downloaded (files like youtube videos).
-      - set if files on moodle that require a cookie should be downloaded.
-      - to add extra courses to your download list which you can see but you are not enrolled in, check out [this wiki entry](https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Download-public-courses).
-- `moodle-dl --new-token`
-    - Overrides the login-token with a newly obtained one.
-    - The script will ask for credentials unless they are explicitly specify with the options `--username` and `--password`
-    - Use it if at any point in time, for whatever reason, the saved token gets rejected by Moodle.
-- `moodle-dl --change-notification-mail`
-    - Activate/deactivate/change the settings for receiving notifications via e-mail.
-- `moodle-dl --change-notification-telegram`
-    - Activate/deactivate/change the settings for receiving notifications via Telegram.
-    - Click [here for help](https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Telegram-Notification) in setting up telegram notifications
-- `moodle-dl --change-notification-xmpp`
-    - Activate/deactivate/change the settings for receiving notifications via XMPP.
-- `moodle-dl --manage-database`
-    - To manage the offline database.
-    - It allows you to delete entries from the database that are no longer available locally so that they can be downloaded again.
-- `moodle-dl --delete-old-files`
-    - To delete old versions of updated files.
-- `moodle-dl --add-all-visible-courses`
-    - To add all courses visible to the moodle user to the configuration file.
-- `moodle-dl --version`
-    - Print program version and exit
-- `moodle-dl --log-responses`
-    - To generate a `responses.log` file, in which all JSON responses from Moodles are logged along with the requested URL
-    - This is for development and debugging purposes only. The log file may contain private data.
+    - A CLI guide will lead you through the additional configuration of the software.
+    - You can start the guide after the initial configuration if you want to change any of the settings.
+    - The guide allows you to change nearly all settings of the moodle-dl
+      - select the courses that will be downloaded
+      - rename each course individually
+      - decide if subfolders should be created inside a course folder
+      - set whether submissions (files uploaded to assignments by yourself or a teacher), descriptions, links inside descriptions, databases, quizzes, lessons, workshops and forum discussions should be downloaded
+      - set if external files should be downloaded (files like youtube videos)
+      - set if files on moodle that require a cookie should be downloaded
+      - to add extra courses to your download list which you can see but you are not enrolled in, check out [this wiki entry](https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Download-public-courses)
 
-### Options
-Options can be combined with all the actions mentioned above.
-- `--path PATH`
-    - This option can be useful if you want to save the downloaded files in a directory other than the current working directory (the directory where you run the script). 
-    - Sets the location of the configuration, logs and downloaded files. 
-    - `PATH` must be an existing directory in which you have read and write access.
-    - Default: current working directory
-- `--threads INT`
-    - Overwrites the number of download threads. (default: 5)
-- `--verbose`
-    - Print various debugging information into the `MoodleDownloader.log` file.
-- `--username USERNAME`
-    - Can be used to automate the `--new-token` process. 
-    - Specify username to skip the query when creating a new token.
-- `--password PASSWORD`
-    - Can be used to automate the `--new-token` process. 
-    - Specify password to skip the query when creating a new token.
-    - If the password contains special characters like spaces you can enclose it in quotation marks
-- `--max-path-length-workaround`
-    - If this flag is set, all path are made absolute in order to work around the max_path limitation on Windows.
-    - To use relative paths on Windows you should [disable the max_path limitation](https://docs.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=cmd).
-    - Default: False
-- `--skip-cert-verify`
-    - This flag is used to skip the certification verification while sending requests to Moodle and all other websites.
-    - Warning: This might lead to security flaws and should only be used in non-production environments.
-    - Default: False
-- `--ignore-ytdl-errors`
-    - If this option is set, errors that occur when downloading with the help of yt-dlp are ignored. Thus, no further attempt will be made to download the file using yt-dlp. 
-    - By default, yt-dlp errors are critical, so the download of the corresponding file will be aborted and when you run moodle-dl again, the download will be repeated.  
-    - You can use this option if a download using yt-dlp fails repeatedly.
-- `--without-downloading-files`
-    - This flag is used to skip the downloading of files.
-    - This allows the local database to be updated to the latest version of Moodle without having to download all files.
-    - This can also be used to ignore recurring errors by adding the files that produce the errors to the database. So these files are not downloaded again.
-- `--sso`
-    - This flag is used to indicate that a Single Sign On (SSO) login to your Moodle is required. 
-    - Can be combined with `--init` and `--new-token`.
+By default a private token is stored in the initial configuration, this is only needed for special Moodle modules that cannot be queried via the Moodle API. If no such module is available in your Moodle you are welcome to delete this token.
 
+If you need help configuring telegram notifications [click here](https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Telegram-Notification)
 
 
 
@@ -143,10 +89,10 @@ Options can be combined with all the actions mentioned above.
 
 
 ## 🏆 Contributing
+You would like to become a maintainer of this project? Then contact me!
 
-Do you have a great new feature idea or just want to be part of the project ? Awesome! Every contribution is welcome! If you want to find out more about how to contribute to the project, please checkout our [CONTRIBUTING.md](CONTRIBUTING.md)!
+Do you have a great new feature idea or just want to be part of the project? Awesome! Every contribution is welcome! If you want to find out more about how to contribute to the project, please check out our [CONTRIBUTING.md](CONTRIBUTING.md)!
 
 
 ## ⚖️ License
-
 This project is licensed under the GPL-3.0 License - see the [LICENSE](LICENSE) file for details

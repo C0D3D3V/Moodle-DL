@@ -10,9 +10,8 @@ from shutil import which
 import sentry_sdk
 
 try:
-    # In unix readline needs to be loaded so that
-    # arrowkeys work in input
-    import readline  # pylint: disable=unused-import
+    # In unix readline needs to be loaded so that arrow keys work in input
+    import readline  # pylint: disable=unused-import # noqa: F401
 except ImportError:
     pass
 
@@ -35,7 +34,7 @@ from moodle_dl.version import __version__
 class ReRaiseOnError(logging.StreamHandler):
     """
     A logging-handler class which allows the exception-catcher of i.e. PyCharm
-    to intervine
+    to intervene
     """
 
     def emit(self, record):
@@ -229,16 +228,9 @@ def get_parser():
     Creates a new argument parser.
     """
     parser = argparse.ArgumentParser(
-        description=('Moodle Downloader 2 helps you download all the course files  of your Moodle account.')
+        description=('Moodle-DL helps you download all the course files from your Moodle account.')
     )
     group = parser.add_mutually_exclusive_group()
-
-    group.add_argument(
-        '--version',
-        action='version',
-        version='moodle-dl ' + __version__,
-        help='Print program version and exit',
-    )
 
     group.add_argument(
         '-i',
@@ -246,11 +238,7 @@ def get_parser():
         dest='init',
         default=False,
         action='store_true',
-        help=(
-            'Guides you trough the configuration of the software, including the activation of'
-            + ' notifications services and obtainment of a login-token for your Moodle-Account. It'
-            + ' does not fetch the current state of you Moodle-Account.'
-        ),
+        help='Create an initial configuration. A CLI guide will lead you through the initial configuration.',
     )
 
     group.add_argument(
@@ -260,8 +248,8 @@ def get_parser():
         default=False,
         action='store_true',
         help=(
-            'Guides you through the additional configuration of the software. This includes'
-            + ' the selection of the courses to be downloaded and various configuration options for these courses.'
+            'Start the configuration utility.'
+            + ' It allows you to make almost all available moodle-dl settings conveniently via the CLI guide.'
         ),
     )
 
@@ -271,11 +259,7 @@ def get_parser():
         dest='new_token',
         default=False,
         action='store_true',
-        help=(
-            'Overrides the login-token with a newly obtained one. It does not fetch the current state of your'
-            + ' Moodle-Account. Use it if at any point in time, for whatever reason, the saved token gets'
-            + ' rejected by Moodle. It does not affect the rest of the config.'
-        ),
+        help=('Obtain a new login token. Use it if the saved token gets rejected by your Moodle.'),
     )
 
     group.add_argument(
@@ -284,10 +268,7 @@ def get_parser():
         dest='change_notification_mail',
         default=False,
         action='store_true',
-        help=(
-            'Activate / deactivate / change the settings for receiving notifications via e-mail. It does not'
-            + ' affect the rest of the config.'
-        ),
+        help=('Activate / deactivate / change the settings for receiving notifications via e-mail.'),
     )
 
     group.add_argument(
@@ -296,10 +277,7 @@ def get_parser():
         dest='change_notification_telegram',
         default=False,
         action='store_true',
-        help=(
-            'Activate / deactivate / change the settings for receiving notifications via Telegram. It does not'
-            + ' affect the rest of the config.'
-        ),
+        help=('Activate / deactivate / change the settings for receiving notifications via Telegram.'),
     )
 
     group.add_argument(
@@ -308,10 +286,7 @@ def get_parser():
         dest='change_notification_xmpp',
         default=False,
         action='store_true',
-        help=(
-            'Activate / deactivate / change the settings for receiving notifications via XMPP. It does not'
-            + ' affect the rest of the config.'
-        ),
+        help=('Activate / deactivate / change the settings for receiving notifications via XMPP.'),
     )
 
     group.add_argument(
@@ -321,7 +296,7 @@ def get_parser():
         default=False,
         action='store_true',
         help=(
-            'This option lets you manage the offline database. It allows you to delete entries from the database'
+            'Manage the offline database. It allows you to delete entries from the database'
             + ' that are no longer available locally so that they can be downloaded again.'
         ),
     )
@@ -333,7 +308,7 @@ def get_parser():
         default=False,
         action='store_true',
         help=(
-            'This option lets you delete old copies of files. It allows you to delete entries from the database'
+            'Delete old copies of files. It allows you to delete entries from the database'
             + ' and from local file system.'
         ),
     )
@@ -343,49 +318,37 @@ def get_parser():
         dest='log_responses',
         default=False,
         action='store_true',
-        help='To generate a responses.log file in which all JSON responses from Moodles are logged'
-        + ' along with the requested URL.',
+        help=(
+            'Generate a responses.log file in which all JSON responses from your Moodle are logged'
+            + ' along with the requested URLs.'
+        ),
     )
 
     group.add_argument(
         '--add-all-visible-courses',
         default=False,
         action='store_true',
-        help='To add all courses visible to the user to the configuration file.',
+        help='Add all courses visible to the user to the configuration file.',
+    )
+
+    group.add_argument(
+        '--version',
+        action='version',
+        version='moodle-dl ' + __version__,
+        help='Print program version and exit',
     )
 
     parser.add_argument(
-        '-p',
-        '--path',
-        dest='path',
-        default='.',
-        type=_dir_path,
-        help=(
-            'Sets the location of the configuration, logs and downloaded files. PATH must be an'
-            + ' existing directory in which you have read and write access. (default: current working directory)'
-        ),
-    )
-
-    parser.add_argument(
-        '--mpl',
-        '--max-path-length-workaround',
-        dest='max_path_length_workaround',
+        '-sso',
+        '--sso',
+        dest='sso',
         default=False,
         action='store_true',
         help=(
-            'If this flag is set, all path are made absolute in order to workaround the max_path limitation on Windows.'
-            + 'To use relative paths on Windows you should disable the max_path limitation'
-            + 'https://docs.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation'
+            'Use SSO login instead of normal login. This flag can be used together with --init and -nt.'
+            + ' You will be guided through the Single Sign On (SSO) login process'
+            + ' during initialization or new token retrieval.'
         ),
-    )
-
-    parser.add_argument(
-        '-t',
-        '--threads',
-        dest='threads',
-        default=5,
-        type=int,
-        help=('Sets the number of max parallel downloads. (default: %(default)s)'),
     )
 
     parser.add_argument(
@@ -407,21 +370,32 @@ def get_parser():
     )
 
     parser.add_argument(
-        '-v',
-        '--verbose',
-        dest='verbose',
-        default=False,
-        action='store_true',
-        help='Print various debugging information',
+        '-tk',
+        '--token',
+        dest='token',
+        default=None,
+        type=str,
+        help=('Specify token to skip the interactive login procedure.'),
+    )
+    parser.add_argument(
+        '-p',
+        '--path',
+        dest='path',
+        default='.',
+        type=_dir_path,
+        help=(
+            'Sets the location of the configuration, logs and downloaded files. PATH must be an'
+            + ' existing directory in which you have read and write access. (default: current working directory)'
+        ),
     )
 
     parser.add_argument(
-        '--skip-cert-verify',
-        dest='skip_cert_verify',
-        default=False,
-        action='store_true',
-        help='If this flag is set, TLS certificates are not verified. This option should only be used in '
-        + 'non production environments.',
+        '-t',
+        '--threads',
+        dest='threads',
+        default=10,
+        type=int,
+        help=('Sets the number of max parallel downloads. (default: %(default)s)'),
     )
 
     parser.add_argument(
@@ -430,10 +404,12 @@ def get_parser():
         dest='ignore_ytdl_errors',
         default=False,
         action='store_true',
-        help='If this option is set, errors that occur when downloading with the help of yt-dlp are ignored. '
-        + 'Thus, no further attempt will be made to download the file using yt-dlp. '
-        + 'By default, yt-dlp errors are critical, so the download of the corresponding file '
-        + 'will be aborted and when you run moodle-dl again, the download will be repeated.',
+        help=(
+            'Ignore errors that occur when downloading with the help of yt-dlp.'
+            + ' Thus, no further attempt will be made to download the file using yt-dlp.'
+            + ' By default, yt-dlp errors are critical, so the download of the corresponding file'
+            + ' will be aborted and when you run moodle-dl again, the download will be repeated.'
+        ),
     )
 
     parser.add_argument(
@@ -441,18 +417,49 @@ def get_parser():
         dest='without_downloading_files',
         default=False,
         action='store_true',
-        help='If this flag is set, no files are downloaded. This allows the local database to be updated without'
-        + ' having to download all files.',
+        help=(
+            'Do not download any file. This allows the local database to be updated'
+            + ' without having to download all files.'
+        ),
     )
 
     parser.add_argument(
-        '-sso',
-        '--sso',
-        dest='sso',
+        '--mpl',
+        '--max-path-length-workaround',
+        dest='max_path_length_workaround',
         default=False,
         action='store_true',
-        help='This flag can be used together with --init and -nt. If this flag is set, you will be guided through the'
-        + ' Single Sign On (SSO) login process during initialization or new token retrieval.',
+        help=(
+            'Make all paths absolute in order to workaround the max_path limitation on Windows.'
+            + ' To use relative paths on Windows you should disable the max_path limitation see:'
+            + ' https://docs.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation'
+        ),
+    )
+
+    parser.add_argument(
+        '-ais',
+        '--allow-insecure-ssl',
+        dest='allow_insecure_ssl',
+        default=False,
+        action='store_true',
+        help='Allow connections to unpatched servers. Use this option if your server uses a very old SSL version.',
+    )
+    parser.add_argument(
+        '-scv',
+        '--skip-cert-verify',
+        dest='skip_cert_verify',
+        default=False,
+        action='store_true',
+        help='Don\'t verify TLS certificates. This option should only be used in non production environments.',
+    )
+
+    parser.add_argument(
+        '-v',
+        '--verbose',
+        dest='verbose',
+        default=False,
+        action='store_true',
+        help='Print various debugging information',
     )
 
     return parser
@@ -511,7 +518,7 @@ def main(args=None):
 
         Log.success('All done. Exiting..')
         ProcessLock.unlock(opts.path)
-    except BaseException as base_err:
+    except BaseException as base_err:  # pylint: disable=broad-except
         print('\n')
         if not isinstance(base_err, ProcessLock.LockError):
             ProcessLock.unlock(opts.path)
