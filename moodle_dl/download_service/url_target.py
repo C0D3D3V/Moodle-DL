@@ -25,9 +25,9 @@ import requests
 import html2text
 import yt_dlp
 
-from yt_dlp.utils import format_bytes, timeconvert
 from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema, RequestException
 
+from moodle_dl.utils import format_bytes, timeconvert
 from moodle_dl.state_recorder.file import File
 from moodle_dl.state_recorder.course import Course
 from moodle_dl.download_service.path_tools import PathTools
@@ -922,12 +922,12 @@ class URLTarget(object):
                     # remove touched file
                     if os.path.exists(self.file.saved_to):
                         os.remove(self.file.saved_to)
-                except OSError as e:
+                except OSError as err_remove:
                     logging.warning(
                         'T%s - Could not delete %s after thread failed. Error: %s',
                         self.thread_id,
                         self.file.saved_to,
-                        e,
+                        err_remove,
                     )
             else:
                 # Subtract the already downloaded content in case of an error.

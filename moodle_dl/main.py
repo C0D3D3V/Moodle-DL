@@ -19,6 +19,8 @@ try:
 except ImportError:
     pass
 
+from colorama import just_fix_windows_console
+
 import moodle_dl.utils.process_lock as process_lock
 
 from moodle_dl.utils import cutie
@@ -596,6 +598,7 @@ def get_parser():
 # --- called at the program invocation: -------------------------------------
 def main(args=None):
     """The main routine."""
+    just_fix_windows_console()
 
     check_debug()
 

@@ -29,15 +29,16 @@ setup(
             'moodle-dl = moodle_dl.main:main',
         ],
     },
-    python_requires='>=3.6',
+    python_requires='>=3.7',
     install_requires=[
         'sentry_sdk>=0.13.5',
-        'colorama>=0.4.3',
+        'colorama>=0.4.6',
         'yt_dlp>=2021.10.22',
         'certifi>=2020.4.5.2',
         'html2text>=2020.1.16',
         'requests>=2.24.0',
         'aioxmpp>=0.12.2',
+        'readchar>=4.0.3',
     ],
     classifiers=[
         'Development Status :: 5 - Production/Stable',

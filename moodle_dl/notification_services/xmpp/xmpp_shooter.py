@@ -1,8 +1,9 @@
 import os
 import asyncio
-import certifi
 
 import aioxmpp
+
+from moodle_dl.utils import SslHelper
 
 
 class XmppShooter:
@@ -14,9 +15,9 @@ class XmppShooter:
 
     @staticmethod
     def my_ssl_factory():
-        ctx = aioxmpp.security_layer.default_ssl_context()
-        ctx.load_verify_locations(certifi.where())
-        return ctx
+        ssl_context = aioxmpp.security_layer.default_ssl_context()
+        SslHelper.load_default_certs(ssl_context)
+        return ssl_context
 
     def __init__(self, jid, password, recipient):
         self.g_jid = aioxmpp.JID.fromstr(jid)

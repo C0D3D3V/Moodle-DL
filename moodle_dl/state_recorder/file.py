@@ -79,7 +79,7 @@ class File:
 
         self.hash = file_hash
 
-        # For Textlable
+        # For text label
         self.text_content = None
 
         # For Created HTML-Files like Quizzes

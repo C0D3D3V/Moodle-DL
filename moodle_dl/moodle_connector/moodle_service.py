@@ -8,10 +8,7 @@ from typing import List
 from urllib.parse import urlparse
 from distutils.version import StrictVersion
 
-from yt_dlp.utils import determine_ext
-
-from moodle_dl.utils import cutie
-from moodle_dl.utils.logger import Log
+from moodle_dl.utils import Cutie, Log, determine_ext
 from moodle_dl.config_service.config_helper import ConfigHelper
 from moodle_dl.state_recorder.course import Course
 from moodle_dl.state_recorder.state_recorder import StateRecorder
@@ -192,7 +189,7 @@ class MoodleService:
         do_automatic = False
         if allow_automatic:
             print(' If you want to copy the login-token manual, you will be guided through the manual copy process.')
-            do_automatic = cutie.prompt_yes_or_no('Do you want to try to receive the SSO token automatically?')
+            do_automatic = Cutie.prompt_yes_or_no('Do you want to try to receive the SSO token automatically?')
 
         print('Please log into Moodle on this computer and then visit the following address in your web browser: ')
 
