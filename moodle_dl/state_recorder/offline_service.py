@@ -2,8 +2,8 @@ import os
 
 from pathlib import Path
 
-from moodle_dl.utils import cutie
-from moodle_dl.utils.logger import Log
+from moodle_dl.utils import Cutie
+from moodle_dl.utils import Log
 from moodle_dl.state_recorder.file import File
 from moodle_dl.moodle_connector.moodle_service import MoodleService
 from moodle_dl.config_service.config_helper import ConfigHelper
@@ -63,7 +63,7 @@ class OfflineService:
         print('Choose one of the courses:')
         print('[Confirm your selection with the Enter key]')
         print('')
-        selected_course_id = cutie.select(options=course_options)
+        selected_course_id = Cutie.select(options=course_options)
 
         selected_course = courses[selected_course_id]
 
@@ -83,7 +83,7 @@ class OfflineService:
         print('[You can select with the space bar and confirm your selection with the enter key]')
         print('')
 
-        selected_sections_ids = cutie.select_multiple(options=section_options, minimal_count=1)
+        selected_sections_ids = Cutie.select_multiple(options=section_options, minimal_count=1)
 
         selected_sections = []
         for selected_sections_id in selected_sections_ids:
@@ -108,7 +108,7 @@ class OfflineService:
         print('Which of the files should be removed form the database, so that they will be redownloaded?')
         print('[You can select with the space bar and confirm your selection with the enter key]')
         print('')
-        selected_files = cutie.select_multiple(options=file_options)
+        selected_files = Cutie.select_multiple(options=file_options)
 
         files_to_delete = []
         for file_index in selected_files:
@@ -149,7 +149,7 @@ class OfflineService:
         print('Choose one of the courses:')
         print('[Confirm your selection with the Enter key]')
         print('')
-        selected_course_id = cutie.select(options=course_options)
+        selected_course_id = Cutie.select(options=course_options)
 
         selected_course = stored_files[selected_course_id]
 
@@ -169,7 +169,7 @@ class OfflineService:
         print('[You can select with the space bar and confirm your selection with the enter key]')
         print('')
 
-        selected_sections_ids = cutie.select_multiple(options=section_options, minimal_count=1)
+        selected_sections_ids = Cutie.select_multiple(options=section_options, minimal_count=1)
 
         selected_sections = []
         for selected_sections_id in selected_sections_ids:
@@ -194,7 +194,7 @@ class OfflineService:
         print('Which of the files should be deleted?')
         print('[You can select with the space bar and confirm your selection with the enter key]')
         print('')
-        selected_files = cutie.select_multiple(options=file_options)
+        selected_files = Cutie.select_multiple(options=file_options)
 
         files_to_delete = []
         for file_index in selected_files:

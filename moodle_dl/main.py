@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 # coding=utf-8
 
+import argparse
+import logging
 import os
 import sys
-import logging
-import argparse
 import traceback
 
-from shutil import which
 from logging.handlers import RotatingFileHandler
+from shutil import which
 
 import sentry_sdk
 
@@ -21,22 +21,18 @@ except ImportError:
 
 from colorama import just_fix_windows_console
 
-import moodle_dl.utils.process_lock as process_lock
-
-from moodle_dl.utils import cutie
-from moodle_dl.utils.logger import Log
-from moodle_dl.version import __version__
-from moodle_dl.download_service.path_tools import PathTools
 from moodle_dl.config_service.config_helper import ConfigHelper
 from moodle_dl.config_service.config_service import ConfigService
-from moodle_dl.state_recorder.offline_service import OfflineService
-from moodle_dl.moodle_connector.moodle_service import MoodleService
 from moodle_dl.download_service.download_service import DownloadService
-from moodle_dl.notification_services.mail.mail_service import MailService
-from moodle_dl.notification_services.xmpp.xmpp_service import XmppService
 from moodle_dl.download_service.fake_download_service import FakeDownloadService
+from moodle_dl.moodle_connector.moodle_service import MoodleService
 from moodle_dl.notification_services.console.console_service import ConsoleService
+from moodle_dl.notification_services.mail.mail_service import MailService
 from moodle_dl.notification_services.telegram.telegram_service import TelegramService
+from moodle_dl.notification_services.xmpp.xmpp_service import XmppService
+from moodle_dl.state_recorder.offline_service import OfflineService
+from moodle_dl.utils import PathTools, Log, Cutie, ProcessLock
+from moodle_dl.version import __version__
 
 IS_DEBUG = False
 
@@ -56,7 +52,7 @@ def run_init(storage_path, use_sso=False, skip_cert_verify=False):
     config = ConfigHelper(storage_path)
 
     if config.is_present():
-        do_override_input = cutie.prompt_yes_or_no(Log.error_str('Do you want to override the existing config?'))
+        do_override_input = Cutie.prompt_yes_or_no(Log.error_str('Do you want to override the existing config?'))
 
         if not do_override_input:
             sys.exit(0)
@@ -65,7 +61,7 @@ def run_init(storage_path, use_sso=False, skip_cert_verify=False):
     TelegramService(config).interactively_configure()
     XmppService(config).interactively_configure()
 
-    do_sentry = cutie.prompt_yes_or_no('Do you want to configure Error Reporting via Sentry?')
+    do_sentry = Cutie.prompt_yes_or_no('Do you want to configure Error Reporting via Sentry?')
     if do_sentry:
         sentry_dsn = input('Please enter your Sentry DSN:   ')
         config.set_property('sentry_dsn', sentry_dsn)
@@ -103,7 +99,7 @@ def run_init(storage_path, use_sso=False, skip_cert_verify=False):
 
     Log.info('You can always do the additional configuration later with the --config option.')
 
-    do_config = cutie.prompt_yes_or_no('Do you want to make additional configurations now?')
+    do_config = Cutie.prompt_yes_or_no('Do you want to make additional configurations now?')
 
     if do_config:
         run_configure(storage_path, skip_cert_verify)
@@ -260,7 +256,7 @@ def run_main(
 
     try:
         if not IS_DEBUG:
-            process_lock.lock(storage_path)
+            ProcessLock.lock(storage_path)
 
         moodle = MoodleService(config, storage_path, skip_cert_verify, log_responses)
 
@@ -275,7 +271,7 @@ def run_main(
             )
             logging.debug(msg_responses_logged)
             Log.success(msg_responses_logged)
-            process_lock.unlock(storage_path)
+            ProcessLock.unlock(storage_path)
             return
 
         msg_start_downloading = 'Start downloading changed files...'
@@ -310,14 +306,14 @@ def run_main(
             tg_service.notify_about_failed_downloads(failed_downloads)
             xmpp_service.notify_about_failed_downloads(failed_downloads)
 
-        process_lock.unlock(storage_path)
+        ProcessLock.unlock(storage_path)
 
         logging.debug('All done. Exiting...')
         Log.success('All done. Exiting..')
     except BaseException as e:
         print('\n')
-        if not isinstance(e, process_lock.LockError):
-            process_lock.unlock(storage_path)
+        if not isinstance(e, ProcessLock.LockError):
+            ProcessLock.unlock(storage_path)
 
         error_formatted = traceback.format_exc()
         logging.error(error_formatted, extra={'exception': e})

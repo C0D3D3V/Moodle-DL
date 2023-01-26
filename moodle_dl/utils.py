@@ -473,12 +473,6 @@ class SslHelper:
         return session
 
 
-class LockError(Exception):
-    """An Exception which gets thrown if a Downloader is already running."""
-
-    pass
-
-
 class ProcessLock:
     """
     A very simple lock mechanism to prevent multiple downloader being started for the same Moodle.
@@ -486,6 +480,11 @@ class ProcessLock:
     The functions are not resistant to high frequency calls.
     Raise conditions will occur!
     """
+
+    class LockError(Exception):
+        """An Exception which gets thrown if a Downloader is already running."""
+
+        pass
 
     @staticmethod
     def lock(dir_path: str):

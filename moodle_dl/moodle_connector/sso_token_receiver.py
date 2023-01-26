@@ -4,7 +4,7 @@ import base64
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-from moodle_dl.utils.logger import Log
+from moodle_dl.utils import Log
 
 
 class TransferServer(BaseHTTPRequestHandler):

@@ -4,7 +4,7 @@ import platform
 from pathlib import Path
 from typing import List
 
-from moodle_dl.utils.logger import Log
+from moodle_dl.utils import Log
 from moodle_dl.state_recorder.course import Course
 from moodle_dl.download_service.path_tools import PathTools
 from moodle_dl.moodle_connector.moodle_service import MoodleService

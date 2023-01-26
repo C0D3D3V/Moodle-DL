@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 from typing import Dict
 
-from moodle_dl.utils.logger import Log
+from moodle_dl.utils import Log
 from moodle_dl.moodle_connector.request_helper import RequestHelper, RequestRejectedError
 
 

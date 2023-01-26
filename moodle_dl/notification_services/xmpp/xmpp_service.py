@@ -6,8 +6,8 @@ from typing import List
 
 import aioxmpp
 
-from moodle_dl.utils import cutie
-from moodle_dl.utils.logger import Log
+from moodle_dl.utils import Cutie
+from moodle_dl.utils import Log
 from moodle_dl.state_recorder.course import Course
 from moodle_dl.download_service.url_target import URLTarget
 from moodle_dl.notification_services.xmpp.xmpp_shooter import XmppShooter
@@ -21,7 +21,7 @@ class XmppService(NotificationService):
         Guides the user through the configuration of the xmpp notification.
         """
 
-        do_xmpp = cutie.prompt_yes_or_no('Do you want to activate Notifications via XMPP?')
+        do_xmpp = Cutie.prompt_yes_or_no('Do you want to activate Notifications via XMPP?')
 
         if not do_xmpp:
             self.config_helper.remove_property('xmpp')

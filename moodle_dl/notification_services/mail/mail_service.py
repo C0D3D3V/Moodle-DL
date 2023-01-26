@@ -4,8 +4,8 @@ import traceback
 from getpass import getpass
 from typing import List
 
-from moodle_dl.utils import cutie
-from moodle_dl.utils.logger import Log
+from moodle_dl.utils import Cutie
+from moodle_dl.utils import Log
 from moodle_dl.state_recorder.course import Course
 from moodle_dl.download_service.url_target import URLTarget
 from moodle_dl.notification_services.mail.mail_shooter import MailShooter
@@ -24,7 +24,7 @@ class MailService(NotificationService):
         Guides the user through the configuration of the mail notification.
         """
 
-        do_mail = cutie.prompt_yes_or_no('Do you want to activate Notifications via mail?')
+        do_mail = Cutie.prompt_yes_or_no('Do you want to activate Notifications via mail?')
 
         if not do_mail:
             self.config_helper.remove_property('mail')

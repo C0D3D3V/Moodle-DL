@@ -2,8 +2,8 @@ import logging
 import traceback
 from typing import List
 
-from moodle_dl.utils import cutie
-from moodle_dl.utils.logger import Log
+from moodle_dl.utils import Cutie
+from moodle_dl.utils import Log
 from moodle_dl.state_recorder.course import Course
 from moodle_dl.download_service.url_target import URLTarget
 from moodle_dl.notification_services.telegram.telegram_shooter import TelegramShooter, RequestRejectedError
@@ -17,7 +17,7 @@ class TelegramService(NotificationService):
         Guides the user through the configuration of the telegram notification.
         """
 
-        do_telegram = cutie.prompt_yes_or_no('Do you want to activate Notifications via Telegram?')
+        do_telegram = Cutie.prompt_yes_or_no('Do you want to activate Notifications via Telegram?')
 
         if not do_telegram:
             self.config_helper.remove_property('telegram')
