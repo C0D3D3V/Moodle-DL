@@ -12,7 +12,7 @@ class DiscordFormatter:
     @classmethod
     def create_full_moodle_diff_messages(cls, changed_courses: [Course], moodle_url) -> [str]:
         """
-        Creates telegram messages with all changed files. This includes new,
+        Creates Discord messages with all changed files. This includes new,
         modified and deleted files. Files that have changed since the last message.
 
         @param changed_courses: A list of all courses with their modified files.
