@@ -21,8 +21,8 @@ from yt_dlp.utils import (
 )
 
 
-class HelixmediaIE(InfoExtractor):
-    IE_NAME = 'helixmedia'
+class HelixmediaLtiIE(InfoExtractor):
+    IE_NAME = 'helixmediaLti'
     _VALID_URL = r'(?P<scheme>https?://)(?P<host>[^/]+)(?P<path>.*)?/mod/helixmedia/view.php\?.*?id=(?P<id>\d+)'
     _LAUNCH_FORM = 'ltiLaunchForm'
 

@@ -13,8 +13,8 @@ from yt_dlp.utils import (
 )
 
 
-class KalvidresIE(InfoExtractor):
-    IE_NAME = 'kalvidres'
+class KalvidresLtiIE(InfoExtractor):
+    IE_NAME = 'kalvidresLti'
     _VALID_URL = r'(?P<scheme>https?://)(?P<host>[^/]+)(?P<path>.*)?/mod/kalvidres/view.php\?.*?id=(?P<id>\d+)'
     _LAUNCH_FORM = 'ltiLaunchForm'
 
