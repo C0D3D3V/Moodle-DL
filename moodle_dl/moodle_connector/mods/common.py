@@ -1,11 +1,12 @@
+from abc import ABCMeta, abstractmethod
 from typing import Dict, List
 
-from moodle_dl.config_service.config_helper import ConfigHelper
+from moodle_dl.config_service import ConfigHelper
 from moodle_dl.moodle_connector.request_helper import RequestHelper
 from moodle_dl.state_recorder.course import Course
 
 
-class MoodleMod:
+class MoodleMod(metaclass=ABCMeta):
     """
     Common class for a Moodle module endpoint
     """
@@ -15,5 +16,6 @@ class MoodleMod:
         self.version = moodle_version
         self.config = config
 
+    @abstractmethod
     async def fetch_module(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
-        raise NotImplementedError('This method must be implemented by subclasses')
+        pass

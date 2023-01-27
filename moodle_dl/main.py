@@ -17,15 +17,12 @@ except ImportError:
 
 from colorama import just_fix_windows_console
 
-from moodle_dl.config_service.config_helper import ConfigHelper
+from moodle_dl.config_service import ConfigHelper
 from moodle_dl.config_service.config_service import ConfigService
 from moodle_dl.download_service.download_service import DownloadService
 from moodle_dl.download_service.fake_download_service import FakeDownloadService
 from moodle_dl.moodle_connector.moodle_service import MoodleService
-from moodle_dl.notification_services.console.console_service import ConsoleService
-from moodle_dl.notification_services.mail.mail_service import MailService
-from moodle_dl.notification_services.telegram.telegram_service import TelegramService
-from moodle_dl.notification_services.xmpp.xmpp_service import XmppService
+from moodle_dl.notification_services import get_all_notify_services, get_remote_notify_services
 from moodle_dl.state_recorder.offline_service import OfflineService
 from moodle_dl.utils import Log, Cutie, ProcessLock, check_debug, check_verbose, PathTools as PT
 from moodle_dl.version import __version__
@@ -49,7 +46,7 @@ def run_init(config: ConfigHelper, opts):
         if not do_override_input:
             sys.exit(0)
 
-    notify_services = [MailService(config), TelegramService(config), XmppService(config)]
+    notify_services = get_remote_notify_services(config)
     for service in notify_services:
         service.interactively_configure()
 
@@ -106,7 +103,7 @@ def run_main(config: ConfigHelper, opts):
     except (ValueError, sentry_sdk.utils.BadDsn, sentry_sdk.utils.ServerlessTimeoutWarning):
         pass
 
-    notify_services = [ConsoleService(config), MailService(config), TelegramService(config), XmppService(config)]
+    notify_services = get_all_notify_services(config)
 
     # Todo: Change this
     PT.restricted_filenames = config.get_restricted_filenames()

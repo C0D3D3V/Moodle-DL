@@ -1,16 +1,15 @@
 from abc import ABCMeta, abstractmethod
 from typing import List
 
-from moodle_dl.state_recorder.course import Course
+from moodle_dl.config_service import ConfigHelper
 from moodle_dl.download_service.url_target import URLTarget
-from moodle_dl.config_service.config_helper import ConfigHelper
+from moodle_dl.state_recorder.course import Course
 
 
-class NotificationService:
-    __metaclass__ = ABCMeta
-    # This enables us to use the @abstractmethod-annotation
-    # By using it, we make it only possible to instantiate a derived class if
-    # every abstractmethod  has a concrete implementation in it.
+class NotificationService(metaclass=ABCMeta):
+    """
+    Common class for a notification service
+    """
 
     def __init__(self, config_helper: ConfigHelper):
         self.config_helper = config_helper

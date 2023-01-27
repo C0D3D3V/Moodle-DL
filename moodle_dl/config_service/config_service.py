@@ -7,7 +7,7 @@ from typing import Dict, List
 from moodle_dl.utils import Cutie
 from moodle_dl.utils import Log
 from moodle_dl.state_recorder.course import Course
-from moodle_dl.config_service.config_helper import ConfigHelper
+from moodle_dl.config_service import ConfigHelper
 from moodle_dl.moodle_connector.results_handler import ResultsHandler
 from moodle_dl.moodle_connector.first_contact_handler import FirstContactHandler
 from moodle_dl.moodle_connector.request_helper import RequestRejectedError, RequestHelper

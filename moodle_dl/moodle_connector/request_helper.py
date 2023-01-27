@@ -12,13 +12,12 @@ import urllib3
 
 from requests.exceptions import RequestException
 
-from moodle_dl.utils import SslHelper
+from moodle_dl.utils import SslHelper, PathTools as PT
 
 
 class RequestHelper:
     """
-    Encapsulates the recurring logic for sending out requests to the
-    Moodle-System.
+    Functions for sending out requests to the Moodle System.
     """
 
     stdHeader = {
@@ -29,18 +28,12 @@ class RequestHelper:
         'Content-Type': 'application/x-www-form-urlencoded',
     }
 
-    def __init__(
-        self,
-        moodle_domain: str,
-        moodle_path: str = '/',
-        token: str = '',
-        skip_cert_verify: bool = False,
-        log_responses_to: str = None,
-        use_http: bool = False,
-    ):
+    def __init__(self, opts, moodle_domain: str, moodle_path: str = '/', token: str = '', use_http: bool = False):
         self.token = token
         self.moodle_domain = moodle_domain
         self.moodle_path = moodle_path
+        self.use_http = use_http
+        self.opts = opts
 
         self.verify = not skip_cert_verify
 
@@ -49,18 +42,15 @@ class RequestHelper:
             scheme = 'http://'
         self.url_base = scheme + moodle_domain + moodle_path
 
-        self.log_responses_to = log_responses_to
-        self.log_responses = False
-
-        if log_responses_to is not None:
-            self.log_responses = True
+        self.log_responses_to = None
+        if opts.log_responses:
+            self.log_responses_to = PT.make_path(opts.path, 'responses.log')
             with open(self.log_responses_to, 'w', encoding='utf-8') as response_log_file:
                 response_log_file.write('JSON Log:\n\n')
 
         logging.getLogger("requests").setLevel(logging.WARNING)
         logging.getLogger("urllib3").setLevel(logging.WARNING)
         urllib3.disable_warnings()
-        # logging.captureWarnings(True)
 
     def post_URL(self, url: str, data: Dict[str, str] = None, cookie_jar_path: str = None):
         """
@@ -163,7 +153,7 @@ class RequestHelper:
                 raise ConnectionError(f"Connection error: {error}") from None
 
         json_result = self._initial_parse(response)
-        if self.log_responses and function not in ['tool_mobile_get_autologin_key']:
+        if self.opts.log_responses and function not in ['tool_mobile_get_autologin_key']:
             with open(self.log_responses_to, 'a', encoding='utf-8') as response_log_file:
                 response_log_file.write(f'URL: {response.url}\n')
                 response_log_file.write(f'Function: {function}\n\n')

@@ -6,7 +6,7 @@ from moodle_dl.utils import Cutie
 from moodle_dl.utils import Log
 from moodle_dl.state_recorder.file import File
 from moodle_dl.moodle_connector.moodle_service import MoodleService
-from moodle_dl.config_service.config_helper import ConfigHelper
+from moodle_dl.config_service import ConfigHelper
 from moodle_dl.state_recorder.state_recorder import StateRecorder
 
 

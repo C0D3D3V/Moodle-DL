@@ -9,17 +9,10 @@ from pathlib import Path
 from typing import List, Tuple
 from urllib.parse import urlparse
 
-from moodle_dl.config_service.config_helper import ConfigHelper
+from moodle_dl.config_service import ConfigHelper
 from moodle_dl.moodle_connector.cookie_handler import CookieHandler
 from moodle_dl.moodle_connector.first_contact_handler import FirstContactHandler
-from moodle_dl.moodle_connector.mods.assignments_handler import AssignmentsHandler
-from moodle_dl.moodle_connector.mods.databases_handler import DatabasesHandler
-from moodle_dl.moodle_connector.mods.folders_handler import FoldersHandler
-from moodle_dl.moodle_connector.mods.forums_handler import ForumsHandler
-from moodle_dl.moodle_connector.mods.lessons_handler import LessonsHandler
-from moodle_dl.moodle_connector.mods.pages_handler import PagesHandler
-from moodle_dl.moodle_connector.mods.quizzes_handler import QuizzesHandler
-from moodle_dl.moodle_connector.mods.workshops_handler import WorkshopsHandler
+from moodle_dl.moodle_connector.mods import get_all_moodle_mods
 from moodle_dl.moodle_connector.request_helper import RequestRejectedError, RequestHelper
 from moodle_dl.moodle_connector.results_handler import ResultsHandler
 from moodle_dl.state_recorder.course import Course
@@ -33,12 +26,8 @@ class MoodleService:
         self.opts = opts
         self.recorder = StateRecorder(Path(opts.path) / 'moodle_state.db')
 
-        self.log_responses_to = None
-        if opts.log_responses:
-            self.log_responses_to = str(Path(opts.path) / 'responses.log')
-
     def interactively_acquire_token(self, use_stored_url: bool = False) -> str:
-        if self.opts.sso:
+        if self.opts.sso or self.opts.token is not None:
             self.interactively_acquire_sso_token(use_stored_url=use_stored_url)
         else:
             self.interactively_acquire_normal_token(use_stored_url=use_stored_url)
@@ -145,9 +134,7 @@ class MoodleService:
         """
         login_data = {'username': username, 'password': password, 'service': 'moodle_mobile_app'}
 
-        response = RequestHelper(
-            moodle_domain, moodle_path, skip_cert_verify=skip_cert_verify, use_http=use_http
-        ).get_login(login_data)
+        response = RequestHelper(self.opts, moodle_domain, moodle_path, use_http=use_http).get_login(login_data)
 
         if 'token' not in response:
             # = we didn't get an error page (checked by the RequestHelper) but
@@ -161,8 +148,7 @@ class MoodleService:
 
     def interactively_acquire_sso_token(self, use_stored_url: bool = False) -> str:
         """
-        Walks the user through the receiving of a SSO token for the
-        Moodle-System and saves it.
+        Walks the user through the receiving of a SSO token
         @return: The Token for Moodle.
         """
         if not use_stored_url:
@@ -179,42 +165,44 @@ class MoodleService:
         scheme = 'https://'
         if use_http:
             scheme = 'http://'
+        if self.opts.token is not None:
+            moodle_token = self.opts.token
+        else:
+            Log.warning('Please use the Chrome browser for the following procedure')
+            print('1. Log into your Moodle Account')
+            print('2. Open the developer console (press F12) and go to the Network tab')
+            print('3. Then visit the following URL in the same browser tab you have logged in:')
 
-        Log.warning('Please use the Chrome browser for the following procedure')
-        print('1. Log into your Moodle Account')
-        print('2. Open the developer console (press F12) and go to the Network tab')
-        print('3. Then visit the following URL in the same browser tab you have logged in:')
+            print(
+                scheme
+                + moodle_domain
+                + moodle_path
+                + 'admin/tool/mobile/launch.php?service='
+                + 'moodle_mobile_app&passport=12345&urlscheme=moodledownloader'
+            )
+            print()
+            print(
+                'If you open the link, no web page should load, instead an error will occur.'
+                + ' In the Network tab of the developer console you opened before there should be an error entry.'
+            )
 
-        print(
-            scheme
-            + moodle_domain
-            + moodle_path
-            + 'admin/tool/mobile/launch.php?service='
-            + 'moodle_mobile_app&passport=12345&urlscheme=moodledownloader'
-        )
-        print()
-        print(
-            'If you open the link, no web page should load, instead an error will occur.'
-            + ' In the Network tab of the developer console you opened before there should be an error entry.'
-        )
+            print('The script expects a URL that looks something like this:')
+            Log.info('moodledownloader://token=$apptoken')
+            print(
+                ' Where $apptoken looks random and "moodledownloader" can also be a different url scheme '
+                + ' like "moodlemobile". In reality $apptoken is a Base64 string containing the token to access moodle.'
+            )
 
-        print('The script expects a URL that looks something like this:')
-        Log.info('moodledownloader://token=$apptoken')
-        print(
-            ' Where $apptoken looks random and "moodledownloader" can also be a different url scheme '
-            + ' like "moodlemobile". In reality $apptoken is a Base64 string containing the token to access moodle.'
-        )
+            print(
+                '4. Copy the link address of the website that could not be loaded'
+                + ' (right click the list entry, then click on Copy, then click on copy link address)'
+            )
 
-        print(
-            '4. Copy the link address of the website that could not be loaded'
-            + ' (right click the list entry, then click on Copy, then click on copy link address)'
-        )
+            token_address = input('Then insert the link address here:   ')
 
-        token_address = input('Then insert the link address here:   ')
-
-        moodle_token, moodle_privatetoken = self.extract_token(token_address)
-        if moodle_token is None:
-            raise ValueError('Invalid URL!')
+            moodle_token, moodle_privatetoken = self.extract_token(token_address)
+            if moodle_token is None:
+                raise ValueError('Invalid URL!')
 
         # Saves the created token and the successful Moodle parameters.
         self.config.set_property('token', moodle_token)
@@ -267,14 +255,7 @@ class MoodleService:
         moodle_path = self.config.get_moodle_path()
         use_http = self.config.get_use_http()
 
-        request_helper = RequestHelper(
-            moodle_domain,
-            moodle_path,
-            token,
-            self.skip_cert_verify,
-            self.log_responses_to,
-            use_http,
-        )
+        request_helper = RequestHelper(self.opts, moodle_domain, moodle_path, token, use_http)
         first_contact_handler = FirstContactHandler(request_helper)
         results_handler = ResultsHandler(request_helper, moodle_domain, moodle_path)
 
@@ -300,15 +281,8 @@ class MoodleService:
             userid, version = first_contact_handler.fetch_userid_and_version()
         else:
             first_contact_handler.version = version
-        assignments_handler = AssignmentsHandler(request_helper, version)
-        databases_handler = DatabasesHandler(request_helper, version)
-        forums_handler = ForumsHandler(request_helper, version)
-        quizzes_handler = QuizzesHandler(request_helper, version)
-        lessons_handler = LessonsHandler(request_helper, version)
-        workshops_handler = WorkshopsHandler(request_helper, version)
-        pages_handler = PagesHandler(request_helper, version)
-        folders_handler = FoldersHandler(request_helper, version)
 
+        mod_handlers = get_all_moodle_mods(request_helper, version, self.config)
         results_handler.setVersion(version)
 
         if download_also_with_cookie:
