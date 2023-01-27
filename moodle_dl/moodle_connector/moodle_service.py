@@ -11,11 +11,10 @@ from urllib.parse import urlparse
 
 from moodle_dl.config_service import ConfigHelper
 from moodle_dl.moodle_connector.cookie_handler import CookieHandler
-from moodle_dl.moodle_connector.first_contact_handler import FirstContactHandler
+from moodle_dl.moodle_connector import FirstContactHandler, RequestRejectedError, RequestHelper
 from moodle_dl.moodle_connector.mods import get_all_moodle_mods
-from moodle_dl.moodle_connector.request_helper import RequestRejectedError, RequestHelper
 from moodle_dl.moodle_connector.results_handler import ResultsHandler
-from moodle_dl.state_recorder import Course,StateRecorder
+from moodle_dl.state_recorder import Course, StateRecorder
 from moodle_dl.utils import Log, determine_ext
 
 
@@ -256,7 +255,6 @@ class MoodleService:
 
         request_helper = RequestHelper(self.opts, moodle_domain, moodle_path, token, use_http)
         first_contact_handler = FirstContactHandler(request_helper)
-        results_handler = ResultsHandler(request_helper, moodle_domain, moodle_path)
 
         download_course_ids = self.config.get_download_course_ids()
         download_public_course_ids = self.config.get_download_public_course_ids()
@@ -275,25 +273,26 @@ class MoodleService:
 
         print('\rDownloading account information\033[K', end='')
 
-        userid, version = self.config.get_userid_and_version()
-        if userid is None or version is None:
-            userid, version = first_contact_handler.fetch_userid_and_version()
+        user_id, version = self.config.get_userid_and_version()
+        if user_id is None or version is None:
+            user_id, version = first_contact_handler.fetch_userid_and_version()
+            logging.debug('Detected moodle version: %d', version)
         else:
             first_contact_handler.version = version
 
-        mod_handlers = get_all_moodle_mods(request_helper, version, self.config)
-        results_handler.setVersion(version)
+        mod_handlers = get_all_moodle_mods(request_helper, version, user_id, self.config)
+        results_handler = ResultsHandler(request_helper, moodle_domain, moodle_path, version)
 
         if download_also_with_cookie:
             # generate a new cookie if necessary
             cookie_handler = CookieHandler(request_helper, version, self.opts.path)
-            cookie_handler.check_and_fetch_cookies(privatetoken, userid)
+            cookie_handler.check_and_fetch_cookies(privatetoken, user_id)
 
-        courses_list = first_contact_handler.fetch_courses(userid)
+        courses_list = first_contact_handler.fetch_courses(user_id)
         courses = []
         # Filter unselected courses
         for course in courses_list:
-            if ResultsHandler.should_download_course(course.id, download_course_ids, dont_download_course_ids):
+            if MoodleService.should_download_course(course.id, download_course_ids, dont_download_course_ids):
                 courses.append(course)
 
         public_courses_list = first_contact_handler.fetch_courses_info(download_public_course_ids)
@@ -302,7 +301,7 @@ class MoodleService:
 
         assignments = assignments_handler.fetch_assignments(courses)
         if download_submissions:
-            assignments = assignments_handler.fetch_submissions(userid, assignments)
+            assignments = assignments_handler.fetch_submissions(user_id, assignments)
 
         databases = databases_handler.fetch_databases(courses)
         if download_databases:
@@ -315,15 +314,15 @@ class MoodleService:
 
         quizzes = quizzes_handler.fetch_quizzes(courses)
         if download_quizzes:
-            quizzes = quizzes_handler.fetch_quizzes_files(userid, quizzes)
+            quizzes = quizzes_handler.fetch_quizzes_files(user_id, quizzes)
 
         lessons = lessons_handler.fetch_lessons(courses)
         if download_lessons:
-            lessons = lessons_handler.fetch_lessons_files(userid, lessons)
+            lessons = lessons_handler.fetch_lessons_files(user_id, lessons)
 
         workshops = workshops_handler.fetch_workshops(courses)
         if download_workshops:
-            workshops = workshops_handler.fetch_workshops_files(userid, workshops)
+            workshops = workshops_handler.fetch_workshops_files(user_id, workshops)
 
         pages = pages_handler.fetch_pages(courses)
 
@@ -392,38 +391,38 @@ class MoodleService:
     @staticmethod
     def filter_courses(
         changes: List[Course],
-        config_helper: ConfigHelper,
+        config: ConfigHelper,
         cookie_handler: CookieHandler = None,
         courses_list: List[Course] = None,
     ) -> List[Course]:
         """
         Filters the changes course list from courses that
         should not get downloaded
-        @param config_helper: ConfigHelper to obtain all the diffrent filter configs
+        @param config: ConfigHelper to obtain all the different filter configs
         @param cookie_handler: CookieHandler to check if the cookie is valid
         @param courses_list: A list of all courses that are available online
         @return: filtered changes course list
         """
 
-        download_course_ids = config_helper.get_download_course_ids()
-        download_public_course_ids = config_helper.get_download_public_course_ids()
-        dont_download_course_ids = config_helper.get_dont_download_course_ids()
-        download_submissions = config_helper.get_download_submissions()
-        download_descriptions = config_helper.get_download_descriptions()
-        download_links_in_descriptions = config_helper.get_download_links_in_descriptions()
-        download_databases = config_helper.get_download_databases()
-        download_quizzes = config_helper.get_download_quizzes()
-        download_lessons = config_helper.get_download_lessons()
-        download_workshops = config_helper.get_download_workshops()
-        exclude_file_extensions = config_helper.get_exclude_file_extensions()
-        download_also_with_cookie = config_helper.get_download_also_with_cookie()
+        download_course_ids = config.get_download_course_ids()
+        download_public_course_ids = config.get_download_public_course_ids()
+        dont_download_course_ids = config.get_dont_download_course_ids()
+        download_submissions = config.get_download_submissions()
+        download_descriptions = config.get_download_descriptions()
+        download_links_in_descriptions = config.get_download_links_in_descriptions()
+        download_databases = config.get_download_databases()
+        download_quizzes = config.get_download_quizzes()
+        download_lessons = config.get_download_lessons()
+        download_workshops = config.get_download_workshops()
+        exclude_file_extensions = config.get_exclude_file_extensions()
+        download_also_with_cookie = config.get_download_also_with_cookie()
         if cookie_handler is not None:
             download_also_with_cookie = cookie_handler.test_cookies()
 
         filtered_changes = []
 
         for course in changes:
-            if not ResultsHandler.should_download_course(
+            if not MoodleService.should_download_course(
                 course.id, download_course_ids + download_public_course_ids, dont_download_course_ids
             ):
                 # Filter courses that should not be downloaded
@@ -470,7 +469,7 @@ class MoodleService:
                     # Exclude files whose file extension is blacklisted
                     and (determine_ext(file.content_filename) not in exclude_file_extensions)
                     # Exclude files that are in excluded sections
-                    and (ResultsHandler.should_download_section(file.section_id, course.excluded_sections))
+                    and (MoodleService.should_download_section(file.section_id, course.excluded_sections))
                 ):
                     course_files.append(file)
             course.files = course_files
@@ -503,6 +502,26 @@ class MoodleService:
                 filtered_changes.append(course)
 
         return filtered_changes
+
+    @staticmethod
+    def should_download_course(
+        course_id: int, download_course_ids: List[int], dont_download_course_ids: List[int]
+    ) -> bool:
+        """
+        Checks if a course is in White-list and not in Blacklist
+        """
+        inBlacklist = course_id in dont_download_course_ids
+        inWhitelist = course_id in download_course_ids or len(download_course_ids) == 0
+
+        return inWhitelist and not inBlacklist
+
+    @staticmethod
+    def should_download_section(section_id: int, dont_download_sections_ids: List[int]) -> bool:
+        """
+        Checks if a section is not in Blacklist
+        """
+
+        return section_id not in dont_download_sections_ids or len(dont_download_sections_ids) == 0
 
     @staticmethod
     def split_moodle_url(moodle_url: str) -> Tuple(str, str):

@@ -23,7 +23,7 @@ class XmppService(NotificationService):
         do_xmpp = Cutie.prompt_yes_or_no('Do you want to activate Notifications via XMPP?')
 
         if not do_xmpp:
-            self.config_helper.remove_property('xmpp')
+            self.config.remove_property('xmpp')
         else:
             print('[The following Inputs are not validated!]')
             config_valid = False
@@ -67,12 +67,12 @@ class XmppService(NotificationService):
                     'send_error_msg': do_send_error_msg,
                 }
 
-                self.config_helper.set_property('xmpp', xmpp_cfg)
+                self.config.set_property('xmpp', xmpp_cfg)
 
     def _is_configured(self) -> bool:
         # Checks if the sending of XMPP messages has been configured.
         try:
-            self.config_helper.get_property('xmpp')
+            self.config.get_property('xmpp')
             return True
         except ValueError:
             logging.debug('XMPP-Notifications not configured, skipping.')
@@ -85,7 +85,7 @@ class XmppService(NotificationService):
         if not self._is_configured() or messages is None or len(messages) == 0:
             return
 
-        xmpp_cfg = self.config_helper.get_property('xmpp')
+        xmpp_cfg = self.config.get_property('xmpp')
 
         logging.debug('Sending Notification via XMPP...')
         Log.debug('Sending Notification via XMPP... (Please wait)')
@@ -118,7 +118,7 @@ class XmppService(NotificationService):
         if not self._is_configured():
             return
 
-        xmpp_cfg = self.config_helper.get_property('xmpp')
+        xmpp_cfg = self.config.get_property('xmpp')
 
         if not xmpp_cfg.get('send_error_msg', True):
             return
@@ -134,7 +134,7 @@ class XmppService(NotificationService):
         if not self._is_configured():
             return
 
-        xmpp_cfg = self.config_helper.get_property('xmpp')
+        xmpp_cfg = self.config.get_property('xmpp')
 
         if not xmpp_cfg.get('send_error_msg', True):
             return

@@ -26,7 +26,7 @@ class MailService(NotificationService):
         do_mail = Cutie.prompt_yes_or_no('Do you want to activate Notifications via mail?')
 
         if not do_mail:
-            self.config_helper.remove_property('mail')
+            self.config.remove_property('mail')
         else:
             print('[The following Inputs are not validated!]')
 
@@ -73,12 +73,12 @@ class MailService(NotificationService):
                     'send_error_msg': do_send_error_msg,
                 }
 
-                self.config_helper.set_property('mail', mail_cfg)
+                self.config.set_property('mail', mail_cfg)
 
     def _is_configured(self) -> bool:
         # Checks if the sending of emails has been configured.
         try:
-            self.config_helper.get_property('mail')
+            self.config.get_property('mail')
             return True
         except ValueError:
             logging.debug('Mail-Notifications not configured, skipping.')
@@ -91,7 +91,7 @@ class MailService(NotificationService):
         if not self._is_configured():
             return
 
-        mail_cfg = self.config_helper.get_property('mail')
+        mail_cfg = self.config.get_property('mail')
 
         try:
             logging.debug('Sending Notification via Mail...')
@@ -134,7 +134,7 @@ class MailService(NotificationService):
         if not self._is_configured():
             return
 
-        mail_cfg = self.config_helper.get_property('mail')
+        mail_cfg = self.config.get_property('mail')
 
         if not mail_cfg.get('send_error_msg', True):
             return
@@ -150,7 +150,7 @@ class MailService(NotificationService):
         if not self._is_configured():
             return
 
-        mail_cfg = self.config_helper.get_property('mail')
+        mail_cfg = self.config.get_property('mail')
 
         if not mail_cfg.get('send_error_msg', True):
             return

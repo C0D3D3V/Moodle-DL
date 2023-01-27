@@ -20,7 +20,7 @@ class TelegramService(NotificationService):
         do_telegram = Cutie.prompt_yes_or_no('Do you want to activate Notifications via Telegram?')
 
         if not do_telegram:
-            self.config_helper.remove_property('telegram')
+            self.config.remove_property('telegram')
         else:
             print('[The following Inputs are not validated!]')
             print(
@@ -61,12 +61,12 @@ class TelegramService(NotificationService):
                     'send_error_msg': do_send_error_msg,
                 }
 
-                self.config_helper.set_property('telegram', telegram_cfg)
+                self.config.set_property('telegram', telegram_cfg)
 
     def _is_configured(self) -> bool:
         # Checks if the sending of Telegram messages has been configured.
         try:
-            self.config_helper.get_property('telegram')
+            self.config.get_property('telegram')
             return True
         except ValueError:
             logging.debug('Telegram-Notifications not configured, skipping.')
@@ -79,7 +79,7 @@ class TelegramService(NotificationService):
         if not self._is_configured() or messages is None or len(messages) == 0:
             return
 
-        telegram_cfg = self.config_helper.get_property('telegram')
+        telegram_cfg = self.config.get_property('telegram')
 
         logging.debug('Sending Notification via Telegram...')
         Log.debug('Sending Notification via Telegram... (Please wait)')
@@ -114,7 +114,7 @@ class TelegramService(NotificationService):
         if not self._is_configured():
             return
 
-        telegram_cfg = self.config_helper.get_property('telegram')
+        telegram_cfg = self.config.get_property('telegram')
 
         if not telegram_cfg.get('send_error_msg', True):
             return
@@ -130,7 +130,7 @@ class TelegramService(NotificationService):
         if not self._is_configured():
             return
 
-        telegram_cfg = self.config_helper.get_property('telegram')
+        telegram_cfg = self.config.get_property('telegram')
 
         if not telegram_cfg.get('send_error_msg', True):
             return

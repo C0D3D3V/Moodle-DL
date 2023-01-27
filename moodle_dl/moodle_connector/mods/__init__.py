@@ -16,8 +16,10 @@ from moodle_dl.moodle_connector.mods.workshops_handler import WorkshopsHandler  
 ALL_MODS = [Class for name, Class in globals().items() if name.endswith('Handler')]
 
 
-def get_all_moodle_mods(request_helper: RequestHelper, moodle_version: int, config: ConfigHelper) -> List[MoodleMod]:
+def get_all_moodle_mods(
+    request_helper: RequestHelper, moodle_version: int, user_id: int, config: ConfigHelper
+) -> List[MoodleMod]:
     result_list = []
     for mod_handler in ALL_MODS:
-        result_list.append(mod_handler(request_helper, moodle_version, config))
+        result_list.append(mod_handler(request_helper, moodle_version, user_id, config))
     return result_list

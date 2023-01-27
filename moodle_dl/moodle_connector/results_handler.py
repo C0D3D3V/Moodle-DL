@@ -14,38 +14,12 @@ class ResultsHandler:
     Fetches and parses the various endpoints in Moodle.
     """
 
-    def __init__(self, request_helper: RequestHelper, moodle_domain: str, moodle_path: str):
+    def __init__(self, request_helper: RequestHelper, moodle_domain: str, moodle_path: str, version: int):
         self.request_helper = request_helper
-        # oldest supported Moodle version
-        self.version = 2011120500
+        self.version = version
         self.moodle_domain = moodle_domain
         self.moodle_path = moodle_path
         self.course_fetch_addons = {}
-
-    def setVersion(self, version: int):
-        self.version = version
-
-        logging.debug('Detected moodle version: %d', version)
-
-    @staticmethod
-    def should_download_course(
-        course_id: int, download_course_ids: List[int], dont_download_course_ids: List[int]
-    ) -> bool:
-        """
-        Checks if a course is in White-list and not in Blacklist
-        """
-        inBlacklist = course_id in dont_download_course_ids
-        inWhitelist = course_id in download_course_ids or len(download_course_ids) == 0
-
-        return inWhitelist and not inBlacklist
-
-    @staticmethod
-    def should_download_section(section_id: int, dont_download_sections_ids: List[int]) -> bool:
-        """
-        Checks if a section is not in Blacklist
-        """
-
-        return section_id not in dont_download_sections_ids or len(dont_download_sections_ids) == 0
 
     def _get_files_in_sections(self, course_sections: List) -> List[File]:
         """

@@ -11,8 +11,8 @@ class NotificationService(metaclass=ABCMeta):
     Common class for a notification service
     """
 
-    def __init__(self, config_helper: ConfigHelper):
-        self.config_helper = config_helper
+    def __init__(self, config: ConfigHelper):
+        self.config = config
 
     @abstractmethod
     def interactively_configure(self) -> None:

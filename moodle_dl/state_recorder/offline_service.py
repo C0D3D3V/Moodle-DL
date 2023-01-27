@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 
 from moodle_dl.config_service import ConfigHelper
-from moodle_dl.moodle_connector.moodle_service import MoodleService
+from moodle_dl.moodle_connector import MoodleService
 from moodle_dl.state_recorder import File, StateRecorder
 from moodle_dl.utils import Cutie, Log
 

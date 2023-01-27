@@ -11,9 +11,10 @@ class MoodleMod(metaclass=ABCMeta):
     Common class for a Moodle module endpoint
     """
 
-    def __init__(self, request_helper: RequestHelper, moodle_version: int, config: ConfigHelper):
+    def __init__(self, request_helper: RequestHelper, moodle_version: int, user_id: int, config: ConfigHelper):
         self.request_helper = request_helper
         self.version = moodle_version
+        self.user_id = user_id
         self.config = config
 
     @abstractmethod

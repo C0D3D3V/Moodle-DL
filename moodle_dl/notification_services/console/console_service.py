@@ -1,10 +1,11 @@
 import logging
+
 from typing import List
 
-from moodle_dl.utils import Log
-from moodle_dl.state_recorder import Course
 from moodle_dl.download_service.url_target import URLTarget
 from moodle_dl.notification_services.notification_service import NotificationService
+from moodle_dl.state_recorder import Course
+from moodle_dl.utils import Log
 
 
 class ConsoleService(NotificationService):

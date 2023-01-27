@@ -5,9 +5,7 @@ from pathlib import Path
 from typing import Dict, List
 
 from moodle_dl.config_service import ConfigHelper
-from moodle_dl.moodle_connector.first_contact_handler import FirstContactHandler
-from moodle_dl.moodle_connector.request_helper import RequestRejectedError, RequestHelper
-from moodle_dl.moodle_connector.results_handler import ResultsHandler
+from moodle_dl.moodle_connector import MoodleService, RequestRejectedError, RequestHelper, FirstContactHandler
 from moodle_dl.state_recorder import Course
 from moodle_dl.utils import Cutie, Log
 
@@ -22,7 +20,7 @@ class ConfigService:
         moodle_path = self.config.get_moodle_path()
         use_http = self.config.get_use_http()
 
-        request_helper = RequestHelper(moodle_domain, moodle_path, token, self.skip_cert_verify, use_http=use_http)
+        request_helper = RequestHelper(opts, moodle_domain, moodle_path, token, use_http)
         self.first_contact_handler = FirstContactHandler(request_helper)
 
     def interactively_acquire_config(self):
@@ -216,7 +214,7 @@ class ConfigService:
         for i, course in enumerate(courses):
             choices.append(f'{int(course.id):5}\t{course.fullname}')
 
-            should_download = ResultsHandler.should_download_course(
+            should_download = MoodleService.should_download_course(
                 course.id, download_course_ids, dont_download_course_ids
             )
             if should_download and use_whitelist:
@@ -257,7 +255,7 @@ class ConfigService:
             section_id = section.get("id")
             choices.append(f"{int(section_id):5}\t{section.get('name')}")
 
-            if ResultsHandler.should_download_section(section_id, excluded):
+            if MoodleService.should_download_section(section_id, excluded):
                 defaults.append(i)
 
         Log.blue('Which of the sections should be downloaded?')
@@ -300,7 +298,7 @@ class ConfigService:
             choices.append('None')
 
             for course in courses:
-                if ResultsHandler.should_download_course(course.id, download_course_ids, dont_download_course_ids):
+                if MoodleService.should_download_course(course.id, download_course_ids, dont_download_course_ids):
 
                     current_course_settings = options_of_courses.get(str(course.id), None)
 

@@ -10,7 +10,7 @@ from typing import List
 
 from moodle_dl.download_service.downloader import Downloader
 from moodle_dl.download_service.url_target import URLTarget
-from moodle_dl.moodle_connector.moodle_service import MoodleService
+from moodle_dl.moodle_connector import MoodleService
 from moodle_dl.state_recorder import Course, File
 from moodle_dl.utils import format_bytes, SslHelper, PathTools as PT
 
@@ -42,7 +42,7 @@ class DownloadService:
 
         self.courses = courses
         self.state_recorder = moodle_service.recorder
-        self.token = moodle_service.config_helper.get_token()
+        self.token = moodle_service.config.get_token()
         self.opts = opts
 
         # The wait queue for all URL targets to be downloaded.
@@ -56,7 +56,7 @@ class DownloadService:
         self.fs_lock = threading.Lock()
 
         # Sets the download options
-        self.options = moodle_service.config_helper.get_download_options()
+        self.options = moodle_service.config.get_download_options()
         # Add console parameters
         self.options.update({'ignore_ytdl_errors': opts.ignore_ytdl_errors})
 

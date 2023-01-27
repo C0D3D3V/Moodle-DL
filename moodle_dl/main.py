@@ -17,11 +17,10 @@ except ImportError:
 
 from colorama import just_fix_windows_console
 
-from moodle_dl.config_service import ConfigHelper
-from moodle_dl.config_service.config_service import ConfigService
+from moodle_dl.config_service import ConfigHelper, ConfigService
 from moodle_dl.download_service.download_service import DownloadService
 from moodle_dl.download_service.fake_download_service import FakeDownloadService
-from moodle_dl.moodle_connector.moodle_service import MoodleService
+from moodle_dl.moodle_connector import MoodleService
 from moodle_dl.notification_services import get_all_notify_services, get_remote_notify_services
 from moodle_dl.state_recorder import OfflineService
 from moodle_dl.utils import Log, Cutie, ProcessLock, check_debug, check_verbose, PathTools as PT
