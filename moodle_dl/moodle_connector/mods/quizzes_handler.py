@@ -1,19 +1,13 @@
 from typing import Dict, List
-from moodle_dl.moodle_connector.request_helper import RequestHelper, RequestRejectedError
-from moodle_dl.state_recorder.course import Course
-from moodle_dl.download_service.path_tools import PathTools
+
+from moodle_dl.moodle_connector.mods.common import MoodleMod
 from moodle_dl.moodle_connector.moodle_constants import moodle_html_footer, moodle_html_header
+from moodle_dl.moodle_connector.request_helper import RequestRejectedError
+from moodle_dl.state_recorder.course import Course
+from moodle_dl.utils import PathTools as PT
 
 
-class QuizzesHandler:
-    """
-    Fetches and parses the various endpoints in Moodle for quiz entries.
-    """
-
-    def __init__(self, request_helper: RequestHelper, version: int):
-        self.request_helper = request_helper
-        self.version = version
-
+class QuizzesHandler(MoodleMod):
     def fetch_quizzes(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
         """
         Fetches the Quizzes List for all courses from the
@@ -141,7 +135,7 @@ class QuizzesHandler:
             attempt_id = attempt.get('id', 0)
             attempt_state = attempt.get('state', 'unknown')
 
-            attempt_filename = PathTools.to_valid_name(
+            attempt_filename = PT.to_valid_name(
                 quiz_name + ' (attempt ' + str(attempt_id) + ' ' + attempt_state + ')'
             )
 

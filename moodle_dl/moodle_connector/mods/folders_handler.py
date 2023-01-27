@@ -1,18 +1,11 @@
 from typing import Dict, List
+
+from moodle_dl.moodle_connector.mods.common import MoodleMod
 from moodle_dl.state_recorder.course import Course
-from moodle_dl.moodle_connector.request_helper import RequestHelper
 
 
-class FoldersHandler:
-    """
-    Fetches and parses the various endpoints in Moodle.
-    """
-
-    def __init__(self, request_helper: RequestHelper, version: int):
-        self.request_helper = request_helper
-        self.version = version
-
-    def fetch_folders(self, courses: List[Course]) ->  Dict[int, Dict[int, Dict]]:
+class FoldersHandler(MoodleMod):
+    def fetch_folders(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
         """
         Fetches the Folder List for all courses from the
         Moodle system

@@ -1,20 +1,12 @@
 from datetime import datetime
 from typing import Dict, List
 
-from moodle_dl.moodle_connector.request_helper import RequestHelper
+from moodle_dl.moodle_connector.mods.common import MoodleMod
 from moodle_dl.state_recorder.course import Course
-from moodle_dl.download_service.path_tools import PathTools
+from moodle_dl.utils import PathTools as PT
 
 
-class ForumsHandler:
-    """
-    Fetches and parses the various endpoints in Moodle for forum entries.
-    """
-
-    def __init__(self, request_helper: RequestHelper, version: int):
-        self.request_helper = request_helper
-        self.version = version
-
+class ForumsHandler(MoodleMod):
     def fetch_forums(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
         """
         Fetches the Databases List for all courses from the
@@ -170,7 +162,7 @@ class ForumsHandler:
         result = []
 
         for counter, discussion in enumerate(latest_discussions):
-            valid_subject = PathTools.to_valid_name(discussion.get('subject', ''))
+            valid_subject = PT.to_valid_name(discussion.get('subject', ''))
             shorted_discussion_name = valid_subject
             if len(shorted_discussion_name) > 17:
                 shorted_discussion_name = shorted_discussion_name[:15] + '..'
@@ -219,11 +211,11 @@ class ForumsHandler:
                 if post_userfullname is None:
                     post_userfullname = "Unknown"
 
-                post_filename = PathTools.to_valid_name('[' + str(post_id) + '] ' + post_userfullname)
+                post_filename = PT.to_valid_name('[' + str(post_id) + '] ' + post_userfullname)
                 if post_parent is not None and post_parent != 0:
-                    post_filename = PathTools.to_valid_name(post_filename + ' response to [' + str(post_parent) + ']')
+                    post_filename = PT.to_valid_name(post_filename + ' response to [' + str(post_parent) + ']')
 
-                post_path = PathTools.to_valid_name(
+                post_path = PT.to_valid_name(
                     datetime.utcfromtimestamp(discussion_created).strftime('%y-%m-%d') + ' ' + valid_subject
                 )
 

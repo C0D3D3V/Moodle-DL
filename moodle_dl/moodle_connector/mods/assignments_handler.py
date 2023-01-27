@@ -1,23 +1,14 @@
 from typing import Dict, List
+
+from moodle_dl.moodle_connector.mods.common import MoodleMod
 from moodle_dl.state_recorder.course import Course
-from moodle_dl.moodle_connector.request_helper import RequestHelper
 
 
-class AssignmentsHandler:
-    """
-    Fetches and parses the various endpoints in Moodle for assignment entries.
-    """
-
-    def __init__(self, request_helper: RequestHelper, version: int):
-        self.request_helper = request_helper
-        self.version = version
-
+class AssignmentsHandler(MoodleMod):
     def fetch_assignments(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
         """
-        Fetches the Assignments List for all courses from the
-        Moodle system
-        @return: A Dictionary of all assignments,
-                 indexed by courses, then assignment
+        Fetches the Assignments List for all courses from the Moodle system
+        @return: A Dictionary of all assignments, indexed by courses, then assignment
         """
         # do this only if version is greater then 2.4
         # because mod_assign_get_assignments will fail

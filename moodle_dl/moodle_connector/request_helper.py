@@ -1,7 +1,6 @@
 import json
 import logging
 import os
-import re
 import urllib
 
 from http.cookiejar import MozillaCookieJar
@@ -233,32 +232,6 @@ class RequestHelper:
                 + f'\nHeader: {response.headers}'
                 + f'\nResponse: {response.text}'
             )
-
-    def get_simple_moodle_version(self) -> str:
-        """
-        Query the version by looking up the change-log (/lib/upgrade.txt)
-        of the Moodle
-        @return: a float number representing the newest version
-                 parsed from the change-log
-        """
-
-        url = f'{self.url_base}lib/upgrade.txt'
-        try:
-            session = SslHelper.custom_session(self.verify)
-            response = session.get(url, headers=self.stdHeader, timeout=60)
-        except RequestException as error:
-            raise ConnectionError(f"Connection error: {str(error)}") from None
-
-        self._check_response_code(response)
-
-        changelog = str(response.text).split('\n')
-        version_string = '1'
-        for line in changelog:
-            match = re.match(r'^===\s*([\d\.]+)\s*===$', line)
-            if match:
-                version_string = match.group(1)
-                break
-        return version_string.strip()
 
     def _initial_parse(self, response) -> object:
         """

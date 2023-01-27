@@ -187,10 +187,6 @@ def setup_logger(storage_path: str):
         app_log.setLevel(logging.INFO)
     app_log.addHandler(log_handler)
 
-    logging.getLogger("requests").setLevel(logging.WARNING)
-    logging.getLogger("urllib3").setLevel(logging.WARNING)
-    logging.getLogger('asyncio').setLevel(logging.WARNING)
-
     logging.info('--- moodle-dl started ---------------------')
     Log.info('Moodle Downloader starting...')
     if IS_VERBOSE:

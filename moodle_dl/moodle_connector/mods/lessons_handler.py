@@ -1,22 +1,16 @@
 import re
+
 from typing import Dict, List
 
-from moodle_dl.moodle_connector.request_helper import RequestHelper, RequestRejectedError
-from moodle_dl.state_recorder.course import Course
-from moodle_dl.download_service.path_tools import PathTools
+from moodle_dl.moodle_connector.mods.common import MoodleMod
 from moodle_dl.moodle_connector.moodle_constants import moodle_html_footer, moodle_html_header
+from moodle_dl.moodle_connector.request_helper import RequestRejectedError
+from moodle_dl.state_recorder.course import Course
+from moodle_dl.utils import PathTools as PT
 
 
-class LessonsHandler:
-    """
-    Fetches and parses the various endpoints in Moodle for lesson entries.
-    """
-
-    def __init__(self, request_helper: RequestHelper, version: int):
-        self.request_helper = request_helper
-        self.version = version
-
-    def fetch_lessons(self, courses: List[Course]) -> Dict[int,Dict[int,Dict]]:
+class LessonsHandler(MoodleMod):
+    def fetch_lessons(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
         """
         Fetches the Lessons List for all courses from the
         Moodle system
@@ -164,7 +158,7 @@ class LessonsHandler:
 
         # build lesson HTML
         lesson_html = moodle_html_header
-        attempt_filename = PathTools.to_valid_name(lesson_name)
+        attempt_filename = PT.to_valid_name(lesson_name)
         lesson_is_empty = True
         for counter, answerpage in enumerate(answerpages):
             page_id = answerpage.get('page', {}).get('id', 0)

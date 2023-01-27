@@ -44,8 +44,7 @@ You may need to install [Visual C++ compiler for Python](https://wiki.python.org
 
 If you run the program on **Windows**, please use [Powershell or CMD](https://www.isunshare.com/windows-10/5-ways-to-open-windows-powershell-in-windows-10.html). Please do not use a mintty like MINGW or similar.
 
-5. Run `moodle-dl --init` in the desired download directory to configure moodle-dl initially.
-6. Run `moodle-dl --help` to see all available options.
+5. Run `moodle-dl --help` to see all available options.
 
  
 

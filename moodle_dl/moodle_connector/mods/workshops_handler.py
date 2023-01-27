@@ -1,23 +1,15 @@
 from typing import Dict, List
-from moodle_dl.moodle_connector.request_helper import RequestHelper, RequestRejectedError
+
+from moodle_dl.moodle_connector.mods.common import MoodleMod
+from moodle_dl.moodle_connector.request_helper import RequestRejectedError
 from moodle_dl.state_recorder.course import Course
 
 
-class WorkshopsHandler:
-    """
-    Fetches and parses the various endpoints in Moodle for workshop entries.
-    """
-
-    def __init__(self, request_helper: RequestHelper, version: int):
-        self.request_helper = request_helper
-        self.version = version
-
+class WorkshopsHandler(MoodleMod):
     def fetch_workshops(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
         """
-        Fetches the Workshops List for all courses from the
-        Moodle system
-        @return: A Dictionary of all workshops,
-                 indexed by courses, then workshops
+        Fetches the Workshops List for all courses from the Moodle system
+        @return: A Dictionary of all workshops, indexed by courses, then workshops
         """
         # do this only if version is greater then 3.4
         # because mod_workshop_get_workshops_by_courses will fail

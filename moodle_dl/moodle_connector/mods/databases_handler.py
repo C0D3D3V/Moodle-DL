@@ -1,17 +1,10 @@
 from typing import Dict, List
-from moodle_dl.moodle_connector.request_helper import RequestHelper
+
+from moodle_dl.moodle_connector.mods.common import MoodleMod
 from moodle_dl.state_recorder.course import Course
 
 
-class DatabasesHandler:
-    """
-    Fetches and parses the various endpoints in Moodle for database entries.
-    """
-
-    def __init__(self, request_helper: RequestHelper, version: int):
-        self.request_helper = request_helper
-        self.version = version
-
+class DatabasesHandler(MoodleMod):
     def fetch_databases(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
         """
         Fetches the Databases List for all courses from the
