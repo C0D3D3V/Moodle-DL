@@ -9,7 +9,7 @@
 ---
 
 
-`moodle-dl` is a console application that can download all the files from your Moodle courses that are necessary for your daily study routine. Furthermore, moodle-dl can notify you about various activities on your Moodle server. Notifications can be sent to Telegram, XMPP and Mail. The current implementation includes: 
+`moodle-dl` is a console application that can download all the files from your Moodle courses that are necessary for your daily study routine. Furthermore, moodle-dl can notify you about various activities on your Moodle server. Notifications can be sent to Discord, Telegram, XMPP and Mail. The current implementation includes: 
 
 - Download files, assignments including submissions, forums, workshops, lessons, quizzes, descriptions, as well as external links.
 - Notifications about all downloaded files
@@ -59,6 +59,8 @@ If you run the program on **Windows**, please use [Powershell or CMD](https://ww
     - Overrides the login-token with a newly obtained one.
     - The script will ask for credentials unless they are explicitly specify with the options `--username` and `--password`
     - Use it if at any point in time, for whatever reason, the saved token gets rejected by Moodle.
+- `moodle-dl --change-notification-discord`
+    - Activate/deactivate/change the settings for receiving notifications via Discord.
 - `moodle-dl --change-notification-mail`
     - Activate/deactivate/change the settings for receiving notifications via e-mail.
 - `moodle-dl --change-notification-telegram`
