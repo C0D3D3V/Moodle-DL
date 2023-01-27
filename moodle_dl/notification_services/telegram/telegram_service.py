@@ -1,14 +1,14 @@
 import logging
 import traceback
+
 from typing import List
 
-from moodle_dl.utils import Cutie
-from moodle_dl.utils import Log
-from moodle_dl.state_recorder.course import Course
 from moodle_dl.download_service.url_target import URLTarget
-from moodle_dl.notification_services.telegram.telegram_shooter import TelegramShooter, RequestRejectedError
 from moodle_dl.notification_services.notification_service import NotificationService
 from moodle_dl.notification_services.telegram.telegram_formater import TelegramFormater as TF
+from moodle_dl.notification_services.telegram.telegram_shooter import TelegramShooter, RequestRejectedError
+from moodle_dl.state_recorder import Course
+from moodle_dl.utils import Cutie, Log
 
 
 class TelegramService(NotificationService):

@@ -23,7 +23,7 @@ from moodle_dl.download_service.download_service import DownloadService
 from moodle_dl.download_service.fake_download_service import FakeDownloadService
 from moodle_dl.moodle_connector.moodle_service import MoodleService
 from moodle_dl.notification_services import get_all_notify_services, get_remote_notify_services
-from moodle_dl.state_recorder.offline_service import OfflineService
+from moodle_dl.state_recorder import OfflineService
 from moodle_dl.utils import Log, Cutie, ProcessLock, check_debug, check_verbose, PathTools as PT
 from moodle_dl.version import __version__
 
@@ -520,7 +520,7 @@ def main(args=None):
         logging.error(error_formatted, extra={'exception': base_err})
 
         if check_verbose() or check_debug():
-            Log.critical(f'{error_formatted}')
+            Log.magenta(f'{error_formatted}')
         else:
             Log.error(f'Exception: {base_err!s}')
 

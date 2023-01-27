@@ -1,16 +1,15 @@
-import sys
 import shutil
+import sys
 
 from pathlib import Path
 from typing import Dict, List
 
-from moodle_dl.utils import Cutie
-from moodle_dl.utils import Log
-from moodle_dl.state_recorder.course import Course
 from moodle_dl.config_service import ConfigHelper
-from moodle_dl.moodle_connector.results_handler import ResultsHandler
 from moodle_dl.moodle_connector.first_contact_handler import FirstContactHandler
 from moodle_dl.moodle_connector.request_helper import RequestRejectedError, RequestHelper
+from moodle_dl.moodle_connector.results_handler import ResultsHandler
+from moodle_dl.state_recorder import Course
+from moodle_dl.utils import Cutie, Log
 
 
 class ConfigService:
@@ -74,7 +73,7 @@ class ConfigService:
             + ' course or the course is visible without enrollment.'
         )
 
-        Log.critical(
+        Log.magenta(
             'This process can take several minutes for large Moodels, as is common at'
             + ' large universities. Timeout is set to 20 minutes.'
         )
@@ -82,7 +81,7 @@ class ConfigService:
         print('')
 
         add_all_visible_courses = Cutie.prompt_yes_or_no(
-            Log.special_str('Do you want to add all visible courses of your Moodle to the configuration?'),
+            Log.blue_str('Do you want to add all visible courses of your Moodle to the configuration?'),
             default_is_yes=False,
         )
 
@@ -162,12 +161,12 @@ class ConfigService:
             + ' configuration.'
         )
 
-        Log.critical(f'Your user id is `{userid}` and the moodle version is `{version}`')
+        Log.magenta(f'Your user id is `{userid}` and the moodle version is `{version}`')
 
         print('')
 
         save_userid_and_version = Cutie.prompt_yes_or_no(
-            Log.special_str('Do you want to store the user id and version number of Moodle in the configuration?'),
+            Log.blue_str('Do you want to store the user id and version number of Moodle in the configuration?'),
             default_is_yes=False,
         )
 
@@ -206,7 +205,7 @@ class ConfigService:
         use_whitelist = len(dont_download_course_ids) == 0
 
         use_whitelist = Cutie.prompt_yes_or_no(
-            Log.special_str('Do you want to create a whitelist or blacklist for your courses?'),
+            Log.blue_str('Do you want to create a whitelist or blacklist for your courses?'),
             default_is_yes=use_whitelist,
             yes_text='Whitelist',
             no_text='Blacklist',
@@ -226,9 +225,9 @@ class ConfigService:
                 defaults.append(i)
 
         if use_whitelist:
-            Log.special('Which of the courses should be downloaded?')
+            Log.blue('Which of the courses should be downloaded?')
         else:
-            Log.special('Which of the courses should NOT be downloaded?')
+            Log.blue('Which of the courses should NOT be downloaded?')
         Log.info('[You can select with the space bar and confirm your selection with the enter key]')
         print('')
         selected_courses = Cutie.select_multiple(options=choices, ticked_indices=defaults)
@@ -261,7 +260,7 @@ class ConfigService:
             if ResultsHandler.should_download_section(section_id, excluded):
                 defaults.append(i)
 
-        Log.special('Which of the sections should be downloaded?')
+        Log.blue('Which of the sections should be downloaded?')
         Log.info('[You can select with the space bar and confirm your selection with the enter key]')
         print('')
         selected_sections = Cutie.select_multiple(options=choices, ticked_indices=defaults)
@@ -333,7 +332,7 @@ class ConfigService:
                     choices_courses.append(course)
 
             print('')
-            Log.special('For which of the following course do you want to change the settings?')
+            Log.blue('For which of the following course do you want to change the settings?')
             print('[Confirm your selection with the Enter key]')
             print('')
 
@@ -380,7 +379,7 @@ class ConfigService:
         create_directory_structure = current_course_settings.get('create_directory_structure', True)
 
         create_directory_structure = Cutie.prompt_yes_or_no(
-            Log.special_str('Should a directory structure be created for this course?'),
+            Log.blue_str('Should a directory structure be created for this course?'),
             default_is_yes=create_directory_structure,
         )
 
@@ -398,7 +397,7 @@ class ConfigService:
             )
 
         change_excluded_sections = Cutie.prompt_yes_or_no(
-            Log.special_str(change_excluded_sections_promt),
+            Log.blue_str(change_excluded_sections_promt),
             default_is_yes=(len(excluded_sections) > 0),
         )
 
@@ -433,7 +432,7 @@ class ConfigService:
         print('')
 
         download_submissions = Cutie.prompt_yes_or_no(
-            Log.special_str('Do you want to download submissions of your assignments?'),
+            Log.blue_str('Do you want to download submissions of your assignments?'),
             default_is_yes=download_submissions,
         )
 
@@ -458,7 +457,7 @@ class ConfigService:
         print('')
 
         download_databases = Cutie.prompt_yes_or_no(
-            Log.special_str('Do you want to download databases of your courses?'), default_is_yes=download_databases
+            Log.blue_str('Do you want to download databases of your courses?'), default_is_yes=download_databases
         )
 
         self.config.set_property('download_databases', download_databases)
@@ -474,7 +473,7 @@ class ConfigService:
         print('')
 
         download_forums = Cutie.prompt_yes_or_no(
-            Log.special_str('Do you want to download forums of your courses?'), default_is_yes=download_forums
+            Log.blue_str('Do you want to download forums of your courses?'), default_is_yes=download_forums
         )
 
         self.config.set_property('download_forums', download_forums)
@@ -493,7 +492,7 @@ class ConfigService:
         print('')
 
         download_quizzes = Cutie.prompt_yes_or_no(
-            Log.special_str('Do you want to download quizzes of your courses?'), default_is_yes=download_quizzes
+            Log.blue_str('Do you want to download quizzes of your courses?'), default_is_yes=download_quizzes
         )
 
         self.config.set_property('download_quizzes', download_quizzes)
@@ -514,7 +513,7 @@ class ConfigService:
         print('')
 
         download_lessons = Cutie.prompt_yes_or_no(
-            Log.special_str('Do you want to download lessons of your courses?'), default_is_yes=download_lessons
+            Log.blue_str('Do you want to download lessons of your courses?'), default_is_yes=download_lessons
         )
 
         self.config.set_property('download_lessons', download_lessons)
@@ -533,7 +532,7 @@ class ConfigService:
         print('')
 
         download_workshops = Cutie.prompt_yes_or_no(
-            Log.special_str('Do you want to download workshops of your courses?'), default_is_yes=download_workshops
+            Log.blue_str('Do you want to download workshops of your courses?'), default_is_yes=download_workshops
         )
 
         self.config.set_property('download_workshops', download_workshops)
@@ -563,7 +562,7 @@ class ConfigService:
         print('')
 
         download_descriptions = Cutie.prompt_yes_or_no(
-            Log.special_str('Would you like to download descriptions of the courses you have selected?'),
+            Log.blue_str('Would you like to download descriptions of the courses you have selected?'),
             default_is_yes=download_descriptions,
         )
 
@@ -583,7 +582,7 @@ class ConfigService:
         print('')
 
         download_links_in_descriptions = Cutie.prompt_yes_or_no(
-            Log.special_str('Would you like to download links in descriptions?'),
+            Log.blue_str('Would you like to download links in descriptions?'),
             default_is_yes=download_links_in_descriptions,
         )
 
@@ -619,7 +618,7 @@ class ConfigService:
         print('')
 
         download_linked_files = Cutie.prompt_yes_or_no(
-            Log.special_str('Would you like to download linked files of the courses you have selected?'),
+            Log.blue_str('Would you like to download linked files of the courses you have selected?'),
             default_is_yes=download_linked_files,
         )
 
@@ -652,7 +651,7 @@ class ConfigService:
         print('')
 
         download_also_with_cookie = Cutie.prompt_yes_or_no(
-            Log.special_str('Would you like to download files for which a cookie is required?'),
+            Log.blue_str('Would you like to download files for which a cookie is required?'),
             default_is_yes=download_also_with_cookie,
         )
 

@@ -15,8 +15,7 @@ from moodle_dl.moodle_connector.first_contact_handler import FirstContactHandler
 from moodle_dl.moodle_connector.mods import get_all_moodle_mods
 from moodle_dl.moodle_connector.request_helper import RequestRejectedError, RequestHelper
 from moodle_dl.moodle_connector.results_handler import ResultsHandler
-from moodle_dl.state_recorder.course import Course
-from moodle_dl.state_recorder.state_recorder import StateRecorder
+from moodle_dl.state_recorder import Course,StateRecorder
 from moodle_dl.utils import Log, determine_ext
 
 

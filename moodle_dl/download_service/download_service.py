@@ -9,11 +9,10 @@ from queue import Queue
 from typing import List
 
 from moodle_dl.download_service.downloader import Downloader
-from moodle_dl.download_service.path_tools import PathTools
 from moodle_dl.download_service.url_target import URLTarget
 from moodle_dl.moodle_connector.moodle_service import MoodleService
-from moodle_dl.state_recorder.course import Course, File
-from moodle_dl.utils import format_bytes, SslHelper
+from moodle_dl.state_recorder import Course, File
+from moodle_dl.utils import format_bytes, SslHelper, PathTools as PT
 
 
 class DownloadService:
@@ -123,7 +122,7 @@ class DownloadService:
 
         # if a flat path is requested
         if not course.create_directory_structure:
-            return PathTools.flat_path_of_file(storage_path, course_name, file.content_filepath)
+            return PT.flat_path_of_file(storage_path, course_name, file.content_filepath)
 
         # If the file is located in a folder or in an assignment,
         # it should be saved in a sub-folder
@@ -133,11 +132,9 @@ class DownloadService:
             if file.content_type == 'submission_file':
                 file_path = os.path.join('/submissions/', file_path.strip('/'))
 
-            return PathTools.path_of_file_in_module(
-                storage_path, course_name, file.section_name, file.module_name, file_path
-            )
+            return PT.path_of_file_in_module(storage_path, course_name, file.section_name, file.module_name, file_path)
         else:
-            return PathTools.path_of_file(storage_path, course_name, file.section_name, file.content_filepath)
+            return PT.path_of_file(storage_path, course_name, file.section_name, file.content_filepath)
 
     def run(self):
         """

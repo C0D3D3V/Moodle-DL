@@ -4,17 +4,16 @@ import traceback
 from getpass import getpass
 from typing import List
 
-from moodle_dl.utils import Cutie
-from moodle_dl.utils import Log
-from moodle_dl.state_recorder.course import Course
 from moodle_dl.download_service.url_target import URLTarget
 from moodle_dl.notification_services.mail.mail_shooter import MailShooter
 from moodle_dl.notification_services.notification_service import NotificationService
+from moodle_dl.state_recorder import Course
+from moodle_dl.utils import Cutie, Log
 from moodle_dl.notification_services.mail.mail_formater import (
-    create_full_welcome_mail,
-    create_full_moodle_diff_mail,
     create_full_error_mail,
     create_full_failed_downloads_mail,
+    create_full_moodle_diff_mail,
+    create_full_welcome_mail,
 )
 
 

@@ -1,37 +1,35 @@
-import re
+import contextlib
+import logging
 import os
 import platform
-import ssl
-import time
-import shlex
-import socket
-import shutil
-from typing import Dict, List
-import urllib
-import logging
 import posixpath
-import traceback
-import threading
+import re
+import shlex
+import shutil
+import socket
+import ssl
 import subprocess
-import contextlib
-
-from pathlib import Path
-from http.cookiejar import MozillaCookieJar
-from urllib.error import ContentTooShortError
+import threading
+import time
+import traceback
+import urllib
 import urllib.parse as urlparse
-from email.utils import unquote
 
-import requests
+from email.utils import unquote
+from http.cookiejar import MozillaCookieJar
+from pathlib import Path
+from typing import Dict, List
+from urllib.error import ContentTooShortError
+
 import html2text
+import requests
 import yt_dlp
 
 from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema, RequestException
 
-from moodle_dl.utils import format_bytes, timeconvert, SslHelper
-from moodle_dl.state_recorder.file import File
-from moodle_dl.state_recorder.course import Course
-from moodle_dl.download_service.path_tools import PathTools
 from moodle_dl.moodle_connector.request_helper import RequestHelper
+from moodle_dl.state_recorder import Course, File
+from moodle_dl.utils import format_bytes, timeconvert, SslHelper, PathTools as PT
 from moodle_dl.ydl_extractors import add_additional_extractors
 
 
@@ -67,7 +65,7 @@ class URLTarget(object):
         self.options = options
 
         # get valid filename
-        self.filename = PathTools.to_valid_name(self.file.content_filename)
+        self.filename = PT.to_valid_name(self.file.content_filename)
 
         # To return errors
         self.success = False

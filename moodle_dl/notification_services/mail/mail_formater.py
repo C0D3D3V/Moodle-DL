@@ -3,7 +3,7 @@
 from string import Template
 from email.utils import make_msgid
 
-from moodle_dl.state_recorder.course import Course
+from moodle_dl.state_recorder import Course
 from moodle_dl.download_service.url_target import URLTarget
 
 main_wrapper = Template(

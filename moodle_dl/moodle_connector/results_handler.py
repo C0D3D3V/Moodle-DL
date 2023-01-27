@@ -5,8 +5,7 @@ import hashlib
 from typing import Dict, List
 import urllib.parse as urlparse
 
-from moodle_dl.state_recorder.course import Course
-from moodle_dl.state_recorder.file import File
+from moodle_dl.state_recorder import Course, File
 from moodle_dl.moodle_connector.request_helper import RequestHelper
 
 

@@ -1,7 +1,7 @@
 from typing import Dict, List
 
 from moodle_dl.moodle_connector.mods.common import MoodleMod
-from moodle_dl.state_recorder.course import Course
+from moodle_dl.state_recorder import Course
 
 
 class FoldersHandler(MoodleMod):

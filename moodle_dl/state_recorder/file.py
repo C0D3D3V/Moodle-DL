@@ -1,4 +1,4 @@
-from moodle_dl.download_service.path_tools import PathTools
+from moodle_dl.utils import PathTools as PT
 
 
 class File:
@@ -163,11 +163,11 @@ class File:
         message = 'File ('
 
         message += f'module_id: {self.module_id}'
-        message += f', section_name: "{PathTools.to_valid_name(self.section_name)}"'
+        message += f', section_name: "{PT.to_valid_name(self.section_name)}"'
         message += f', section_id: "{self.section_id}"'
-        message += f', module_name: "{PathTools.to_valid_name(self.module_name)}"'
+        message += f', module_name: "{PT.to_valid_name(self.module_name)}"'
         message += f', content_filepath: {self.content_filepath}'
-        message += f', content_filename: "{PathTools.to_valid_name(self.content_filename)}"'
+        message += f', content_filename: "{PT.to_valid_name(self.content_filename)}"'
         message += f', content_fileurl: "{self.content_fileurl}"'
         message += f', content_filesize: {self.content_filesize}'
         message += f', content_timemodified: {self.content_timemodified}'

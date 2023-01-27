@@ -5,7 +5,7 @@ from typing import Dict, List
 from moodle_dl.moodle_connector.mods.common import MoodleMod
 from moodle_dl.moodle_connector.moodle_constants import moodle_html_footer, moodle_html_header
 from moodle_dl.moodle_connector.request_helper import RequestRejectedError
-from moodle_dl.state_recorder.course import Course
+from moodle_dl.state_recorder import Course
 from moodle_dl.utils import PathTools as PT
 
 

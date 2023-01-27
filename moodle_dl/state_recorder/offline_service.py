@@ -2,12 +2,10 @@ import os
 
 from pathlib import Path
 
-from moodle_dl.utils import Cutie
-from moodle_dl.utils import Log
-from moodle_dl.state_recorder.file import File
-from moodle_dl.moodle_connector.moodle_service import MoodleService
 from moodle_dl.config_service import ConfigHelper
-from moodle_dl.state_recorder.state_recorder import StateRecorder
+from moodle_dl.moodle_connector.moodle_service import MoodleService
+from moodle_dl.state_recorder import File, StateRecorder
+from moodle_dl.utils import Cutie, Log
 
 
 class OfflineService:
@@ -17,11 +15,6 @@ class OfflineService:
         self.state_recorder = StateRecorder(Path(opts.path) / 'moodle_state.db')
 
     def interactively_manage_database(self):
-        RESET_SEQ = '\033[0m'
-        COLOR_SEQ = '\033[1;%dm'
-
-        BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = range(30, 38)
-
         stored_files = self.state_recorder.get_stored_files()
 
         stored_files = MoodleService.filter_courses(stored_files, self.config)
@@ -34,7 +27,7 @@ class OfflineService:
         for course in stored_files:
             for course_file in course.files:
                 if not os.path.exists(course_file.saved_to):
-                    course_options.append(COLOR_SEQ % BLUE + course.fullname + RESET_SEQ)
+                    course_options.append(Log.blue_str(course.fullname))
                     courses.append(course)
                     break
 
@@ -51,7 +44,7 @@ class OfflineService:
             + ' courses that are selected for download are displayed.'
         )
 
-        Log.critical(
+        Log.magenta(
             'For more complicated operations on the database a DB browser for SQLite'
             + ' is advantageous (https://sqlitebrowser.org/).'
         )
@@ -71,12 +64,12 @@ class OfflineService:
         sections = []
 
         # Add the option to select all sections
-        section_options.append(COLOR_SEQ % MAGENTA + '[All sections]' + RESET_SEQ)
+        section_options.append(Log.magenta_str('[All sections]'))
         sections.append(None)  # Add None at index 0 to avoid index shifting
 
         for course_file in selected_course.files:
             if not os.path.exists(course_file.saved_to) and (course_file.section_name not in sections):
-                section_options.append(COLOR_SEQ % MAGENTA + course_file.section_name + RESET_SEQ)
+                section_options.append(Log.magenta_str(course_file.section_name))
                 sections.append(course_file.section_name)
 
         print('From which sections you want to select files?')
@@ -97,15 +90,15 @@ class OfflineService:
         files = []
 
         # Add the option to select all files
-        file_options.append(COLOR_SEQ % CYAN + '[All files]' + RESET_SEQ)
+        file_options.append(Log.cyan_str('[All files]'))
         files.append(None)  # Add None at index 0 to avoid index shifting
 
         for course_file in selected_course.files:
             if not os.path.exists(course_file.saved_to) and (course_file.section_name in selected_sections):
-                file_options.append(COLOR_SEQ % CYAN + course_file.content_filename + RESET_SEQ)
+                file_options.append(Log.cyan_str(course_file.content_filename))
                 files.append(course_file)
 
-        print('Which of the files should be removed form the database, so that they will be redownloaded?')
+        print('Which of the files should be removed form the database, so that they will be re-downloaded?')
         print('[You can select with the space bar and confirm your selection with the enter key]')
         print('')
         selected_files = Cutie.select_multiple(options=file_options)
@@ -125,11 +118,6 @@ class OfflineService:
         self.state_recorder.batch_delete_files_from_db(files_to_delete)
 
     def delete_old_files(self):
-        RESET_SEQ = '\033[0m'
-        COLOR_SEQ = '\033[1;%dm'
-
-        BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = range(30, 38)
-
         stored_files = self.state_recorder.get_old_files()
 
         if len(stored_files) <= 0:
@@ -144,7 +132,7 @@ class OfflineService:
 
         course_options = []
         for course in stored_files:
-            course_options.append(COLOR_SEQ % BLUE + course.fullname + RESET_SEQ)
+            course_options.append(Log.blue_str(course.fullname))
 
         print('Choose one of the courses:')
         print('[Confirm your selection with the Enter key]')
@@ -157,12 +145,12 @@ class OfflineService:
         sections = []
 
         # Add the option to select all sections
-        section_options.append(COLOR_SEQ % MAGENTA + '[All sections]' + RESET_SEQ)
+        section_options.append(Log.magenta_str('[All sections]'))
         sections.append(None)  # Add None at index 0 to avoid index shifting
 
         for course_file in selected_course.files:
             if course_file.section_name not in sections:
-                section_options.append(COLOR_SEQ % MAGENTA + course_file.section_name + RESET_SEQ)
+                section_options.append(Log.magenta_str(course_file.section_name))
                 sections.append(course_file.section_name)
 
         print('From which sections you want to delete old files?')
@@ -183,12 +171,12 @@ class OfflineService:
         files = []
 
         # Add the option to select all files
-        file_options.append(COLOR_SEQ % CYAN + '[All files]' + RESET_SEQ)
+        file_options.append(Log.cyan_str('[All files]'))
         files.append(None)  # Add None at index 0 to avoid index shifting
 
         for course_file in selected_course.files:
             if course_file.section_name in selected_sections:
-                file_options.append(COLOR_SEQ % CYAN + course_file.content_filename + RESET_SEQ)
+                file_options.append(Log.cyan_str(course_file.content_filename))
                 files.append(course_file)
 
         print('Which of the files should be deleted?')
