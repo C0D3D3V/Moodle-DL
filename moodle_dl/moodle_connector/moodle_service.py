@@ -175,8 +175,7 @@ class MoodleService:
                 scheme
                 + moodle_domain
                 + moodle_path
-                + 'admin/tool/mobile/launch.php?service='
-                + 'moodle_mobile_app&passport=12345&urlscheme=moodledownloader'
+                + 'admin/tool/mobile/launch.php?service=moodle_mobile_app&passport=12345&urlscheme=moodledl'
             )
             print()
             print(
@@ -185,9 +184,9 @@ class MoodleService:
             )
 
             print('The script expects a URL that looks something like this:')
-            Log.info('moodledownloader://token=$apptoken')
+            Log.info('moodledl://token=$apptoken')
             print(
-                ' Where $apptoken looks random and "moodledownloader" can also be a different url scheme '
+                ' Where $apptoken looks random and "moodledl" can also be a different url scheme '
                 + ' like "moodlemobile". In reality $apptoken is a Base64 string containing the token to access moodle.'
             )
 
@@ -259,12 +258,14 @@ class MoodleService:
         download_course_ids = self.config.get_download_course_ids()
         download_public_course_ids = self.config.get_download_public_course_ids()
         dont_download_course_ids = self.config.get_dont_download_course_ids()
+
         download_submissions = self.config.get_download_submissions()
         download_databases = self.config.get_download_databases()
         download_forums = self.config.get_download_forums()
         download_quizzes = self.config.get_download_quizzes()
         download_lessons = self.config.get_download_lessons()
         download_workshops = self.config.get_download_workshops()
+
         download_also_with_cookie = self.config.get_download_also_with_cookie()
 
         courses = []
@@ -407,13 +408,15 @@ class MoodleService:
         download_course_ids = config.get_download_course_ids()
         download_public_course_ids = config.get_download_public_course_ids()
         dont_download_course_ids = config.get_dont_download_course_ids()
+
         download_submissions = config.get_download_submissions()
+        download_databases = config.get_download_databases()
+        download_lessons = config.get_download_lessons()
+        download_quizzes = config.get_download_quizzes()
+        download_workshops = config.get_download_workshops()
+
         download_descriptions = config.get_download_descriptions()
         download_links_in_descriptions = config.get_download_links_in_descriptions()
-        download_databases = config.get_download_databases()
-        download_quizzes = config.get_download_quizzes()
-        download_lessons = config.get_download_lessons()
-        download_workshops = config.get_download_workshops()
         exclude_file_extensions = config.get_exclude_file_extensions()
         download_also_with_cookie = config.get_download_also_with_cookie()
         if cookie_handler is not None:

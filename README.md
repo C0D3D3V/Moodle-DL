@@ -53,7 +53,7 @@ If you don't want moodle-dl to use the current working directory, then you shoul
 
 - `moodle-dl --init`
     - Create an initial configuration. A CLI guide will lead you through the initial configuration.
-    - If you have to log in with Single Sign On (SSO), you can set the option `--sso` additionally.
+    - If you have to log in with Single Sign On (SSO, something like Shibboleth or OAuth2), you can set the option `--sso` additionally.
     - If at any point in time, the saved token gets rejected by Moodle use `moodle-dl --new-token` instead
     - To automate the login you can use the additional options `--username` and `--password` or `--token`.
 
