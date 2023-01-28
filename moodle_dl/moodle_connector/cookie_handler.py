@@ -97,9 +97,9 @@ class CookieHandler:
 
         if self.test_cookies():
             return True
-        else:
-            error_msg = 'Failed to generate cookies!'
-            logging.debug(error_msg)
-            print('')
-            Log.error(error_msg)
-            return False
+
+        error_msg = 'Failed to generate cookies!'
+        logging.debug(error_msg)
+        print('')
+        Log.error(error_msg)
+        return False

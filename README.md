@@ -49,6 +49,8 @@ If you run the program on **Windows**, please use [Powershell or CMD](https://ww
  
 
 ### Usage
+Moodle-dl uses the Moodle mobile API. If your Moodle does not allow access via [the Moodle app](https://download.moodle.org/mobile/), Moodle-dl will not be able to connect to your Moodle.
+
 If you don't want moodle-dl to use the current working directory, then you should set the `--path` option on all commands.
 
 - `moodle-dl --init`

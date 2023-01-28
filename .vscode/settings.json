@@ -23,5 +23,9 @@
     ],
     "editor.rulers": [
         120
-    ]
+    ],
+    "cSpell.diagnosticLevel": "Hint",
+    "workbench.colorCustomizations": {
+        "editorHint.foreground": "#ff0000",
+    }
 }

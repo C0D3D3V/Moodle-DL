@@ -492,7 +492,7 @@ class MoodleService:
                                 # then ignore this URL
                                 add_description_url = False
                                 break
-                            elif file.module_id > test_file.module_id:
+                            if file.module_id > test_file.module_id:
                                 # Always use the link from the older description.
                                 add_description_url = False
                                 break
