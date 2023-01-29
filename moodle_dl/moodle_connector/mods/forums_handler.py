@@ -1,12 +1,20 @@
 from datetime import datetime
 from typing import Dict, List
 
-from moodle_dl.moodle_connector.mods.common import MoodleMod
-from moodle_dl.state_recorder import Course
+from moodle_dl.config_service import ConfigHelper
+from moodle_dl.moodle_connector.mods import MoodleMod
+from moodle_dl.state_recorder import Course, File
 from moodle_dl.utils import PathTools as PT
 
 
 class ForumsHandler(MoodleMod):
+    MOD_NAME = 'forum'
+
+    @classmethod
+    def download_condition(cls, config: ConfigHelper, file: File) -> bool:
+        # TODO: Add download condition, currently forums get filtered on API Call, and are not deleted at all
+        return True
+
     def fetch_forums(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
         """
         Fetches the Databases List for all courses from the

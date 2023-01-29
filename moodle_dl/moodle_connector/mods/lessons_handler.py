@@ -2,14 +2,21 @@ import re
 
 from typing import Dict, List
 
-from moodle_dl.moodle_connector.mods.common import MoodleMod
+from moodle_dl.config_service import ConfigHelper
+from moodle_dl.moodle_connector.mods import MoodleMod
 from moodle_dl.moodle_connector.moodle_constants import moodle_html_footer, moodle_html_header
 from moodle_dl.moodle_connector.request_helper import RequestRejectedError
-from moodle_dl.state_recorder import Course
+from moodle_dl.state_recorder import Course, File
 from moodle_dl.utils import PathTools as PT
 
 
 class LessonsHandler(MoodleMod):
+    MOD_NAME = 'lesson'
+
+    @classmethod
+    def download_condition(cls, config: ConfigHelper, file: File) -> bool:
+        return config.get_download_lessons() or (not (file.module_modname.endswith(cls.MOD_NAME) and file.deleted))
+
     def fetch_lessons(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
         """
         Fetches the Lessons List for all courses from the

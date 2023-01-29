@@ -12,7 +12,7 @@ from urllib.parse import urlparse
 from moodle_dl.config_service import ConfigHelper
 from moodle_dl.moodle_connector.cookie_handler import CookieHandler
 from moodle_dl.moodle_connector import FirstContactHandler, RequestRejectedError, RequestHelper
-from moodle_dl.moodle_connector.mods import get_all_moodle_mods
+from moodle_dl.moodle_connector.mods import get_all_mods, get_all_mods_classes
 from moodle_dl.moodle_connector.results_handler import ResultsHandler
 from moodle_dl.state_recorder import Course, StateRecorder
 from moodle_dl.utils import Log, determine_ext
@@ -233,9 +233,9 @@ class MoodleService:
 
         if len(splitted) < 3:
             return token, None
-        else:
-            secret_token = re.sub(r'[^A-Za-z0-9]+', '', splitted[2])
-            return (token, secret_token)
+
+        secret_token = re.sub(r'[^A-Za-z0-9]+', '', splitted[2])
+        return (token, secret_token)
 
     def fetch_state(self) -> List[Course]:
         """
@@ -281,7 +281,7 @@ class MoodleService:
         else:
             first_contact_handler.version = version
 
-        mod_handlers = get_all_moodle_mods(request_helper, version, user_id, self.config)
+        mod_handlers = get_all_mods(request_helper, version, user_id, self.config)
         results_handler = ResultsHandler(request_helper, moodle_domain, moodle_path, version)
 
         if download_also_with_cookie:
@@ -406,19 +406,13 @@ class MoodleService:
         """
 
         download_course_ids = config.get_download_course_ids()
-        download_public_course_ids = config.get_download_public_course_ids()
         dont_download_course_ids = config.get_dont_download_course_ids()
-
-        download_submissions = config.get_download_submissions()
-        download_databases = config.get_download_databases()
-        download_lessons = config.get_download_lessons()
-        download_quizzes = config.get_download_quizzes()
-        download_workshops = config.get_download_workshops()
-
+        download_public_course_ids = config.get_download_public_course_ids()
         download_descriptions = config.get_download_descriptions()
         download_links_in_descriptions = config.get_download_links_in_descriptions()
         exclude_file_extensions = config.get_exclude_file_extensions()
         download_also_with_cookie = config.get_download_also_with_cookie()
+
         if cookie_handler is not None:
             download_also_with_cookie = cookie_handler.test_cookies()
 
@@ -445,10 +439,16 @@ class MoodleService:
 
             course_files = []
             for file in course.files:
-                # Filter Files based on options
+                # Filter files based on module options
+                modules_conditions_met = True
+                for mod in get_all_mods_classes():
+                    if not mod.download_condition(file):
+                        modules_conditions_met = False
+                        break
+
+                # Filter Files based on other options
                 if (
-                    # Filter Assignment Submission Files
-                    (download_submissions or (not (file.module_modname.endswith('assign') and file.deleted)))
+                    modules_conditions_met
                     # Filter Description Files (except the forum posts)
                     and (
                         download_descriptions
@@ -459,14 +459,6 @@ class MoodleService:
                             and file.content_filename != 'Forum intro'
                         )
                     )
-                    # Filter Database Files
-                    and (download_databases or file.content_type != 'database_file')
-                    # Filter Quiz Files
-                    and (download_quizzes or (not (file.module_modname.endswith('quiz') and file.deleted)))
-                    # Filter Lesson Files
-                    and (download_lessons or (not (file.module_modname.endswith('lesson') and file.deleted)))
-                    # Filter Workshops Files
-                    and (download_workshops or (not (file.module_modname.endswith('workshop') and file.deleted)))
                     # Filter Files that requiere a Cookie
                     and (download_also_with_cookie or (not file.module_modname.startswith('cookie_mod-')))
                     # Exclude files whose file extension is blacklisted

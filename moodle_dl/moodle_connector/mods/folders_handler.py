@@ -1,10 +1,18 @@
 from typing import Dict, List
 
-from moodle_dl.moodle_connector.mods.common import MoodleMod
-from moodle_dl.state_recorder import Course
+from moodle_dl.config_service import ConfigHelper
+from moodle_dl.moodle_connector.mods import MoodleMod
+from moodle_dl.state_recorder import Course, File
 
 
 class FoldersHandler(MoodleMod):
+    MOD_NAME = 'folder'
+
+    @classmethod
+    def download_condition(cls, config: ConfigHelper, file: File) -> bool:
+        # TODO: Add download condition
+        return True
+
     def fetch_folders(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
         """
         Fetches the Folder List for all courses from the

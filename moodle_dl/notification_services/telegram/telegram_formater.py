@@ -32,8 +32,8 @@ class TelegramFormater:
         else:
             return one_msg_content + new_line
 
-    @classmethod
-    def make_bold(cls, string: str) -> str:
+    @staticmethod
+    def make_bold(string: str) -> str:
         """
         Makes a string bold in a telegram message
         """
