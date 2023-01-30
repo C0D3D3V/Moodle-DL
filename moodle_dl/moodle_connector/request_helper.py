@@ -134,26 +134,35 @@ class RequestHelper:
             while error_ctr <= self.MAX_RETRIES:
                 try:
                     async with session.post(
-                        url, data=data_urlencoded, headers=self.stdHeader, timeout=timeout, ssl=ssl_context
+                        url,
+                        data=data_urlencoded,
+                        headers=self.stdHeader,
+                        timeout=timeout,
+                        ssl=ssl_context,
+                        raise_for_status=True,
                     ) as resp:
-                        response = await resp.read()
+                        resp_json = await resp.json()
+                        resp_url = resp.url
                     break
-                except (requests.ConnectionError, requests.Timeout) as error:
-                    # We treat requests.ConnectionErrors here specially, since they normally mean,
-                    # that something went wrong, which could be fixed by a restart.
+                except (aiohttp.client_exceptions.ClientError, OSError, ValueError) as req_err:
                     error_ctr += 1
+                    if isinstance(req_err, aiohttp.client_exceptions.ClientResponseError) and req_err.status == 404:
+                        raise ConnectionError(f"Connection error: {req_err}") from None
+                    if isinstance(req_err, aiohttp.client_exceptions.ContentTypeError):
+                        raise RequestRejectedError(
+                            'The Moodle Mobile API does not appear to be available at this time.'
+                        ) from None
+
                     if error_ctr < self.MAX_RETRIES:
-                        logging.debug("The %sth Connection Error occurred, retrying. %s", error_ctr, str(error))
-                        sleep(1)
+                        logging.debug("The %sth Connection Error occurred, retrying. %s", error_ctr, req_err)
+                        asyncio.sleep(1)
                         continue
-                    raise ConnectionError(f"Connection error: {error}") from None
-                except RequestException as error:
-                    raise ConnectionError(f"Connection error: {error}") from None
+                    raise ConnectionError(f"Connection error: {req_err}") from None
 
-        json_result = self._initial_parse(response)
-        self.log_response(function, data, response.url, json_result)
+        self.check_json_for_moodle_error(resp_json)
+        self.log_response(function, data, resp_url, resp_json)
 
-        return json_result
+        return resp_json
 
     def post(self, function: str, data: Dict[str, str] = None, timeout: str = 60) -> Dict:
         """
@@ -175,17 +184,17 @@ class RequestHelper:
             try:
                 response = session.post(url, data=data_urlencoded, headers=self.stdHeader, timeout=timeout)
                 break
-            except (requests.ConnectionError, requests.Timeout) as error:
+            except (requests.ConnectionError, requests.Timeout) as req_err:
                 # We treat requests.ConnectionErrors here specially, since they normally mean,
                 # that something went wrong, which could be fixed by a restart.
                 error_ctr += 1
                 if error_ctr < self.MAX_RETRIES:
-                    logging.debug("The %sth Connection Error occurred, retrying. %s", error_ctr, str(error))
+                    logging.debug("The %sth Connection Error occurred, retrying. %s", error_ctr, str(req_err))
                     sleep(1)
                     continue
-                raise ConnectionError(f"Connection error: {error}") from None
-            except RequestException as error:
-                raise ConnectionError(f"Connection error: {error}") from None
+                raise ConnectionError(f"Connection error: {req_err}") from None
+            except RequestException as req_err:
+                raise ConnectionError(f"Connection error: {req_err}") from None
 
         json_result = self._initial_parse(response)
         self.log_response(function, data, response.url, json_result)
