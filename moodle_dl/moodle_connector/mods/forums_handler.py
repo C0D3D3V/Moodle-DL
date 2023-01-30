@@ -82,7 +82,7 @@ class ForumsHandler(MoodleMod):
 
         return result
 
-    def fetch_forums_posts(self, forums: Dict, last_timestamps_per_forum: Dict) -> Dict:
+    def fetch_forums_posts(self, forums: Dict) -> Dict:
         """
         Fetches for the forums list of all courses the additionally
         entries. This is kind of waste of resources, because there
@@ -91,6 +91,9 @@ class ForumsHandler(MoodleMod):
         @return: A Dictionary of all forums,
                  indexed by courses, then forums
         """
+        if not self.config.get_download_forums():
+            return forums
+
         # do this only if version is greater then 2.8
         # because mod_forum_get_forum_discussions_paginated will fail
         if self.version < 2014111000:
@@ -108,7 +111,7 @@ class ForumsHandler(MoodleMod):
                 counter += 1
                 real_id = forums[course_id][forum_id].get('id', 0)
                 page_num = 0
-                last_timestamp = last_timestamps_per_forum.get(forum_id, 0)
+                last_timestamp = self.last_timestamps.get(self.MOD_NAME, {}).get(forum_id, 0)
                 latest_discussions = []
                 done = False
                 while not done:

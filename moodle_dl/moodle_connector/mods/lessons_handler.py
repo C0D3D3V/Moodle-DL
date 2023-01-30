@@ -97,6 +97,9 @@ class LessonsHandler(MoodleMod):
         @return: A Dictionary of all lessons,
                  indexed by courses, then lessons
         """
+        if not self.config.get_download_lessons():
+            return lessons
+            
         # do this only if version is greater then 3.3
         # because mod_lesson_get_user_attempt will fail
         if self.version < 2017051500:

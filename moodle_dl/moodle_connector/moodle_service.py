@@ -237,6 +237,31 @@ class MoodleService:
         secret_token = re.sub(r'[^A-Za-z0-9]+', '', splitted[2])
         return (token, secret_token)
 
+    def get_courses_list(self, first_contact_handler: FirstContactHandler, user_id: int):
+        download_course_ids = self.config.get_download_course_ids()
+        download_public_course_ids = self.config.get_download_public_course_ids()
+        dont_download_course_ids = self.config.get_dont_download_course_ids()
+
+        courses_list = first_contact_handler.fetch_courses(user_id)
+        courses = []
+        # Filter unselected courses
+        for course in courses_list:
+            if MoodleService.should_download_course(course.id, download_course_ids, dont_download_course_ids):
+                courses.append(course)
+
+        public_courses_list = first_contact_handler.fetch_courses_info(download_public_course_ids)
+        courses.extend(public_courses_list)
+        return courses
+
+    def get_user_id_and_version(self, first_contact_handler: FirstContactHandler) -> Tuple(int, int):
+        user_id, version = self.config.get_userid_and_version()
+        if user_id is None or version is None:
+            user_id, version = first_contact_handler.fetch_userid_and_version()
+            logging.debug('Detected moodle version: %d', version)
+        else:
+            first_contact_handler.version = version
+        return user_id, version
+
     def fetch_state(self) -> List[Course]:
         """
         Gets the current status of the configured Moodle account and compares
@@ -255,50 +280,27 @@ class MoodleService:
         request_helper = RequestHelper(self.opts, moodle_domain, moodle_path, token, use_http)
         first_contact_handler = FirstContactHandler(request_helper)
 
-        download_course_ids = self.config.get_download_course_ids()
-        download_public_course_ids = self.config.get_download_public_course_ids()
-        dont_download_course_ids = self.config.get_dont_download_course_ids()
-
-        download_submissions = self.config.get_download_submissions()
-        download_databases = self.config.get_download_databases()
-        download_forums = self.config.get_download_forums()
-        download_quizzes = self.config.get_download_quizzes()
         download_lessons = self.config.get_download_lessons()
+        download_quizzes = self.config.get_download_quizzes()
         download_workshops = self.config.get_download_workshops()
 
         download_also_with_cookie = self.config.get_download_also_with_cookie()
 
-        courses = []
         filtered_courses = []
-        cookie_handler = None
 
         print('\rDownloading account information\033[K', end='')
+        user_id, version = self.get_user_id_and_version(first_contact_handler)
 
-        user_id, version = self.config.get_userid_and_version()
-        if user_id is None or version is None:
-            user_id, version = first_contact_handler.fetch_userid_and_version()
-            logging.debug('Detected moodle version: %d', version)
-        else:
-            first_contact_handler.version = version
-
-        mod_handlers = get_all_mods(request_helper, version, user_id, self.config)
+        mod_handlers = get_all_mods(request_helper, version, user_id,  self.recorder.get_last_timestamp_per_mod_module(),self.config)
         results_handler = ResultsHandler(request_helper, moodle_domain, moodle_path, version)
 
+        cookie_handler = None
         if download_also_with_cookie:
             # generate a new cookie if necessary
             cookie_handler = CookieHandler(request_helper, version, self.opts.path)
             cookie_handler.check_and_fetch_cookies(privatetoken, user_id)
 
-        courses_list = first_contact_handler.fetch_courses(user_id)
-        courses = []
-        # Filter unselected courses
-        for course in courses_list:
-            if MoodleService.should_download_course(course.id, download_course_ids, dont_download_course_ids):
-                courses.append(course)
-
-        public_courses_list = first_contact_handler.fetch_courses_info(download_public_course_ids)
-        for course in public_courses_list:
-            courses.append(course)
+        courses = self.get_courses_list(first_contact_handler, user_id)
 
         assignments = assignments_handler.fetch_assignments(courses)
         if download_submissions:
@@ -310,7 +312,7 @@ class MoodleService:
 
         forums = forums_handler.fetch_forums(courses)
         if download_forums:
-            last_timestamps_per_forum = self.recorder.get_last_timestamps_per_forum()
+            last_timestamps_per_forum = 
             forums = forums_handler.fetch_forums_posts(forums, last_timestamps_per_forum)
 
         quizzes = quizzes_handler.fetch_quizzes(courses)
@@ -371,7 +373,7 @@ class MoodleService:
 
         # Filter changes
         changes = self.add_options_to_courses(changes)
-        changes = self.filter_courses(changes, self.config, cookie_handler, courses_list + public_courses_list)
+        changes = self.filter_courses(changes, self.config, cookie_handler, courses)
 
         return changes
 
@@ -433,7 +435,6 @@ class MoodleService:
                         not_online = False
                         break
                 if not_online:
-                    Log.warning(f'The Moodle course with id {course.id} is no longer available online.')
                     logging.warning('The Moodle course with id %d is no longer available online.', course.id)
                     continue
 

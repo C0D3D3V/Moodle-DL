@@ -39,6 +39,7 @@ setup(
         'requests>=2.24.0',
         'aioxmpp>=0.12.2',
         'readchar>=4.0.3',
+        'colorlog>=6.7.0',
     ],
     classifiers=[
         'Development Status :: 5 - Production/Stable',

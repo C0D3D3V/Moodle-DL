@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 
 from moodle_dl.config_service import ConfigHelper
 from moodle_dl.moodle_connector.mods.common import MoodleMod
@@ -21,9 +21,13 @@ def get_all_mods_classes() -> List[MoodleMod]:
 
 
 def get_all_mods(
-    request_helper: RequestHelper, moodle_version: int, user_id: int, config: ConfigHelper
+    request_helper: RequestHelper,
+    moodle_version: int,
+    user_id: int,
+    last_timestamps: Dict[str, Dict[int, int]],
+    config: ConfigHelper,
 ) -> List[MoodleMod]:
     result_list = []
     for mod_handler in ALL_MODS:
-        result_list.append(mod_handler(request_helper, moodle_version, user_id, config))
+        result_list.append(mod_handler(request_helper, moodle_version, user_id, last_timestamps, config))
     return result_list

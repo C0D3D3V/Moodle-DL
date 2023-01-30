@@ -54,7 +54,7 @@ Moodle-dl uses the Moodle mobile API. If your Moodle does not allow access via [
 If you don't want moodle-dl to use the current working directory, then you should set the `--path` option on all commands.
 
 - `moodle-dl --init`
-    - Create an initial configuration. A CLI guide will lead you through the initial configuration.
+    - Create an initial configuration. A CLI configuration wizard will lead you through the initial configuration.
     - If you have to log in with Single Sign On (SSO, something like Shibboleth or OAuth2), you can set the option `--sso` additionally.
     - If at any point in time, the saved token gets rejected by Moodle use `moodle-dl --new-token` instead
     - To automate the login you can use the additional options `--username` and `--password` or `--token`.
@@ -63,9 +63,9 @@ If you don't want moodle-dl to use the current working directory, then you shoul
     - After configuring moodle-dl, this command is sufficient to download all files from your Moodle account and notify you about the result.
 
 - `moodle-dl --config`
-    - A CLI guide will lead you through the additional configuration of the software.
-    - You can start the guide after the initial configuration if you want to change any of the settings.
-    - The guide allows you to change nearly all settings of the moodle-dl
+    - A CLI configuration wizard will lead you through the additional configuration of moodle-dl.
+    - You can start the wizard after the initial configuration if you want to change any of the settings.
+    - The wizard allows you to change nearly all settings of moodle-dl
       - select the courses that will be downloaded
       - rename each course individually
       - decide if subfolders should be created inside a course folder
@@ -73,7 +73,7 @@ If you don't want moodle-dl to use the current working directory, then you shoul
       - set if external files should be downloaded (files like Youtube videos)
       - set if files on moodle that require a cookie should be downloaded
       - to add extra courses to your download list which you can see but you are not enrolled in, check out [this wiki entry](https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Download-public-courses)
-    - Not all moodle-dl settings are available in the CLI guide for configuration, see [the wiki](https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Config.json) for more available options.
+    - Not all moodle-dl settings are available in the CLI configuration wizard for configuration, see [the wiki](https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Config.json) for more available options.
 
 By default a private token is stored in the initial configuration, this is only needed for special Moodle modules that cannot be queried via the Moodle API. If no such module is available in your Moodle you are welcome to delete this token.
 

@@ -126,6 +126,9 @@ class WorkshopsHandler(MoodleMod):
         @return: A Dictionary of all workshops,
                  indexed by courses, then workshops
         """
+        if not self.config.get_download_workshops():
+            return workshops
+
         # do this only if version is greater then 3.3
         # because mod_quiz_get_user_attempts will fail
         if self.version < 2017111300:

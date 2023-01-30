@@ -1,3 +1,4 @@
+import logging
 import os
 import platform
 
@@ -7,7 +8,7 @@ from typing import List
 from moodle_dl.download_service.download_service import DownloadService
 from moodle_dl.moodle_connector import MoodleService
 from moodle_dl.state_recorder import Course
-from moodle_dl.utils import Log, PathTools as PT
+from moodle_dl.utils import PathTools as PT
 
 
 class FakeDownloadService:
@@ -67,4 +68,4 @@ class FakeDownloadService:
 
     def run(self):
         """Dummy function"""
-        Log.success('All files stored in the Database!')
+        logging.success('All files stored in the Database!')

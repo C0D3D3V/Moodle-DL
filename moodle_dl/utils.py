@@ -520,6 +520,9 @@ class Log:
     :param logString: the string that should be logged
 
     The string functions returns the strings that would be logged.
+
+    The idea is to use this Log class only for the CLI configuration wizard, 
+    and for all other logging we use the normal python logging module 
     """
 
     @staticmethod

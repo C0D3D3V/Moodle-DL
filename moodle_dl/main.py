@@ -7,6 +7,7 @@ import traceback
 from logging.handlers import RotatingFileHandler
 from shutil import which
 
+import colorlog
 import sentry_sdk
 
 try:
@@ -97,8 +98,6 @@ def run_init(config: ConfigHelper, opts):
 
 
 def run_main(config: ConfigHelper, opts):
-    setup_logger(opts.path)
-
     sentry_connected = False
     try:
         sentry_dsn = config.get_property('sentry_dsn')
@@ -110,26 +109,20 @@ def run_main(config: ConfigHelper, opts):
 
     notify_services = get_all_notify_services(config)
 
-    # Todo: Change this
+    # TODO: Change this
     PT.restricted_filenames = config.get_restricted_filenames()
 
     try:
         moodle = MoodleService(config, opts)
 
-        msg_checking_for_changes = 'Checking for changes for the configured Moodle-Account....'
-        logging.debug(msg_checking_for_changes)
-        Log.debug(msg_checking_for_changes)
+        logging.debug('Checking for changes for the configured Moodle-Account....')
         changed_courses = moodle.fetch_state()
 
         if opts.log_responses:
-            msg_responses_logged = "All JSON-responses from Moodle have been written to the responses.log file."
-            logging.debug(msg_responses_logged)
-            Log.success(msg_responses_logged)
+            logging.info("All JSON-responses from Moodle have been written to the responses.log file.")
             return
 
-        msg_start_downloading = 'Start downloading changed files...'
-        logging.debug(msg_start_downloading)
-        Log.debug(msg_start_downloading)
+        logging.debug('Start downloading changed files...')
 
         if opts.without_downloading_files:
             downloader = FakeDownloadService(changed_courses, moodle, opts)
@@ -148,7 +141,6 @@ def run_main(config: ConfigHelper, opts):
 
         else:
             logging.info('No changes found for the configured Moodle-Account.')
-            Log.warning('No changes found for the configured Moodle-Account.')
 
         if len(failed_downloads) > 0:
             for service in notify_services:
@@ -168,29 +160,35 @@ def run_main(config: ConfigHelper, opts):
         raise base_err
 
 
-def setup_logger(storage_path: str):
-    log_formatter = logging.Formatter('%(asctime)s  %(levelname)s  {%(module)s}  %(message)s', '%Y-%m-%d %H:%M:%S')
-    log_file = os.path.join(storage_path, 'MoodleDownloader.log')
-    log_handler = RotatingFileHandler(
-        log_file, mode='a', maxBytes=1 * 1024 * 1024, backupCount=2, encoding='utf-8', delay=0
-    )
-
-    log_handler.setFormatter(log_formatter)
+def setup_logger(opts):
     IS_VERBOSE = check_verbose()
-    if IS_VERBOSE:
-        log_handler.setLevel(logging.DEBUG)
-    else:
-        log_handler.setLevel(logging.INFO)
+
+    file_log_handler = RotatingFileHandler(
+        PT.make_path(opts.path, 'MoodleDL.log'),
+        mode='a',
+        maxBytes=1 * 1024 * 1024,
+        backupCount=2,
+        encoding='utf-8',
+        delay=0,
+    )
+    file_log_handler.setFormatter(
+        logging.Formatter('%(asctime)s  %(levelname)s  {%(module)s}  %(message)s', '%Y-%m-%d %H:%M:%S')
+    )
+    stdout_log_handler = colorlog.StreamHandler()
+    stdout_log_handler.setFormatter(colorlog.ColoredFormatter('%(log_color)s%(asctime)s %(message)s', '%H:%M:%S'))
 
     app_log = logging.getLogger()
     if IS_VERBOSE:
+        file_log_handler.setLevel(logging.DEBUG)
         app_log.setLevel(logging.DEBUG)
     else:
+        file_log_handler.setLevel(logging.INFO)
         app_log.setLevel(logging.INFO)
-    app_log.addHandler(log_handler)
 
-    logging.info('--- moodle-dl started ---------------------')
-    Log.info('Moodle Downloader starting...')
+    app_log.addHandler(stdout_log_handler)
+    if opts.log_to_file:
+        app_log.addHandler(file_log_handler)
+
     if IS_VERBOSE:
         logging.debug('moodle-dl version: %s', __version__)
         logging.debug('python version: %s', ".".join(map(str, sys.version_info[:3])))
@@ -215,9 +213,9 @@ def win_max_path_length_workaround(path):
     if os.name == 'nt':
         abs_file_path = PT.get_abs_path(path)
         path = '\\\\?\\' + abs_file_path
-        Log.debug("Using windows max path length workaround")
+        logging.debug("Using windows max path length workaround")
     else:
-        Log.info("You are not on Windows, you don't need to use this workaround")
+        logging.info("You are not on Windows, you don't need to use this workaround")
     return path
 
 
@@ -236,7 +234,10 @@ def get_parser():
         dest='init',
         default=False,
         action='store_true',
-        help='Create an initial configuration. A CLI guide will lead you through the initial configuration.',
+        help=(
+            'Create an initial configuration. A CLI configuration wizard will lead you through'
+            + ' the initial configuration.',
+        ),
     )
 
     group.add_argument(
@@ -246,8 +247,8 @@ def get_parser():
         default=False,
         action='store_true',
         help=(
-            'Start the configuration utility.'
-            + ' It allows you to make almost all available moodle-dl settings conveniently via the CLI guide.'
+            'Start the configuration utility. It allows you to make almost all available moodle-dl settings'
+            + ' conveniently via the CLI configuration wizard.'
         ),
     )
 
@@ -460,6 +461,15 @@ def get_parser():
         help='Print various debugging information',
     )
 
+    parser.add_argument(
+        '-ltf',
+        '--log-to-file',
+        dest='log_to_file',
+        default=False,
+        action='store_true',
+        help='Log all output additionally to a log file called MoodleDL.log',
+    )
+
     return parser
 
 
@@ -474,9 +484,10 @@ def main(args=None):
     just_fix_windows_console()
     parser = get_parser()
     opts = parser.parse_args(args)  # opts is of type Namespace
+    setup_logger(opts)
     pre_process_opts(opts)
 
-    # Todo: Change this
+    # TODO: Change this
     DownloadService.thread_count = args.threads
 
     config = ConfigHelper(opts.path)
@@ -487,8 +498,8 @@ def main(args=None):
         try:
             config.load()
         except ConfigHelper.NoConfigError as err_config:
-            Log.error(f'Error: {err_config!s}')
-            Log.warning('You can create a configuration with the --init option')
+            logging.error('Error: %s', err_config)
+            logging.warning('You can create a configuration with the --init option')
             exit(-1)
 
     try:
@@ -514,7 +525,7 @@ def main(args=None):
         else:
             run_main(config, opts)
 
-        Log.success('All done. Exiting..')
+        logging.info('All done. Exiting..')
         ProcessLock.unlock(opts.path)
     except BaseException as base_err:  # pylint: disable=broad-except
         print('\n')
@@ -522,12 +533,11 @@ def main(args=None):
             ProcessLock.unlock(opts.path)
 
         error_formatted = traceback.format_exc()
-        logging.error(error_formatted, extra={'exception': base_err})
 
         if check_verbose() or check_debug():
-            Log.magenta(f'{error_formatted}')
+            logging.error(error_formatted, extra={'exception': base_err})
         else:
-            Log.error(f'Exception: {base_err!s}')
+            logging.error('Exception: %s', base_err)
 
         logging.debug('Exception-Handling completed. Exiting...')
 

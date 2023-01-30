@@ -11,7 +11,7 @@ from moodle_dl.notification_services.notification_service import NotificationSer
 from moodle_dl.notification_services.xmpp.xmpp_formater import XmppFormater as XF
 from moodle_dl.notification_services.xmpp.xmpp_shooter import XmppShooter
 from moodle_dl.state_recorder import Course
-from moodle_dl.utils import Cutie, Log
+from moodle_dl.utils import Cutie
 
 
 class XmppService(NotificationService):
@@ -87,8 +87,7 @@ class XmppService(NotificationService):
 
         xmpp_cfg = self.config.get_property('xmpp')
 
-        logging.debug('Sending Notification via XMPP...')
-        Log.debug('Sending Notification via XMPP... (Please wait)')
+        logging.info(('Sending Notification via XMPP...')
 
         try:
             xmpp = XmppShooter(xmpp_cfg['sender'], xmpp_cfg['password'], xmpp_cfg['target'])

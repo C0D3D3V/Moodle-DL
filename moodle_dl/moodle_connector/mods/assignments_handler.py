@@ -95,6 +95,9 @@ class AssignmentsHandler(MoodleMod):
         @return: A Dictionary of all assignments,
                  indexed by courses, then assignment
         """
+        if not self.config.get_download_submissions():
+            return assignments
+
         # do this only if version is greater then 3.1
         # because mod_assign_get_submission_status will fail
         if self.version < 2016052300:

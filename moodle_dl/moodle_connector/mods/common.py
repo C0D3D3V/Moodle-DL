@@ -11,15 +11,24 @@ class MoodleMod(metaclass=ABCMeta):
     Common class for a Moodle module endpoint
     """
 
-    def __init__(self, request_helper: RequestHelper, moodle_version: int, user_id: int, config: ConfigHelper):
+    def __init__(
+        self,
+        request_helper: RequestHelper,
+        moodle_version: int,
+        user_id: int,
+        last_timestamps: Dict[str, Dict[int, int]],
+        config: ConfigHelper,
+    ):
+        """
+        @param last_timestamps: A Dict per mod of timestamps per course module id,
+                                prevents downloading older content of a corse module
+        """
+
         self.request_helper = request_helper
         self.version = moodle_version
         self.user_id = user_id
+        self.last_timestamps = last_timestamps
         self.config = config
-
-    @abstractmethod
-    async def fetch_module(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
-        pass
 
     @classmethod
     @abstractmethod
@@ -30,4 +39,8 @@ class MoodleMod(metaclass=ABCMeta):
         """
         # TODO: Make module download conditions more granular and more generally
         # (do not only filter "deleted" mod files but all?)
+        pass
+
+    @abstractmethod
+    async def fetch_mod(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
         pass

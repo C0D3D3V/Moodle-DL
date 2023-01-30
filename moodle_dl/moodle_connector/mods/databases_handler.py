@@ -6,7 +6,7 @@ from moodle_dl.state_recorder import Course, File
 
 
 class DatabasesHandler(MoodleMod):
-    MOD_NAME = 'database'
+    MOD_NAME = 'data'
 
     @classmethod
     def download_condition(cls, config: ConfigHelper, file: File) -> bool:
@@ -90,6 +90,9 @@ class DatabasesHandler(MoodleMod):
         @return: A Dictionary of all databases,
                  indexed by courses, then databases
         """
+        if not self.config.get_download_databases():
+            return databases
+
         # do this only if version is greater then 3.3
         # because mod_data_get_entries will fail
         if self.version < 2017051500:

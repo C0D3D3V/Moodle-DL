@@ -46,7 +46,7 @@ class CookieHandler:
             bool: True if valide
         """
 
-        logging.debug('Testing cookies with this URL %s', self.moodle_test_url)
+        logging.debug('Testing cookies using this URL: %s', self.moodle_test_url)
 
         response, dummy = self.request_helper.get_URL(self.moodle_test_url, self.cookies_path)
 
@@ -64,26 +64,20 @@ class CookieHandler:
                 logging.debug('Cookies are still valid')
                 return True
 
-            warning_msg = 'Moodle cookie has expired, an attempt is made to generate a new cookie.'
-            logging.warning(warning_msg)
-            Log.warning('\r' + warning_msg + '\033[K')
+            logging.info('Moodle cookie has expired, an attempt is made to generate a new cookie.')
 
         if privatetoken is None:
             error_msg = (
                 'Moodle Cookies are not retrieved because no private token is set.'
                 + ' To set a private token, use the `--new-token` option (if necessary also with `--sso`).'
             )
-            logging.warning(error_msg)
-            Log.error('\r' + error_msg + '\033[K')
+            logging.debug(error_msg)
             return False
 
         autologin_key = self.fetch_autologin_key(privatetoken)
 
         if autologin_key is None:
-            error_msg = 'Failed to download autologin key!'
-            logging.debug(error_msg)
-            print('')
-            Log.error(error_msg)
+            logging.debug('Failed to download autologin key!')
             return False
 
         print('\rDownloading cookies\033[K', end='')
@@ -98,8 +92,5 @@ class CookieHandler:
         if self.test_cookies():
             return True
 
-        error_msg = 'Failed to generate cookies!'
-        logging.debug(error_msg)
-        print('')
-        Log.error(error_msg)
+        logging.debug('Failed to generate cookies!')
         return False

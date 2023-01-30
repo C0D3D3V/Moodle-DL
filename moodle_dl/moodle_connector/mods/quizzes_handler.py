@@ -94,6 +94,9 @@ class QuizzesHandler(MoodleMod):
         @return: A Dictionary of all quizzes,
                  indexed by courses, then quizzes
         """
+        if not self.config.get_download_quizzes():
+            return quizzes
+
         # do this only if version is greater then 3.1
         # because mod_quiz_get_user_attempts will fail
         if self.version < 2016052300:

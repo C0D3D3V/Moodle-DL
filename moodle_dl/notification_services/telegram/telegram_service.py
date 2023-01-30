@@ -8,7 +8,7 @@ from moodle_dl.notification_services.notification_service import NotificationSer
 from moodle_dl.notification_services.telegram.telegram_formater import TelegramFormater as TF
 from moodle_dl.notification_services.telegram.telegram_shooter import TelegramShooter, RequestRejectedError
 from moodle_dl.state_recorder import Course
-from moodle_dl.utils import Cutie, Log
+from moodle_dl.utils import Cutie
 
 
 class TelegramService(NotificationService):
@@ -81,8 +81,7 @@ class TelegramService(NotificationService):
 
         telegram_cfg = self.config.get_property('telegram')
 
-        logging.debug('Sending Notification via Telegram...')
-        Log.debug('Sending Notification via Telegram... (Please wait)')
+        logging.info('Sending Notification via Telegram...')
 
         telegram_shooter = TelegramShooter(telegram_cfg['token'], telegram_cfg['chat_id'])
 
