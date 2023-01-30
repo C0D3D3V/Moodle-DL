@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 import os
@@ -7,6 +8,7 @@ from http.cookiejar import MozillaCookieJar
 from time import sleep
 from typing import Dict
 
+import aiohttp
 import requests
 import urllib3
 
@@ -27,6 +29,7 @@ class RequestHelper:
         ),
         'Content-Type': 'application/x-www-form-urlencoded',
     }
+    MAX_RETRIES = 5
 
     def __init__(self, opts, use_http: bool, moodle_domain: str, moodle_path: str = '/', token: str = ''):
         self.token = token
@@ -34,9 +37,9 @@ class RequestHelper:
         self.moodle_path = moodle_path
         self.use_http = use_http
         self.opts = opts
-
-        # Make sure to either set stream to False or read the content property of the Response object
-        self.session = SslHelper.custom_requests_session(opts.skip_cert_verify, opts.allow_insecure_ssl)
+        # Semaphore for async requests
+        # Keep in mind Semaphore needs to be initialized in the same async loop as it is used
+        self.semaphore = asyncio.Semaphore(opts.threads)
 
         scheme = 'https://'
         if use_http:
@@ -66,8 +69,7 @@ class RequestHelper:
         if data is not None:
             data_urlencoded = RequestHelper.recursive_urlencode(data)
 
-        session = SslHelper.custom_requests_session(self.verify)
-
+        session = SslHelper.custom_requests_session(self.opts.skip_cert_verify, self.opts.allow_insecure_ssl)
         if cookie_jar_path is not None:
             session.cookies = MozillaCookieJar(cookie_jar_path)
 
@@ -96,8 +98,7 @@ class RequestHelper:
         @return: The resulting Response object.
         """
 
-        session = SslHelper.custom_requests_session(self.verify)
-
+        session = SslHelper.custom_requests_session(self.opts.skip_cert_verify, self.opts.allow_insecure_ssl)
         if cookie_jar_path is not None:
             session.cookies = MozillaCookieJar(cookie_jar_path)
 
@@ -113,16 +114,53 @@ class RequestHelper:
 
         return response, session
 
-    async def async_post(self):
-        pass
+    async def async_post(self, function: str, data: Dict[str, str] = None, timeout: str = 60) -> Dict:
+        """
+        Sends async a POST request to the REST endpoint of the Moodle system
+        @param function: The Web service function to be called.
+        @param data: The optional data is added to the POST body.
+        @return: The JSON response returned by the Moodle system, already checked for errors..
+        """
 
-    def post(self, function: str, data: Dict[str, str] = None, timeout: str = 60) -> object:
+        if self.token is None:
+            raise ValueError('The required Token is not set!')
+
+        data_urlencoded = self._get_POST_DATA(function, self.token, data)
+        url = self._get_REST_POST_URL(self.url_base, function)
+        ssl_context = SslHelper.get_ssl_context(self.opts.skip_cert_verify, self.opts.allow_insecure_ssl)
+
+        error_ctr = 0
+        async with self.semaphore, aiohttp.ClientSession() as session:
+            while error_ctr <= self.MAX_RETRIES:
+                try:
+                    async with session.post(
+                        url, data=data_urlencoded, headers=self.stdHeader, timeout=timeout, ssl=ssl_context
+                    ) as resp:
+                        response = await resp.read()
+                    break
+                except (requests.ConnectionError, requests.Timeout) as error:
+                    # We treat requests.ConnectionErrors here specially, since they normally mean,
+                    # that something went wrong, which could be fixed by a restart.
+                    error_ctr += 1
+                    if error_ctr < self.MAX_RETRIES:
+                        logging.debug("The %sth Connection Error occurred, retrying. %s", error_ctr, str(error))
+                        sleep(1)
+                        continue
+                    raise ConnectionError(f"Connection error: {error}") from None
+                except RequestException as error:
+                    raise ConnectionError(f"Connection error: {error}") from None
+
+        json_result = self._initial_parse(response)
+        self.log_response(function, data, response.url, json_result)
+
+        return json_result
+
+    def post(self, function: str, data: Dict[str, str] = None, timeout: str = 60) -> Dict:
         """
         Sends a POST request to the REST endpoint of the Moodle system
         @param function: The Web service function to be called.
         @param data: The optional data is added to the POST body.
-        @return: The JSON response returned by the Moodle system, already
-        checked for errors..
+        @return: The JSON response returned by the Moodle system, already checked for errors..
         """
 
         if self.token is None:
@@ -131,10 +169,9 @@ class RequestHelper:
         data_urlencoded = self._get_POST_DATA(function, self.token, data)
         url = self._get_REST_POST_URL(self.url_base, function)
 
+        session = SslHelper.custom_requests_session(self.opts.skip_cert_verify, self.opts.allow_insecure_ssl)
         error_ctr = 0
-        max_retries = 5
-        session = SslHelper.custom_requests_session(self.verify)
-        while True:
+        while error_ctr <= self.MAX_RETRIES:
             try:
                 response = session.post(url, data=data_urlencoded, headers=self.stdHeader, timeout=timeout)
                 break
@@ -142,7 +179,7 @@ class RequestHelper:
                 # We treat requests.ConnectionErrors here specially, since they normally mean,
                 # that something went wrong, which could be fixed by a restart.
                 error_ctr += 1
-                if error_ctr < max_retries:
+                if error_ctr < self.MAX_RETRIES:
                     logging.debug("The %sth Connection Error occurred, retrying. %s", error_ctr, str(error))
                     sleep(1)
                     continue
@@ -151,15 +188,18 @@ class RequestHelper:
                 raise ConnectionError(f"Connection error: {error}") from None
 
         json_result = self._initial_parse(response)
+        self.log_response(function, data, response.url, json_result)
+
+        return json_result
+
+    def log_response(self, function: str, data: Dict[str, str], url: str, json_result: Dict):
         if self.opts.log_responses and function not in ['tool_mobile_get_autologin_key']:
             with open(self.log_responses_to, 'a', encoding='utf-8') as response_log_file:
-                response_log_file.write(f'URL: {response.url}\n')
+                response_log_file.write(f'URL: {url}\n')
                 response_log_file.write(f'Function: {function}\n\n')
                 response_log_file.write(f'Data: {data}\n\n')
                 response_log_file.write(json.dumps(json_result, indent=4, ensure_ascii=False))
                 response_log_file.write('\n\n\n')
-
-        return json_result
 
     @staticmethod
     def _get_REST_POST_URL(url_base: str, function: str) -> str:
@@ -197,7 +237,7 @@ class RequestHelper:
         @return: The JSON response returned by the Moodle System, already
         checked for errors.
         """
-        session = SslHelper.custom_requests_session(self.verify)
+        session = SslHelper.custom_requests_session(self.opts.skip_cert_verify, self.opts.allow_insecure_ssl)
         try:
             response = session.post(
                 f'{self.url_base}login/token.php',
@@ -233,7 +273,7 @@ class RequestHelper:
 
         # Try to parse the JSON
         try:
-            response_extracted = response.json()
+            resp_json = response.json()
         except ValueError:
             raise RequestRejectedError('The Moodle Mobile API does not appear to be available at this time.') from None
         except Exception as error:
@@ -242,24 +282,22 @@ class RequestHelper:
                 + ' to parse the json response! Moodle'
                 + f' response: {response.text}.\nError: {error}'
             ) from None
-        # Check for known errors
-        if 'error' in response_extracted:
-            error = response_extracted.get('error', '')
-            errorcode = response_extracted.get('errorcode', '')
-            stacktrace = response_extracted.get('stacktrace', '')
-            debuginfo = response_extracted.get('debuginfo', '')
-            reproductionlink = response_extracted.get('reproductionlink', '')
 
+        self.check_json_for_moodle_error(resp_json)
+        return resp_json
+
+    def check_json_for_moodle_error(self, resp_json: Dict):
+        # Check for known errors
+        if 'error' in resp_json:
             raise RequestRejectedError(
                 'The Moodle System rejected the Request.'
-                + f' Details: {error} (Errorcode: {errorcode}, '
-                + f'Stacktrace: {stacktrace}, Debuginfo: {debuginfo}, Reproductionlink: {reproductionlink})'
+                + f" Details: {resp_json.get('error', '')} (Errorcode: {resp_json.get('errorcode', '')},"
+                + f" Stacktrace: {resp_json.get('stacktrace', '')}, Debuginfo: {resp_json.get('debuginfo', '')},"
+                + f" Reproductionlink: {resp_json.get('reproductionlink', '')})"
             )
 
-        if 'exception' in response_extracted:
-            exception = response_extracted.get('exception', '')
-            errorcode = response_extracted.get('errorcode', '')
-            message = response_extracted.get('message', '')
+        if 'exception' in resp_json:
+            errorcode = resp_json.get('errorcode', '')
 
             if errorcode == 'invalidtoken':
                 raise RequestRejectedError(
@@ -269,10 +307,9 @@ class RequestHelper:
 
             raise RequestRejectedError(
                 'The Moodle System rejected the Request.'
-                + f' Details: {exception} (Errorcode: {errorcode}, Message: {message})'
+                + f" Details: {resp_json.get('exception', '')} (Errorcode: {errorcode},"
+                + f" Message: {resp_json.get('message', '')})"
             )
-
-        return response_extracted
 
     @staticmethod
     def recursive_urlencode(data):

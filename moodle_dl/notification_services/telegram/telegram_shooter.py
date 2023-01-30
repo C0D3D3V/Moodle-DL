@@ -1,14 +1,11 @@
 import urllib
-import requests
 
 from requests.exceptions import RequestException
 
+from moodle_dl.utils import SslHelper
+
 
 class TelegramShooter:
-    """
-    Encapsulates the sending of notification-messages.
-    """
-
     stdHeader = {
         'User-Agent': (
             'Mozilla/5.0 (X11; Linux x86_64)'
@@ -28,8 +25,9 @@ class TelegramShooter:
         url = f'https://api.telegram.org/bot{self.telegram_token}/sendMessage'
         data_urlencoded = urllib.parse.urlencode(payload)
 
+        session = SslHelper.custom_requests_session()
         try:
-            response = requests.post(url, data=data_urlencoded, headers=self.stdHeader, timeout=60)
+            response = session.post(url, data=data_urlencoded, headers=self.stdHeader, timeout=60)
         except RequestException as error:
             raise ConnectionError(f"Connection error: {str(error)}") from None
 
@@ -40,8 +38,7 @@ class TelegramShooter:
         # Normally Telegram answer with response 200
         if response.status_code not in [200, 400]:
             raise RuntimeError(
-                'An Unexpected Error happened on side of the'
-                + ' Telegram System!'
+                'An Unexpected Error happened on side of the Telegram System!'
                 + f' Status-Code: {str(response.status_code)}'
                 + f'\nHeader: {response.headers}'
                 + f'\nResponse: {response.text}'

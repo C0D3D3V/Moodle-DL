@@ -263,7 +263,7 @@ class MoodleService:
             first_contact_handler.version = version
         return user_id, version
 
-    def fetch_state(self) -> List[Course]:
+    async def fetch_state(self) -> List[Course]:
         """
         Gets the current status of the configured Moodle account and compares
         it with the last known status for changes. It does not change the

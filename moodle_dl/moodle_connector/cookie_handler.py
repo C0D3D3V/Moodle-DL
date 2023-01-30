@@ -84,7 +84,7 @@ class CookieHandler:
         post_data = {'key': autologin_key.get('key', ''), 'userid': userid}
         url = autologin_key.get('autologinurl', '')
 
-        cookies_response, dummy = self.client.post_URL(url, post_data, self.cookies_path)
+        cookies_response, _ = self.client.post_URL(url, post_data, self.cookies_path)
 
         logging.debug('Autologin redirected to %s', cookies_response.url)
 

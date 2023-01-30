@@ -1,4 +1,5 @@
 import argparse
+import asyncio
 import logging
 import os
 import sys
@@ -116,7 +117,7 @@ def run_main(config: ConfigHelper, opts):
         moodle = MoodleService(config, opts)
 
         logging.debug('Checking for changes for the configured Moodle-Account....')
-        changed_courses = moodle.fetch_state()
+        changed_courses = asyncio.run(moodle.fetch_state())
 
         if opts.log_responses:
             logging.info("All JSON-responses from Moodle have been written to the responses.log file.")
