@@ -1,3 +1,5 @@
+import logging
+
 from typing import Dict, List
 
 from moodle_dl.config_service import ConfigHelper
@@ -7,36 +9,16 @@ from moodle_dl.state_recorder import Course, File
 
 class DatabasesHandler(MoodleMod):
     MOD_NAME = 'data'
+    MOD_MIN_VERSION = 2015051100  # 2.9
 
     @classmethod
     def download_condition(cls, config: ConfigHelper, file: File) -> bool:
         return config.get_download_databases() or file.content_type != 'database_file'
 
-    def fetch_databases(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
-        """
-        Fetches the Databases List for all courses from the
-        Moodle system
-        @return: A Dictionary of all databases,
-                 indexed by courses, then databases
-        """
-        # do this only if version is greater then 2.9
-        # because mod_data_get_databases_by_courses will fail
-        if self.version < 2015051100:
-            return {}
-
-        print('\rDownloading databases information\033[K', end='')
-
-        # We create a dictionary with all the courses we want to request.
-        extra_data = {}
-        courseids = {}
-        for index, course in enumerate(courses):
-            courseids.update({str(index): course.id})
-
-        extra_data.update({'courseids': courseids})
-
-        databases_result = self.request_helper.post_REST('mod_data_get_databases_by_courses', extra_data)
-
-        databases = databases_result.get('databases', [])
+    async def real_fetch_mod_entries(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
+        databases = await self.client.async_post(
+            'mod_data_get_databases_by_courses', self.get_data_for_mod_entries_endpoint(courses)
+        ).get('databases', [])
 
         result = {}
         for database in databases:
@@ -113,7 +95,7 @@ class DatabasesHandler(MoodleMod):
                 real_id = databases[course_id][database_id].get('id', 0)
                 data = {'databaseid': real_id}
 
-                access = self.request_helper.post_REST('mod_data_get_data_access_information', data)
+                access = await self.client.async_post('mod_data_get_data_access_information', data)
 
                 if not access.get('timeavailable', False):
                     continue
@@ -122,7 +104,7 @@ class DatabasesHandler(MoodleMod):
 
                 data.update({'returncontents': 1})
 
-                entries = self.request_helper.post_REST('mod_data_get_entries', data)
+                entries = await self.client.async_post('mod_data_get_entries', data)
 
                 database_files = self._get_files_of_db_entries(entries)
                 databases[course_id][database_id]['files'] += database_files

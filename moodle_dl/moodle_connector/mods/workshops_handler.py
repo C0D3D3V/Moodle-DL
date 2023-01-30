@@ -1,41 +1,25 @@
+import logging
+
 from typing import Dict, List
 
 from moodle_dl.config_service import ConfigHelper
+from moodle_dl.moodle_connector import RequestRejectedError
 from moodle_dl.moodle_connector.mods import MoodleMod
-from moodle_dl.moodle_connector.request_helper import RequestRejectedError
 from moodle_dl.state_recorder import Course, File
 
 
 class WorkshopsHandler(MoodleMod):
     MOD_NAME = 'workshop'
+    MOD_MIN_VERSION = 2017111300  # 3.4
 
     @classmethod
     def download_condition(cls, config: ConfigHelper, file: File) -> bool:
         return config.get_download_workshops() or (not (file.module_modname.endswith(cls.MOD_NAME) and file.deleted))
 
-    def fetch_workshops(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
-        """
-        Fetches the Workshops List for all courses from the Moodle system
-        @return: A Dictionary of all workshops, indexed by courses, then workshops
-        """
-        # do this only if version is greater then 3.4
-        # because mod_workshop_get_workshops_by_courses will fail
-        if self.version < 2017111300:
-            return {}
-
-        print('\rDownloading workshops information\033[K', end='')
-
-        # We create a dictionary with all the courses we want to request.
-        extra_data = {}
-        courseids = {}
-        for index, course in enumerate(courses):
-            courseids.update({str(index): course.id})
-
-        extra_data.update({'courseids': courseids})
-
-        workshops_result = self.request_helper.post_REST('mod_workshop_get_workshops_by_courses', extra_data)
-
-        workshops = workshops_result.get('workshops', [])
+    async def real_fetch_mod_entries(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
+        workshops = await self.client.async_post(
+            'mod_workshop_get_workshops_by_courses', self.get_data_for_mod_entries_endpoint(courses)
+        ).get('workshops', [])
 
         result = {}
         for workshop in workshops:
@@ -116,7 +100,7 @@ class WorkshopsHandler(MoodleMod):
 
         return result
 
-    def fetch_workshops_files(self, userid: int, workshops: Dict) -> Dict:
+    async def fetch_workshops_files(self, userid: int, workshops: Dict) -> Dict:
         """
         Fetches for the workshops list of all courses the additionally
         entries. This is kind of waste of resources, because there
@@ -163,19 +147,19 @@ class WorkshopsHandler(MoodleMod):
                 )
 
                 try:
-                    submissions_result = self.request_helper.post_REST('mod_workshop_get_submissions', data)
+                    submissions_result = await self.client.async_post('mod_workshop_get_submissions', data)
                 except RequestRejectedError:
                     continue
 
                 try:
-                    reviewer_assessments_result = self.request_helper.post_REST(
+                    reviewer_assessments_result = await self.client.async_post(
                         'mod_workshop_get_reviewer_assessments', data
                     )
                 except RequestRejectedError:
                     reviewer_assessments_result = {}
 
                 try:
-                    grades_result = self.request_helper.post_REST('mod_workshop_get_grades', data)
+                    grades_result = await self.client.async_post('mod_workshop_get_grades', data)
                 except RequestRejectedError:
                     grades_result = {}
 
@@ -229,7 +213,7 @@ class WorkshopsHandler(MoodleMod):
             # Get submissions of assessments
             data = {'submissionid': reviewer_assessment_submissionid}
             try:
-                submission_result = self.request_helper.post_REST('mod_workshop_get_submission', data)
+                submission_result = await self.client.async_post('mod_workshop_get_submission', data)
             except RequestRejectedError:
                 submission_result = None
 

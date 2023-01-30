@@ -1,7 +1,7 @@
 import json
 from typing import Dict, List
 
-from moodle_dl.moodle_connector.request_helper import RequestHelper
+from moodle_dl.moodle_connector import RequestHelper
 from moodle_dl.state_recorder import Course
 
 
@@ -11,7 +11,7 @@ class FirstContactHandler:
     """
 
     def __init__(self, request_helper: RequestHelper):
-        self.request_helper = request_helper
+        self.client = request_helper
         # oldest supported Moodle version
         self.version = 2011120500
 
@@ -20,7 +20,7 @@ class FirstContactHandler:
         Ask the Moodle system for the user id.
         @return: the userid
         """
-        result = self.request_helper.post_REST('core_webservice_get_site_info')
+        result = self.client.post('core_webservice_get_site_info')
 
         if 'userid' not in result:
             raise RuntimeError('Error could not receive your user ID!')
@@ -45,7 +45,7 @@ class FirstContactHandler:
         """
         data = {'userid': userid}
 
-        courses = self.request_helper.post_REST('core_enrol_get_users_courses', data)
+        courses = self.client.post('core_enrol_get_users_courses', data)
 
         results = []
         for course in courses:
@@ -62,7 +62,7 @@ class FirstContactHandler:
         if self.version < 2016120500:
             return []
 
-        result = self.request_helper.post_REST('core_course_get_courses_by_field', timeout=1200)
+        result = self.client.post('core_course_get_courses_by_field', timeout=1200)
         if log_all_courses_to is not None:
             with open(log_all_courses_to, 'w', encoding='utf-8') as log_file:
                 log_file.write(json.dumps(result, indent=4, ensure_ascii=False))
@@ -89,7 +89,7 @@ class FirstContactHandler:
             "value": ",".join(list(map(str, course_ids))),
         }
 
-        result = self.request_helper.post_REST('core_course_get_courses_by_field', data)
+        result = self.client.post('core_course_get_courses_by_field', data)
         courses = result.get('courses', [])
 
         results = []
@@ -113,7 +113,7 @@ class FirstContactHandler:
                 'options[1][name]': 'excludecontents',
                 'options[1][value]': 'true',
             }
-        course_sections = self.request_helper.post_REST('core_course_get_contents', data)
+        course_sections = self.client.post('core_course_get_contents', data)
 
         sections = []
         for section in course_sections:

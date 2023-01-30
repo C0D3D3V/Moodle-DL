@@ -1,45 +1,27 @@
+import logging
+
 from typing import Dict, List
 
 from moodle_dl.config_service import ConfigHelper
+from moodle_dl.moodle_connector import RequestRejectedError
 from moodle_dl.moodle_connector.mods import MoodleMod
 from moodle_dl.moodle_connector.moodle_constants import moodle_html_footer, moodle_html_header
-from moodle_dl.moodle_connector.request_helper import RequestRejectedError
 from moodle_dl.state_recorder import Course, File
 from moodle_dl.utils import PathTools as PT
 
 
 class QuizzesHandler(MoodleMod):
     MOD_NAME = 'quiz'
+    MOD_MIN_VERSION = 2016052300  # 3.1
 
     @classmethod
     def download_condition(cls, config: ConfigHelper, file: File) -> bool:
         return config.get_download_quizzes() or (not (file.module_modname.endswith(cls.MOD_NAME) and file.deleted))
 
-    def fetch_quizzes(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
-        """
-        Fetches the Quizzes List for all courses from the
-        Moodle system
-        @return: A Dictionary of all quizzes,
-                 indexed by courses, then quizzes
-        """
-        # do this only if version is greater then 3.1
-        # because mod_quiz_get_quizzes_by_courses will fail
-        if self.version < 2016052300:
-            return {}
-
-        print('\rDownloading quizzes information\033[K', end='')
-
-        # We create a dictionary with all the courses we want to request.
-        extra_data = {}
-        courseids = {}
-        for index, course in enumerate(courses):
-            courseids.update({str(index): course.id})
-
-        extra_data.update({'courseids': courseids})
-
-        quizzes_result = self.request_helper.post_REST('mod_quiz_get_quizzes_by_courses', extra_data)
-
-        quizzes = quizzes_result.get('quizzes', [])
+    async def real_fetch_mod_entries(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
+        quizzes = await self.client.async_post(
+            'mod_quiz_get_quizzes_by_courses', self.get_data_for_mod_entries_endpoint(courses)
+        ).get('quizzes', [])
 
         result = {}
         for quiz in quizzes:
@@ -130,7 +112,7 @@ class QuizzesHandler(MoodleMod):
                     end='',
                 )
 
-                attempts_result = self.request_helper.post_REST('mod_quiz_get_user_attempts', data)
+                attempts_result = await self.client.async_post('mod_quiz_get_user_attempts', data)
                 attempts = attempts_result.get('attempts', [])
 
                 quiz_files = self._get_files_of_attempts(attempts, quiz.get('name', ''))
@@ -155,9 +137,9 @@ class QuizzesHandler(MoodleMod):
 
             try:
                 if attempt_state == 'finished':
-                    attempt_result = self.request_helper.post_REST('mod_quiz_get_attempt_review', data)
+                    attempt_result = await self.client.async_post('mod_quiz_get_attempt_review', data)
                 elif attempt_state == 'inprogress':
-                    attempt_result = self.request_helper.post_REST('mod_quiz_get_attempt_summary', data)
+                    attempt_result = await self.client.async_post('mod_quiz_get_attempt_summary', data)
                 else:
                     continue
             except RequestRejectedError:

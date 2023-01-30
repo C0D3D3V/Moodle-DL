@@ -401,14 +401,14 @@ class PathTools:
 class SslHelper:
     warned_about_certifi = False
 
-    @staticmethod
-    def load_default_certs(ssl_context: ssl.SSLContext):
+    @classmethod
+    def load_default_certs(cls, ssl_context: ssl.SSLContext):
         cert_loc = extract_zipped_paths(DEFAULT_CA_BUNDLE_PATH)
 
         if not cert_loc or not os.path.exists(cert_loc):
-            if not SslHelper.warned_about_certifi:
+            if not cls.warned_about_certifi:
                 Log.warning(f"Certifi could not find a suitable TLS CA certificate bundle, invalid path: {cert_loc}")
-                SslHelper.warned_about_certifi = True
+                cls.warned_about_certifi = True
             ssl_context.load_default_certs()
         else:
             if not os.path.isdir(cert_loc):
@@ -416,11 +416,11 @@ class SslHelper:
             else:
                 ssl_context.load_verify_locations(capath=cert_loc)
 
-    @staticmethod
-    def get_ssl_context(verify_cert: bool = True, allow_unpatched_servers: bool = False):
+    @classmethod
+    def get_ssl_context(cls, verify_cert: bool = True, allow_insecure_ssl: bool = False):
         if verify_cert:
             ssl_context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
-            SslHelper.load_default_certs(ssl_context)
+            cls.load_default_certs(ssl_context)
         else:
             ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
             ssl_context.options |= ssl.OP_NO_SSLv2
@@ -438,7 +438,7 @@ class SslHelper:
                 )
             ssl_context.load_default_certs()
 
-        if allow_unpatched_servers:
+        if allow_insecure_ssl:
             # This allows connections to legacy insecure servers
             # https://www.openssl.org/docs/manmaster/man3/SSL_CTX_set_options.html#SECURE-RENEGOTIATION
             # Be warned the insecure renegotiation allows an attack, see:
@@ -462,14 +462,14 @@ class SslHelper:
                 num_pools=connections, maxsize=maxsize, block=block, ssl_context=self.ssl_context, **pool_kwargs
             )
 
-    @staticmethod
-    def custom_session(verify_cert: bool = True, allow_unpatched_servers: bool = False):
+    @classmethod
+    def custom_requests_session(cls, verify_cert: bool = True, allow_insecure_ssl: bool = False):
         """
         Return a new requests session with custom SSL context
         """
         session = requests.Session()
-        ssl_context = SslHelper.get_ssl_context(verify_cert, allow_unpatched_servers)
-        session.mount('https://', SslHelper.CustomHttpAdapter(ssl_context))
+        ssl_context = cls.get_ssl_context(verify_cert, allow_insecure_ssl)
+        session.mount('https://', cls.CustomHttpAdapter(ssl_context))
         return session
 
 

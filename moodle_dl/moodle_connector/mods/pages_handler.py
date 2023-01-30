@@ -1,3 +1,5 @@
+import logging
+
 from typing import Dict, List
 
 from moodle_dl.config_service import ConfigHelper
@@ -7,37 +9,17 @@ from moodle_dl.state_recorder import Course, File
 
 class PagesHandler(MoodleMod):
     MOD_NAME = 'page'
+    MOD_MIN_VERSION = 2017051500  # 3.3
 
     @classmethod
     def download_condition(cls, config: ConfigHelper, file: File) -> bool:
         # TODO: Add download condition
         return True
 
-    def fetch_pages(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
-        """
-        Fetches the Pages List for all courses from the
-        Moodle system
-        @return: A Dictionary of all pages,
-                 indexed by courses, then pages
-        """
-        # do this only if version is greater then 3.3
-        # because mod_page_get_pages_by_courses will fail
-        if self.version < 2017051500:
-            return {}
-
-        print('\rDownloading pages information\033[K', end='')
-
-        # We create a dictionary with all the courses we want to request.
-        extra_data = {}
-        courseids = {}
-        for index, course in enumerate(courses):
-            courseids.update({str(index): course.id})
-
-        extra_data.update({'courseids': courseids})
-
-        pages_result = self.request_helper.post_REST('mod_page_get_pages_by_courses', extra_data)
-
-        pages = pages_result.get('pages', [])
+    async def real_fetch_mod_entries(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
+        pages = await self.client.async_post(
+            'mod_page_get_pages_by_courses', self.get_data_for_mod_entries_endpoint(courses)
+        ).get('pages', [])
 
         result = {}
         for page in pages:

@@ -1,3 +1,5 @@
+import logging
+
 from datetime import datetime
 from typing import Dict, List
 
@@ -9,35 +11,17 @@ from moodle_dl.utils import PathTools as PT
 
 class ForumsHandler(MoodleMod):
     MOD_NAME = 'forum'
+    MOD_MIN_VERSION = 2013051400  # 2.5
 
     @classmethod
     def download_condition(cls, config: ConfigHelper, file: File) -> bool:
         # TODO: Add download condition, currently forums get filtered on API Call, and are not deleted at all
         return True
 
-    def fetch_forums(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
-        """
-        Fetches the Databases List for all courses from the
-        Moodle system
-        @return: A Dictionary of all databases,
-                 indexed by courses, then databases
-        """
-        # do this only if version is greater then 2.5
-        # because mod_forum_get_forums_by_courses will fail
-        if self.version < 2013051400:
-            return {}
-
-        print('\rDownloading forums information\033[K', end='')
-
-        # We create a dictionary with all the courses we want to request.
-        extra_data = {}
-        courseids = {}
-        for index, course in enumerate(courses):
-            courseids.update({str(index): course.id})
-
-        extra_data.update({'courseids': courseids})
-
-        forums = self.request_helper.post_REST('mod_forum_get_forums_by_courses', extra_data)
+    async def real_fetch_mod_entries(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
+        forums = await self.client.async_post(
+            'mod_forum_get_forums_by_courses', self.get_data_for_mod_entries_endpoint(courses)
+        )
 
         result = {}
         for forum in forums:
@@ -132,9 +116,9 @@ class ForumsHandler(MoodleMod):
                     )
 
                     if self.version >= 2019052000:
-                        discussions_result = self.request_helper.post_REST('mod_forum_get_forum_discussions', data)
+                        discussions_result = await self.client.async_post('mod_forum_get_forum_discussions', data)
                     else:
-                        discussions_result = self.request_helper.post_REST(
+                        discussions_result = await self.client.async_post(
                             'mod_forum_get_forum_discussions_paginated', data
                         )
 
@@ -197,9 +181,9 @@ class ForumsHandler(MoodleMod):
             }
 
             if self.version >= 2019052000:
-                posts_result = self.request_helper.post_REST('mod_forum_get_discussion_posts', data)
+                posts_result = await self.client.async_post('mod_forum_get_discussion_posts', data)
             else:
-                posts_result = self.request_helper.post_REST('mod_forum_get_forum_discussion_posts', data)
+                posts_result = await self.client.async_post('mod_forum_get_forum_discussion_posts', data)
 
             posts = posts_result.get('posts', [])
 

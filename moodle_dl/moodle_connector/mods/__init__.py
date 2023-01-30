@@ -1,8 +1,8 @@
 from typing import List, Dict
 
 from moodle_dl.config_service import ConfigHelper
+from moodle_dl.moodle_connector import RequestHelper
 from moodle_dl.moodle_connector.mods.common import MoodleMod
-from moodle_dl.moodle_connector.request_helper import RequestHelper
 
 from moodle_dl.moodle_connector.mods.assignments_handler import AssignmentsHandler  # noqa: F401
 from moodle_dl.moodle_connector.mods.databases_handler import DatabasesHandler  # noqa: F401

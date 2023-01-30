@@ -28,14 +28,15 @@ class RequestHelper:
         'Content-Type': 'application/x-www-form-urlencoded',
     }
 
-    def __init__(self, opts, moodle_domain: str, moodle_path: str = '/', token: str = '', use_http: bool = False):
+    def __init__(self, opts, use_http: bool, moodle_domain: str, moodle_path: str = '/', token: str = ''):
         self.token = token
         self.moodle_domain = moodle_domain
         self.moodle_path = moodle_path
         self.use_http = use_http
         self.opts = opts
 
-        self.verify = not skip_cert_verify
+        # Make sure to either set stream to False or read the content property of the Response object
+        self.session = SslHelper.custom_requests_session(opts.skip_cert_verify, opts.allow_insecure_ssl)
 
         scheme = 'https://'
         if use_http:
@@ -65,7 +66,7 @@ class RequestHelper:
         if data is not None:
             data_urlencoded = RequestHelper.recursive_urlencode(data)
 
-        session = SslHelper.custom_session(self.verify)
+        session = SslHelper.custom_requests_session(self.verify)
 
         if cookie_jar_path is not None:
             session.cookies = MozillaCookieJar(cookie_jar_path)
@@ -95,7 +96,7 @@ class RequestHelper:
         @return: The resulting Response object.
         """
 
-        session = SslHelper.custom_session(self.verify)
+        session = SslHelper.custom_requests_session(self.verify)
 
         if cookie_jar_path is not None:
             session.cookies = MozillaCookieJar(cookie_jar_path)
@@ -112,18 +113,16 @@ class RequestHelper:
 
         return response, session
 
-    def post_REST(self, function: str, data: Dict[str, str] = None, timeout: str = 60) -> object:
+    async def async_post(self):
+        pass
+
+    def post(self, function: str, data: Dict[str, str] = None, timeout: str = 60) -> object:
         """
         Sends a POST request to the REST endpoint of the Moodle system
         @param function: The Web service function to be called.
         @param data: The optional data is added to the POST body.
         @return: The JSON response returned by the Moodle system, already
-        checked for errors.
-
-        As discussed in issue #131, it occurs, that the POST-REQUEST fails, which results automatically in a failure.
-        In the following lines of code, the Post-Request will be retried.
-        The loop terminates, since in every loop the variable i is incremented and goes strictly in the direction of
-        the variable maxretries or the loop breaks if the response is successful.
+        checked for errors..
         """
 
         if self.token is None:
@@ -133,22 +132,21 @@ class RequestHelper:
         url = self._get_REST_POST_URL(self.url_base, function)
 
         error_ctr = 0
-        maxretries = 5
-        session = SslHelper.custom_session(self.verify)
+        max_retries = 5
+        session = SslHelper.custom_requests_session(self.verify)
         while True:
             try:
                 response = session.post(url, data=data_urlencoded, headers=self.stdHeader, timeout=timeout)
                 break
             except (requests.ConnectionError, requests.Timeout) as error:
-                # We treat requests.ConnectionErrors here specially, since they normally mean, that something went rong,
-                # which could be fixed by a restart.
+                # We treat requests.ConnectionErrors here specially, since they normally mean,
+                # that something went wrong, which could be fixed by a restart.
                 error_ctr += 1
-                if error_ctr < maxretries:
+                if error_ctr < max_retries:
                     logging.debug("The %sth Connection Error occurred, retrying. %s", error_ctr, str(error))
                     sleep(1)
                     continue
-                else:
-                    raise ConnectionError(f"Connection error: {error}") from None
+                raise ConnectionError(f"Connection error: {error}") from None
             except RequestException as error:
                 raise ConnectionError(f"Connection error: {error}") from None
 
@@ -199,7 +197,7 @@ class RequestHelper:
         @return: The JSON response returned by the Moodle System, already
         checked for errors.
         """
-        session = SslHelper.custom_session(self.verify)
+        session = SslHelper.custom_requests_session(self.verify)
         try:
             response = session.post(
                 f'{self.url_base}login/token.php',

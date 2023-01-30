@@ -528,13 +528,11 @@ def main(args=None):
         logging.info('All done. Exiting..')
         ProcessLock.unlock(opts.path)
     except BaseException as base_err:  # pylint: disable=broad-except
-        print('\n')
         if not isinstance(base_err, ProcessLock.LockError):
             ProcessLock.unlock(opts.path)
 
-        error_formatted = traceback.format_exc()
-
         if check_verbose() or check_debug():
+            error_formatted = traceback.format_exc()
             logging.error(error_formatted, extra={'exception': base_err})
         else:
             logging.error('Exception: %s', base_err)

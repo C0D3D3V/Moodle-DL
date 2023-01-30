@@ -1,47 +1,28 @@
+import logging
 import re
 
 from typing import Dict, List
 
 from moodle_dl.config_service import ConfigHelper
+from moodle_dl.moodle_connector import RequestRejectedError
 from moodle_dl.moodle_connector.mods import MoodleMod
 from moodle_dl.moodle_connector.moodle_constants import moodle_html_footer, moodle_html_header
-from moodle_dl.moodle_connector.request_helper import RequestRejectedError
 from moodle_dl.state_recorder import Course, File
 from moodle_dl.utils import PathTools as PT
 
 
 class LessonsHandler(MoodleMod):
     MOD_NAME = 'lesson'
+    MOD_MIN_VERSION = 2017051500  # 3.3
 
     @classmethod
     def download_condition(cls, config: ConfigHelper, file: File) -> bool:
         return config.get_download_lessons() or (not (file.module_modname.endswith(cls.MOD_NAME) and file.deleted))
 
-    def fetch_lessons(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
-        """
-        Fetches the Lessons List for all courses from the
-        Moodle system
-        @return: A Dictionary of all lessons,
-                 indexed by courses, then lessons
-        """
-        # do this only if version is greater then 3.3
-        # because mod_lesson_get_lessons_by_courses will fail
-        if self.version < 2017051500:
-            return {}
-
-        print('\rDownloading lessons information\033[K', end='')
-
-        # We create a dictionary with all the courses we want to request.
-        extra_data = {}
-        courseids = {}
-        for index, course in enumerate(courses):
-            courseids.update({str(index): course.id})
-
-        extra_data.update({'courseids': courseids})
-
-        lessons_result = self.request_helper.post_REST('mod_lesson_get_lessons_by_courses', extra_data)
-
-        lessons = lessons_result.get('lessons', [])
+    async def real_fetch_mod_entries(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
+        lessons = await self.client.async_post(
+            'mod_lesson_get_lessons_by_courses', self.get_data_for_mod_entries_endpoint(courses)
+        ).get('lessons', [])
 
         result = {}
         for lesson in lessons:
@@ -99,7 +80,7 @@ class LessonsHandler(MoodleMod):
         """
         if not self.config.get_download_lessons():
             return lessons
-            
+
         # do this only if version is greater then 3.3
         # because mod_lesson_get_user_attempt will fail
         if self.version < 2017051500:
@@ -134,7 +115,7 @@ class LessonsHandler(MoodleMod):
                 )
 
                 try:
-                    attempt_result = self.request_helper.post_REST('mod_lesson_get_user_attempt', data)
+                    attempt_result = await self.client.async_post('mod_lesson_get_user_attempt', data)
                 except RequestRejectedError:
                     continue
 
@@ -191,7 +172,7 @@ class LessonsHandler(MoodleMod):
             data = {'lessonid': lesson_id, 'pageid': page_id, 'returncontents': 1}
 
             try:
-                page_result = self.request_helper.post_REST('mod_lesson_get_page_data', data)
+                page_result = await self.client.async_post('mod_lesson_get_page_data', data)
             except RequestRejectedError:
                 continue
 

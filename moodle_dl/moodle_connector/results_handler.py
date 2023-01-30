@@ -6,7 +6,7 @@ from typing import Dict, List
 import urllib.parse as urlparse
 
 from moodle_dl.state_recorder import Course, File
-from moodle_dl.moodle_connector.request_helper import RequestHelper
+from moodle_dl.moodle_connector import RequestHelper
 
 
 class ResultsHandler:
@@ -15,7 +15,7 @@ class ResultsHandler:
     """
 
     def __init__(self, request_helper: RequestHelper, moodle_domain: str, moodle_path: str, version: int):
-        self.request_helper = request_helper
+        self.client = request_helper
         self.version = version
         self.moodle_domain = moodle_domain
         self.moodle_path = moodle_path
@@ -526,7 +526,7 @@ class ResultsHandler:
         """
 
         data = {'courseid': course.id}
-        course_sections = self.request_helper.post_REST('core_course_get_contents', data)
+        course_sections = await self.client.async_post('core_course_get_contents', data)
 
         files = self._get_files_in_sections(course_sections)
 

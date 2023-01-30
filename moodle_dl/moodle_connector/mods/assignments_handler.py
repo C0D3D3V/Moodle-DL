@@ -1,3 +1,5 @@
+import logging
+
 from typing import Dict, List
 
 from moodle_dl.config_service import ConfigHelper
@@ -7,35 +9,17 @@ from moodle_dl.state_recorder import Course, File
 
 class AssignmentsHandler(MoodleMod):
     MOD_NAME = 'assign'
+    MOD_MIN_VERSION = 2012120300  # 2.4
 
     @classmethod
     def download_condition(cls, config: ConfigHelper, file: File) -> bool:
         # TODO: Add condition for assignments not only submissions
         return config.get_download_submissions() or (not (file.module_modname.endswith(cls.MOD_NAME) and file.deleted))
 
-    def fetch_assignments(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
-        """
-        Fetches the Assignments List for all courses from the Moodle system
-        @return: A Dictionary of all assignments, indexed by courses, then assignment
-        """
-        # do this only if version is greater then 2.4
-        # because mod_assign_get_assignments will fail
-        if self.version < 2012120300:
-            return {}
-
-        print('\rDownloading assignments information\033[K', end='')
-
-        # We create a dictionary with all the courses we want to request.
-        extra_data = {}
-        courseids = {}
-        for index, course in enumerate(courses):
-            courseids.update({str(index): course.id})
-
-        extra_data.update({'courseids': courseids})
-
-        assign_result = self.request_helper.post_REST('mod_assign_get_assignments', extra_data)
-
-        assign_courses = assign_result.get('courses', [])
+    async def real_fetch_mod_entries(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
+        assign_courses = await self.client.async_post(
+            'mod_assign_get_assignments', self.get_data_for_mod_entries_endpoint(courses)
+        ).get('courses', [])
 
         result = {}
         for assign_course in assign_courses:
@@ -85,7 +69,9 @@ class AssignmentsHandler(MoodleMod):
 
         return result
 
-    def fetch_submissions(self, userid: int, assignments: Dict[int, Dict[int, Dict]]) -> Dict[int, Dict[int, Dict]]:
+    async def fetch_submissions(
+        self, userid: int, assignments: Dict[int, Dict[int, Dict]]
+    ) -> Dict[int, Dict[int, Dict]]:
         """
         Fetches for the assignments list of all courses the additionally
         submissions. This is kind of waste of resources, because there
@@ -132,7 +118,7 @@ class AssignmentsHandler(MoodleMod):
                     end='',
                 )
 
-                submission = self.request_helper.post_REST('mod_assign_get_submission_status', data)
+                submission = await self.client.async_post('mod_assign_get_submission_status', data)
 
                 submission_files = self._get_files_of_submission(submission)
                 assign['files'] += submission_files

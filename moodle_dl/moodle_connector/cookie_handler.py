@@ -4,8 +4,7 @@ import logging
 from pathlib import Path
 from typing import Dict
 
-from moodle_dl.utils import Log
-from moodle_dl.moodle_connector.request_helper import RequestHelper, RequestRejectedError
+from moodle_dl.moodle_connector import RequestHelper, RequestRejectedError
 
 
 class CookieHandler:
@@ -14,12 +13,12 @@ class CookieHandler:
     """
 
     def __init__(self, request_helper: RequestHelper, version: int, storage_path: str):
-        self.request_helper = request_helper
+        self.client = request_helper
         self.version = version
         self.storage_path = storage_path
         self.cookies_path = str(Path(storage_path) / 'Cookies.txt')
 
-        self.moodle_test_url = self.request_helper.url_base
+        self.moodle_test_url = self.client.url_base
 
     def fetch_autologin_key(self, privatetoken: str) -> Dict[str, str]:
 
@@ -28,12 +27,12 @@ class CookieHandler:
         if self.version < 2016120500:
             return None
 
-        print('\rDownloading autologin key\033[K', end='')
+        logging.info('Downloading autologin key')
 
         extra_data = {'privatetoken': privatetoken}
 
         try:
-            autologin_key_result = self.request_helper.post_REST('tool_mobile_get_autologin_key', extra_data)
+            autologin_key_result = self.client.post('tool_mobile_get_autologin_key', extra_data)
             return autologin_key_result
         except RequestRejectedError as e:
             logging.debug("Cookie lockout: %s", e)
@@ -48,7 +47,7 @@ class CookieHandler:
 
         logging.debug('Testing cookies using this URL: %s', self.moodle_test_url)
 
-        response, dummy = self.request_helper.get_URL(self.moodle_test_url, self.cookies_path)
+        response, dummy = self.client.get_URL(self.moodle_test_url, self.cookies_path)
 
         response_text = response.text
 
@@ -80,12 +79,12 @@ class CookieHandler:
             logging.debug('Failed to download autologin key!')
             return False
 
-        print('\rDownloading cookies\033[K', end='')
+        logging.info('Downloading cookies')
 
         post_data = {'key': autologin_key.get('key', ''), 'userid': userid}
         url = autologin_key.get('autologinurl', '')
 
-        cookies_response, dummy = self.request_helper.post_URL(url, post_data, self.cookies_path)
+        cookies_response, dummy = self.client.post_URL(url, post_data, self.cookies_path)
 
         logging.debug('Autologin redirected to %s', cookies_response.url)
 

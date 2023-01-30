@@ -10,8 +10,8 @@ from typing import List, Tuple
 from urllib.parse import urlparse
 
 from moodle_dl.config_service import ConfigHelper
-from moodle_dl.moodle_connector.cookie_handler import CookieHandler
 from moodle_dl.moodle_connector import FirstContactHandler, RequestRejectedError, RequestHelper
+from moodle_dl.moodle_connector.cookie_handler import CookieHandler
 from moodle_dl.moodle_connector.mods import get_all_mods, get_all_mods_classes
 from moodle_dl.moodle_connector.results_handler import ResultsHandler
 from moodle_dl.state_recorder import Course, StateRecorder
@@ -132,7 +132,7 @@ class MoodleService:
         """
         login_data = {'username': username, 'password': password, 'service': 'moodle_mobile_app'}
 
-        response = RequestHelper(self.opts, moodle_domain, moodle_path, use_http=use_http).get_login(login_data)
+        response = RequestHelper(self.opts, use_http, moodle_domain, moodle_path).get_login(login_data)
 
         if 'token' not in response:
             # = we didn't get an error page (checked by the RequestHelper) but
@@ -256,6 +256,7 @@ class MoodleService:
     def get_user_id_and_version(self, first_contact_handler: FirstContactHandler) -> Tuple(int, int):
         user_id, version = self.config.get_userid_and_version()
         if user_id is None or version is None:
+            logging.info('Downloading account information')
             user_id, version = first_contact_handler.fetch_userid_and_version()
             logging.debug('Detected moodle version: %d', version)
         else:
@@ -277,21 +278,16 @@ class MoodleService:
         moodle_path = self.config.get_moodle_path()
         use_http = self.config.get_use_http()
 
-        request_helper = RequestHelper(self.opts, moodle_domain, moodle_path, token, use_http)
+        request_helper = RequestHelper(self.opts, use_http, moodle_domain, moodle_path, token)
         first_contact_handler = FirstContactHandler(request_helper)
-
-        download_lessons = self.config.get_download_lessons()
-        download_quizzes = self.config.get_download_quizzes()
-        download_workshops = self.config.get_download_workshops()
 
         download_also_with_cookie = self.config.get_download_also_with_cookie()
 
-        filtered_courses = []
-
-        print('\rDownloading account information\033[K', end='')
         user_id, version = self.get_user_id_and_version(first_contact_handler)
 
-        mod_handlers = get_all_mods(request_helper, version, user_id,  self.recorder.get_last_timestamp_per_mod_module(),self.config)
+        mod_handlers = get_all_mods(
+            request_helper, version, user_id, self.recorder.get_last_timestamp_per_mod_module(), self.config
+        )
         results_handler = ResultsHandler(request_helper, moodle_domain, moodle_path, version)
 
         cookie_handler = None
@@ -302,36 +298,10 @@ class MoodleService:
 
         courses = self.get_courses_list(first_contact_handler, user_id)
 
-        assignments = assignments_handler.fetch_assignments(courses)
-        if download_submissions:
-            assignments = assignments_handler.fetch_submissions(user_id, assignments)
-
-        databases = databases_handler.fetch_databases(courses)
-        if download_databases:
-            databases = databases_handler.fetch_database_files(databases)
-
-        forums = forums_handler.fetch_forums(courses)
-        if download_forums:
-            last_timestamps_per_forum = 
-            forums = forums_handler.fetch_forums_posts(forums, last_timestamps_per_forum)
-
-        quizzes = quizzes_handler.fetch_quizzes(courses)
-        if download_quizzes:
-            quizzes = quizzes_handler.fetch_quizzes_files(user_id, quizzes)
-
-        lessons = lessons_handler.fetch_lessons(courses)
-        if download_lessons:
-            lessons = lessons_handler.fetch_lessons_files(user_id, lessons)
-
-        workshops = workshops_handler.fetch_workshops(courses)
-        if download_workshops:
-            workshops = workshops_handler.fetch_workshops_files(user_id, workshops)
-
-        pages = pages_handler.fetch_pages(courses)
-
-        folders = folders_handler.fetch_folders(courses)
+        # TODO: use mod_handlers to get all contents of all mods
 
         courses = self.add_options_to_courses(courses)
+        filtered_courses = []
         index = 0
         for course in courses:
             index += 1
@@ -366,7 +336,6 @@ class MoodleService:
             course.files = results_handler.fetch_files(course)
 
             filtered_courses.append(course)
-        print('')
 
         logging.debug('Checking for changes...')
         changes = self.recorder.changes_of_new_version(filtered_courses)
