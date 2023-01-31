@@ -7,8 +7,9 @@ from moodle_dl.moodle_connector.mods import MoodleMod
 from moodle_dl.state_recorder import Course, File
 
 
-class DatabasesHandler(MoodleMod):
+class DataMod(MoodleMod):
     MOD_NAME = 'data'
+    MOD_PLURAL_NAME = 'databases'
     MOD_MIN_VERSION = 2015051100  # 2.9
 
     @classmethod

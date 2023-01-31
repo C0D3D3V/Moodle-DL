@@ -7,8 +7,9 @@ from moodle_dl.moodle_connector.mods import MoodleMod
 from moodle_dl.state_recorder import Course, File
 
 
-class FoldersHandler(MoodleMod):
+class FolderMod(MoodleMod):
     MOD_NAME = 'folder'
+    MOD_PLURAL_NAME = 'folders'
     MOD_MIN_VERSION = 2017051500  # 3.3
 
     @classmethod

@@ -9,8 +9,9 @@ from moodle_dl.state_recorder import Course, File
 from moodle_dl.utils import PathTools as PT
 
 
-class ForumsHandler(MoodleMod):
+class ForumMod(MoodleMod):
     MOD_NAME = 'forum'
+    MOD_PLURAL_NAME = 'forums'
     MOD_MIN_VERSION = 2013051400  # 2.5
 
     @classmethod

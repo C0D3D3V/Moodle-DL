@@ -10,8 +10,9 @@ from moodle_dl.state_recorder import Course, File
 from moodle_dl.utils import PathTools as PT
 
 
-class QuizzesHandler(MoodleMod):
+class QuizMod(MoodleMod):
     MOD_NAME = 'quiz'
+    MOD_PLURAL_NAME = 'quizzes'
     MOD_MIN_VERSION = 2016052300  # 3.1
 
     @classmethod

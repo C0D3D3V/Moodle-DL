@@ -68,3 +68,10 @@ class MoodleMod(metaclass=ABCMeta):
         @return: A dictionary of all course modules of that mod type, indexed by course id, then course module id
         """
         pass
+
+    @staticmethod
+    def set_files_types_if_empty(files: [Dict], type_to_set: str):
+        for file_dict in files:
+            file_type = file_dict.get('type', '')
+            if file_type is None or file_type == '':
+                file_dict['type'] = type_to_set

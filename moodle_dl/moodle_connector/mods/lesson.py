@@ -11,8 +11,9 @@ from moodle_dl.state_recorder import Course, File
 from moodle_dl.utils import PathTools as PT
 
 
-class LessonsHandler(MoodleMod):
+class LessonMod(MoodleMod):
     MOD_NAME = 'lesson'
+    MOD_PLURAL_NAME = 'lessons'
     MOD_MIN_VERSION = 2017051500  # 3.3
 
     @classmethod

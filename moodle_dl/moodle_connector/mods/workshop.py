@@ -8,8 +8,9 @@ from moodle_dl.moodle_connector.mods import MoodleMod
 from moodle_dl.state_recorder import Course, File
 
 
-class WorkshopsHandler(MoodleMod):
+class WorkshopMod(MoodleMod):
     MOD_NAME = 'workshop'
+    MOD_PLURAL_NAME = 'workshops'
     MOD_MIN_VERSION = 2017111300  # 3.4
 
     @classmethod
