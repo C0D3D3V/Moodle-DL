@@ -62,10 +62,10 @@ class LessonMod(MoodleMod):
         @param lessons: Dictionary of all lessons, indexed by courses, then module id
         """
         if not self.config.get_download_lessons():
-            return lessons
+            return
 
         if self.version < 2017051500:  # 3.3
-            return lessons
+            return
 
         await self.run_async_load_function_on_mod_entries(lessons, self.load_lesson_files)
 
@@ -90,7 +90,7 @@ class LessonMod(MoodleMod):
             page_result = await self.client.async_post('mod_lesson_get_page_data', data)
         except RequestRejectedError:
             logging.debug("No access rights for lesson attempt page %d", page_id)
-            return
+            return []
 
         page_files = page_result.get('contentfiles', [])
         self.set_files_types_if_empty(page_files, 'lesson_file')

@@ -163,6 +163,9 @@ class MoodleMod(metaclass=ABCMeta):
             )
 
         result = []
-        for result_list in await asyncio.gather(*async_features):
-            result.extend(result_list)
+        for feature_result in await asyncio.gather(*async_features):
+            if isinstance(feature_result, list):
+                result.extend(feature_result)
+            elif feature_result is not None:
+                result.append(feature_result)
         return result

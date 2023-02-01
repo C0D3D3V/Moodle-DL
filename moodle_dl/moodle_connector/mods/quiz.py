@@ -26,147 +26,97 @@ class QuizMod(MoodleMod):
 
         result = {}
         for quiz in quizzes:
-            # This is the instance id with which we can make the API queries.
-            quiz_id = quiz.get('id', 0)
-            quiz_name = quiz.get('name', 'unnamed quiz')
-            quiz_intro = quiz.get('intro', '')
-            quiz_course_module_id = quiz.get('coursemodule', 0)
-            quiz_introfiles = quiz.get('introfiles', [])
             course_id = quiz.get('course', 0)
 
-            # normalize
-            for quiz_file in quiz_introfiles:
-                file_type = quiz_file.get('type', '')
-                if file_type is None or file_type == '':
-                    quiz_file.update({'type': 'quiz_introfile'})
+            quiz_files = quiz.get('introfiles', [])
+            self.set_files_types_if_empty(quiz_files, 'quiz_introfile')
 
+            quiz_intro = quiz.get('intro', '')
             if quiz_intro != '':
-                # Add Intro File
-                intro_file = {
-                    'filename': 'Quiz intro',
-                    'filepath': '/',
-                    'description': quiz_intro,
-                    'type': 'description',
+                quiz_files.append(
+                    {
+                        'filename': 'Quiz intro',
+                        'filepath': '/',
+                        'description': quiz_intro,
+                        'type': 'description',
+                    }
+                )
+
+            result[course_id] = result.get(course_id, {}).update(
+                {
+                    quiz.get('coursemodule', 0): {
+                        'id': quiz.get('id', 0),
+                        'name': quiz.get('name', 'unnamed quiz'),
+                        'files': quiz_files,
+                    }
                 }
-                quiz_introfiles.append(intro_file)
-
-            quiz_entry = {
-                quiz_course_module_id: {
-                    'id': quiz_id,
-                    'name': quiz_name,
-                    'intro': quiz_intro,
-                    'files': quiz_introfiles,
-                }
-            }
-
-            course_dic = result.get(course_id, {})
-
-            course_dic.update(quiz_entry)
-
-            result.update({course_id: course_dic})
+            )
 
         return result
 
-    def fetch_quizzes_files(self, userid: int, quizzes: Dict) -> Dict:
+    async def add_quizzes_files(self, quizzes: Dict[int, Dict[int, Dict]]):
         """
-        Fetches for the quizzes list of all courses the additionally
-        entries. This is kind of waste of resources, because there
-        is no API to get all entries at once.
-        @param userid: the user id.
-        @param quizzes: the dictionary of quizzes of all courses.
-        @return: A Dictionary of all quizzes,
-                 indexed by courses, then quizzes
+        Fetches for the quizzes list the quizzes files
+        @param quizzes: Dictionary of all quizzes, indexed by courses, then module id
         """
         if not self.config.get_download_quizzes():
-            return quizzes
+            return
 
-        # do this only if version is greater then 3.1
-        # because mod_quiz_get_user_attempts will fail
-        if self.version < 2016052300:
-            return quizzes
+        if self.version < 2016052300:  # 3.1
+            return
 
-        counter = 0
-        total = 0
-        # count total quizzes for nice console output
-        for course_id in quizzes:
-            for quiz_id in quizzes[course_id]:
-                total += 1
+        await self.run_async_load_function_on_mod_entries(quizzes, self.load_quiz_files)
 
-        for course_id in quizzes:
-            for quiz_id in quizzes[course_id]:
-                counter += 1
-                quiz = quizzes[course_id][quiz_id]
-                real_id = quiz.get('id', 0)
-                data = {'quizid': real_id, 'userid': userid, 'status': 'all'}
+    async def load_quiz_files(self, quiz: Dict):
+        data = {'quizid': quiz.get('id', 0), 'userid': self.user_id, 'status': 'all'}
+        attempts = await self.client.async_post('mod_quiz_get_user_attempts', data).get('attempts', [])
+        quiz_name = quiz.get('name', '')
+        for attempt in attempts:
+            attempt['_quiz_name'] = quiz_name
 
-                shorted_quiz_name = quiz.get('name', '')
-                if len(shorted_quiz_name) > 17:
-                    shorted_quiz_name = shorted_quiz_name[:15] + '..'
+        quiz['files'] += await self.run_async_collect_function_on_list(
+            attempts,
+            self.load_files_of_attempt,
+            'attempt',
+            {'collect_id': 'id', 'collect_name': '_quiz_name'},
+        )
 
-                print(
-                    (
-                        '\r'
-                        + 'Downloading quiz infos'
-                        + f' {counter:3d}/{total:3d}'
-                        + f' [{shorted_quiz_name:<17}|{course_id:6}]\033[K'
-                    ),
-                    end='',
-                )
-
-                attempts_result = await self.client.async_post('mod_quiz_get_user_attempts', data)
-                attempts = attempts_result.get('attempts', [])
-
-                quiz_files = self._get_files_of_attempts(attempts, quiz.get('name', ''))
-                quiz['files'] += quiz_files
-
-        return quizzes
-
-    def _get_files_of_attempts(self, attempts: List, quiz_name: str) -> List:
+    async def load_files_of_attempt(self, attempt: Dict) -> List[Dict]:
         result = []
 
-        for attempt in attempts:
-            attempt_id = attempt.get('id', 0)
-            attempt_state = attempt.get('state', 'unknown')
+        attempt_id = attempt.get('id', 0)
+        attempt_state = attempt.get('state', 'unknown')
+        quiz_name = attempt.get('_quiz_name', '')
 
-            attempt_filename = PT.to_valid_name(quiz_name + ' (attempt ' + str(attempt_id) + ' ' + attempt_state + ')')
+        attempt_filename = PT.to_valid_name(quiz_name + ' (attempt ' + str(attempt_id) + ' ' + attempt_state + ')')
 
-            shorted_quiz_name = quiz_name
-            if len(shorted_quiz_name) > 17:
-                shorted_quiz_name = shorted_quiz_name[:15] + '..'
+        data = {'attemptid': attempt_id}
+        try:
+            if attempt_state == 'finished':
+                questions = await self.client.async_post('mod_quiz_get_attempt_review', data).get('questions', [])
+            elif attempt_state == 'inprogress':
+                questions = await self.client.async_post('mod_quiz_get_attempt_summary', data).get('questions', [])
+            else:
+                return result
+        except RequestRejectedError:
+            logging.debug("No access rights for quiz attempt %d", attempt_id)
+            return result
 
-            data = {'attemptid': attempt_id}
+        # build quiz HTML
+        quiz_html = moodle_html_header
+        for question in questions:
+            question_html = question.get('html', '').split('<script>')[0]
+            if question_html is None:
+                question_html = ''
+            quiz_html += question_html + '\n'
 
-            try:
-                if attempt_state == 'finished':
-                    attempt_result = await self.client.async_post('mod_quiz_get_attempt_review', data)
-                elif attempt_state == 'inprogress':
-                    attempt_result = await self.client.async_post('mod_quiz_get_attempt_summary', data)
-                else:
-                    continue
-            except RequestRejectedError:
-                continue
+            question_files = question.get('responsefileareas', [])
+            self.set_files_types_if_empty(question_files, 'quiz_file')
+            result.extend(question_files)
 
-            questions = attempt_result.get('questions', [])
-
-            # build quiz HTML
-            quiz_html = moodle_html_header
-            for question in questions:
-
-                question_html = question.get('html', '').split('<script>')[0]
-                if question_html is None:
-                    question_html = ''
-
-                quiz_html += question_html + '\n'
-
-                question_files = question.get('responsefileareas', [])
-                for question_file in question_files:
-                    file_type = question_file.get('type', '')
-                    if file_type is None or file_type == '':
-                        question_file.update({'type': 'quiz_file'})
-                    result.append(question_file)
-
-            quiz_html += moodle_html_footer
-            attempt_file = {
+        quiz_html += moodle_html_footer
+        result.append(
+            {
                 'filename': attempt_filename,
                 'filepath': '/',
                 'timemodified': 0,
@@ -174,6 +124,6 @@ class QuizMod(MoodleMod):
                 'type': 'html',
                 'no_search_for_urls': True,
             }
-            result.append(attempt_file)
+        )
 
         return result

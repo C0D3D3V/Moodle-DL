@@ -57,10 +57,10 @@ class DataMod(MoodleMod):
         @param databases: Dictionary of all databases, indexed by courses, then module id
         """
         if not self.config.get_download_databases():
-            return databases
+            return
 
         if self.version < 2017051500:  # 3.3
-            return databases
+            return
 
         await self.run_async_load_function_on_mod_entries(databases, self.load_database_files)
 

@@ -161,7 +161,6 @@ class ForumMod(MoodleMod):
                             attachment.get('filesize', 0) == inline_file.get('filesize', 0)
                             # we assume that inline attachments can have different timestamps than the actual
                             # attachment. However, they are still the same file.
-                            # and attachment.get('timemodified', 0) == inlinefile.get('timemodified', 0)
                             and attachment.get('filename', '') == inline_file.get('filename', '')
                         ):
                             new_inline_file = False

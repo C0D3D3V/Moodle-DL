@@ -24,255 +24,194 @@ class WorkshopMod(MoodleMod):
 
         result = {}
         for workshop in workshops:
-            # This is the instance id with which we can make the API queries.
-            workshop_id = workshop.get('id', 0)
-            workshop_name = workshop.get('name', 'unnamed workshop')
-            workshop_course_module_id = workshop.get('coursemodule', 0)
-            workshop_introfiles = workshop.get('introfiles', [])
-            workshop_introfiles += workshop.get('instructauthorsfiles', [])
-            workshop_introfiles += workshop.get('instructreviewersfiles', [])
-            workshop_introfiles += workshop.get('conclusionfiles', [])
             course_id = workshop.get('course', 0)
-
-            # normalize
-            for workshop_file in workshop_introfiles:
-                file_type = workshop_file.get('type', '')
-                if file_type is None or file_type == '':
-                    workshop_file.update({'type': 'workshop_introfile'})
+            workshop_files = workshop.get('introfiles', [])
+            workshop_files += workshop.get('instructauthorsfiles', [])
+            workshop_files += workshop.get('instructreviewersfiles', [])
+            workshop_files += workshop.get('conclusionfiles', [])
+            self.set_files_types_if_empty(workshop_files, 'workshop_introfile')
 
             workshop_intro = workshop.get('intro', '')
             if workshop_intro != '':
-                # Add Intro File
-                intro_file = {
-                    'filename': 'Workshop intro',
-                    'filepath': '/',
-                    'description': workshop_intro,
-                    'type': 'description',
-                }
-                workshop_introfiles.append(intro_file)
+                workshop_files.append(
+                    {
+                        'filename': 'Workshop intro',
+                        'filepath': '/',
+                        'description': workshop_intro,
+                        'type': 'description',
+                    }
+                )
 
-            workshop_instructauthors = workshop.get('instructauthors', '')
-            if workshop_instructauthors != '':
-                # Add Instructions for submission File
-                instructauthors_file = {
-                    'filename': 'Instructions for submission',
-                    'filepath': '/',
-                    'description': workshop_instructauthors,
-                    'type': 'description',
-                }
-                workshop_introfiles.append(instructauthors_file)
+            workshop_instruct_authors = workshop.get('instructauthors', '')
+            if workshop_instruct_authors != '':
+                workshop_files.append(
+                    {
+                        'filename': 'Instructions for submission',
+                        'filepath': '/',
+                        'description': workshop_instruct_authors,
+                        'type': 'description',
+                    }
+                )
 
-            workshop_instructreviewers = workshop.get('instructreviewers', '')
-            if workshop_instructreviewers != '':
-                # Add Instructions for assessment File
-                instructreviewers_file = {
-                    'filename': 'Instructions for assessment',
-                    'filepath': '/',
-                    'description': workshop_instructreviewers,
-                    'type': 'description',
-                }
-                workshop_introfiles.append(instructreviewers_file)
+            workshop_instruct_reviewers = workshop.get('instructreviewers', '')
+            if workshop_instruct_reviewers != '':
+                workshop_files.append(
+                    {
+                        'filename': 'Instructions for assessment',
+                        'filepath': '/',
+                        'description': workshop_instruct_reviewers,
+                        'type': 'description',
+                    }
+                )
 
             workshop_conclusion = workshop.get('conclusion', '')
             if workshop_conclusion != '':
-                # Add Conclusion File
-                conclusion_file = {
-                    'filename': 'Conclusion',
-                    'filepath': '/',
-                    'description': workshop_conclusion,
-                    'type': 'description',
+                workshop_files.append(
+                    {
+                        'filename': 'Conclusion',
+                        'filepath': '/',
+                        'description': workshop_conclusion,
+                        'type': 'description',
+                    }
+                )
+
+            result[course_id] = result.get(course_id, {}).update(
+                {
+                    workshop.get('coursemodule', 0): {
+                        'id': workshop.get('id', 0),
+                        'name': workshop.get('name', 'unnamed workshop'),
+                        'files': workshop_files,
+                    }
                 }
-                workshop_introfiles.append(conclusion_file)
+            )
 
-            workshop_entry = {
-                workshop_course_module_id: {
-                    'id': workshop_id,
-                    'name': workshop_name,
-                    'intro': workshop_intro,
-                    'files': workshop_introfiles,
-                }
-            }
-
-            course_dic = result.get(course_id, {})
-
-            course_dic.update(workshop_entry)
-
-            result.update({course_id: course_dic})
-
+        await self.add_workshops_files(result)
         return result
 
-    async def fetch_workshops_files(self, userid: int, workshops: Dict) -> Dict:
+    async def add_workshops_files(self, workshops: Dict[int, Dict[int, Dict]]):
         """
-        Fetches for the workshops list of all courses the additionally
-        entries. This is kind of waste of resources, because there
-        is no API to get all entries at once.
-        @param userid: the user id.
-        @param workshops: the dictionary of workshops of all courses.
-        @return: A Dictionary of all workshops,
-                 indexed by courses, then workshops
+        Fetches for the workshops list the forum posts
+        @param workshops: Dictionary of all workshops, indexed by courses, then module id
         """
         if not self.config.get_download_workshops():
-            return workshops
+            return
 
-        # do this only if version is greater then 3.3
-        # because mod_quiz_get_user_attempts will fail
-        if self.version < 2017111300:
-            return workshops
+        if self.version < 2017111300:  # 3.4
+            return
 
-        counter = 0
-        total = 0
-        # count total workshops for nice console output
-        for course_id in workshops:
-            for workshop_id in workshops[course_id]:
-                total += 1
+        await self.run_async_load_function_on_mod_entries(workshops, self.load_workshop_files)
 
-        for course_id in workshops:
-            for workshop_id in workshops[course_id]:
-                counter += 1
-                workshop = workshops[course_id][workshop_id]
-                real_id = workshop.get('id', 0)
-                data = {'workshopid': real_id, 'userid': userid}
+    async def load_workshop_files(self, workshop: Dict):
+        workshop_id = workshop.get('id', 0)
+        data = {'workshopid': workshop_id, 'userid': self.user_id}
 
-                shorted_workshop_name = workshop.get('name', '')
-                if len(shorted_workshop_name) > 17:
-                    shorted_workshop_name = shorted_workshop_name[:15] + '..'
+        try:
+            submissions = await self.client.async_post('mod_workshop_get_submissions', data).get('submissions', [])
+        except RequestRejectedError:
+            logging.debug("No access rights for workshop %d", workshop_id)
+            return
 
-                print(
-                    (
-                        '\r'
-                        + 'Downloading workshop infos'
-                        + f' {counter:3d}/{total:3d}'
-                        + f' [{shorted_workshop_name:<17}|{course_id:6}]\033[K'
-                    ),
-                    end='',
-                )
+        try:
+            assessments = await self.client.async_post('mod_workshop_get_reviewer_assessments', data).get(
+                'assessments', []
+            )
+        except RequestRejectedError:
+            assessments = []
+        submissions += await self.run_async_collect_function_on_list(
+            assessments,
+            self.load_foreign_submission,
+            'foreign submission',
+            {'collect_id': 'submissionid', 'collect_name': 'title'},
+        )
 
-                try:
-                    submissions_result = await self.client.async_post('mod_workshop_get_submissions', data)
-                except RequestRejectedError:
-                    continue
+        try:
+            grades = await self.client.async_post('mod_workshop_get_grades', data)
+        except RequestRejectedError:
+            grades = {}
 
-                try:
-                    reviewer_assessments_result = await self.client.async_post(
-                        'mod_workshop_get_reviewer_assessments', data
-                    )
-                except RequestRejectedError:
-                    reviewer_assessments_result = {}
+        workshop_files = self._get_files_of_workshop(submissions, grades)
+        workshop['files'] += workshop_files
 
-                try:
-                    grades_result = await self.client.async_post('mod_workshop_get_grades', data)
-                except RequestRejectedError:
-                    grades_result = {}
+    async def load_foreign_submission(self, assessment: Dict) -> Dict:
+        # reviewer_assessment_id = reviewer_assessment.get('id', 0)
+        # reviewer_assessment_reviewerid = reviewer_assessment.get('reviewerid', 0)
 
-                workshop_files = self._get_files_of_workshop(
-                    submissions_result, reviewer_assessments_result, grades_result
-                )
-                workshop['files'] += workshop_files
+        reviewer_assessment_files = reviewer_assessment.get('feedbackcontentfiles', [])
+        reviewer_assessment_files += reviewer_assessment.get('feedbackattachmentfiles', [])
 
-        return workshops
+        feedback_author = reviewer_assessment.get('feedbackauthor', '')
+        if feedback_author != '':
+            reviewer_assessment_files.append({
+                'filename': 'Feedback for the author',
+                'filepath': '/',
+                'description': feedback_author,
+                'type': 'description',
+            })
 
-    def _get_files_of_workshop(
-        self, submissions_result: Dict, reviewer_assessments_result: Dict, grades_result: Dict
-    ) -> List:
+        feedback_reviewer = reviewer_assessment.get('feedbackreviewer', '')
+        if feedback_reviewer != '':
+            reviewer_assessment_files.append({
+                'filename': 'Feedback for the reviewer',
+                'filepath': '/',
+                'description': feedback_reviewer,
+                'type': 'description',
+            })
+
+        # Get submissions of assessments
+        data = {'submissionid': reviewer_assessment.get('submissionid', 0)}
+        try:
+            submission = await self.client.async_post('mod_workshop_get_submission', data).get('submission', {})
+            submission['files'] = reviewer_assessment_files
+            return submission
+        except RequestRejectedError:
+            logging.debug("No access rights for workshop submission %d", workshop_id)
+            return None
+
+
+    def _get_files_of_workshop(self, submissions: List[Dict],  grades: Dict) -> List:
         result = []
 
-        submissions = submissions_result.get('submissions', [])
-
-        reviewer_assessments = reviewer_assessments_result.get('assessments', [])
-
-        for reviewer_assessment in reviewer_assessments:
-            # reviewer_assessment_id = reviewer_assessment.get('id', 0)
-            reviewer_assessment_submissionid = reviewer_assessment.get('submissionid', 0)
-            # reviewer_assessment_reviewerid = reviewer_assessment.get('reviewerid', 0)
-
-            # Get attached files
-            reviewer_assessment_files = reviewer_assessment.get('feedbackcontentfiles', [])
-            reviewer_assessment_files += reviewer_assessment.get('feedbackattachmentfiles', [])
-
-            feedbackauthor = reviewer_assessment.get('feedbackauthor', '')
-            if feedbackauthor != '':
-                # Add Feedback for the author
-                feedbackauthor_file = {
-                    'filename': 'Feedback for the author',
-                    'filepath': '/',
-                    'description': feedbackauthor,
-                    'type': 'description',
-                }
-                reviewer_assessment_files.append(feedbackauthor_file)
-
-            feedbackreviewer = reviewer_assessment.get('feedbackreviewer', '')
-            if feedbackreviewer != '':
-                # Add Feedback for the reviewer
-                feedbackreviewer_file = {
-                    'filename': 'Feedback for the reviewer',
-                    'filepath': '/',
-                    'description': feedbackreviewer,
-                    'type': 'description',
-                }
-                reviewer_assessment_files.append(feedbackreviewer_file)
-
-            # Get submissions of assessments
-            data = {'submissionid': reviewer_assessment_submissionid}
-            try:
-                submission_result = await self.client.async_post('mod_workshop_get_submission', data)
-            except RequestRejectedError:
-                submission_result = None
-
-            if submission_result is not None:
-                submission = submission_result.get('submission', {})
-                submission['files'] = reviewer_assessment_files
-                submissions.append(submission)
-
-        assessmentlongstrgrade = grades_result.get('assessmentlongstrgrade', '')
-        if assessmentlongstrgrade != '':
-            # Add Assessment Grade
-            assessmentlongstrgrade_file = {
+        # Grades
+        assessment_long_str_grade = grades.get('assessmentlongstrgrade', '')
+        if assessment_long_str_grade != '':
+            result.append({
                 'filename': 'Assessment grade',
                 'filepath': '/',
-                'description': assessmentlongstrgrade,
+                'description': assessment_long_str_grade,
                 'type': 'description',
-            }
-            result.append(assessmentlongstrgrade_file)
+            })
 
-        submissionlongstrgrade = grades_result.get('submissionlongstrgrade', '')
-        if submissionlongstrgrade != '':
-            # Add Submission Grade
-            submissionlongstrgrade_file = {
+        submission_long_str_grade = grades.get('submissionlongstrgrade', '')
+        if submission_long_str_grade != '':
+            result.append({
                 'filename': 'Submission grade',
                 'filepath': '/',
-                'description': submissionlongstrgrade,
+                'description': submission_long_str_grade,
                 'type': 'description',
-            }
-            result.append(submissionlongstrgrade_file)
+            })
 
+        # Own and foreign submissions
         for submission in submissions:
-            submission_id = submission.get('id', 0)
-            submission_timemodified = submission.get('timemodified', 0)
-            submission_title = submission.get('title', 0)
             submission_content = submission.get('content', 0)
 
-            filepath = f'/submissions {submission_id}/'
+            filepath = f'/submissions {submission.get('id', 0)}/'
 
             submission_files = submission.get('contentfiles', [])
             submission_files += submission.get('attachmentfiles', [])
             submission_files += submission.get('files', [])
 
             for submission_file in submission_files:
-                file_type = submission_file.get('type', '')
-                if file_type is None or file_type == '':
-                    submission_file.update({'type': 'workshop_file'})
-                submission_file.update({'filepath': filepath})
+                self.set_file_type_if_empty(submission_file, 'workshop_file')
+                submission_file['filepath'] = filepath
 
             if submission_content != '':
-                # Add submission content file
-                content_file = {
-                    'filename': submission_title,
+                submission_files.append({
+                    'filename': submission.get('title', 0),
                     'filepath': filepath,
                     'description': submission_content,
-                    'timemodified': submission_timemodified,
+                    'timemodified': submission.get('timemodified', 0),
                     'type': 'description',
-                }
-                submission_files.append(content_file)
+                })
             result += submission_files
 
         return result
