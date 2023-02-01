@@ -84,8 +84,9 @@ class MoodleMod(metaclass=ABCMeta):
 
     @staticmethod
     async def run_with_final_message(load_function, entry: Dict, message: str, *format_args):
-        await load_function(entry)
+        result = await load_function(entry)
         logging.info(message, *format_args)
+        return result
 
     @classmethod
     async def run_async_load_function_on_mod_entries(cls, entries: Dict[int, Dict[int, Dict]], load_function):
@@ -104,20 +105,63 @@ class MoodleMod(metaclass=ABCMeta):
                 ctr += 1
 
                 # Example: [5/16] Loaded assign 123 in course 456 "Assignment name"
-                loaded_message = '[%3d/%-3d] Loaded %10s %-6d in course %-6d "%s"'
+                loaded_message = (
+                    '[%(ctr)3d/%(total)-3d] Loaded %(mod_name)10s %(module_id)-6d'
+                    + ' in course %(course_id)-6d "%(module_name)s"'
+                )
 
                 async_features.append(
                     cls.run_with_final_message(
                         load_function,
                         entry,
                         loaded_message,
-                        ctr,
-                        total_entries,
-                        cls.MOD_NAME,
-                        course_id,
-                        module_id,
-                        entry.get('name', ''),
+                        {
+                            'ctr': ctr,
+                            'total': total_entries,
+                            'mod_name': cls.MOD_NAME,
+                            'module_id': module_id,
+                            'course_id': course_id,
+                            'module_name': entry.get('name', ''),
+                        },
                     )
                 )
 
         await asyncio.gather(*async_features)
+
+    @classmethod
+    async def run_async_collect_function_on_list(
+        cls,
+        entries: List[Dict],
+        collect_function,
+        collect_kind: str,
+        format_mapping: Dict,
+    ):
+        "Runs a collect function on every entry in a given entries list"
+        total_entries = len(entries)
+        async_features = []
+        for ctr, entry in enumerate(entries):
+            # Example: [5/16] Loaded forum discussion 123 "Good discussion"
+            loaded_message = (
+                '[%(ctr)3d/%(total)-3d] Loaded %(mod_name)10s %(collect_kind)s %(collect_id)-6d "%(collect_name)s"'
+            )
+
+            async_features.append(
+                cls.run_with_final_message(
+                    collect_function,
+                    entry,
+                    loaded_message,
+                    {
+                        'ctr': ctr,
+                        'total': total_entries,
+                        'mod_name': cls.MOD_NAME,
+                        'collect_kind': collect_kind,
+                        'collect_id': entry.get(format_mapping['collect_id'], 0),
+                        'collect_name': entry.get(format_mapping['collect_name'], ''),
+                    },
+                )
+            )
+
+        result = []
+        for result_list in await asyncio.gather(*async_features):
+            result.extend(result_list)
+        return result

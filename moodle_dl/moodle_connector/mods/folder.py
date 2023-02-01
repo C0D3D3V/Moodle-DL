@@ -1,5 +1,3 @@
-import logging
-
 from typing import Dict, List
 
 from moodle_dl.config_service import ConfigHelper
@@ -24,43 +22,34 @@ class FolderMod(MoodleMod):
 
         result = {}
         for folder in folders:
-            folder_id = folder.get('id', 0)
-            folder_name = folder.get('name', 'unnamed folder')
-            folder_intro = folder.get('intro', '')
-            folder_course_module_id = folder.get('coursemodule', 0)
-            folder_files = folder.get('introfiles', [])
             course_id = folder.get('course', 0)
-            folder_timemodified = folder.get('timemodified', 0)
+            folder_files = folder.get('introfiles', [])
+            folder_time_modified = folder.get('timemodified', 0)
+            self.set_files_types_if_empty(folder_files, 'folder_file')
 
-            # normalize
-            for folder_file in folder_files:
-                file_type = folder_file.get('type', '')
-                if file_type is None or file_type == '':
-                    folder_file.update({'type': 'folder_file'})
-
+            folder_intro = folder.get('intro', '')
             if folder_intro != '':
-                # Add intro file
-                intro_file = {
-                    'filename': 'Folder intro',
-                    'filepath': '/',
-                    'description': folder_intro,
-                    'timemodified': folder_timemodified,
-                    'filter_urls_during_search_containing': ['/mod_folder/intro'],
-                    'type': 'description',
-                }
-                folder_files.append(intro_file)
+                folder_files.append(
+                    {
+                        'filename': 'Folder intro',
+                        'filepath': '/',
+                        'description': folder_intro,
+                        'timemodified': folder_time_modified,
+                        'filter_urls_during_search_containing': ['/mod_folder/intro'],
+                        'type': 'description',
+                    }
+                )
 
-            folder_entry = {
-                folder_course_module_id: {
-                    'id': folder_id,
-                    'name': folder_name,
-                    'intro': folder_intro,
-                    'files': folder_files,
+            result[course_id] = result.get(course_id, {}).update(
+                {
+                    folder.get('coursemodule', 0): {
+                        'id': folder.get('id', 0),
+                        'name': folder.get('name', 'unnamed folder'),
+                        'timemodified': folder_time_modified,
+                        'intro': folder_intro,
+                        'files': folder_files,
+                    }
                 }
-            }
-
-            course_dic = result.get(course_id, {})
-            course_dic.update(folder_entry)
-            result.update({course_id: course_dic})
+            )
 
         return result

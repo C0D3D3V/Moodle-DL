@@ -26,226 +26,164 @@ class ForumMod(MoodleMod):
 
         result = {}
         for forum in forums:
-            # This is the instance id with which we can make the API queries.
-            forum_id = forum.get('id', 0)
-            forum_name = forum.get('name', 'forum')
-            forum_intro = forum.get('intro', '')
-            forum_course_module_id = forum.get('cmid', 0)
-            forum_introfiles = forum.get('introfiles', [])
             course_id = forum.get('course', 0)
+            forum_module_id = forum.get('cmid', 0)
+            forum_files = forum.get('introfiles', [])
+            self.set_files_types_if_empty(forum_files, 'forum_introfile')
 
-            # normalize
-            for forum_file in forum_introfiles:
-                file_type = forum_file.get('type', '')
-                if file_type is None or file_type == '':
-                    forum_file.update({'type': 'forum_introfile'})
-
+            forum_intro = forum.get('intro', '')
             if forum_intro != '':
-                # Add Intro File
-                intro_file = {
-                    'filename': 'Forum intro',
-                    'filepath': '/',
-                    'description': forum_intro,
-                    'type': 'description',
-                }
-                forum_introfiles.append(intro_file)
-
-            forum_entry = {
-                forum_course_module_id: {
-                    'id': forum_id,
-                    'name': forum_name,
-                    'intro': forum_intro,
-                    'files': forum_introfiles,
-                }
-            }
-
-            course_dic = result.get(course_id, {})
-
-            course_dic.update(forum_entry)
-
-            result.update({course_id: course_dic})
-
-        return result
-
-    def fetch_forums_posts(self, forums: Dict) -> Dict:
-        """
-        Fetches for the forums list of all courses the additionally
-        entries. This is kind of waste of resources, because there
-        is no API to get all entries at once.
-        @param forums: the dictionary of forums of all courses.
-        @return: A Dictionary of all forums,
-                 indexed by courses, then forums
-        """
-        if not self.config.get_download_forums():
-            return forums
-
-        # do this only if version is greater then 2.8
-        # because mod_forum_get_forum_discussions_paginated will fail
-        if self.version < 2014111000:
-            return forums
-
-        counter = 0
-        total = 0
-        # count total forums for nice console output
-        for course_id in forums:
-            for forum_id in forums[course_id]:
-                total += 1
-
-        for course_id in forums:
-            for forum_id in forums[course_id]:
-                counter += 1
-                real_id = forums[course_id][forum_id].get('id', 0)
-                page_num = 0
-                last_timestamp = self.last_timestamps.get(self.MOD_NAME, {}).get(forum_id, 0)
-                latest_discussions = []
-                done = False
-                while not done:
-                    data = {
-                        'forumid': real_id,
-                        'perpage': 10,
-                        'page': page_num,
+                forum_files.append(
+                    {
+                        'filename': 'Forum intro',
+                        'filepath': '/',
+                        'description': forum_intro,
+                        'type': 'description',
                     }
-
-                    print(
-                        (
-                            '\r'
-                            + 'Downloading forum discussions'
-                            + f' {counter:3d}/{total:3d}'
-                            + f' [{course_id:6}|{real_id:6}|p{page_num}]\033[K'
-                        ),
-                        end='',
-                    )
-
-                    if self.version >= 2019052000:
-                        discussions_result = await self.client.async_post('mod_forum_get_forum_discussions', data)
-                    else:
-                        discussions_result = await self.client.async_post(
-                            'mod_forum_get_forum_discussions_paginated', data
-                        )
-
-                    discussions = discussions_result.get('discussions', [])
-
-                    if len(discussions) == 0:
-                        done = True
-                        break
-
-                    for discussion in discussions:
-
-                        timemodified = discussion.get('timemodified', 0)
-                        if discussion.get('modified', 0) > timemodified:
-                            timemodified = discussion.get('modified', 0)
-
-                        if last_timestamp < timemodified:
-                            latest_discussions.append(
-                                {
-                                    'subject': discussion.get('subject', ''),
-                                    'timemodified': timemodified,
-                                    'discussion_id': discussion.get('discussion', 0),
-                                    'created': discussion.get('created', 0),
-                                }
-                            )
-                        else:
-                            done = True
-                            break
-                    page_num += 1
-
-                forums_files = self._get_files_of_discussions(latest_discussions)
-                forums[course_id][forum_id]['files'] += forums_files
-
-        return forums
-
-    def _get_files_of_discussions(self, latest_discussions: List) -> List:
-        result = []
-
-        for counter, discussion in enumerate(latest_discussions):
-            valid_subject = PT.to_valid_name(discussion.get('subject', ''))
-            shorted_discussion_name = valid_subject
-            if len(shorted_discussion_name) > 17:
-                shorted_discussion_name = shorted_discussion_name[:15] + '..'
-            discussion_id = discussion.get('discussion_id', 0)
-            discussion_created = discussion.get('created', 0)
-
-            print(
-                (
-                    '\r'
-                    + 'Downloading posts of discussion'
-                    + f' [{shorted_discussion_name:<17}|{discussion_id:6}]'
-                    + f' {counter + 1:3d}/{len(latest_discussions):3d}\033[K'
-                ),
-                end='',
-            )
-
-            data = {
-                'discussionid': discussion_id,
-                'sortby': 'modified',
-                'sortdirection': 'ASC',
-            }
-
-            if self.version >= 2019052000:
-                posts_result = await self.client.async_post('mod_forum_get_discussion_posts', data)
-            else:
-                posts_result = await self.client.async_post('mod_forum_get_forum_discussion_posts', data)
-
-            posts = posts_result.get('posts', [])
-
-            for post in posts:
-                post_message = post.get('message', '')
-                if post_message is None:
-                    post_message = ''
-
-                post_id = post.get('id', 0)
-
-                if self.version >= 2019052000:
-                    post_parent = post.get('parentid', 0)
-                    post_userfullname = post.get('author', {}).get('fullname', None)
-                    post_modified = post.get('timecreated', 0)
-                else:
-                    post_parent = post.get('parent', 0)
-                    post_userfullname = post.get('userfullname', '')
-                    post_modified = post.get('modified', 0)
-
-                if post_userfullname is None:
-                    post_userfullname = "Unknown"
-
-                post_filename = PT.to_valid_name('[' + str(post_id) + '] ' + post_userfullname)
-                if post_parent is not None and post_parent != 0:
-                    post_filename = PT.to_valid_name(post_filename + ' response to [' + str(post_parent) + ']')
-
-                post_path = PT.to_valid_name(
-                    datetime.utcfromtimestamp(discussion_created).strftime('%y-%m-%d') + ' ' + valid_subject
                 )
 
-                post_files = post.get('attachments', [])
-                for inlinefile in post.get('messageinlinefiles', []):
-                    new_inlinefile = True
-                    for attachment in post_files:
-                        if attachment.get('fileurl', '').replace('attachment', 'post') == inlinefile.get('fileurl', ''):
-                            if (
-                                attachment.get('filesize', 0) == inlinefile.get('filesize', 0)
-                                # we assume that inline attachments can have different timestamps than the actual
-                                # attachment. However, they are still the same file.
-                                # and attachment.get('timemodified', 0) == inlinefile.get('timemodified', 0)
-                                and attachment.get('filename', '') == inlinefile.get('filename', '')
-                            ):
-                                new_inlinefile = False
-                                break
-                    if new_inlinefile:
-                        post_files.append(inlinefile)
-
-                post_file = {
-                    'filename': post_filename,
-                    'filepath': post_path,
-                    'timemodified': post_modified,
-                    'description': post_message,
-                    'type': 'description',
+            result[course_id] = result.get(course_id, {}).update(
+                {
+                    forum_module_id: {
+                        'id': forum.get('id', 0),
+                        'name': forum.get('name', 'forum'),
+                        'intro': forum_intro,
+                        'files': forum_files,
+                        '_cmid': forum_module_id,
+                    }
                 }
-                result.append(post_file)
+            )
 
-                for post_file in post_files:
-                    file_type = post_file.get('type', '')
-                    if file_type is None or file_type == '':
-                        post_file.update({'type': 'forum_file'})
-                    post_file.update({'filepath': post_path})
-                    result.append(post_file)
+        await self.add_forum_posts(result)
+        return result
+
+    async def add_forum_posts(self, forums: Dict[int, Dict[int, Dict]]):
+        """
+        Fetches for the forums list the forum posts
+        @param forums: Dictionary of all forums, indexed by courses, then module id
+        """
+        if not self.config.get_download_forums():
+            return
+
+        if self.version < 2014111000:  # 2.8
+            return
+
+        await self.run_async_load_function_on_mod_entries(forums, self.load_latest_discussions)
+
+    async def load_latest_discussions(self, forum: Dict):
+        # Adds the discussions that needs to be updated to the forum dict
+        page_num = 0
+        last_timestamp = self.last_timestamps.get(self.MOD_NAME, {}).get(forum.get('_cmid', 0), 0)
+        latest_discussions = []
+        done = False
+        while not done:
+            data = {
+                'forumid': forum.get('id', 0),
+                'perpage': 10,
+                'page': page_num,
+            }
+
+            if self.version >= 2019052000:  # 3.7
+                discussions_result = await self.client.async_post('mod_forum_get_forum_discussions', data)
+            else:
+                discussions_result = await self.client.async_post('mod_forum_get_forum_discussions_paginated', data)
+
+            discussions = discussions_result.get('discussions', [])
+
+            if len(discussions) == 0:
+                done = True
+                break
+
+            for discussion in discussions:
+                time_modified = discussion.get('timemodified', 0)
+                if discussion.get('modified', 0) > time_modified:
+                    time_modified = discussion.get('modified', 0)
+
+                if last_timestamp < time_modified:
+                    latest_discussions.append(
+                        {
+                            'subject': discussion.get('subject', ''),
+                            'timemodified': time_modified,
+                            'discussion_id': discussion.get('discussion', 0),
+                            'created': discussion.get('created', 0),
+                        }
+                    )
+                else:
+                    done = True
+                    break
+            page_num += 1
+
+        forum['files'] += await self.run_async_collect_function_on_list(
+            latest_discussions,
+            self.load_files_of_discussion,
+            'discussions',
+            {'collect_id': 'discussion_id', 'collect_name': 'subject'},
+        )
+
+    async def load_files_of_discussion(self, discussion: Dict) -> List[Dict]:
+        result = []
+
+        data = {
+            'discussionid': discussion.get('discussion_id', 0),
+            'sortby': 'modified',
+            'sortdirection': 'ASC',
+        }
+        if self.version >= 2019052000:  # 3.7
+            posts = await self.client.async_post('mod_forum_get_discussion_posts', data).get('posts', [])
+        else:
+            posts = await self.client.async_post('mod_forum_get_forum_discussion_posts', data).get('posts', [])
+
+        for post in posts:
+            post_message = post.get('message', '') or ''
+
+            if self.version >= 2019052000:  # 3.7
+                post_parent = post.get('parentid', 0)
+                post_user_fullname = post.get('author', {}).get('fullname', None) or 'Unknown'
+                post_modified = post.get('timecreated', 0)
+            else:
+                post_parent = post.get('parent', 0)
+                post_user_fullname = post.get('userfullname', '') or 'Unknown'
+                post_modified = post.get('modified', 0)
+
+            post_filename = PT.to_valid_name(f'[{post.get('id', 0)}] ' + post_user_fullname)
+            if post_parent is not None and post_parent != 0:
+                post_filename = PT.to_valid_name(post_filename + ' response to [' + str(post_parent) + ']')
+
+            post_path = PT.to_valid_name(
+                datetime.utcfromtimestamp(discussion.get('created', 0)).strftime('%y-%m-%d')
+                + ' '
+                + discussion.get('subject', '')
+            )
+
+            post_files = post.get('attachments', [])
+            for inline_file in post.get('messageinlinefiles', []):
+                new_inline_file = True
+                for attachment in post_files:
+                    if attachment.get('fileurl', '').replace('attachment', 'post') == inline_file.get('fileurl', ''):
+                        if (
+                            attachment.get('filesize', 0) == inline_file.get('filesize', 0)
+                            # we assume that inline attachments can have different timestamps than the actual
+                            # attachment. However, they are still the same file.
+                            # and attachment.get('timemodified', 0) == inlinefile.get('timemodified', 0)
+                            and attachment.get('filename', '') == inline_file.get('filename', '')
+                        ):
+                            new_inline_file = False
+                            break
+                if new_inline_file:
+                    post_files.append(inline_file)
+
+            result.append({
+                'filename': post_filename,
+                'filepath': post_path,
+                'timemodified': post_modified,
+                'description': post_message,
+                'type': 'description',
+            })
+
+            for post_file in post_files:
+                self.set_file_type_if_empty(post_file, 'forum_file')
+                post_file['filepath'] = post_path
+
+            result.extend(post_files)
 
         return result

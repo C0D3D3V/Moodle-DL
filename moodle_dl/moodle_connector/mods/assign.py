@@ -31,8 +31,7 @@ class AssignMod(MoodleMod):
     def extract_assign_modules(self, assignments: List[Dict]) -> Dict[int, Dict]:
         result = {}
         for assign in assignments:
-            assign_files = []
-            assign_files += assign.get('introfiles', [])
+            assign_files = assign.get('introfiles', [])
             assign_files += assign.get('introattachments', [])
 
             self.set_files_types_if_empty(assign_files, 'assign_file')
@@ -70,7 +69,7 @@ class AssignMod(MoodleMod):
         await self.run_async_load_function_on_mod_entries(assignments, self.load_submissions)
 
     async def load_submissions(self, assign: Dict):
-        # Fetches for a given assign module the submissions
+        "Fetches for a given assign module the submissions"
         data = {'userid': self.user_id, 'assignid': assign.get('id', 0)}
         submission = await self.client.async_post('mod_assign_get_submission_status', data)
         assign['files'] += self._get_files_of_submission(submission)

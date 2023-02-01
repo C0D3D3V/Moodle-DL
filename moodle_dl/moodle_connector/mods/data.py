@@ -24,9 +24,7 @@ class DataMod(MoodleMod):
         result = {}
         for database in databases:
             course_id = database.get('course', 0)
-
-            database_files = []
-            database_files += database.get('introfiles', [])
+            database_files = database.get('introfiles', [])
             self.set_files_types_if_empty(database_files, 'database_introfile')
 
             database_intro = database.get('intro', '')
@@ -67,7 +65,7 @@ class DataMod(MoodleMod):
         await self.run_async_load_function_on_mod_entries(databases, self.load_database_files)
 
     async def load_database_files(self, database: Dict):
-        # Fetches for a given assign database the database files
+        "Fetches for a given assign database the database files"
         data = {'databaseid': database.get('id', 0)}
         access = await self.client.async_post('mod_data_get_data_access_information', data)
         if not access.get('timeavailable', False):
