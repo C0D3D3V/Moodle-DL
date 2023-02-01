@@ -133,68 +133,75 @@ class WorkshopMod(MoodleMod):
         workshop['files'] += workshop_files
 
     async def load_foreign_submission(self, assessment: Dict) -> Dict:
-        # reviewer_assessment_id = reviewer_assessment.get('id', 0)
-        # reviewer_assessment_reviewerid = reviewer_assessment.get('reviewerid', 0)
+        # assessment_id = assessment.get('id', 0)
+        # assessment_reviewerid = assessment.get('reviewerid', 0)
 
-        reviewer_assessment_files = reviewer_assessment.get('feedbackcontentfiles', [])
-        reviewer_assessment_files += reviewer_assessment.get('feedbackattachmentfiles', [])
+        assessment_files = assessment.get('feedbackcontentfiles', [])
+        assessment_files += assessment.get('feedbackattachmentfiles', [])
 
-        feedback_author = reviewer_assessment.get('feedbackauthor', '')
+        feedback_author = assessment.get('feedbackauthor', '')
         if feedback_author != '':
-            reviewer_assessment_files.append({
-                'filename': 'Feedback for the author',
-                'filepath': '/',
-                'description': feedback_author,
-                'type': 'description',
-            })
+            assessment_files.append(
+                {
+                    'filename': 'Feedback for the author',
+                    'filepath': '/',
+                    'description': feedback_author,
+                    'type': 'description',
+                }
+            )
 
-        feedback_reviewer = reviewer_assessment.get('feedbackreviewer', '')
+        feedback_reviewer = assessment.get('feedbackreviewer', '')
         if feedback_reviewer != '':
-            reviewer_assessment_files.append({
-                'filename': 'Feedback for the reviewer',
-                'filepath': '/',
-                'description': feedback_reviewer,
-                'type': 'description',
-            })
-
+            assessment_files.append(
+                {
+                    'filename': 'Feedback for the reviewer',
+                    'filepath': '/',
+                    'description': feedback_reviewer,
+                    'type': 'description',
+                }
+            )
+        assessment_submission_id = assessment.get('submissionid', 0)
         # Get submissions of assessments
-        data = {'submissionid': reviewer_assessment.get('submissionid', 0)}
+        data = {'submissionid': assessment_submission_id}
         try:
             submission = await self.client.async_post('mod_workshop_get_submission', data).get('submission', {})
-            submission['files'] = reviewer_assessment_files
+            submission['files'] = assessment_files
             return submission
         except RequestRejectedError:
-            logging.debug("No access rights for workshop submission %d", workshop_id)
+            logging.debug("No access rights for workshop submission %d", assessment_submission_id)
             return None
 
-
-    def _get_files_of_workshop(self, submissions: List[Dict],  grades: Dict) -> List:
+    def _get_files_of_workshop(self, submissions: List[Dict], grades: Dict) -> List:
         result = []
 
         # Grades
         assessment_long_str_grade = grades.get('assessmentlongstrgrade', '')
         if assessment_long_str_grade != '':
-            result.append({
-                'filename': 'Assessment grade',
-                'filepath': '/',
-                'description': assessment_long_str_grade,
-                'type': 'description',
-            })
+            result.append(
+                {
+                    'filename': 'Assessment grade',
+                    'filepath': '/',
+                    'description': assessment_long_str_grade,
+                    'type': 'description',
+                }
+            )
 
         submission_long_str_grade = grades.get('submissionlongstrgrade', '')
         if submission_long_str_grade != '':
-            result.append({
-                'filename': 'Submission grade',
-                'filepath': '/',
-                'description': submission_long_str_grade,
-                'type': 'description',
-            })
+            result.append(
+                {
+                    'filename': 'Submission grade',
+                    'filepath': '/',
+                    'description': submission_long_str_grade,
+                    'type': 'description',
+                }
+            )
 
         # Own and foreign submissions
         for submission in submissions:
             submission_content = submission.get('content', 0)
 
-            filepath = f'/submissions {submission.get('id', 0)}/'
+            filepath = f"/submissions {submission.get('id', 0)}/"
 
             submission_files = submission.get('contentfiles', [])
             submission_files += submission.get('attachmentfiles', [])
@@ -205,13 +212,15 @@ class WorkshopMod(MoodleMod):
                 submission_file['filepath'] = filepath
 
             if submission_content != '':
-                submission_files.append({
-                    'filename': submission.get('title', 0),
-                    'filepath': filepath,
-                    'description': submission_content,
-                    'timemodified': submission.get('timemodified', 0),
-                    'type': 'description',
-                })
+                submission_files.append(
+                    {
+                        'filename': submission.get('title', 0),
+                        'filepath': filepath,
+                        'description': submission_content,
+                        'timemodified': submission.get('timemodified', 0),
+                        'type': 'description',
+                    }
+                )
             result += submission_files
 
         return result

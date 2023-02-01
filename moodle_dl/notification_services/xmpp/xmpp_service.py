@@ -87,7 +87,7 @@ class XmppService(NotificationService):
 
         xmpp_cfg = self.config.get_property('xmpp')
 
-        logging.info(('Sending Notification via XMPP...')
+        logging.info('Sending Notification via XMPP...')
 
         try:
             xmpp = XmppShooter(xmpp_cfg['sender'], xmpp_cfg['password'], xmpp_cfg['target'])
