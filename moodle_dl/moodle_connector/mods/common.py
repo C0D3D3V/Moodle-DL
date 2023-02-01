@@ -7,6 +7,7 @@ from typing import Dict, List
 from moodle_dl.config_service import ConfigHelper
 from moodle_dl.moodle_connector import RequestHelper
 from moodle_dl.state_recorder import Course, File
+from moodle_dl.utils import get_nested
 
 
 class MoodleMod(metaclass=ABCMeta):
@@ -155,8 +156,8 @@ class MoodleMod(metaclass=ABCMeta):
                         'total': total_entries,
                         'mod_name': cls.MOD_NAME,
                         'collect_kind': collect_kind,
-                        'collect_id': entry.get(format_mapping['collect_id'], 0),
-                        'collect_name': entry.get(format_mapping['collect_name'], ''),
+                        'collect_id': get_nested(entry, format_mapping['collect_id'], 0),
+                        'collect_name': get_nested(entry, format_mapping['collect_name'], ''),
                     },
                 )
             )

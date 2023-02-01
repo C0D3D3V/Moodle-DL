@@ -1,5 +1,3 @@
-import logging
-
 from datetime import datetime
 from typing import Dict, List
 
@@ -47,7 +45,6 @@ class ForumMod(MoodleMod):
                     forum_module_id: {
                         'id': forum.get('id', 0),
                         'name': forum.get('name', 'forum'),
-                        'intro': forum_intro,
                         'files': forum_files,
                         '_cmid': forum_module_id,
                     }
@@ -71,7 +68,7 @@ class ForumMod(MoodleMod):
         await self.run_async_load_function_on_mod_entries(forums, self.load_latest_discussions)
 
     async def load_latest_discussions(self, forum: Dict):
-        # Adds the discussions that needs to be updated to the forum dict
+        "Adds the discussions that needs to be updated to the forum dict"
         page_num = 0
         last_timestamp = self.last_timestamps.get(self.MOD_NAME, {}).get(forum.get('_cmid', 0), 0)
         latest_discussions = []
@@ -145,7 +142,7 @@ class ForumMod(MoodleMod):
                 post_user_fullname = post.get('userfullname', '') or 'Unknown'
                 post_modified = post.get('modified', 0)
 
-            post_filename = PT.to_valid_name(f'[{post.get('id', 0)}] ' + post_user_fullname)
+            post_filename = PT.to_valid_name(f"[{post.get('id', 0)}] " + post_user_fullname)
             if post_parent is not None and post_parent != 0:
                 post_filename = PT.to_valid_name(post_filename + ' response to [' + str(post_parent) + ']')
 
@@ -172,13 +169,15 @@ class ForumMod(MoodleMod):
                 if new_inline_file:
                     post_files.append(inline_file)
 
-            result.append({
-                'filename': post_filename,
-                'filepath': post_path,
-                'timemodified': post_modified,
-                'description': post_message,
-                'type': 'description',
-            })
+            result.append(
+                {
+                    'filename': post_filename,
+                    'filepath': post_path,
+                    'timemodified': post_modified,
+                    'description': post_message,
+                    'type': 'description',
+                }
+            )
 
             for post_file in post_files:
                 self.set_file_type_if_empty(post_file, 'forum_file')

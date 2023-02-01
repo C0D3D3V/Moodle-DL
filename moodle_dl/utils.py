@@ -11,7 +11,7 @@ import sys
 import unicodedata
 
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 import readchar
 import requests
@@ -28,6 +28,16 @@ def check_verbose() -> bool:
 def check_debug() -> bool:
     """Return if the debugger is currently active"""
     return 'pydevd' in sys.modules or (hasattr(sys, 'gettrace') and sys.gettrace() is not None)
+
+
+def get_nested(from_dict: Dict, key: str, default=None):
+    keys = key.split('.')
+    try:
+        result = from_dict
+        for key in keys:
+            result = result[key]
+    except KeyError:
+        return default
 
 
 KNOWN_EXTENSIONS = (
@@ -521,8 +531,8 @@ class Log:
 
     The string functions returns the strings that would be logged.
 
-    The idea is to use this Log class only for the CLI configuration wizard, 
-    and for all other logging we use the normal python logging module 
+    The idea is to use this Log class only for the CLI configuration wizard,
+    and for all other logging we use the normal python logging module
     """
 
     @staticmethod

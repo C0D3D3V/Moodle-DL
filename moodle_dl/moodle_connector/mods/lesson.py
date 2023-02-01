@@ -27,198 +27,145 @@ class LessonMod(MoodleMod):
 
         result = {}
         for lesson in lessons:
-            # This is the instance id with which we can make the API queries.
-            lesson_id = lesson.get('id', 0)
-            lesson_name = lesson.get('name', 'unnamed lesson')
-            lesson_intro = lesson.get('intro', '')
-            lesson_course_module_id = lesson.get('coursemodule', 0)
-            lesson_introfiles = lesson.get('introfiles', [])
-            lesson_introfiles += lesson.get('mediafiles', [])
             course_id = lesson.get('course', 0)
+            lesson_files = lesson.get('introfiles', [])
+            lesson_files += lesson.get('mediafiles', [])
+            self.set_files_types_if_empty(lesson_files, 'lesson_introfile')
 
-            # normalize
-            for lesson_file in lesson_introfiles:
-                file_type = lesson_file.get('type', '')
-                if file_type is None or file_type == '':
-                    lesson_file.update({'type': 'lesson_introfile'})
-
+            lesson_intro = lesson.get('intro', '')
             if lesson_intro != '':
-                # Add Intro File
-                intro_file = {
-                    'filename': 'Lesson intro',
-                    'filepath': '/',
-                    'description': lesson_intro,
-                    'type': 'description',
+                lesson_files.append(
+                    {
+                        'filename': 'Lesson intro',
+                        'filepath': '/',
+                        'description': lesson_intro,
+                        'type': 'description',
+                    }
+                )
+
+            result[course_id] = result.get(course_id, {}).update(
+                {
+                    lesson.get('coursemodule', 0): {
+                        'id': lesson.get('id', 0),
+                        'name': lesson.get('name', 'unnamed lesson'),
+                        'files': lesson_files,
+                    }
                 }
-                lesson_introfiles.append(intro_file)
+            )
 
-            lesson_entry = {
-                lesson_course_module_id: {
-                    'id': lesson_id,
-                    'name': lesson_name,
-                    'intro': lesson_intro,
-                    'files': lesson_introfiles,
-                }
-            }
-
-            course_dic = result.get(course_id, {})
-
-            course_dic.update(lesson_entry)
-
-            result.update({course_id: course_dic})
-
+        await self.add_lessons_files(result)
         return result
 
-    def fetch_lessons_files(self, userid: int, lessons: Dict) -> Dict:
+    async def add_lessons_files(self, lessons: Dict[int, Dict[int, Dict]]):
         """
-        Fetches for the lessons list of all courses the additionally
-        entries. This is kind of waste of resources, because there
-        is no API to get all entries at once.
-        @param userid: the user id.
-        @param lessons: the dictionary of lessons of all courses.
-        @return: A Dictionary of all lessons,
-                 indexed by courses, then lessons
+        Fetches for the lessons list the lessons files
+        @param lessons: Dictionary of all lessons, indexed by courses, then module id
         """
         if not self.config.get_download_lessons():
             return lessons
 
-        # do this only if version is greater then 3.3
-        # because mod_lesson_get_user_attempt will fail
-        if self.version < 2017051500:
+        if self.version < 2017051500:  # 3.3
             return lessons
 
-        counter = 0
-        total = 0
-        # count total lessons for nice console output
-        for course_id in lessons:
-            for lesson_id in lessons[course_id]:
-                total += 1
+        await self.run_async_load_function_on_mod_entries(lessons, self.load_lesson_files)
 
-        for course_id in lessons:
-            for lesson_id in lessons[course_id]:
-                counter += 1
-                lesson = lessons[course_id][lesson_id]
-                real_id = lesson.get('id', 0)
-                data = {'lessonid': real_id, 'userid': userid, 'lessonattempt': 0}
+    async def load_lesson_files(self, lesson: Dict):
+        # load only the last attempt
+        # TODO: We could load all attempts, if needed
+        lesson_id = lesson.get('id', 0)
+        data = {'lessonid': lesson_id, 'userid': self.user_id, 'lessonattempt': 0}
+        try:
+            user_attempt = await self.client.async_post('mod_lesson_get_user_attempt', data)
+            user_attempt['lesson_name'] = lesson.get('name', '')
+        except RequestRejectedError:
+            logging.debug("No access rights for lesson %d", lesson_id)
+            return
+        lesson['files'] += await self._get_files_of_attempt(user_attempt)
 
-                shorted_lesson_name = lesson.get('name', '')
-                if len(shorted_lesson_name) > 17:
-                    shorted_lesson_name = shorted_lesson_name[:15] + '..'
+    async def load_attempt_page(self, attempt_page: Dict) -> List[Dict]:
+        "Load files and content of an answer page in an attempt"
+        page_id = attempt_page.get('page', {}).get('id', 0)
+        data = {'lessonid': attempt_page.get('page', {}).get('lessonid', 0), 'pageid': page_id, 'returncontents': 1}
+        try:
+            page_result = await self.client.async_post('mod_lesson_get_page_data', data)
+        except RequestRejectedError:
+            logging.debug("No access rights for lesson attempt page %d", page_id)
+            return
 
-                print(
-                    (
-                        '\r'
-                        + 'Downloading lesson infos'
-                        + f' {counter:3d}/{total:3d}'
-                        + f' [{shorted_lesson_name:<17}|{course_id:6}]\033[K'
-                    ),
-                    end='',
-                )
+        page_files = page_result.get('contentfiles', [])
+        self.set_files_types_if_empty(page_files, 'lesson_file')
 
-                try:
-                    attempt_result = await self.client.async_post('mod_lesson_get_user_attempt', data)
-                except RequestRejectedError:
-                    continue
+        page_files.append(
+            {
+                '_is_page_content': True,
+                'content': page_result.get('pagecontent', '').split('<script>')[0],
+            }
+        )
+        return page_files
 
-                lesson_files = self._get_files_of_attempt(attempt_result, lesson.get('name', ''))
-                lesson['files'] += lesson_files
-
-        return lessons
-
-    def _get_files_of_attempt(self, attempt_result: Dict, lesson_name: str) -> List:
+    async def _get_files_of_attempt(self, attempt: Dict) -> List[Dict]:
         result = []
 
-        answerpages = attempt_result.get('answerpages', [])
-        # The review page should actually be generated here.
-        # https://github.com/moodle/moodle/blob/511a87f5fc357f18a4c53911f6e6c7f7b526246e/mod/lesson/report.php#L278-L366
-
-        # Grade is in: attempt_result.userstats.gradeinfo.earned  (max points: attempt_result.userstats.gradeinfo.total)
-        # Take care, grade can be None
-
-        grade = attempt_result.get('userstats', {}).get('gradeinfo', {}).get('earned', None)
-        grade_total = attempt_result.get('userstats', {}).get('gradeinfo', {}).get('total', None)
-
+        # Create grade file
+        grade = attempt.get('userstats', {}).get('gradeinfo', {}).get('earned', None)
+        grade_total = attempt.get('userstats', {}).get('gradeinfo', {}).get('total', None)
         if grade is not None and grade_total is not None:
-            grade_file = {
-                'filename': 'grade',
-                'filepath': '/',
-                'timemodified': 0,
-                'description': str(grade) + ' / ' + str(grade_total),
-                'type': 'description',
-            }
-            result.append(grade_file)
-
-        # build lesson HTML
-        lesson_html = moodle_html_header
-        attempt_filename = PT.to_valid_name(lesson_name)
-        lesson_is_empty = True
-        for counter, answerpage in enumerate(answerpages):
-            page_id = answerpage.get('page', {}).get('id', 0)
-            lesson_id = answerpage.get('page', {}).get('lessonid', 0)
-
-            shorted_lesson_name = lesson_name
-            if len(shorted_lesson_name) > 17:
-                shorted_lesson_name = shorted_lesson_name[:15] + '..'
-
-            print(
-                (
-                    '\r'
-                    + 'Downloading lesson pages'
-                    + f' {counter + 1:3d}/{len(answerpages):3d}'
-                    + f' [{shorted_lesson_name:<17}|{lesson_id:6}]\033[K'
-                ),
-                end='',
+            result.append(
+                {
+                    'filename': 'grade',
+                    'filepath': '/',
+                    'timemodified': 0,
+                    'description': str(grade) + ' / ' + str(grade_total),
+                    'type': 'description',
+                }
             )
 
-            data = {'lessonid': lesson_id, 'pageid': page_id, 'returncontents': 1}
+        attempt_pages_and_files = await self.run_async_collect_function_on_list(
+            attempt.get('answerpages', []),
+            self.load_attempt_page,
+            'attempt page',
+            {'collect_id': 'page.id', 'collect_name': 'page.lessonid'},
+        )
 
-            try:
-                page_result = await self.client.async_post('mod_lesson_get_page_data', data)
-            except RequestRejectedError:
-                continue
-
-            pagecontent = page_result.get('pagecontent', '').split('<script>')[0]
-
-            if pagecontent != '':
-                lesson_is_empty = False
-
-            lesson_html += pagecontent + '\n'
-
-            page_files = page_result.get('contentfiles', [])
-            for page_file in page_files:
-                file_type = page_file.get('type', '')
-                if file_type is None or file_type == '':
-                    page_file.update({'type': 'lesson_file'})
-
-            for page_file in page_files:
+        # build lesson HTML and add unique files
+        lesson_html = moodle_html_header
+        lesson_is_empty = True
+        for page_or_file in attempt_pages_and_files:
+            if page_or_file.get('_is_page_content', False):
+                page_content = page_or_file.get('content', '')
+                if page_content != '':
+                    lesson_is_empty = False
+                lesson_html += page_content + '\n'
+            else:
                 new_page_file = True
+                clean_file_url = re.sub(r"\/page_contents\/\d+\/", "/", page_or_file.get('fileurl', ''))
+                page_or_file['_clean_file_url'] = clean_file_url
                 for attempt_file in result:
-                    if re.sub(r"\/page_contents\/\d+\/", "/", attempt_file.get('fileurl', '')) == re.sub(
-                        r"\/page_contents\/\d+\/", "/", page_file.get('fileurl', '')
-                    ):
-                        if (
-                            attempt_file.get('filesize', 0) == page_file.get('filesize', 0)
-                            # sometimes the teacher adds the same file for multiple answer pages with a
-                            # different timestamp
-                            # and attempt_file.get('timemodified', 0) == page_file.get('timemodified', 0)
-                            and attempt_file.get('filename', '') == page_file.get('filename', '')
+                    if attempt_file.get('_clean_file_url', '') == clean_file_url:
+                        # sometimes the teacher adds the same file for multiple answer pages with a
+                        # different timestamp
+                        if (attempt_file.get('filesize', 0) == page_or_file.get('filesize', 0)) and (
+                            attempt_file.get('filename', '') == page_or_file.get('filename', '')
                         ):
                             new_page_file = False
                             break
                 if new_page_file:
-                    result.append(page_file)
+                    result.append(page_or_file)
 
+        # The generation code for the original review page is here:
+        # https://github.com/moodle/moodle/blob/511a87f5fc357f18a4c53911f6e6c7f7b526246e/mod/lesson/report.php#L278-L366
         if not lesson_is_empty:
             lesson_html += moodle_html_footer
-            attempt_file = {
-                'filename': attempt_filename,
-                'filepath': '/',
-                'timemodified': 0,
-                'html': lesson_html,
-                'filter_urls_during_search_containing': ['/mod_lesson/page_contents/'],
-                'type': 'html',
-                'no_search_for_urls': True,
-            }
-            result.append(attempt_file)
+            result.append(
+                {
+                    'filename': PT.to_valid_name(attempt['lesson_name']),
+                    'filepath': '/',
+                    'timemodified': 0,
+                    'html': lesson_html,
+                    'filter_urls_during_search_containing': ['/mod_lesson/page_contents/'],
+                    'type': 'html',
+                    'no_search_for_urls': True,
+                }
+            )
 
         return result

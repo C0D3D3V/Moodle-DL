@@ -46,7 +46,6 @@ class FolderMod(MoodleMod):
                         'id': folder.get('id', 0),
                         'name': folder.get('name', 'unnamed folder'),
                         'timemodified': folder_time_modified,
-                        'intro': folder_intro,
                         'files': folder_files,
                     }
                 }

@@ -71,16 +71,8 @@ class ResultsHandler:
             if module_modname in ['page'] and self.version < 2017051500:
                 module_modname = 'index_mod-' + module_modname
 
-            if module_description is not None and module_modname not in [
-                'page',
-                'forum',
-                'database',
-                'lesson',
-                'quiz',
-                'workshop',
-                'assign',
-            ]:
-                # Handle descriptions of Files, Labels and all that we do not handle in seperate modules
+            if module_description is not None and module_modname not in self.course_fetch_addons:
+                # Handle descriptions of Files, Labels and all mods that we do not handle in separately
                 files += self._handle_description(
                     section_name, section_id, module_name, module_modname, module_id, module_description
                 )
@@ -157,26 +149,11 @@ class ResultsHandler:
                 module_name = addon.get('name', '')
                 module_modname = addon_modname
                 module_id = addon.get('id', 0)
-                module_intro = addon.get('intro', None)
                 module_contents = addon.get('files', [])
 
                 # Handle not supported modules that results in an index.html special
                 if module_modname in ['page'] and self.version < 2017051500:
                     module_modname = 'index_mod-' + module_modname
-
-                if module_intro is not None and module_modname not in [
-                    'page',
-                    'forum',
-                    'database',
-                    'lesson',
-                    'quiz',
-                    'workshop',
-                    'assign',
-                ]:
-                    # Handle descriptions of Files, Labels and all that we do not handle in seperate modules
-                    files += self._handle_description(
-                        section_name, section_id, module_name, module_modname, module_id, module_intro
-                    )
 
                 files += self._handle_files(
                     section_name, section_id, module_name, module_modname, module_id, module_contents
