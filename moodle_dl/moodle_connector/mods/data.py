@@ -23,114 +23,71 @@ class DataMod(MoodleMod):
 
         result = {}
         for database in databases:
-            # This is the instance id with which we can make the API queries.
-            database_id = database.get('id', 0)
-            database_name = database.get('name', 'db')
-            database_intro = database.get('intro', '')
-            database_coursemodule = database.get('coursemodule', 0)
-            database_introfiles = database.get('introfiles', [])
             course_id = database.get('course', 0)
 
-            # normalize
-            for db_file in database_introfiles:
-                file_type = db_file.get('type', '')
-                if file_type is None or file_type == '':
-                    db_file.update({'type': 'database_introfile'})
+            database_files = []
+            database_files += database.get('introfiles', [])
+            self.set_files_types_if_empty(database_files, 'database_introfile')
 
+            database_intro = database.get('intro', '')
             if database_intro != '':
-                # Add Intro File
-                intro_file = {
-                    'filename': 'Database intro',
-                    'filepath': '/',
-                    'description': database_intro,
-                    'type': 'description',
+                database_files.append(
+                    {
+                        'filename': 'Database intro',
+                        'filepath': '/',
+                        'description': database_intro,
+                        'type': 'description',
+                    }
+                )
+
+            result[course_id] = result.get(course_id, {}).update(
+                {
+                    database.get('coursemodule', 0): {
+                        'id': database.get('id', 0),
+                        'name': database.get('name', 'db'),
+                        'files': database_files,
+                    }
                 }
-                database_introfiles.append(intro_file)
+            )
 
-            database_entry = {
-                database_coursemodule: {
-                    'id': database_id,
-                    'name': database_name,
-                    'intro': database_intro,
-                    'files': database_introfiles,
-                }
-            }
-
-            course_dic = result.get(course_id, {})
-
-            course_dic.update(database_entry)
-
-            result.update({course_id: course_dic})
-
+        await self.add_database_files(result)
         return result
 
-    def fetch_database_files(self, databases: Dict[int, Dict[int, Dict]]) -> Dict[int, Dict[int, Dict]]:
+    async def add_database_files(self, databases: Dict[int, Dict[int, Dict]]):
         """
-        Fetches for the databases list of all courses the additionally
-        entries. This is kind of waste of resources, because there
-        is no API to get all entries at once
-        @param databases: the dictionary of databases of all courses.
-        @return: A Dictionary of all databases,
-                 indexed by courses, then databases
+        Fetches for the databases list the database file entries.
+        @param databases: Dictionary of all databases, indexed by courses, then module id
         """
         if not self.config.get_download_databases():
             return databases
 
-        # do this only if version is greater then 3.3
-        # because mod_data_get_entries will fail
-        if self.version < 2017051500:
+        if self.version < 2017051500:  # 3.3
             return databases
 
-        counter = 0
-        total = 0
-        intro = '\rDownloading database information'
+        await self.run_async_load_function_on_mod_entries(databases, self.load_database_files)
 
-        # count total databases for nice console output
-        for course_id in databases:
-            for database_id in databases[course_id]:
-                total += 1
+    async def load_database_files(self, database: Dict):
+        # Fetches for a given assign database the database files
+        data = {'databaseid': database.get('id', 0)}
+        access = await self.client.async_post('mod_data_get_data_access_information', data)
+        if not access.get('timeavailable', False):
+            logging.debug("No access rights for database %d", database.get('id', 0))
+            return
 
-        for course_id in databases:
-            for database_id in databases[course_id]:
-                counter += 1
-                real_id = databases[course_id][database_id].get('id', 0)
-                data = {'databaseid': real_id}
+        data.update({'returncontents': 1})
+        entries = await self.client.async_post('mod_data_get_entries', data)
+        database['files'] += self._get_files_of_db_entries(entries)
 
-                access = await self.client.async_post('mod_data_get_data_access_information', data)
-
-                if not access.get('timeavailable', False):
-                    continue
-
-                print(intro + f' {counter:3}/{total:3} [{course_id:6}|{real_id:6}]\033[K', end='')
-
-                data.update({'returncontents': 1})
-
-                entries = await self.client.async_post('mod_data_get_entries', data)
-
-                database_files = self._get_files_of_db_entries(entries)
-                databases[course_id][database_id]['files'] += database_files
-
-        return databases
-
-    @staticmethod
-    def _get_files_of_db_entries(entries: Dict) -> List:
+    @classmethod
+    def _get_files_of_db_entries(cls, entries: Dict) -> List:
         result = []
-
-        entries_list = entries.get('entries', [])
-
-        for entry in entries_list:
-            entry_contents = entry.get('contents', [])
-
-            for entry_content in entry_contents:
-                entry_files = entry_content.get('files', [])
-
-                for entry_file in entry_files:
+        for entry in entries.get('entries', []):
+            for entry_content in entry.get('contents', []):
+                for entry_file in entry_content.get('files', []):
                     filename = entry_file.get('filename', '')
                     if filename.startswith('thumb_'):
                         continue
-                    file_type = entry_file.get('type', '')
-                    if file_type is None or file_type == '':
-                        entry_file.update({'type': 'database_file'})
+                    cls.set_file_type_if_empty(entry_file, 'database_file')
                     result.append(entry_file)
 
         return result

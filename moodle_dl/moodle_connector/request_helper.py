@@ -39,7 +39,7 @@ class RequestHelper:
         self.opts = opts
         # Semaphore for async requests
         # Keep in mind Semaphore needs to be initialized in the same async loop as it is used
-        self.semaphore = asyncio.Semaphore(opts.threads)
+        self.semaphore = asyncio.Semaphore(opts.max_parallel_api_calls)
 
         scheme = 'https://'
         if use_http:

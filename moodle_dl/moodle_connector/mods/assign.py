@@ -25,7 +25,7 @@ class AssignMod(MoodleMod):
             course_id = assign_course.get('id', 0)
             result[course_id] = self.extract_assign_modules(assign_course.get('assignments', []))
 
-        self.add_submissions(result)
+        await self.add_submissions(result)
         return result
 
     def extract_assign_modules(self, assignments: List[Dict]) -> Dict[int, Dict]:
@@ -50,9 +50,9 @@ class AssignMod(MoodleMod):
 
             result[assign.get('cmid', 0)] = {
                 'id': assign.get('id', 0),
-                'files': assign_files,
                 'name': assign.get('name', ''),
                 'timemodified': assign.get('timemodified', 0),
+                'files': assign_files,
             }
         return result
 
@@ -62,19 +62,18 @@ class AssignMod(MoodleMod):
         @param assignments: Dictionary of all assignments, indexed by courses, then module id
         """
         if not self.config.get_download_submissions():
-            return assignments
+            return
 
         if self.version < 2016052300:  # 3.1
-            return assignments
+            return
 
-        self.run_async_load_function_on_mod_entries(assignments, self.load_submissions)
+        await self.run_async_load_function_on_mod_entries(assignments, self.load_submissions)
 
     async def load_submissions(self, assign: Dict):
         # Fetches for a given assign module the submissions
         data = {'userid': self.user_id, 'assignid': assign.get('id', 0)}
         submission = await self.client.async_post('mod_assign_get_submission_status', data)
-        submission_files = self._get_files_of_submission(submission)
-        assign['files'] += submission_files
+        assign['files'] += self._get_files_of_submission(submission)
 
     def _get_files_of_submission(self, submission: Dict) -> List[Dict]:
         result = []
@@ -119,7 +118,6 @@ class AssignMod(MoodleMod):
                 self.set_files_types_if_empty(files, 'submission_file')
                 result += files
 
-        for plugin in plugins:
             for editor_field in plugin.get('editorfields', []):
                 filename = editor_field.get('description', '')
                 description = editor_field.get('text', '')

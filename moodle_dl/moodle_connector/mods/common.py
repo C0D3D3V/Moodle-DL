@@ -15,6 +15,7 @@ class MoodleMod(metaclass=ABCMeta):
     """
 
     MOD_NAME = None
+    MOD_PLURAL_NAME = None
     MOD_MIN_VERSION = None
 
     def __init__(
@@ -52,7 +53,7 @@ class MoodleMod(metaclass=ABCMeta):
             return {}
 
         result = self.real_fetch_mod_entries(courses)
-        logging.info('Loaded %s mod entries', self.MOD_NAME)
+        logging.info('Loaded all %s', self.MOD_PLURAL_NAME)
         return result
 
     def get_data_for_mod_entries_endpoint(self, courses: List[Course]):
@@ -71,11 +72,15 @@ class MoodleMod(metaclass=ABCMeta):
         pass
 
     @staticmethod
-    def set_files_types_if_empty(files: [Dict], type_to_set: str):
+    def set_file_type_if_empty(file_dict: Dict, type_to_set: str):
+        file_type = file_dict.get('type', '')
+        if file_type is None or file_type == '':
+            file_dict['type'] = type_to_set
+
+    @classmethod
+    def set_files_types_if_empty(cls, files: List[Dict], type_to_set: str):
         for file_dict in files:
-            file_type = file_dict.get('type', '')
-            if file_type is None or file_type == '':
-                file_dict['type'] = type_to_set
+            cls.set_file_type_if_empty(file_dict, type_to_set)
 
     @staticmethod
     async def run_with_final_message(load_function, entry: Dict, message: str, *format_args):

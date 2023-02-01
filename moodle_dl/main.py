@@ -390,12 +390,21 @@ def get_parser():
     )
 
     parser.add_argument(
-        '-t',
-        '--threads',
-        dest='threads',
-        default=10,
+        '-mpd',
+        '--max-parallel-downloads',
+        dest='max_parallel_downloads',
+        default=5,
         type=int,
         help=('Sets the number of max parallel downloads. (default: %(default)s)'),
+    )
+
+    parser.add_argument(
+        '-mpac',
+        '--max-parallel-api-calls',
+        dest='max_parallel_api_calls',
+        default=10,
+        type=int,
+        help=('Sets the number of max parallel Moodle Mobile API calls. (default: %(default)s)'),
     )
 
     parser.add_argument(
@@ -489,7 +498,7 @@ def main(args=None):
     pre_process_opts(opts)
 
     # TODO: Change this
-    DownloadService.thread_count = args.threads
+    DownloadService.thread_count = args.max_parallel_downloads
 
     config = ConfigHelper(opts.path)
     if opts.init:
