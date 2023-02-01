@@ -162,8 +162,6 @@ def run_main(config: ConfigHelper, opts):
 
 
 def setup_logger(opts):
-    IS_VERBOSE = check_verbose()
-
     file_log_handler = RotatingFileHandler(
         PT.make_path(opts.path, 'MoodleDL.log'),
         mode='a',
@@ -179,18 +177,24 @@ def setup_logger(opts):
     stdout_log_handler.setFormatter(colorlog.ColoredFormatter('%(log_color)s%(asctime)s %(message)s', '%H:%M:%S'))
 
     app_log = logging.getLogger()
-    if IS_VERBOSE:
+    if opts.quiet:
+        file_log_handler.setLevel(logging.ERROR)
+        app_log.setLevel(logging.ERROR)
+        stdout_log_handler.setLevel(logging.ERROR)
+    elif opts.verbose:
         file_log_handler.setLevel(logging.DEBUG)
         app_log.setLevel(logging.DEBUG)
+        stdout_log_handler.setLevel(logging.DEBUG)
     else:
         file_log_handler.setLevel(logging.INFO)
         app_log.setLevel(logging.INFO)
+        stdout_log_handler.setLevel(logging.INFO)
 
     app_log.addHandler(stdout_log_handler)
     if opts.log_to_file:
         app_log.addHandler(file_log_handler)
 
-    if IS_VERBOSE:
+    if opts.verbose:
         logging.debug('moodle-dl version: %s', __version__)
         logging.debug('python version: %s', ".".join(map(str, sys.version_info[:3])))
         ffmpeg_available = which('ffmpeg') is not None
@@ -472,6 +476,15 @@ def get_parser():
     )
 
     parser.add_argument(
+        '-q',
+        '--quiet',
+        dest='quiet',
+        default=False,
+        action='store_true',
+        help='Sets the log level to error',
+    )
+
+    parser.add_argument(
         '-ltf',
         '--log-to-file',
         dest='log_to_file',
@@ -541,7 +554,7 @@ def main(args=None):
         if not isinstance(base_err, ProcessLock.LockError):
             ProcessLock.unlock(opts.path)
 
-        if check_verbose() or check_debug():
+        if opts.verbose or check_debug():
             error_formatted = traceback.format_exc()
             logging.error(error_formatted, extra={'exception': base_err})
         else:

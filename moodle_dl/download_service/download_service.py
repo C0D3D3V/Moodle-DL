@@ -35,11 +35,6 @@ class DownloadService:
         @param opts: Moodle-dl options
         """
 
-        # How much threads should be created
-        if 'pydevd' in sys.modules:
-            # if debugging only one thread should be started
-            DownloadService.thread_count = 1
-
         self.courses = courses
         self.state_recorder = moodle_service.recorder
         self.token = moodle_service.config.get_token()

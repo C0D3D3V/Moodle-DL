@@ -30,6 +30,36 @@ class MoodleService:
         else:
             self.interactively_acquire_normal_token(use_stored_url=use_stored_url)
 
+    def interactively_get_moodle_url(self, use_stored_url: bool) -> Tuple(bool, str, str):
+        "@Return (use_http, moodle_domain, moodle_path)"
+        if not use_stored_url:
+            url_ok = False
+            while not url_ok:
+                url_ok = True
+                moodle_url = input('URL of Moodle:   ')
+
+                use_http = False
+                if moodle_url.startswith('http://'):
+                    Log.warning(
+                        'Warning: You have entered an insecure URL! Are you sure that the Moodle is'
+                        + ' not accessible via `https://`? All your data will be transferred'
+                        + ' insecurely! If your Moodle is accessible via `https://`, then run'
+                        + ' the process again using `https://` to protect your data.'
+                    )
+                    use_http = True
+                elif not moodle_url.startswith('https://'):
+                    Log.error('The url of your moodle must start with `https://`')
+                    url_ok = False
+
+            moodle_domain, moodle_path = self.split_moodle_url(moodle_url)
+
+        else:
+            moodle_domain = self.config.get_moodle_domain()
+            moodle_path = self.config.get_moodle_path()
+            use_http = self.config.get_use_http()
+
+        return use_http, moodle_domain, moodle_path
+
     def interactively_acquire_normal_token(self, use_stored_url: bool = False) -> str:
         """
         Walks the user through executing a login into the Moodle-System to get
@@ -50,28 +80,7 @@ class MoodleService:
             if stop_automatic_generation and automated:
                 break
 
-            if not use_stored_url:
-                moodle_url = input('URL of Moodle:   ')
-
-                use_http = False
-                if moodle_url.startswith('http://'):
-                    Log.error(
-                        'Warning: You have entered an insecure URL! Are you sure that the Moodle is'
-                        + ' not accessible via `https://`? All your data will be transferred'
-                        + ' insecurely! If your Moodle is accessible via `https://`, then run'
-                        + ' the process again using `https://` to protect your data.'
-                    )
-                    use_http = True
-                elif not moodle_url.startswith('https://'):
-                    Log.error('The url of your moodle must start with `https://`')
-                    continue
-
-                moodle_domain, moodle_path = self.split_moodle_url(moodle_url)
-
-            else:
-                moodle_domain = self.config.get_moodle_domain()
-                moodle_path = self.config.get_moodle_path()
-                use_http = self.config.get_use_http()
+            use_http, moodle_domain, moodle_path = self.interactively_get_moodle_url(use_stored_url)
 
             if self.opts.username is not None:
                 moodle_username = self.opts.username
@@ -124,14 +133,8 @@ class MoodleService:
         moodle_path: str = '/',
         use_http: bool = False,
     ) -> str:
-        """
-        Send the login credentials to the Moodle-System and extracts the resulting Login-Token.
-
-        @params: The necessary parameters to create a Token.
-        @return: The received token.
-        """
+        "Send the login credentials to the Moodle-System and extracts the resulting Login-Token"
         login_data = {'username': username, 'password': password, 'service': 'moodle_mobile_app'}
-
         response = RequestHelper(self.opts, use_http, moodle_domain, moodle_path).get_login(login_data)
 
         if 'token' not in response:
@@ -141,28 +144,17 @@ class MoodleService:
 
         if 'privatetoken' not in response:
             return response.get('token', ''), None
-        else:
-            return response.get('token', ''), response.get('privatetoken', '')
+        return response.get('token', ''), response.get('privatetoken', '')
 
     def interactively_acquire_sso_token(self, use_stored_url: bool = False) -> str:
         """
         Walks the user through the receiving of a SSO token
         @return: The Token for Moodle.
         """
-        if not use_stored_url:
 
-            moodle_url = input('URL of Moodle:   ')
+        use_http, moodle_domain, moodle_path = self.interactively_get_moodle_url(use_stored_url)
+        scheme = 'http://' if use_http else 'https://'
 
-            moodle_domain, moodle_path = self.split_moodle_url(moodle_url)
-
-        else:
-            moodle_domain = self.config.get_moodle_domain()
-            moodle_path = self.config.get_moodle_path()
-
-        use_http = self.config.get_use_http()
-        scheme = 'https://'
-        if use_http:
-            scheme = 'http://'
         if self.opts.token is not None:
             moodle_token = self.opts.token
         else:

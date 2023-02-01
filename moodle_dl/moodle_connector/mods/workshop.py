@@ -134,7 +134,7 @@ class WorkshopMod(MoodleMod):
 
     async def load_foreign_submission(self, assessment: Dict) -> Dict:
         # assessment_id = assessment.get('id', 0)
-        # assessment_reviewerid = assessment.get('reviewerid', 0)
+        # assessment_reviewer_id = assessment.get('reviewerid', 0)
 
         assessment_files = assessment.get('feedbackcontentfiles', [])
         assessment_files += assessment.get('feedbackattachmentfiles', [])
