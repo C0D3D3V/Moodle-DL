@@ -10,10 +10,10 @@ from typing import List, Tuple
 from urllib.parse import urlparse
 
 from moodle_dl.config_service import ConfigHelper
-from moodle_dl.moodle_connector import FirstContactHandler, RequestRejectedError, RequestHelper, MoodleURL
+from moodle_dl.moodle_connector import CoreHandler, RequestRejectedError, RequestHelper, MoodleURL
 from moodle_dl.moodle_connector.cookie_handler import CookieHandler
 from moodle_dl.moodle_connector.mods import fetch_mods_files, get_all_mods, get_all_mods_classes
-from moodle_dl.moodle_connector.results_handler import ResultsHandler
+from moodle_dl.moodle_connector.result_builder import ResultBuilder
 from moodle_dl.state_recorder import Course, StateRecorder
 from moodle_dl.utils import Log, determine_ext
 
@@ -206,30 +206,30 @@ class MoodleService:
         secret_token = re.sub(r'[^A-Za-z0-9]+', '', splitted[2])
         return (token, secret_token)
 
-    def get_courses_list(self, first_contact_handler: FirstContactHandler, user_id: int) -> List[Course]:
+    def get_courses_list(self, core_handler: CoreHandler, user_id: int) -> List[Course]:
         download_course_ids = self.config.get_download_course_ids()
         download_public_course_ids = self.config.get_download_public_course_ids()
         dont_download_course_ids = self.config.get_dont_download_course_ids()
 
-        courses_list = first_contact_handler.fetch_courses(user_id)
+        courses_list = core_handler.fetch_courses(user_id)
         courses = []
         # Filter unselected courses
         for course in courses_list:
             if MoodleService.should_download_course(course.id, download_course_ids, dont_download_course_ids):
                 courses.append(course)
 
-        public_courses_list = first_contact_handler.fetch_courses_info(download_public_course_ids)
+        public_courses_list = core_handler.fetch_courses_info(download_public_course_ids)
         courses.extend(public_courses_list)
         return courses
 
-    def get_user_id_and_version(self, first_contact_handler: FirstContactHandler) -> Tuple(int, int):
+    def get_user_id_and_version(self, core_handler: CoreHandler) -> Tuple(int, int):
         user_id, version = self.config.get_userid_and_version()
         if user_id is None or version is None:
             logging.info('Downloading account information')
-            user_id, version = first_contact_handler.fetch_userid_and_version()
+            user_id, version = core_handler.fetch_userid_and_version()
             logging.debug('Detected moodle version: %d', version)
         else:
-            first_contact_handler.version = version
+            core_handler.version = version
         return user_id, version
 
     async def fetch_state(self) -> List[Course]:
@@ -246,8 +246,8 @@ class MoodleService:
         moodle_url = self.config.get_moodle_URL()
 
         request_helper = RequestHelper(self.opts, moodle_url, token)
-        first_contact_handler = FirstContactHandler(request_helper)
-        user_id, version = self.get_user_id_and_version(first_contact_handler)
+        core_handler = CoreHandler(request_helper)
+        user_id, version = self.get_user_id_and_version(core_handler)
 
         cookie_handler = None
         if self.config.get_download_also_with_cookie():
@@ -255,14 +255,14 @@ class MoodleService:
             cookie_handler = CookieHandler(request_helper, version, self.opts.path)
             cookie_handler.check_and_fetch_cookies(privatetoken, user_id)
 
-        courses = self.get_courses_list(first_contact_handler, user_id)
+        courses = self.get_courses_list(core_handler, user_id)
 
         mods = get_all_mods(
             request_helper, version, user_id, self.recorder.get_last_timestamp_per_mod_module(), self.config
         )
         fetched_mods_files = await fetch_mods_files(mods, courses)
 
-        results_handler = ResultsHandler(request_helper, moodle_url, version)
+        result_builder = ResultBuilder(request_helper, moodle_url, version)
 
         filtered_courses = []
         index = 0
@@ -295,8 +295,8 @@ class MoodleService:
                 'quiz': quizzes.get(course.id, {}),
                 'workshop': workshops.get(course.id, {}),
             }
-            results_handler.set_fetch_addons(course_fetch_addons)
-            course.files = results_handler.fetch_files(course)
+            result_builder.set_fetch_addons(course_fetch_addons)
+            course.files = result_builder.fetch_files(course)
 
             filtered_courses.append(course)
 

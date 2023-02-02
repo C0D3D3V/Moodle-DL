@@ -5,7 +5,7 @@ from moodle_dl.moodle_connector import RequestHelper
 from moodle_dl.state_recorder import Course
 
 
-class FirstContactHandler:
+class CoreHandler:
     """
     Fetches and parses the various endpoints in Moodle.
     """
@@ -58,8 +58,7 @@ class FirstContactHandler:
         Queries the Moodle system for all courses available on the system and returns:
         @return: A list of all visible courses
         """
-        # API is only available since version 3.2
-        if self.version < 2016120500:
+        if self.version < 2016120500:  # 3.2
             return []
 
         result = self.client.post('core_course_get_courses_by_field', timeout=1200)
@@ -80,8 +79,7 @@ class FirstContactHandler:
         @param course_ids: A list of courses ids
         @return: A list of courses
         """
-        # API is only available since version 3.2
-        if len(course_ids) == 0 or self.version < 2016120500:
+        if len(course_ids) == 0 or self.version < 2016120500:  # 3.2
             return []
 
         data = {
@@ -105,7 +103,7 @@ class FirstContactHandler:
         @return: A List of all section dictionaries
         """
         data = {'courseid': course_id}
-        if self.version >= 2015051100:
+        if self.version >= 2015051100:  # 2.9
             data = {
                 'courseid': course_id,
                 'options[0][name]': 'excludemodules',

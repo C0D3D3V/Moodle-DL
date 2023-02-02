@@ -9,9 +9,9 @@ from moodle_dl.state_recorder import Course, File
 from moodle_dl.moodle_connector import RequestHelper, MoodleURL
 
 
-class ResultsHandler:
+class ResultBuilder:
     """
-    Fetches and parses the various endpoints in Moodle.
+    Combines all fetched mod files and core course files to one result based on File objects
     """
 
     def __init__(self, request_helper: RequestHelper, moodle_url: MoodleURL, version: int):
@@ -374,7 +374,7 @@ class ResultsHandler:
 
             hash_description = None
             if content_type == 'description' and not content_no_hash:
-                hashable_description = ResultsHandler._filter_changing_attributes(content_description)
+                hashable_description = ResultBuilder._filter_changing_attributes(content_description)
                 m = hashlib.sha1()
                 m.update(hashable_description.encode('utf-8'))
                 hash_description = m.hexdigest()
@@ -442,7 +442,7 @@ class ResultsHandler:
         content_isexternalfile = False
 
         m = hashlib.sha1()
-        hashable_description = ResultsHandler._filter_changing_attributes(module_description)
+        hashable_description = ResultBuilder._filter_changing_attributes(module_description)
         m.update(hashable_description.encode('utf-8'))
         hash_description = m.hexdigest()
 

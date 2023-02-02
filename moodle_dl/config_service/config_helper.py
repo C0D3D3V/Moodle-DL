@@ -126,6 +126,12 @@ class ConfigHelper:
         except ValueError:
             return None, None
 
+    def get_do_not_ask_to_save_userid_and_version(self) -> bool:
+        try:
+            return self.get_property('do_not_ask_to_save_userid_and_version')
+        except ValueError:
+            return False
+
     def get_download_course_ids(self) -> str:
         # returns a stored list of course ids hat should be downloaded
         try:
@@ -277,5 +283,3 @@ class ConfigHelper:
         else:
             if self.get_use_http():
                 self.set_property('use_http', moodle_url.use_http)
-
-        

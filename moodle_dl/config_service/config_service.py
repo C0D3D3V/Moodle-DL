@@ -1,13 +1,12 @@
 import shutil
 import sys
 
-from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from moodle_dl.config_service import ConfigHelper
-from moodle_dl.moodle_connector import MoodleService, RequestRejectedError, RequestHelper, FirstContactHandler
+from moodle_dl.moodle_connector import MoodleService, RequestRejectedError, RequestHelper, CoreHandler
 from moodle_dl.state_recorder import Course
-from moodle_dl.utils import Cutie, Log
+from moodle_dl.utils import Cutie, Log, PathTools as PT
 
 
 class ConfigService:
@@ -15,9 +14,16 @@ class ConfigService:
         self.config = config
         self.opts = opts
 
-        self.first_contact_handler = FirstContactHandler(
-            RequestHelper(opts, self.config.get_moodle_URL(), self.config.get_token())
-        )
+        self.core_handler = CoreHandler(RequestHelper(opts, self.config.get_moodle_URL(), self.config.get_token()))
+
+    def get_user_id_and_version(self) -> Tuple(int, int):
+        user_id, version = self.config.get_userid_and_version()
+        if user_id is None or version is None:
+            user_id, version = self.core_handler.fetch_userid_and_version()
+            self._select_should_userid_and_version_be_saved(user_id, version)
+        else:
+            self.core_handler.version = version
+        return user_id, version
 
     def interactively_acquire_config(self):
         """
@@ -26,14 +32,8 @@ class ConfigService:
         """
         courses = []
         try:
-            userid, version = self.config.get_userid_and_version()
-            if userid is None or version is None:
-                userid, version = self.first_contact_handler.fetch_userid_and_version()
-                self._select_should_userid_and_version_be_saved(userid, version)
-            else:
-                self.first_contact_handler.version = version
-
-            courses = self.first_contact_handler.fetch_courses(userid)
+            user_id, _ = self.get_user_id_and_version()
+            courses = self.core_handler.fetch_courses(user_id)
 
         except (RequestRejectedError, ValueError, RuntimeError, ConnectionError) as error:
             Log.error(f'Error while communicating with the Moodle System! ({error})')
@@ -92,15 +92,10 @@ class ConfigService:
         courses = []
         all_visible_courses = []
         try:
-            userid, version = self.config.get_userid_and_version()
-            if userid is None or version is None:
-                userid, version = self.first_contact_handler.fetch_userid_and_version()
-            else:
-                self.first_contact_handler.version = version
-
-            courses = self.first_contact_handler.fetch_courses(userid)
-            log_all_courses_to = str(Path(self.opts.path) / 'all_courses.json')
-            all_visible_courses = self.first_contact_handler.fetch_all_visible_courses(log_all_courses_to)
+            user_id, _ = self.get_user_id_and_version()
+            courses = self.core_handler.fetch_courses(user_id)
+            log_all_courses_to = PT.make_path(self.opts.path, 'all_courses.json')
+            all_visible_courses = self.core_handler.fetch_all_visible_courses(log_all_courses_to)
 
         except (RequestRejectedError, ValueError, RuntimeError, ConnectionError) as error:
             Log.error(f'Error while communicating with the Moodle System! ({error})')
@@ -146,6 +141,9 @@ class ConfigService:
         """
         Asks the user if the userid and version should be saved in the configuration
         """
+        do_not_ask_to_save_userid_and_version = self.config.get_do_not_ask_to_save_userid_and_version()
+        if do_not_ask_to_save_userid_and_version:
+            return
 
         print('')
         Log.info(
@@ -173,6 +171,13 @@ class ConfigService:
 
             self.config.set_property('userid', userid)
             self.config.set_property('version', version)
+        else:
+            do_not_ask_to_save_userid_and_version = Cutie.prompt_yes_or_no(
+                Log.blue_str('Should this question no longer be asked in the future?'),
+                default_is_yes=False,
+            )
+            if do_not_ask_to_save_userid_and_version:
+                self.config.set_property('do_not_ask_to_save_userid_and_version', True)
 
         self.section_seperator()
 
@@ -397,7 +402,7 @@ class ConfigService:
 
         if change_excluded_sections:
             Log.info('Please wait for a moment, the information about the course sections gets downloaded.')
-            sections = self.first_contact_handler.fetch_sections(course.id)
+            sections = self.core_handler.fetch_sections(course.id)
 
             dont_download_section_ids = self._select_sections_to_download(sections, excluded_sections)
 
