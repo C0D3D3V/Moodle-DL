@@ -4,8 +4,10 @@ import sys
 from typing import Dict, List, Tuple
 
 from moodle_dl.config_service import ConfigHelper
-from moodle_dl.moodle_connector import MoodleService, RequestRejectedError, RequestHelper, CoreHandler
-from moodle_dl.state_recorder import Course
+from moodle_dl.moodle_connector.core_handler import CoreHandler
+from moodle_dl.moodle_connector.moodle_service import MoodleService
+from moodle_dl.moodle_connector.request_helper import RequestRejectedError, RequestHelper
+from moodle_dl.types import Course
 from moodle_dl.utils import Cutie, Log, PathTools as PT
 
 
@@ -16,7 +18,7 @@ class ConfigService:
 
         self.core_handler = CoreHandler(RequestHelper(opts, self.config.get_moodle_URL(), self.config.get_token()))
 
-    def get_user_id_and_version(self) -> Tuple(int, int):
+    def get_user_id_and_version(self) -> Tuple[int, int]:
         user_id, version = self.config.get_userid_and_version()
         if user_id is None or version is None:
             user_id, version = self.core_handler.fetch_userid_and_version()

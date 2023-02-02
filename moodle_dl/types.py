@@ -1,3 +1,6 @@
+from dataclasses import dataclass, field
+from typing import List
+
 from moodle_dl.utils import PathTools as PT
 
 
@@ -187,3 +190,44 @@ class File:
 
         message += ')'
         return message
+
+
+class Course:
+    def __init__(self, _id: int, fullname: str, files: List[File] = None):
+        self.id = _id
+        self.fullname = PT.to_valid_name(fullname)
+        if files is not None:
+            self.files = files
+        else:
+            self.files = []
+
+        self.overwrite_name_with = None
+        self.create_directory_structure = True
+        self.excluded_sections = []
+
+    def __str__(self):
+        message = 'Course ('
+
+        message += f'id: {self.id}'
+        message += f', fullname: "{self.fullname}"'
+        message += f', overwrite_name_with: "{PT.to_valid_name(self.overwrite_name_with)}"'
+        message += f', create_directory_structure: {self.create_directory_structure}'
+        message += f', files: {len(self.files)}'
+        message += ')'
+        return message
+
+
+@dataclass
+class MoodleURL:
+    use_http: bool
+    domain: str
+    path: str
+    scheme: str = field(init=False)
+    url_base: str = field(init=False)
+
+    def __post_init__(self):
+        if self.use_http:
+            self.scheme = 'http://'
+        else:
+            self.scheme = 'https://'
+        self.url_base = self.scheme + self.domain + self.path

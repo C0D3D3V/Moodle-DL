@@ -3,7 +3,7 @@ from typing import List
 
 import html2text
 
-from moodle_dl.state_recorder import Course
+from moodle_dl.types import Course
 from moodle_dl.download_service.url_target import URLTarget
 
 

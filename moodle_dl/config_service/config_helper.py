@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-from moodle_dl.moodle_connector import MoodleURL
+from moodle_dl.types import MoodleURL
 
 
 class ConfigHelper:

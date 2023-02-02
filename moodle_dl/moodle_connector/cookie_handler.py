@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 from typing import Dict
 
-from moodle_dl.moodle_connector import RequestHelper, RequestRejectedError
+from moodle_dl.moodle_connector.request_helper import RequestHelper, RequestRejectedError
 
 
 class CookieHandler:

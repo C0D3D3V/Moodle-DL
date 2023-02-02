@@ -3,9 +3,9 @@ import asyncio
 from typing import List, Dict
 
 from moodle_dl.config_service import ConfigHelper
-from moodle_dl.moodle_connector import RequestHelper
+from moodle_dl.moodle_connector.request_helper import RequestHelper
 from moodle_dl.moodle_connector.mods.common import MoodleMod
-from moodle_dl.state_recorder import Course
+from moodle_dl.types import Course
 
 from moodle_dl.moodle_connector.mods.assign import AssignMod  # noqa: F401
 from moodle_dl.moodle_connector.mods.data import DataMod  # noqa: F401

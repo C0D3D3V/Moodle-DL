@@ -3,10 +3,10 @@ import logging
 from typing import Dict, List
 
 from moodle_dl.config_service import ConfigHelper
-from moodle_dl.moodle_connector import RequestRejectedError
 from moodle_dl.moodle_connector.mods import MoodleMod
 from moodle_dl.moodle_connector.moodle_constants import moodle_html_footer, moodle_html_header
-from moodle_dl.state_recorder import Course, File
+from moodle_dl.moodle_connector.request_helper import RequestRejectedError
+from moodle_dl.types import Course, File
 from moodle_dl.utils import PathTools as PT
 
 

@@ -27,8 +27,8 @@ import yt_dlp
 
 from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema, RequestException
 
-from moodle_dl.moodle_connector import RequestHelper
-from moodle_dl.state_recorder import Course, File
+from moodle_dl.moodle_connector.request_helper import RequestHelper
+from moodle_dl.types import Course, File
 from moodle_dl.utils import format_bytes, timeconvert, SslHelper, PathTools as PT
 from moodle_dl.ydl_extractors import add_additional_extractors
 

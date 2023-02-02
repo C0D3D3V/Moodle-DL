@@ -10,11 +10,10 @@ from typing import Dict
 
 import aiohttp
 import requests
-import urllib3
 
 from requests.exceptions import RequestException
 
-from moodle_dl.moodle_connector import MoodleURL
+from moodle_dl.types import MoodleURL
 from moodle_dl.utils import SslHelper, PathTools as PT
 
 
@@ -49,9 +48,6 @@ class RequestHelper:
             with open(self.log_responses_to, 'w', encoding='utf-8') as response_log_file:
                 response_log_file.write('JSON Log:\n\n')
 
-        logging.getLogger("requests").setLevel(logging.WARNING)
-        logging.getLogger("urllib3").setLevel(logging.WARNING)
-        urllib3.disable_warnings()
 
     def post_URL(self, url: str, data: Dict[str, str] = None, cookie_jar_path: str = None):
         """

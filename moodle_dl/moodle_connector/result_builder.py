@@ -5,8 +5,8 @@ import hashlib
 from typing import Dict, List
 import urllib.parse as urlparse
 
-from moodle_dl.state_recorder import Course, File
-from moodle_dl.moodle_connector import MoodleURL
+from moodle_dl.types import Course, File
+from moodle_dl.types import MoodleURL
 
 
 class ResultBuilder:
@@ -496,7 +496,7 @@ class ResultBuilder:
     def add_files_to_courses(
         self,
         courses: List[Course],
-        course_cores: Dict[List[Dict]],
+        course_cores: Dict[int, List[Dict]],
         fetched_mods_files: Dict[str, Dict],
     ):
 

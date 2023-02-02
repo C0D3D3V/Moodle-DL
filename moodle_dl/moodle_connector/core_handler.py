@@ -3,8 +3,8 @@ import json
 
 from typing import Dict, List
 
-from moodle_dl.moodle_connector import RequestHelper
-from moodle_dl.state_recorder import Course
+from moodle_dl.moodle_connector.request_helper import RequestHelper
+from moodle_dl.types import Course
 from moodle_dl.utils import run_with_final_message
 
 
@@ -122,7 +122,7 @@ class CoreHandler:
 
         return sections
 
-    async def async_load_course_cores(self, courses: List[Course]) -> Dict[List[Dict]]:
+    async def async_load_course_cores(self, courses: List[Course]) -> Dict[int, List[Dict]]:
         """
         Loads all course core structures for every given course
         @param entries: List of all section entries, indexed by course id
@@ -140,7 +140,7 @@ class CoreHandler:
                     course,
                     loaded_message,
                     {
-                        'ctr': ctr,
+                        'ctr': ctr + 1,
                         'total': total_courses,
                         'course_id': course.id,
                         'course_name': course.fullname,

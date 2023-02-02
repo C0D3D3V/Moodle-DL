@@ -6,8 +6,8 @@ from pathlib import Path
 from typing import List
 
 from moodle_dl.download_service.download_service import DownloadService
-from moodle_dl.moodle_connector import MoodleService
-from moodle_dl.state_recorder import Course
+from moodle_dl.moodle_connector.moodle_service import MoodleService
+from moodle_dl.types import Course
 from moodle_dl.utils import PathTools as PT
 
 

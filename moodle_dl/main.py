@@ -8,8 +8,11 @@ import traceback
 from logging.handlers import RotatingFileHandler
 from shutil import which
 
+import asyncio  # noqa: F401 pylint: disable=unused-import
 import colorlog
+import requests  # noqa: F401 pylint: disable=unused-import
 import sentry_sdk
+import urllib3
 
 try:
     # In unix readline needs to be loaded so that arrow keys work in input
@@ -22,7 +25,7 @@ from colorama import just_fix_windows_console
 from moodle_dl.config_service import ConfigHelper, ConfigService
 from moodle_dl.download_service.download_service import DownloadService
 from moodle_dl.download_service.fake_download_service import FakeDownloadService
-from moodle_dl.moodle_connector import MoodleService
+from moodle_dl.moodle_connector.moodle_service import MoodleService
 from moodle_dl.notification_services import (
     get_all_notify_services,
     get_remote_notify_services,
@@ -30,8 +33,8 @@ from moodle_dl.notification_services import (
     TelegramService,
     XmppService,
 )
-from moodle_dl.state_recorder import OfflineService
-from moodle_dl.utils import Log, Cutie, ProcessLock, check_debug, check_verbose, PathTools as PT
+from moodle_dl.state_recorder.offline_service import OfflineService
+from moodle_dl.utils import Log, Cutie, ProcessLock, check_debug, PathTools as PT
 from moodle_dl.version import __version__
 
 
@@ -203,6 +206,12 @@ def setup_logger(opts):
     if check_debug():
         logging.info('Debug-Mode detected. Errors will be re-risen.')
         app_log.addHandler(ReRaiseOnError())
+
+    if not opts.verbose:
+        logging.getLogger("requests").setLevel(logging.WARNING)
+        logging.getLogger("urllib3").setLevel(logging.WARNING)
+        logging.getLogger('asyncio').setLevel(logging.WARNING)
+        urllib3.disable_warnings()
 
 
 def _dir_path(path):
@@ -511,7 +520,7 @@ def main(args=None):
     pre_process_opts(opts)
 
     # TODO: Change this
-    DownloadService.thread_count = args.max_parallel_downloads
+    DownloadService.thread_count = opts.max_parallel_downloads
 
     config = ConfigHelper(opts.path)
     if opts.init:

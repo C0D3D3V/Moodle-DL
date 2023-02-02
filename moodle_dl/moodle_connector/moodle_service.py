@@ -8,11 +8,13 @@ from typing import List, Tuple
 from urllib.parse import urlparse
 
 from moodle_dl.config_service import ConfigHelper
-from moodle_dl.moodle_connector import CoreHandler, RequestRejectedError, RequestHelper, MoodleURL
 from moodle_dl.moodle_connector.cookie_handler import CookieHandler
+from moodle_dl.moodle_connector.core_handler import CoreHandler
 from moodle_dl.moodle_connector.mods import fetch_mods_files, get_all_mods, get_all_mods_classes
+from moodle_dl.moodle_connector.request_helper import RequestRejectedError, RequestHelper
 from moodle_dl.moodle_connector.result_builder import ResultBuilder
-from moodle_dl.state_recorder import Course, StateRecorder
+from moodle_dl.state_recorder.state_recorder import StateRecorder
+from moodle_dl.types import Course, MoodleURL
 from moodle_dl.utils import Log, determine_ext, PathTools as PT
 
 
@@ -211,7 +213,7 @@ class MoodleService:
         courses.extend(public_courses_list)
         return courses
 
-    def get_user_id_and_version(self, core_handler: CoreHandler) -> Tuple(int, int):
+    def get_user_id_and_version(self, core_handler: CoreHandler) -> Tuple[int, int]:
         user_id, version = self.config.get_userid_and_version()
         if user_id is None or version is None:
             logging.info('Downloading account information')
@@ -397,7 +399,7 @@ class MoodleService:
         return section_id not in dont_download_sections_ids or len(dont_download_sections_ids) == 0
 
     @staticmethod
-    def split_moodle_url(moodle_url: str) -> Tuple(str, str):
+    def split_moodle_url(moodle_url: str) -> Tuple[str, str]:
         """
         Splits a given Moodle URL into the domain and the installation path
         @return: moodle_domain, moodle_path as strings

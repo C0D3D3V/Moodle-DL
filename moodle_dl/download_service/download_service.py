@@ -1,7 +1,6 @@
 import logging
 import os
 import shutil
-import sys
 import threading
 import time
 
@@ -10,8 +9,8 @@ from typing import List
 
 from moodle_dl.download_service.downloader import Downloader
 from moodle_dl.download_service.url_target import URLTarget
-from moodle_dl.moodle_connector import MoodleService
-from moodle_dl.state_recorder import Course, File
+from moodle_dl.moodle_connector.moodle_service import MoodleService
+from moodle_dl.types import Course, File
 from moodle_dl.utils import format_bytes, SslHelper, PathTools as PT
 
 

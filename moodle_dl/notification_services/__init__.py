@@ -11,7 +11,11 @@ from moodle_dl.notification_services.xmpp.xmpp_service import XmppService
 
 __all__ = ['ConsoleService', 'MailService', 'TelegramService', 'XmppService']
 
-REMOTE_SERVICES = [Class for name, Class in globals().items() if name.endswith('Service') and name != 'ConsoleService']
+REMOTE_SERVICES = [
+    Class
+    for name, Class in globals().items()
+    if name.endswith('Service') and name not in ['ConsoleService', 'NotificationService']
+]
 ALL_SERVICES = [ConsoleService] + REMOTE_SERVICES
 
 

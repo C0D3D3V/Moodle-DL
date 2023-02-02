@@ -5,8 +5,8 @@ from abc import ABCMeta, abstractmethod
 from typing import Dict, List
 
 from moodle_dl.config_service import ConfigHelper
-from moodle_dl.moodle_connector import RequestHelper
-from moodle_dl.state_recorder import Course, File
+from moodle_dl.moodle_connector.request_helper import RequestHelper
+from moodle_dl.types import Course, File
 from moodle_dl.utils import get_nested, run_with_final_message
 
 
@@ -146,7 +146,7 @@ class MoodleMod(metaclass=ABCMeta):
                     entry,
                     loaded_message,
                     {
-                        'ctr': ctr,
+                        'ctr': ctr + 1,
                         'total': total_entries,
                         'mod_name': cls.MOD_NAME,
                         'collect_kind': collect_kind,

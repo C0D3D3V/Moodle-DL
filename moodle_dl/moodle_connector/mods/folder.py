@@ -2,7 +2,7 @@ from typing import Dict, List
 
 from moodle_dl.config_service import ConfigHelper
 from moodle_dl.moodle_connector.mods import MoodleMod
-from moodle_dl.state_recorder import Course, File
+from moodle_dl.types import Course, File
 
 
 class FolderMod(MoodleMod):

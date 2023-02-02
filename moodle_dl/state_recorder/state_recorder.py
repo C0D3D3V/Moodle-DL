@@ -4,7 +4,7 @@ import logging
 from sqlite3 import Error
 from typing import Dict, List
 
-from moodle_dl.state_recorder import File, Course
+from moodle_dl.types import File, Course
 
 
 class StateRecorder:

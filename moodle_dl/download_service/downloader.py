@@ -4,7 +4,7 @@ import threading
 from queue import Queue, Empty
 from typing import List
 
-from moodle_dl.state_recorder import StateRecorder
+from moodle_dl.state_recorder.state_recorder import StateRecorder
 
 
 class Downloader(threading.Thread):
