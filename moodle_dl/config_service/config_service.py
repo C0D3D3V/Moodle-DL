@@ -292,7 +292,6 @@ class ConfigService:
         print('')
 
         while True:
-
             choices = []
             choices_courses = []
 
@@ -302,7 +301,6 @@ class ConfigService:
 
             for course in courses:
                 if MoodleService.should_download_course(course.id, download_course_ids, dont_download_course_ids):
-
                     current_course_settings = options_of_courses.get(str(course.id), None)
 
                     # create default settings

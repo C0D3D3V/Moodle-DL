@@ -354,7 +354,6 @@ class StateRecorder:
         changed_courses = []
 
         for stored_course in stored_courses:
-
             same_course_in_current = None
 
             for current_course in current_courses:

@@ -37,6 +37,7 @@ async def run_with_final_message(load_function, entry: Dict, message: str, *form
     logging.info(message, *format_args)
     return result
 
+
 def get_nested(from_dict: Dict, key: str, default=None):
     keys = key.split('.')
     try:

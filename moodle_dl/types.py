@@ -29,7 +29,6 @@ class File:
         file_id: int = None,
         old_file_id: int = None,
     ):
-
         self.file_id = file_id
 
         self.module_id = module_id
@@ -121,7 +120,6 @@ class File:
 
     @staticmethod
     def fromRow(row):
-
         return File(
             file_id=row['file_id'],
             module_id=row['module_id'],

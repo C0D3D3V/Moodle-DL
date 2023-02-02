@@ -48,7 +48,6 @@ class RequestHelper:
             with open(self.log_responses_to, 'w', encoding='utf-8') as response_log_file:
                 response_log_file.write('JSON Log:\n\n')
 
-
     def post_URL(self, url: str, data: Dict[str, str] = None, cookie_jar_path: str = None):
         """
         Sends a POST request to a specific URL, including saving of cookies in cookie jar.

@@ -8,7 +8,6 @@ import traceback
 from logging.handlers import RotatingFileHandler
 from shutil import which
 
-import asyncio  # noqa: F401 pylint: disable=unused-import
 import colorlog
 import requests  # noqa: F401 pylint: disable=unused-import
 import sentry_sdk

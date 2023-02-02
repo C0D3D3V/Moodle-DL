@@ -499,7 +499,6 @@ class ResultBuilder:
         course_cores: Dict[int, List[Dict]],
         fetched_mods_files: Dict[str, Dict],
     ):
-
         # course_sections =
 
         # files = self._get_files_in_sections(course_sections)

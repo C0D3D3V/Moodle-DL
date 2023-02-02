@@ -39,7 +39,6 @@ class FakeDownloadService:
         for course in self.courses:
             for file in course.files:
                 if file.deleted is False:
-
                     save_destination = DownloadService.gen_path(opts.path, course, file)
 
                     filename = PT.to_valid_name(file.content_filename)

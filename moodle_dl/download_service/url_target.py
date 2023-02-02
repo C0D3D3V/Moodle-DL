@@ -283,7 +283,6 @@ class URLTarget(object):
             self.thread_report[self.thread_id]['extra_totalsize'] == -1
             and total_bytes_estimate > self.thread_report[self.thread_id]['old_extra_totalsize']
         ):
-
             self.thread_report[self.thread_id]['extra_totalsize'] = (
                 total_bytes_estimate - self.thread_report[self.thread_id]['old_extra_totalsize']
             )
@@ -494,7 +493,6 @@ class URLTarget(object):
                 return True
 
         elif isHTML and not self.is_blocked_for_yt_dlp(url_to_download):
-
             filename_tmpl = self.filename + ' - %(title)s (%(id)s).%(ext)s'
             if self.file.content_type == 'description-url':
                 filename_tmpl = '%(title)s (%(id)s).%(ext)s'

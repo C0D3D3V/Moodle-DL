@@ -33,7 +33,6 @@ class OwncloudIE(InfoExtractor):
         '''
 
     def _real_extract(self, url):
-
         mobj = re.match(self._VALID_URL, url)
         server = mobj.group('server')
         video_id = mobj.group('id')

@@ -193,7 +193,6 @@ class DownloadService:
         threads_status_message = ''
         threads_total_downloaded = 0
         for thread in self.threads:
-
             i = thread.thread_id
             # A thread status contains it id and the progress
             # of the current file
