@@ -67,4 +67,4 @@ class FakeDownloadService:
 
     def run(self):
         """Dummy function"""
-        logging.success('All files stored in the Database!')
+        logging.info('All files stored in the Database!')

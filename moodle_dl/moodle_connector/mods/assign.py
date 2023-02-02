@@ -16,8 +16,8 @@ class AssignMod(MoodleMod):
         return config.get_download_submissions() or (not (file.module_modname.endswith(cls.MOD_NAME) and file.deleted))
 
     async def real_fetch_mod_entries(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
-        assign_courses = await self.client.async_post(
-            'mod_assign_get_assignments', self.get_data_for_mod_entries_endpoint(courses)
+        assign_courses = (
+            await self.client.async_post('mod_assign_get_assignments', self.get_data_for_mod_entries_endpoint(courses))
         ).get('courses', [])
 
         result = {}

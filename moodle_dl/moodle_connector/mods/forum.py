@@ -40,15 +40,16 @@ class ForumMod(MoodleMod):
                     }
                 )
 
-            result[course_id] = result.get(course_id, {}).update(
+            self.add_module(
+                result,
+                course_id,
+                forum_module_id,
                 {
-                    forum_module_id: {
-                        'id': forum.get('id', 0),
-                        'name': forum.get('name', 'forum'),
-                        'files': forum_files,
-                        '_cmid': forum_module_id,
-                    }
-                }
+                    'id': forum.get('id', 0),
+                    'name': forum.get('name', 'forum'),
+                    'files': forum_files,
+                    '_cmid': forum_module_id,
+                },
             )
 
         await self.add_forum_posts(result)
@@ -126,9 +127,9 @@ class ForumMod(MoodleMod):
             'sortdirection': 'ASC',
         }
         if self.version >= 2019052000:  # 3.7
-            posts = await self.client.async_post('mod_forum_get_discussion_posts', data).get('posts', [])
+            posts = (await self.client.async_post('mod_forum_get_discussion_posts', data)).get('posts', [])
         else:
-            posts = await self.client.async_post('mod_forum_get_forum_discussion_posts', data).get('posts', [])
+            posts = (await self.client.async_post('mod_forum_get_forum_discussion_posts', data)).get('posts', [])
 
         for post in posts:
             post_message = post.get('message', '') or ''

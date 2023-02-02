@@ -18,8 +18,10 @@ class WorkshopMod(MoodleMod):
         return config.get_download_workshops() or (not (file.module_modname.endswith(cls.MOD_NAME) and file.deleted))
 
     async def real_fetch_mod_entries(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
-        workshops = await self.client.async_post(
-            'mod_workshop_get_workshops_by_courses', self.get_data_for_mod_entries_endpoint(courses)
+        workshops = (
+            await self.client.async_post(
+                'mod_workshop_get_workshops_by_courses', self.get_data_for_mod_entries_endpoint(courses)
+            )
         ).get('workshops', [])
 
         result = {}
@@ -75,14 +77,15 @@ class WorkshopMod(MoodleMod):
                     }
                 )
 
-            result[course_id] = result.get(course_id, {}).update(
+            self.add_module(
+                result,
+                course_id,
+                workshop.get('coursemodule', 0),
                 {
-                    workshop.get('coursemodule', 0): {
-                        'id': workshop.get('id', 0),
-                        'name': workshop.get('name', 'unnamed workshop'),
-                        'files': workshop_files,
-                    }
-                }
+                    'id': workshop.get('id', 0),
+                    'name': workshop.get('name', 'unnamed workshop'),
+                    'files': workshop_files,
+                },
             )
 
         await self.add_workshops_files(result)
@@ -106,13 +109,13 @@ class WorkshopMod(MoodleMod):
         data = {'workshopid': workshop_id, 'userid': self.user_id}
 
         try:
-            submissions = await self.client.async_post('mod_workshop_get_submissions', data).get('submissions', [])
+            submissions = (await self.client.async_post('mod_workshop_get_submissions', data)).get('submissions', [])
         except RequestRejectedError:
             logging.debug("No access rights for workshop %d", workshop_id)
             return
 
         try:
-            assessments = await self.client.async_post('mod_workshop_get_reviewer_assessments', data).get(
+            assessments = (await self.client.async_post('mod_workshop_get_reviewer_assessments', data)).get(
                 'assessments', []
             )
         except RequestRejectedError:
@@ -164,7 +167,7 @@ class WorkshopMod(MoodleMod):
         # Get submissions of assessments
         data = {'submissionid': assessment_submission_id}
         try:
-            submission = await self.client.async_post('mod_workshop_get_submission', data).get('submission', {})
+            submission = (await self.client.async_post('mod_workshop_get_submission', data)).get('submission', {})
             submission['files'] = assessment_files
             return submission
         except RequestRejectedError:

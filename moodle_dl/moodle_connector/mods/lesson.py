@@ -21,8 +21,10 @@ class LessonMod(MoodleMod):
         return config.get_download_lessons() or (not (file.module_modname.endswith(cls.MOD_NAME) and file.deleted))
 
     async def real_fetch_mod_entries(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
-        lessons = await self.client.async_post(
-            'mod_lesson_get_lessons_by_courses', self.get_data_for_mod_entries_endpoint(courses)
+        lessons = (
+            await self.client.async_post(
+                'mod_lesson_get_lessons_by_courses', self.get_data_for_mod_entries_endpoint(courses)
+            )
         ).get('lessons', [])
 
         result = {}
@@ -43,14 +45,15 @@ class LessonMod(MoodleMod):
                     }
                 )
 
-            result[course_id] = result.get(course_id, {}).update(
+            self.add_module(
+                result,
+                course_id,
+                lesson.get('coursemodule', 0),
                 {
-                    lesson.get('coursemodule', 0): {
-                        'id': lesson.get('id', 0),
-                        'name': lesson.get('name', 'unnamed lesson'),
-                        'files': lesson_files,
-                    }
-                }
+                    'id': lesson.get('id', 0),
+                    'name': lesson.get('name', 'unnamed lesson'),
+                    'files': lesson_files,
+                },
             )
 
         await self.add_lessons_files(result)

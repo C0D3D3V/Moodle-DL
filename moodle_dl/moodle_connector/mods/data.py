@@ -17,8 +17,10 @@ class DataMod(MoodleMod):
         return config.get_download_databases() or file.content_type != 'database_file'
 
     async def real_fetch_mod_entries(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
-        databases = await self.client.async_post(
-            'mod_data_get_databases_by_courses', self.get_data_for_mod_entries_endpoint(courses)
+        databases = (
+            await self.client.async_post(
+                'mod_data_get_databases_by_courses', self.get_data_for_mod_entries_endpoint(courses)
+            )
         ).get('databases', [])
 
         result = {}
@@ -38,14 +40,15 @@ class DataMod(MoodleMod):
                     }
                 )
 
-            result[course_id] = result.get(course_id, {}).update(
+            self.add_module(
+                result,
+                course_id,
+                database.get('coursemodule', 0),
                 {
-                    database.get('coursemodule', 0): {
-                        'id': database.get('id', 0),
-                        'name': database.get('name', 'db'),
-                        'files': database_files,
-                    }
-                }
+                    'id': database.get('id', 0),
+                    'name': database.get('name', 'db'),
+                    'files': database_files,
+                },
             )
 
         await self.add_database_files(result)

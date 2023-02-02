@@ -16,8 +16,10 @@ class FolderMod(MoodleMod):
         return True
 
     async def real_fetch_mod_entries(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
-        folders = await self.client.async_post(
-            'mod_folder_get_folders_by_courses', self.get_data_for_mod_entries_endpoint(courses)
+        folders = (
+            await self.client.async_post(
+                'mod_folder_get_folders_by_courses', self.get_data_for_mod_entries_endpoint(courses)
+            )
         ).get('folders', [])
 
         result = {}
@@ -40,15 +42,16 @@ class FolderMod(MoodleMod):
                     }
                 )
 
-            result[course_id] = result.get(course_id, {}).update(
+            self.add_module(
+                result,
+                course_id,
+                folder.get('coursemodule', 0),
                 {
-                    folder.get('coursemodule', 0): {
-                        'id': folder.get('id', 0),
-                        'name': folder.get('name', 'unnamed folder'),
-                        'timemodified': folder_time_modified,
-                        'files': folder_files,
-                    }
-                }
+                    'id': folder.get('id', 0),
+                    'name': folder.get('name', 'unnamed folder'),
+                    'timemodified': folder_time_modified,
+                    'files': folder_files,
+                },
             )
 
         return result

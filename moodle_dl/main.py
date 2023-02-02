@@ -176,7 +176,14 @@ def setup_logger(opts):
         logging.Formatter('%(asctime)s  %(levelname)s  {%(module)s}  %(message)s', '%Y-%m-%d %H:%M:%S')
     )
     stdout_log_handler = colorlog.StreamHandler()
-    stdout_log_handler.setFormatter(colorlog.ColoredFormatter('%(log_color)s%(asctime)s %(message)s', '%H:%M:%S'))
+    if sys.stdout.isatty():
+        stdout_log_handler.setFormatter(colorlog.ColoredFormatter('%(log_color)s%(asctime)s %(message)s', '%H:%M:%S'))
+    else:
+        stdout_log_handler.setFormatter(
+            colorlog.ColoredFormatter(
+                '%(log_color)s%(asctime)s  %(levelname)s  {%(module)s}  %(message)s', '%Y-%m-%d %H:%M:%S'
+            )
+        )
 
     app_log = logging.getLogger()
     if opts.quiet:

@@ -20,8 +20,10 @@ class QuizMod(MoodleMod):
         return config.get_download_quizzes() or (not (file.module_modname.endswith(cls.MOD_NAME) and file.deleted))
 
     async def real_fetch_mod_entries(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
-        quizzes = await self.client.async_post(
-            'mod_quiz_get_quizzes_by_courses', self.get_data_for_mod_entries_endpoint(courses)
+        quizzes = (
+            await self.client.async_post(
+                'mod_quiz_get_quizzes_by_courses', self.get_data_for_mod_entries_endpoint(courses)
+            )
         ).get('quizzes', [])
 
         result = {}
@@ -42,14 +44,15 @@ class QuizMod(MoodleMod):
                     }
                 )
 
-            result[course_id] = result.get(course_id, {}).update(
+            self.add_module(
+                result,
+                course_id,
+                quiz.get('coursemodule', 0),
                 {
-                    quiz.get('coursemodule', 0): {
-                        'id': quiz.get('id', 0),
-                        'name': quiz.get('name', 'unnamed quiz'),
-                        'files': quiz_files,
-                    }
-                }
+                    'id': quiz.get('id', 0),
+                    'name': quiz.get('name', 'unnamed quiz'),
+                    'files': quiz_files,
+                },
             )
 
         return result
@@ -69,7 +72,7 @@ class QuizMod(MoodleMod):
 
     async def load_quiz_files(self, quiz: Dict):
         data = {'quizid': quiz.get('id', 0), 'userid': self.user_id, 'status': 'all'}
-        attempts = await self.client.async_post('mod_quiz_get_user_attempts', data).get('attempts', [])
+        attempts = (await self.client.async_post('mod_quiz_get_user_attempts', data)).get('attempts', [])
         quiz_name = quiz.get('name', '')
         for attempt in attempts:
             attempt['_quiz_name'] = quiz_name
@@ -93,9 +96,9 @@ class QuizMod(MoodleMod):
         data = {'attemptid': attempt_id}
         try:
             if attempt_state == 'finished':
-                questions = await self.client.async_post('mod_quiz_get_attempt_review', data).get('questions', [])
+                questions = (await self.client.async_post('mod_quiz_get_attempt_review', data)).get('questions', [])
             elif attempt_state == 'inprogress':
-                questions = await self.client.async_post('mod_quiz_get_attempt_summary', data).get('questions', [])
+                questions = (await self.client.async_post('mod_quiz_get_attempt_summary', data)).get('questions', [])
             else:
                 return result
         except RequestRejectedError:

@@ -16,8 +16,10 @@ class PageMod(MoodleMod):
         return True
 
     async def real_fetch_mod_entries(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
-        pages = await self.client.async_post(
-            'mod_page_get_pages_by_courses', self.get_data_for_mod_entries_endpoint(courses)
+        pages = (
+            await self.client.async_post(
+                'mod_page_get_pages_by_courses', self.get_data_for_mod_entries_endpoint(courses)
+            )
         ).get('pages', [])
 
         result = {}
@@ -55,15 +57,15 @@ class PageMod(MoodleMod):
                     }
                 )
 
-            result[course_id] = result.get(course_id, {}).update(
+            self.add_module(
+                result,
+                course_id,
+                page.get('coursemodule', 0),
                 {
-                    page.get('coursemodule', 0): {
-                        'id': page.get('id', 0),
-                        'name': page_name,
-                        'intro': page_intro,
-                        'files': page_files,
-                    }
-                }
+                    'id': page.get('id', 0),
+                    'name': page_name,
+                    'files': page_files,
+                },
             )
 
         return result

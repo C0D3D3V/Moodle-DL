@@ -53,7 +53,7 @@ class MoodleMod(metaclass=ABCMeta):
         if self.version < self.MOD_MIN_VERSION:
             return {}
 
-        result = self.real_fetch_mod_entries(courses)
+        result = await self.real_fetch_mod_entries(courses)
         logging.info('Loaded all %s', self.MOD_PLURAL_NAME)
         return result
 
@@ -163,3 +163,11 @@ class MoodleMod(metaclass=ABCMeta):
             elif feature_result is not None:
                 result.append(feature_result)
         return result
+
+    @staticmethod
+    def add_module(result: Dict, course_id: int, module_id: int, module: Dict):
+        if course_id not in result:
+            result[course_id] = {}
+        if module_id in result[course_id]:
+            logging.debug('Got duplicated module %s in course %s', module_id, course_id)
+        result[course_id][module_id] = module
