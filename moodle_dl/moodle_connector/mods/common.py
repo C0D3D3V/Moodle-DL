@@ -94,6 +94,9 @@ class MoodleMod(metaclass=ABCMeta):
         for _, entries_in_course in entries.items():
             total_entries += len(entries_in_course)
 
+        if total_entries == 0:
+            return
+
         async_features = []
         for course_id, entries_in_course in entries.items():
             for module_id, entry in entries_in_course.items():
@@ -101,7 +104,7 @@ class MoodleMod(metaclass=ABCMeta):
 
                 # Example: [5/16] Loaded assign 123 in course 456 "Assignment name"
                 loaded_message = (
-                    '[%(ctr)3d/%(total)-3d] Loaded %(mod_name)10s %(module_id)-6d'
+                    '[%(ctr)3d/%(total)-3d] Loaded %(mod_name)s %(module_id)-6d'
                     + ' in course %(course_id)-6d "%(module_name)s"'
                 )
 
@@ -130,14 +133,17 @@ class MoodleMod(metaclass=ABCMeta):
         collect_function,
         collect_kind: str,
         format_mapping: Dict,
-    ):
+    ) -> List[Dict]:
         "Runs a collect function on every entry in a given entries list"
         total_entries = len(entries)
+        if total_entries == 0:
+            return []
+
         async_features = []
         for ctr, entry in enumerate(entries):
             # Example: [5/16] Loaded forum discussion 123 "Good discussion"
             loaded_message = (
-                '[%(ctr)3d/%(total)-3d] Loaded %(mod_name)10s %(collect_kind)s %(collect_id)-6d "%(collect_name)s"'
+                '[%(ctr)3d/%(total)-3d] Loaded %(mod_name)s %(collect_kind)s %(collect_id)-6d "%(collect_name)s"'
             )
 
             async_features.append(

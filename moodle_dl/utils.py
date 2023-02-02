@@ -44,6 +44,7 @@ def get_nested(from_dict: Dict, key: str, default=None):
         result = from_dict
         for key in keys:
             result = result[key]
+        return result
     except KeyError:
         return default
 

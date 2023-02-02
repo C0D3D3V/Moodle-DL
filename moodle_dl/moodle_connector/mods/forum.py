@@ -114,7 +114,7 @@ class ForumMod(MoodleMod):
         forum['files'] += await self.run_async_collect_function_on_list(
             latest_discussions,
             self.load_files_of_discussion,
-            'discussions',
+            'discussion',
             {'collect_id': 'discussion_id', 'collect_name': 'subject'},
         )
 

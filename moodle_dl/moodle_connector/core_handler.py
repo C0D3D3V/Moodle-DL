@@ -129,6 +129,9 @@ class CoreHandler:
         """
         total_courses = len(courses)
 
+        if total_courses == 0:
+            return {}
+
         async_features = []
         for ctr, course in enumerate(courses):
             # Example: [5/16] Loaded course core 123 "Best course"
