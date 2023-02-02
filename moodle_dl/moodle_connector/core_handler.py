@@ -1,8 +1,11 @@
+import asyncio
 import json
+
 from typing import Dict, List
 
 from moodle_dl.moodle_connector import RequestHelper
 from moodle_dl.state_recorder import Course
+from moodle_dl.utils import run_with_final_message
 
 
 class CoreHandler:
@@ -118,3 +121,40 @@ class CoreHandler:
             sections.append({"id": section.get("id"), "name": section.get("name")})
 
         return sections
+
+    async def async_load_course_cores(self, courses: List[Course]) -> Dict[List[Dict]]:
+        """
+        Loads all course core structures for every given course
+        @param entries: List of all section entries, indexed by course id
+        """
+        total_courses = len(courses)
+
+        async_features = []
+        for ctr, course in enumerate(courses):
+            # Example: [5/16] Loaded course core 123 "Best course"
+            loaded_message = '[%(ctr)3d/%(total)-3d] Loaded course core %(course_id)-6d "%(course_name)s"'
+
+            async_features.append(
+                run_with_final_message(
+                    self.async_load_course_core,
+                    course,
+                    loaded_message,
+                    {
+                        'ctr': ctr,
+                        'total': total_courses,
+                        'course_id': course.id,
+                        'course_name': course.fullname,
+                    },
+                )
+            )
+
+        cores = await asyncio.gather(*async_features)
+
+        result = {}
+        for idx, course in enumerate(courses):
+            result[course.id] = cores[idx]
+        return result
+
+    async def async_load_course_core(self, course: Course) -> List[Dict]:
+        data = {'courseid': course.id}
+        return await self.client.async_post('core_course_get_contents', data)

@@ -6,7 +6,7 @@ from typing import Dict, List
 import urllib.parse as urlparse
 
 from moodle_dl.state_recorder import Course, File
-from moodle_dl.moodle_connector import RequestHelper, MoodleURL
+from moodle_dl.moodle_connector import MoodleURL
 
 
 class ResultBuilder:
@@ -14,8 +14,7 @@ class ResultBuilder:
     Combines all fetched mod files and core course files to one result based on File objects
     """
 
-    def __init__(self, request_helper: RequestHelper, moodle_url: MoodleURL, version: int):
-        self.client = request_helper
+    def __init__(self, moodle_url: MoodleURL, version: int):
         self.version = version
         self.moodle_url = moodle_url
         self.moodle_domain = moodle_url.domain
@@ -494,17 +493,15 @@ class ResultBuilder:
         """
         self.course_fetch_addons = course_fetch_addons
 
-    def fetch_files(self, course: Course) -> List[File]:
-        """
-        Queries the Moodle system for all the files that
-        are present in a course
-        @param course_id: The id of the course for which you want to enquirer.
-        @return: A list of Files
-        """
+    def add_files_to_courses(
+        self,
+        courses: List[Course],
+        course_cores: Dict[List[Dict]],
+        fetched_mods_files: Dict[str, Dict],
+    ):
 
-        data = {'courseid': course.id}
-        course_sections = await self.client.async_post('core_course_get_contents', data)
+        # course_sections =
 
-        files = self._get_files_in_sections(course_sections)
-
+        # files = self._get_files_in_sections(course_sections)
+        # course.files = result_builder.fetch_files(course)
         return files

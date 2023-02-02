@@ -2,6 +2,7 @@ import email.utils
 import getpass
 import html
 import itertools
+import logging
 import math
 import os
 import re
@@ -29,6 +30,12 @@ def check_debug() -> bool:
     """Return if the debugger is currently active"""
     return 'pydevd' in sys.modules or (hasattr(sys, 'gettrace') and sys.gettrace() is not None)
 
+
+@staticmethod
+async def run_with_final_message(load_function, entry: Dict, message: str, *format_args):
+    result = await load_function(entry)
+    logging.info(message, *format_args)
+    return result
 
 def get_nested(from_dict: Dict, key: str, default=None):
     keys = key.split('.')

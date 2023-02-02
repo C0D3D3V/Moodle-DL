@@ -1,11 +1,9 @@
 import base64
 import logging
 import re
-import shutil
 import sys
 
 from getpass import getpass
-from pathlib import Path
 from typing import List, Tuple
 from urllib.parse import urlparse
 
@@ -15,14 +13,14 @@ from moodle_dl.moodle_connector.cookie_handler import CookieHandler
 from moodle_dl.moodle_connector.mods import fetch_mods_files, get_all_mods, get_all_mods_classes
 from moodle_dl.moodle_connector.result_builder import ResultBuilder
 from moodle_dl.state_recorder import Course, StateRecorder
-from moodle_dl.utils import Log, determine_ext
+from moodle_dl.utils import Log, determine_ext, PathTools as PT
 
 
 class MoodleService:
     def __init__(self, config: ConfigHelper, opts):
         self.config = config
         self.opts = opts
-        self.recorder = StateRecorder(Path(opts.path) / 'moodle_state.db')
+        self.recorder = StateRecorder(PT.make_path(opts.path, 'moodle_state.db'))
 
     def interactively_acquire_token(self, use_stored_url: bool = False) -> str:
         if self.opts.sso or self.opts.token is not None:
@@ -71,10 +69,7 @@ class MoodleService:
             print('[The following Credentials are not saved, it is only used temporarily to generate a login token.]')
 
         moodle_token = None
-        while moodle_token is None:
-            if stop_automatic_generation and automated:
-                break
-
+        while moodle_token is None or (stop_automatic_generation and automated):
             moodle_url = self.interactively_get_moodle_url(use_stored_url)
 
             if self.opts.username is not None:
@@ -103,10 +98,7 @@ class MoodleService:
         if automated is True and moodle_token is None:
             sys.exit(1)
 
-        # Saves the created token and the successful Moodle parameters.
-        self.config.set_property('token', moodle_token)
-        if moodle_privatetoken is not None:
-            self.config.set_property('privatetoken', moodle_privatetoken)
+        self.config.set_tokens(moodle_token, moodle_privatetoken)
         self.config.set_moodle_URL(moodle_url)
 
         Log.success('Token successfully saved!')
@@ -171,10 +163,7 @@ class MoodleService:
             if moodle_token is None:
                 raise ValueError('Invalid URL!')
 
-        # Saves the created token and the successful Moodle parameters.
-        self.config.set_property('token', moodle_token)
-        if moodle_privatetoken is not None:
-            self.config.set_property('privatetoken', moodle_privatetoken)
+        self.config.set_tokens(moodle_token, moodle_privatetoken)
         self.config.set_moodle_URL(moodle_url)
 
         Log.success('Token successfully saved!')
@@ -234,13 +223,11 @@ class MoodleService:
 
     async def fetch_state(self) -> List[Course]:
         """
-        Gets the current status of the configured Moodle account and compares
-        it with the last known status for changes. It does not change the
-        known state, nor does it download the files.
-        @return: List with detected changes
+        Fetch the current status of the configured Moodle account and compare it with the last known state
+        It does not change the known state, nor does it download the files.
+        @return: List with detected changes between the new and old state
         """
-        logging.debug('Fetching current Moodle State...')
-
+        logging.debug('Fetching current Moodle state...')
         token = self.config.get_token()
         privatetoken = self.config.get_privatetoken()
         moodle_url = self.config.get_moodle_URL()
@@ -251,7 +238,6 @@ class MoodleService:
 
         cookie_handler = None
         if self.config.get_download_also_with_cookie():
-            # generate a new cookie if necessary
             cookie_handler = CookieHandler(request_helper, version, self.opts.path)
             cookie_handler.check_and_fetch_cookies(privatetoken, user_id)
 
@@ -261,49 +247,14 @@ class MoodleService:
             request_helper, version, user_id, self.recorder.get_last_timestamp_per_mod_module(), self.config
         )
         fetched_mods_files = await fetch_mods_files(mods, courses)
+        course_cores = await core_handler.async_load_course_cores(courses)
 
-        result_builder = ResultBuilder(request_helper, moodle_url, version)
-
-        filtered_courses = []
-        index = 0
-        for course in courses:
-            index += 1
-
-            # to limit the output to one line
-            limits = shutil.get_terminal_size()
-
-            shorted_course_name = course.fullname
-            if len(course.fullname) > 17:
-                shorted_course_name = course.fullname[:15] + '..'
-
-            into = '\rDownloading course information'
-
-            status_message = into + f' {index:3d}/{len(courses):3d} [{shorted_course_name:<17}|{course.id:6}]'
-
-            if len(status_message) > limits.columns:
-                status_message = status_message[0 : limits.columns]
-
-            print(status_message + '\033[K', end='')
-
-            course_fetch_addons = {
-                'assign': assignments.get(course.id, {}),
-                'data': databases.get(course.id, {}),
-                'folder': folders.get(course.id, {}),
-                'forum': forums.get(course.id, {}),
-                'lesson': lessons.get(course.id, {}),
-                'page': pages.get(course.id, {}),
-                'quiz': quizzes.get(course.id, {}),
-                'workshop': workshops.get(course.id, {}),
-            }
-            result_builder.set_fetch_addons(course_fetch_addons)
-            course.files = result_builder.fetch_files(course)
-
-            filtered_courses.append(course)
+        logging.debug('Combine API results...')
+        result_builder = ResultBuilder(moodle_url, version)
+        result_builder.add_files_to_courses(courses, course_cores, fetched_mods_files)
 
         logging.debug('Checking for changes...')
-        changes = self.recorder.changes_of_new_version(filtered_courses)
-
-        # Filter changes
+        changes = self.recorder.changes_of_new_version(courses)
         changes = self.add_options_to_courses(changes)
         changes = self.filter_courses(changes, self.config, cookie_handler, courses)
 

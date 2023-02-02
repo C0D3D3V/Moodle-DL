@@ -7,7 +7,7 @@ from typing import Dict, List
 from moodle_dl.config_service import ConfigHelper
 from moodle_dl.moodle_connector import RequestHelper
 from moodle_dl.state_recorder import Course, File
-from moodle_dl.utils import get_nested
+from moodle_dl.utils import get_nested, run_with_final_message
 
 
 class MoodleMod(metaclass=ABCMeta):
@@ -83,12 +83,6 @@ class MoodleMod(metaclass=ABCMeta):
         for file_dict in files:
             cls.set_file_type_if_empty(file_dict, type_to_set)
 
-    @staticmethod
-    async def run_with_final_message(load_function, entry: Dict, message: str, *format_args):
-        result = await load_function(entry)
-        logging.info(message, *format_args)
-        return result
-
     @classmethod
     async def run_async_load_function_on_mod_entries(cls, entries: Dict[int, Dict[int, Dict]], load_function):
         """
@@ -112,7 +106,7 @@ class MoodleMod(metaclass=ABCMeta):
                 )
 
                 async_features.append(
-                    cls.run_with_final_message(
+                    run_with_final_message(
                         load_function,
                         entry,
                         loaded_message,
@@ -147,7 +141,7 @@ class MoodleMod(metaclass=ABCMeta):
             )
 
             async_features.append(
-                cls.run_with_final_message(
+                run_with_final_message(
                     collect_function,
                     entry,
                     loaded_message,

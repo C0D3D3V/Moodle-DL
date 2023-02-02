@@ -283,3 +283,8 @@ class ConfigHelper:
         else:
             if self.get_use_http():
                 self.set_property('use_http', moodle_url.use_http)
+
+    def set_tokens(self, moodle_token: str, moodle_privatetoken: str):
+        self.set_property('token', moodle_token)
+        if moodle_privatetoken is not None:
+            self.set_property('privatetoken', moodle_privatetoken)
