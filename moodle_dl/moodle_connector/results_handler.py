@@ -6,7 +6,7 @@ from typing import Dict, List
 import urllib.parse as urlparse
 
 from moodle_dl.state_recorder import Course, File
-from moodle_dl.moodle_connector import RequestHelper
+from moodle_dl.moodle_connector import RequestHelper, MoodleURL
 
 
 class ResultsHandler:
@@ -14,11 +14,11 @@ class ResultsHandler:
     Fetches and parses the various endpoints in Moodle.
     """
 
-    def __init__(self, request_helper: RequestHelper, moodle_domain: str, moodle_path: str, version: int):
+    def __init__(self, request_helper: RequestHelper, moodle_url: MoodleURL, version: int):
         self.client = request_helper
         self.version = version
-        self.moodle_domain = moodle_domain
-        self.moodle_path = moodle_path
+        self.moodle_url = moodle_url
+        self.moodle_domain = moodle_url.domain
         self.course_fetch_addons = {}
 
     def _get_files_in_sections(self, course_sections: List) -> List[File]:
@@ -118,7 +118,7 @@ class ResultsHandler:
     def _get_modplural(self, modname: str) -> str:
         modplural_dict = {
             'assign': 'Assignments',
-            'database': 'Databases',
+            'data': 'Databases',
             'folder': 'Folders',
             'forum': 'Forums',
             'lesson': 'Lessons',

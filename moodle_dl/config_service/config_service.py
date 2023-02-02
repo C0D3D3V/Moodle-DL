@@ -15,13 +15,8 @@ class ConfigService:
         self.config = config
         self.opts = opts
 
-        token = self.config.get_token()
-        moodle_domain = self.config.get_moodle_domain()
-        moodle_path = self.config.get_moodle_path()
-        use_http = self.config.get_use_http()
-
         self.first_contact_handler = FirstContactHandler(
-            RequestHelper(opts, use_http, moodle_domain, moodle_path, token)
+            RequestHelper(opts, self.config.get_moodle_URL(), self.config.get_token())
         )
 
     def interactively_acquire_config(self):

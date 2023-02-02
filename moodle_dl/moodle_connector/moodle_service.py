@@ -10,9 +10,9 @@ from typing import List, Tuple
 from urllib.parse import urlparse
 
 from moodle_dl.config_service import ConfigHelper
-from moodle_dl.moodle_connector import FirstContactHandler, RequestRejectedError, RequestHelper
+from moodle_dl.moodle_connector import FirstContactHandler, RequestRejectedError, RequestHelper, MoodleURL
 from moodle_dl.moodle_connector.cookie_handler import CookieHandler
-from moodle_dl.moodle_connector.mods import get_all_mods, get_all_mods_classes
+from moodle_dl.moodle_connector.mods import fetch_mods_files, get_all_mods, get_all_mods_classes
 from moodle_dl.moodle_connector.results_handler import ResultsHandler
 from moodle_dl.state_recorder import Course, StateRecorder
 from moodle_dl.utils import Log, determine_ext
@@ -30,35 +30,30 @@ class MoodleService:
         else:
             self.interactively_acquire_normal_token(use_stored_url=use_stored_url)
 
-    def interactively_get_moodle_url(self, use_stored_url: bool) -> Tuple(bool, str, str):
-        "@Return (use_http, moodle_domain, moodle_path)"
-        if not use_stored_url:
-            url_ok = False
-            while not url_ok:
-                url_ok = True
-                moodle_url = input('URL of Moodle:   ')
+    def interactively_get_moodle_url(self, use_stored_url: bool) -> MoodleURL:
+        if use_stored_url:
+            return self.config.get_moodle_URL()
 
-                use_http = False
-                if moodle_url.startswith('http://'):
-                    Log.warning(
-                        'Warning: You have entered an insecure URL! Are you sure that the Moodle is'
-                        + ' not accessible via `https://`? All your data will be transferred'
-                        + ' insecurely! If your Moodle is accessible via `https://`, then run'
-                        + ' the process again using `https://` to protect your data.'
-                    )
-                    use_http = True
-                elif not moodle_url.startswith('https://'):
-                    Log.error('The url of your moodle must start with `https://`')
-                    url_ok = False
+        url_ok = False
+        while not url_ok:
+            url_ok = True
+            moodle_url = input('URL of Moodle:   ')
 
-            moodle_domain, moodle_path = self.split_moodle_url(moodle_url)
+            use_http = False
+            if moodle_url.startswith('http://'):
+                Log.warning(
+                    'Warning: You have entered an insecure URL! Are you sure that the Moodle is'
+                    + ' not accessible via `https://`? All your data will be transferred'
+                    + ' insecurely! If your Moodle is accessible via `https://`, then run'
+                    + ' the process again using `https://` to protect your data.'
+                )
+                use_http = True
+            elif not moodle_url.startswith('https://'):
+                Log.error('The url of your moodle must start with `https://`')
+                url_ok = False
 
-        else:
-            moodle_domain = self.config.get_moodle_domain()
-            moodle_path = self.config.get_moodle_path()
-            use_http = self.config.get_use_http()
-
-        return use_http, moodle_domain, moodle_path
+        moodle_domain, moodle_path = self.split_moodle_url(moodle_url)
+        return MoodleURL(use_http, moodle_domain, moodle_path)
 
     def interactively_acquire_normal_token(self, use_stored_url: bool = False) -> str:
         """
@@ -80,7 +75,7 @@ class MoodleService:
             if stop_automatic_generation and automated:
                 break
 
-            use_http, moodle_domain, moodle_path = self.interactively_get_moodle_url(use_stored_url)
+            moodle_url = self.interactively_get_moodle_url(use_stored_url)
 
             if self.opts.username is not None:
                 moodle_username = self.opts.username
@@ -95,11 +90,7 @@ class MoodleService:
 
             try:
                 moodle_token, moodle_privatetoken = self.obtain_login_token(
-                    moodle_username,
-                    moodle_password,
-                    moodle_domain,
-                    moodle_path,
-                    use_http,
+                    moodle_username, moodle_password, moodle_url
                 )
 
             except RequestRejectedError as error:
@@ -116,26 +107,16 @@ class MoodleService:
         self.config.set_property('token', moodle_token)
         if moodle_privatetoken is not None:
             self.config.set_property('privatetoken', moodle_privatetoken)
-        self.config.set_property('moodle_domain', moodle_domain)
-        self.config.set_property('moodle_path', moodle_path)
-        if use_http is True:
-            self.config.set_property('use_http', use_http)
+        self.config.set_moodle_URL(moodle_url)
 
         Log.success('Token successfully saved!')
 
         return moodle_token
 
-    def obtain_login_token(
-        self,
-        username: str,
-        password: str,
-        moodle_domain: str,
-        moodle_path: str = '/',
-        use_http: bool = False,
-    ) -> str:
+    def obtain_login_token(self, username: str, password: str, moodle_url: MoodleURL) -> str:
         "Send the login credentials to the Moodle-System and extracts the resulting Login-Token"
         login_data = {'username': username, 'password': password, 'service': 'moodle_mobile_app'}
-        response = RequestHelper(self.opts, use_http, moodle_domain, moodle_path).get_login(login_data)
+        response = RequestHelper(self.opts, moodle_url).get_login(login_data)
 
         if 'token' not in response:
             # = we didn't get an error page (checked by the RequestHelper) but
@@ -152,8 +133,7 @@ class MoodleService:
         @return: The Token for Moodle.
         """
 
-        use_http, moodle_domain, moodle_path = self.interactively_get_moodle_url(use_stored_url)
-        scheme = 'http://' if use_http else 'https://'
+        moodle_url = self.interactively_get_moodle_url(use_stored_url)
 
         if self.opts.token is not None:
             moodle_token = self.opts.token
@@ -164,9 +144,7 @@ class MoodleService:
             print('3. Then visit the following URL in the same browser tab you have logged in:')
 
             print(
-                scheme
-                + moodle_domain
-                + moodle_path
+                moodle_url.url_base
                 + 'admin/tool/mobile/launch.php?service=moodle_mobile_app&passport=12345&urlscheme=moodledl'
             )
             print()
@@ -197,8 +175,7 @@ class MoodleService:
         self.config.set_property('token', moodle_token)
         if moodle_privatetoken is not None:
             self.config.set_property('privatetoken', moodle_privatetoken)
-        self.config.set_property('moodle_domain', moodle_domain)
-        self.config.set_property('moodle_path', moodle_path)
+        self.config.set_moodle_URL(moodle_url)
 
         Log.success('Token successfully saved!')
 
@@ -229,7 +206,7 @@ class MoodleService:
         secret_token = re.sub(r'[^A-Za-z0-9]+', '', splitted[2])
         return (token, secret_token)
 
-    def get_courses_list(self, first_contact_handler: FirstContactHandler, user_id: int):
+    def get_courses_list(self, first_contact_handler: FirstContactHandler, user_id: int) -> List[Course]:
         download_course_ids = self.config.get_download_course_ids()
         download_public_course_ids = self.config.get_download_public_course_ids()
         dont_download_course_ids = self.config.get_dont_download_course_ids()
@@ -266,33 +243,27 @@ class MoodleService:
 
         token = self.config.get_token()
         privatetoken = self.config.get_privatetoken()
-        moodle_domain = self.config.get_moodle_domain()
-        moodle_path = self.config.get_moodle_path()
-        use_http = self.config.get_use_http()
+        moodle_url = self.config.get_moodle_URL()
 
-        request_helper = RequestHelper(self.opts, use_http, moodle_domain, moodle_path, token)
+        request_helper = RequestHelper(self.opts, moodle_url, token)
         first_contact_handler = FirstContactHandler(request_helper)
-
-        download_also_with_cookie = self.config.get_download_also_with_cookie()
-
         user_id, version = self.get_user_id_and_version(first_contact_handler)
 
-        mod_handlers = get_all_mods(
-            request_helper, version, user_id, self.recorder.get_last_timestamp_per_mod_module(), self.config
-        )
-        results_handler = ResultsHandler(request_helper, moodle_domain, moodle_path, version)
-
         cookie_handler = None
-        if download_also_with_cookie:
+        if self.config.get_download_also_with_cookie():
             # generate a new cookie if necessary
             cookie_handler = CookieHandler(request_helper, version, self.opts.path)
             cookie_handler.check_and_fetch_cookies(privatetoken, user_id)
 
         courses = self.get_courses_list(first_contact_handler, user_id)
 
-        # TODO: use mod_handlers to get all contents of all mods
+        mods = get_all_mods(
+            request_helper, version, user_id, self.recorder.get_last_timestamp_per_mod_module(), self.config
+        )
+        fetched_mods_files = await fetch_mods_files(mods, courses)
 
-        courses = self.add_options_to_courses(courses)
+        results_handler = ResultsHandler(request_helper, moodle_url, version)
+
         filtered_courses = []
         index = 0
         for course in courses:
@@ -339,9 +310,7 @@ class MoodleService:
         return changes
 
     def add_options_to_courses(self, courses: List[Course]):
-        """
-        Updates a array of courses with its options
-        """
+        "Updates the courses with their options"
         options_of_courses = self.config.get_options_of_courses()
         for course in courses:
             options = options_of_courses.get(str(course.id), None)
@@ -374,11 +343,12 @@ class MoodleService:
         download_descriptions = config.get_download_descriptions()
         download_links_in_descriptions = config.get_download_links_in_descriptions()
         exclude_file_extensions = config.get_exclude_file_extensions()
-        download_also_with_cookie = config.get_download_also_with_cookie()
 
+        download_also_with_cookie = config.get_download_also_with_cookie()
         if cookie_handler is not None:
             download_also_with_cookie = cookie_handler.test_cookies()
 
+        all_mods_classes = get_all_mods_classes()
         filtered_changes = []
 
         for course in changes:
@@ -403,7 +373,7 @@ class MoodleService:
             for file in course.files:
                 # Filter files based on module options
                 modules_conditions_met = True
-                for mod in get_all_mods_classes():
+                for mod in all_mods_classes:
                     if not mod.download_condition(file):
                         modules_conditions_met = False
                         break
@@ -464,9 +434,7 @@ class MoodleService:
     def should_download_course(
         course_id: int, download_course_ids: List[int], dont_download_course_ids: List[int]
     ) -> bool:
-        """
-        Checks if a course is in White-list and not in Blacklist
-        """
+        "Checks if a course is in whitelist and not in blacklist"
         inBlacklist = course_id in dont_download_course_ids
         inWhitelist = course_id in download_course_ids or len(download_course_ids) == 0
 
@@ -474,10 +442,7 @@ class MoodleService:
 
     @staticmethod
     def should_download_section(section_id: int, dont_download_sections_ids: List[int]) -> bool:
-        """
-        Checks if a section is not in Blacklist
-        """
-
+        "Checks if a section is not in blacklist"
         return section_id not in dont_download_sections_ids or len(dont_download_sections_ids) == 0
 
     @staticmethod
@@ -486,7 +451,6 @@ class MoodleService:
         Splits a given Moodle URL into the domain and the installation path
         @return: moodle_domain, moodle_path as strings
         """
-
         moodle_uri = urlparse(moodle_url)
         moodle_domain = moodle_uri.netloc
         moodle_path = moodle_uri.path

@@ -14,6 +14,7 @@ import urllib3
 
 from requests.exceptions import RequestException
 
+from moodle_dl.moodle_connector import MoodleURL
 from moodle_dl.utils import SslHelper, PathTools as PT
 
 
@@ -31,20 +32,16 @@ class RequestHelper:
     }
     MAX_RETRIES = 5
 
-    def __init__(self, opts, use_http: bool, moodle_domain: str, moodle_path: str = '/', token: str = ''):
+    def __init__(self, opts, moodle_url: MoodleURL, token: str = ''):
         self.token = token
-        self.moodle_domain = moodle_domain
-        self.moodle_path = moodle_path
-        self.use_http = use_http
+        self.moodle_url = moodle_url
         self.opts = opts
+
+        self.url_base = moodle_url.url_base
+
         # Semaphore for async requests
         # Keep in mind Semaphore needs to be initialized in the same async loop as it is used
         self.semaphore = asyncio.Semaphore(opts.max_parallel_api_calls)
-
-        scheme = 'https://'
-        if use_http:
-            scheme = 'http://'
-        self.url_base = scheme + moodle_domain + moodle_path
 
         self.log_responses_to = None
         if opts.log_responses:
@@ -324,7 +321,7 @@ class RequestHelper:
     def recursive_urlencode(data):
         """URL-encode a multidimensional dictionary.
         @param data: the data to be encoded
-        @returns: the url encoded data
+        @return: the url encoded data
         """
 
         def recursion(data, base=None):

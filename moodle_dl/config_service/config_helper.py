@@ -4,6 +4,8 @@ import json
 from pathlib import Path
 from typing import Dict, List, Tuple
 
+from moodle_dl.moodle_connector import MoodleURL
+
 
 class ConfigHelper:
     """
@@ -152,6 +154,12 @@ class ConfigHelper:
         except ValueError:
             return None
 
+    def get_moodle_URL(self) -> MoodleURL:
+        moodle_domain = self.get_moodle_domain()
+        moodle_path = self.get_moodle_path()
+        use_http = self.get_use_http()
+        return MoodleURL(use_http, moodle_domain, moodle_path)
+
     def get_moodle_domain(self) -> str:
         # returns a stored moodle_domain
         try:
@@ -258,3 +266,16 @@ class ConfigHelper:
             return self.get_property('use_http')
         except ValueError:
             return False
+
+    # ---------------------------- SETTERS ------------------------------------
+
+    def set_moodle_URL(self, moodle_url: MoodleURL):
+        self.set_property('moodle_domain', moodle_url.domain)
+        self.set_property('moodle_path', moodle_url.path)
+        if moodle_url.use_http is True:
+            self.set_property('use_http', moodle_url.use_http)
+        else:
+            if self.get_use_http():
+                self.set_property('use_http', moodle_url.use_http)
+
+        

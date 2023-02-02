@@ -1,8 +1,11 @@
+import asyncio
+
 from typing import List, Dict
 
 from moodle_dl.config_service import ConfigHelper
 from moodle_dl.moodle_connector import RequestHelper
 from moodle_dl.moodle_connector.mods.common import MoodleMod
+from moodle_dl.state_recorder import Course
 
 from moodle_dl.moodle_connector.mods.assign import AssignMod  # noqa: F401
 from moodle_dl.moodle_connector.mods.data import DataMod  # noqa: F401
@@ -31,3 +34,12 @@ def get_all_mods(
     for mod_handler in ALL_MODS:
         result_list.append(mod_handler(request_helper, moodle_version, user_id, last_timestamps, config))
     return result_list
+
+
+async def fetch_mods_files(mods_to_fetch: List[MoodleMod], courses_to_load: List[Course]) -> Dict[str, Dict]:
+    "@return: Dictionary of all fetched files, indexed by mod name, then by courses, then module id"
+    mods_results = await asyncio.gather(*[mod.fetch_mod_entries(courses_to_load) for mod in mods_to_fetch])
+    result = {}
+    for idx, mod in enumerate(mods_to_fetch):
+        result[mod.MOD_NAME] = mods_results[idx]
+    return result

@@ -46,7 +46,7 @@ class TelegramFormater:
         modified and deleted files. Files that have changed since the last message.
 
         @param changed_courses: A list of all courses with their modified files.
-        @returns a list of messages
+        @return: a list of messages
         """
 
         diff_count = 0
