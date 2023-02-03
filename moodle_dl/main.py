@@ -128,9 +128,9 @@ def run_main(config: ConfigHelper, opts):
         logging.debug('Start downloading changed files...')
 
         if opts.without_downloading_files:
-            downloader = FakeDownloadService(changed_courses, moodle, opts)
+            downloader = FakeDownloadService(changed_courses, config, opts)
         else:
-            downloader = DownloadService(changed_courses, moodle, opts)
+            downloader = DownloadService(changed_courses, config, opts)
         downloader.run()
         failed_downloads = downloader.get_failed_url_targets()
 
@@ -524,9 +524,6 @@ def main(args=None):
     opts = parser.parse_args(args)  # opts is of type Namespace
     setup_logger(opts)
     pre_process_opts(opts)
-
-    # TODO: Change this
-    DownloadService.thread_count = opts.max_parallel_downloads
 
     config = ConfigHelper(opts.path)
     if opts.init:

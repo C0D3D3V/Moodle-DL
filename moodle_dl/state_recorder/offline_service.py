@@ -1,7 +1,5 @@
 import os
 
-from pathlib import Path
-
 from moodle_dl.config_service import ConfigHelper
 from moodle_dl.moodle_connector.moodle_service import MoodleService
 from moodle_dl.state_recorder.state_recorder import StateRecorder
@@ -13,7 +11,7 @@ class OfflineService:
     def __init__(self, config: ConfigHelper, opts):
         self.config = config
         self.opts = opts
-        self.state_recorder = StateRecorder(Path(opts.path) / 'moodle_state.db')
+        self.state_recorder = StateRecorder(opts)
 
     def interactively_manage_database(self):
         stored_files = self.state_recorder.get_stored_files()

@@ -18,7 +18,7 @@
 - Running moodle-dl again will only download files that have not been downloaded yet. Do not miss any files, if files are deleted online, they are still available offline.
 - It is possible to download Moodle courses you are enrolled in, as well as courses that are publicly visible to you.
 
-Development discussions happen on [Discord in the developer channel](https://discord.gg/HNg7CsqEnZ).
+Discussions about the development take place mainly on [Github](https://github.com/C0D3D3V/Moodle-Downloader-2/issues), but also on [Discord](https://discord.gg/HNg7CsqEnZ).
 
 ## 🚀 Setup
 [![Deploy with Docker](https://img.shields.io/badge/deploy%20with-docker-0db7ed)](https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Run-with-Docker)

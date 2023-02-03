@@ -33,9 +33,9 @@ from moodle_dl.utils import format_bytes, timeconvert, SslHelper, PathTools as P
 from moodle_dl.ydl_extractors import add_additional_extractors
 
 
-class URLTarget(object):
+class Task(object):
     """
-    URLTarget is responsible to download a special file.
+    Task is responsible to download or create a file
     """
 
     def __init__(
@@ -814,6 +814,12 @@ class URLTarget(object):
         self.success = True
 
     def download(self, thread_id: int):
+        sucessfull = self.real_download()
+
+        if sucessfull:
+            self.state_recorder.save_file(url_target.file, url_target.course.id, url_target.course.fullname)
+
+    def real_download(self):
         """
         Downloads a file
         """

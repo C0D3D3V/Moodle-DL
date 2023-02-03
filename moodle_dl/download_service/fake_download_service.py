@@ -5,8 +5,9 @@ import platform
 from pathlib import Path
 from typing import List
 
+from moodle_dl.config_service import ConfigHelper
 from moodle_dl.download_service.download_service import DownloadService
-from moodle_dl.moodle_connector.moodle_service import MoodleService
+from moodle_dl.state_recorder.state_recorder import StateRecorder
 from moodle_dl.types import Course
 from moodle_dl.utils import PathTools as PT
 
@@ -14,28 +15,25 @@ from moodle_dl.utils import PathTools as PT
 class FakeDownloadService:
     """
     FakeDownloadService fakes a DownloadService.
-    This way a local database of Moodle's current files
-    can be created without actually downloading the files.
+    This way a local database of Moodle's current files can be created without actually downloading the files.
     """
 
-    def __init__(self, courses: List[Course], moodle_service: MoodleService, opts):
+    def __init__(self, courses: List[Course], config: ConfigHelper, opts):
         """
-        Initiates the FakeDownloadService with all files that
-        need to be downloaded (saved in the database).
-        @param courses: A list of courses that contains all modified files.
-        @param moodle_service: A reference to the moodle_service, currently
-                               only to get to the state_recorder.
+        Initiates the FakeDownloadService with all files that need to be saved in the database
+        @param courses: A list of courses that contains all modified files
+        @param config: Config helper
         @param opts: Moodle-dl options
         """
-
         self.courses = courses
-        self.state_recorder = moodle_service.recorder
         self.opts = opts
+        self.config = config
+        self.state_recorder = StateRecorder(opts)
 
         # delete files, that should be deleted
         self.state_recorder.batch_delete_files(self.courses)
 
-        # Prepopulate queue with any files that were given
+        # save files, that should be saved
         for course in self.courses:
             for file in course.files:
                 if file.deleted is False:

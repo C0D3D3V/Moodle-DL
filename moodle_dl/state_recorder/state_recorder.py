@@ -5,6 +5,7 @@ from sqlite3 import Error
 from typing import Dict, List
 
 from moodle_dl.types import File, Course
+from moodle_dl.utils import PathTools as PT
 
 
 class StateRecorder:
@@ -13,13 +14,14 @@ class StateRecorder:
     state against the previous.
     """
 
-    def __init__(self, db_file: str):
+    def __init__(self, opts):
         """
         Initiates the database.
         If no database exists yet, a new one is created.
-        @param db_file: The path to the database
+        @param opts: Moodle-dl options
         """
-        self.db_file = str(db_file)
+        self.opts = opts
+        self.db_file = PT.make_path(opts.path, 'moodle_state.db')
 
         try:
             conn = sqlite3.connect(self.db_file)

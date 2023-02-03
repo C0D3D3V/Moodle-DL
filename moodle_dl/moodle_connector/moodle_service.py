@@ -22,7 +22,7 @@ class MoodleService:
     def __init__(self, config: ConfigHelper, opts):
         self.config = config
         self.opts = opts
-        self.recorder = StateRecorder(PT.make_path(opts.path, 'moodle_state.db'))
+        self.recorder = StateRecorder(opts)
 
     def interactively_acquire_token(self, use_stored_url: bool = False) -> str:
         if self.opts.sso or self.opts.token is not None:

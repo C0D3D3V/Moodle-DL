@@ -31,6 +31,20 @@ def check_debug() -> bool:
     return 'pydevd' in sys.modules or (hasattr(sys, 'gettrace') and sys.gettrace() is not None)
 
 
+def calc_speed(start, now, byte_count):
+    dif = now - start
+    if byte_count <= 0 or dif < 0.001:  # One millisecond
+        return None
+    return float(byte_count) / dif
+
+
+def format_speed(speed):
+    if speed is None:
+        return f"{'---b/s':10}"
+    speed_text = format_bytes(speed) + '/s'
+    return f'{speed_text:10}'
+
+
 @staticmethod
 async def run_with_final_message(load_function, entry: Dict, message: str, *format_args):
     result = await load_function(entry)

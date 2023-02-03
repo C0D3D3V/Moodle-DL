@@ -1,57 +1,37 @@
 import logging
 import os
 import shutil
-import threading
 import time
 
-from queue import Queue
 from typing import List
 
-from moodle_dl.download_service.downloader import Downloader
-from moodle_dl.download_service.url_target import URLTarget
-from moodle_dl.moodle_connector.moodle_service import MoodleService
+from moodle_dl.config_service import ConfigHelper
+from moodle_dl.download_service.task import Task
+from moodle_dl.state_recorder.state_recorder import StateRecorder
 from moodle_dl.types import Course, File
-from moodle_dl.utils import format_bytes, SslHelper, PathTools as PT
+from moodle_dl.utils import format_bytes, SslHelper, PathTools as PT, calc_speed, format_speed
 
 
 class DownloadService:
     """
-    DownloadService manages the queue of files to be downloaded and starts
-    the Downloader threads which download all URLTargets.
-    Furthermore DownloadService is responsible for logging live information
-    and errors.
+    Manages jobs to download, delete or create files of courses
     """
 
-    thread_count = 5
-
-    def __init__(self, courses: List[Course], moodle_service: MoodleService, opts):
+    def __init__(self, courses: List[Course], config: ConfigHelper, opts):
         """
-        Initiates the DownloadService with all files that
-        need to be downloaded. A URLTarget is created for each file.
-        @param courses: A list of courses that contains all modified files.
-        @param moodle_service: A reference to the moodle_service, currently
-                               only to get to the state_recorder and the token.
+        @param courses: A list of courses that contains all files that needs to be handled
+        @param config: Config helper
         @param opts: Moodle-dl options
         """
-
         self.courses = courses
-        self.state_recorder = moodle_service.recorder
-        self.token = moodle_service.config.get_token()
+        self.config = config
         self.opts = opts
 
-        # The wait queue for all URL targets to be downloaded.
-        self.queue = Queue(0)
-        # A list of the created threads
-        self.threads = []
-        # A lock to stabilize thread insecure resources.
-        # writing in DB
-        self.db_lock = threading.Lock()
-        # reading file system
-        self.fs_lock = threading.Lock()
+        self.state_recorder = StateRecorder(opts)
+        self.token = config.get_token()
 
         # Sets the download options
-        self.options = moodle_service.config.get_download_options()
-        # Add console parameters
+        self.options = config.get_download_options()
         self.options.update({'ignore_ytdl_errors': opts.ignore_ytdl_errors})
 
         # report is used to collect successful and failed downloads
@@ -66,7 +46,7 @@ class DownloadService:
                 'current_url': '',
                 'external_dl': None,
             }
-            for i in range(self.thread_count)
+            for i in range(self.opts.max_parallel_downloads)
         ]
         # Collects the total size of the files that needs to be downloaded.
         self.total_to_download = 0
@@ -79,7 +59,7 @@ class DownloadService:
         self.ssl_context = SslHelper.get_ssl_context(not skip_cert_verify, False)
         self.skip_cert_verify = skip_cert_verify
 
-        # Prepopulate queue with any files that were given
+        # Pre populate queue with any files that were given
         for course in self.courses:
             for file in course.files:
                 if file.deleted is False:
@@ -127,8 +107,7 @@ class DownloadService:
                 file_path = os.path.join('/submissions/', file_path.strip('/'))
 
             return PT.path_of_file_in_module(storage_path, course_name, file.section_name, file.module_name, file_path)
-        else:
-            return PT.path_of_file(storage_path, course_name, file.section_name, file.content_filepath)
+        return PT.path_of_file(storage_path, course_name, file.section_name, file.content_filepath)
 
     def run(self):
         """
@@ -156,7 +135,7 @@ class DownloadService:
         Creates all downloader threads, initiates them
         with the queue and starts them.
         """
-        for i in range(self.thread_count):
+        for i in range(self.opts.max_parallel_downloads):
             thread = Downloader(self.queue, self.report, self.state_recorder, i, self.db_lock)
             thread.start()
             self.threads.append(thread)
@@ -234,8 +213,8 @@ class DownloadService:
 
         diff_to_last_status = threads_total_downloaded - self.last_threads_total_downloaded
 
-        speed = self.calc_speed(self.last_status_timestamp, time.time(), diff_to_last_status)
-        progressmessage_line += ' | ' + self.format_speed(speed)
+        speed = calc_speed(self.last_status_timestamp, time.time(), diff_to_last_status)
+        progressmessage_line += ' | ' + format_speed(speed)
 
         if len(progressmessage_line) > limits.columns:
             progressmessage_line = progressmessage_line[0 : limits.columns]
@@ -247,20 +226,6 @@ class DownloadService:
         self.last_threads_total_downloaded = threads_total_downloaded
 
         return progressmessage
-
-    @staticmethod
-    def calc_speed(start, now, byte_count):
-        dif = now - start
-        if byte_count <= 0 or dif < 0.001:  # One millisecond
-            return None
-        return float(byte_count) / dif
-
-    @staticmethod
-    def format_speed(speed):
-        if speed is None:
-            return f"{'---b/s':10}"
-        speed_text = format_bytes(speed) + '/s'
-        return f'{speed_text:10}'
 
     def _clear_status_message(self):
         print(f'\033[{len(self.threads)}A\r', end='')
