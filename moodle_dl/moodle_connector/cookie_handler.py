@@ -21,9 +21,7 @@ class CookieHandler:
         self.moodle_test_url = self.client.url_base
 
     def fetch_autologin_key(self, privatetoken: str) -> Dict[str, str]:
-        # do this only if version is greater then 3.2
-        # because tool_mobile_get_autologin_key will fail
-        if self.version < 2016120500:
+        if self.version < 2016120500:  # 3.2
             return None
 
         logging.info('Downloading autologin key')
@@ -56,8 +54,6 @@ class CookieHandler:
 
     def check_and_fetch_cookies(self, privatetoken: str, userid: str) -> bool:
         if os.path.exists(self.cookies_path):
-            # test if still logged in.
-
             if self.test_cookies():
                 logging.debug('Cookies are still valid')
                 return True

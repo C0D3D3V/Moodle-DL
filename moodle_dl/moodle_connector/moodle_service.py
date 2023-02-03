@@ -10,7 +10,7 @@ from urllib.parse import urlparse
 from moodle_dl.config_service import ConfigHelper
 from moodle_dl.moodle_connector.cookie_handler import CookieHandler
 from moodle_dl.moodle_connector.core_handler import CoreHandler
-from moodle_dl.moodle_connector.mods import fetch_mods_files, get_all_mods, get_all_mods_classes
+from moodle_dl.moodle_connector.mods import fetch_mods_files, get_all_mods, get_all_mods_classes, get_mod_plurals
 from moodle_dl.moodle_connector.request_helper import RequestRejectedError, RequestHelper
 from moodle_dl.moodle_connector.result_builder import ResultBuilder
 from moodle_dl.state_recorder.state_recorder import StateRecorder
@@ -252,7 +252,7 @@ class MoodleService:
         course_cores = await core_handler.async_load_course_cores(courses)
 
         logging.debug('Combine API results...')
-        result_builder = ResultBuilder(moodle_url, version)
+        result_builder = ResultBuilder(moodle_url, version, get_mod_plurals())
         result_builder.add_files_to_courses(courses, course_cores, fetched_mods_files)
 
         logging.debug('Checking for changes...')
@@ -327,7 +327,7 @@ class MoodleService:
                 # Filter files based on module options
                 modules_conditions_met = True
                 for mod in all_mods_classes:
-                    if not mod.download_condition(file):
+                    if not mod.download_condition(config, file):
                         modules_conditions_met = False
                         break
 

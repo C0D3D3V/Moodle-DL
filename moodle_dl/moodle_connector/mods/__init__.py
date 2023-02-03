@@ -30,10 +30,10 @@ def get_all_mods(
     last_timestamps: Dict[str, Dict[int, int]],
     config: ConfigHelper,
 ) -> List[MoodleMod]:
-    result_list = []
-    for mod_handler in ALL_MODS:
-        result_list.append(mod_handler(request_helper, moodle_version, user_id, last_timestamps, config))
-    return result_list
+    result = []
+    for mod in ALL_MODS:
+        result.append(mod(request_helper, moodle_version, user_id, last_timestamps, config))
+    return result
 
 
 async def fetch_mods_files(mods_to_fetch: List[MoodleMod], courses_to_load: List[Course]) -> Dict[str, Dict]:
@@ -42,4 +42,11 @@ async def fetch_mods_files(mods_to_fetch: List[MoodleMod], courses_to_load: List
     result = {}
     for idx, mod in enumerate(mods_to_fetch):
         result[mod.MOD_NAME] = mods_results[idx]
+    return result
+
+
+def get_mod_plurals():
+    result = {}
+    for mod in ALL_MODS:
+        result[mod.MOD_NAME] = mod.MOD_PLURAL_NAME
     return result

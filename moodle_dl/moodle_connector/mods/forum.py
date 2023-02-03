@@ -1,3 +1,5 @@
+import logging
+
 from datetime import datetime
 from typing import Dict, List
 
@@ -85,6 +87,11 @@ class ForumMod(MoodleMod):
                 discussions_result = await self.client.async_post('mod_forum_get_forum_discussions', data)
             else:
                 discussions_result = await self.client.async_post('mod_forum_get_forum_discussions_paginated', data)
+
+            logging.debug(
+                'Loaded %(mod_name)s page %(page_num)d of "%(forum_name)s"',
+                {'mod_name': self.MOD_NAME, 'page_num': page_num, 'forum_name': forum.get('name', '')},
+            )
 
             discussions = discussions_result.get('discussions', [])
 

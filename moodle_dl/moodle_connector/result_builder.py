@@ -1,9 +1,10 @@
-import re
+import hashlib
 import html
 import logging
-import hashlib
-from typing import Dict, List
+import re
 import urllib.parse as urlparse
+
+from typing import Dict, List
 
 from moodle_dl.types import Course, File
 from moodle_dl.types import MoodleURL
@@ -14,154 +15,148 @@ class ResultBuilder:
     Combines all fetched mod files and core course files to one result based on File objects
     """
 
-    def __init__(self, moodle_url: MoodleURL, version: int):
+    def __init__(self, moodle_url: MoodleURL, version: int, mod_plurals: Dict):
         self.version = version
         self.moodle_url = moodle_url
         self.moodle_domain = moodle_url.domain
-        self.course_fetch_addons = {}
+        self.mod_plurals = mod_plurals
 
-    def _get_files_in_sections(self, course_sections: List) -> List[File]:
+    def get_files_in_sections(self, course_sections: List[Dict], fetched_mods: Dict[str, Dict]) -> List[File]:
         """
         Iterates over all sections of a course to find files (or modules).
-        @param course_sections: The course object returned by Moodle,
-                                containing the sections of the course.
+        @param course_sections: Contains the sections of the course
+        @param fetched_mods: Contains the fetched mods of the course
         @return: A list of files of the course.
         """
         files = []
         for section in course_sections:
-            section_id = section.get('id', 0)
-            section_name = section.get('name', '')
+            location = {
+                'section_id': section.get('id', 0),
+                'section_name': section.get('name', ''),
+            }
             section_modules = section.get('modules', [])
+            files += self._get_files_in_modules(section_modules, fetched_mods, **location)
+
             section_summary = section.get('summary', '')
             if section_summary is not None and section_summary != '':
-                files += self._handle_description(
-                    section_name, section_id, 'Section summary', 'section_summary', 0, section_summary
+                location.update(
+                    {
+                        'module_id': 0,
+                        'module_name': 'Section summary',
+                        'module_modname': 'section_summary',
+                    }
                 )
+                files += self._handle_description(section_summary, **location)
 
-            files += self._get_files_in_modules(section_name, section_id, section_modules)
-
-        files += self._get_files_not_on_main_page()
+        files += self._get_files_not_on_main_page(fetched_mods)
 
         return files
 
-    def _get_files_in_modules(self, section_name: str, section_id: int, section_modules: List) -> List[File]:
+    def _get_files_in_modules(self, section_modules: List, fetched_mods: Dict[str, Dict], **location) -> List[File]:
         """
         Iterates over all modules to find files (or content) in them.
-        @param section_name: The name of the section to be iterated over.
-        @param section_id: The id of the section to be iterated over.
         @param section_modules: The modules of the section.
+        @param fetched_mods: Contains the fetched mods of the course
+        @param location: contains
+            section_id: int,
+            section_name: str,
         @return: A list of files of the section.
         """
         files = []
         for module in section_modules:
-            module_name = module.get('name', '')
-            module_modname = module.get('modname', '')
+            location['module_id'] = module.get('id', 0)
+            location['module_name'] = module.get('name', '')
+            location['module_modname'] = module.get('modname', '')
+
             module_url = module.get('url', '')
-            module_id = module.get('id', 0)
-
             module_contents = module.get('contents', [])
-
             module_description = module.get('description', None)
 
             # handle not supported modules that results in an index.html special
-            if module_modname in ['moodecvideo']:
-                module_modname = 'index_mod-' + module_modname
+            if location['module_modname'] in ['moodecvideo']:
+                location['module_modname'] = 'index_mod-' + location['module_modname']
 
-            if module_modname in ['page'] and self.version < 2017051500:
-                module_modname = 'index_mod-' + module_modname
+            if location['module_modname'] in ['page'] and self.version < 2017051500:
+                location['module_modname'] = 'index_mod-' + location['module_modname']
 
-            if module_description is not None and module_modname not in self.course_fetch_addons:
+            if module_description is not None and location['module_modname'] not in fetched_mods:
                 # Handle descriptions of Files, Labels and all mods that we do not handle in separately
-                files += self._handle_description(
-                    section_name, section_id, module_name, module_modname, module_id, module_description
-                )
+                files += self._handle_description(module_description, **location)
 
-            if module_modname in ['kalvidres', 'helixmedia', 'lti']:
-                module_modname = 'cookie_mod-' + module_modname
-                files += self._handle_cookie_mod(
-                    section_name, section_id, module_name, module_modname, module_id, module_url
-                )
+            if location['module_modname'] in ['kalvidres', 'helixmedia', 'lti']:
+                location['module_modname'] = 'cookie_mod-' + location['module_modname']
+                files += self._handle_cookie_mod(module_url, **location)
 
-            elif module_modname.startswith(('resource', 'akarifolder', 'url', 'index_mod')):
-                files += self._handle_files(
-                    section_name, section_id, module_name, module_modname, module_id, module_contents
-                )
+            elif location['module_modname'].startswith(('resource', 'akarifolder', 'url', 'index_mod')):
+                files += self._handle_files(module_contents, **location)
 
-            elif module_modname.startswith(('folder')):
+            elif location['module_modname'].startswith(('folder')):
                 # Modules whose content is directly linked, and additional content exists in their module.
-                if module_modname in self.course_fetch_addons:
-                    # find addon with same module_id
-                    addon = self.course_fetch_addons.get(module_modname, {}).get(module_id, {})
-                    addon['on_main_page'] = True
-                    addon_files = addon.get('files', [])
-                    module_contents += addon_files
+                if location['module_modname'] in fetched_mods:
+                    # find mod module with same module_id
+                    mod = fetched_mods.get(location['module_modname'], {}).get(location['module_id'], {})
+                    mod['on_main_page'] = True
+                    mod_files = mod.get('files', [])
+                    module_contents += mod_files
 
-                files += self._handle_files(
-                    section_name, section_id, module_name, module_modname, module_id, module_contents
-                )
+                files += self._handle_files(module_contents, **location)
 
-            elif module_modname in self.course_fetch_addons:
-                # find addon with same module_id
-                addon = self.course_fetch_addons.get(module_modname, {}).get(module_id, {})
-                addon['on_main_page'] = True
-                addon_files = addon.get('files', [])
-
-                files += self._handle_files(
-                    section_name, section_id, module_name, module_modname, module_id, addon_files
-                )
+            elif location['module_modname'] in fetched_mods:
+                # find mod module with same module_id
+                mod = fetched_mods.get(location['module_modname'], {}).get(location['module_id'], {})
+                mod['on_main_page'] = True
+                mod_files = mod.get('files', [])
+                files += self._handle_files(mod_files, **location)
             else:
-                logging.debug('Got unhandled module: name=%s mod=%s url=%s', module_name, module_modname, module_url)
+                if location['module_modname'] not in ['label']:
+                    logging.debug(
+                        'Got unhandled module: name=%s mod=%s url=%s',
+                        location['module_name'],
+                        location['module_modname'],
+                        module_url,
+                    )
 
         return files
 
-    def _get_modplural(self, modname: str) -> str:
-        modplural_dict = {
-            'assign': 'Assignments',
-            'data': 'Databases',
-            'folder': 'Folders',
-            'forum': 'Forums',
-            'lesson': 'Lessons',
-            'page': 'Pages',
-            'quiz': 'Quizzes',
-            'workshop': 'Workshops',
-        }
-        if modname in modplural_dict:
-            return modplural_dict[modname]
-        else:
-            return modname.capitalize()
+    def get_mod_plural_name(self, mod_name: str) -> str:
+        if mod_name in self.mod_plurals:
+            return self.mod_plurals[mod_name].capitalize()
+        return mod_name.capitalize()
 
-    def _get_files_not_on_main_page(self) -> List[File]:
+    def _get_files_not_on_main_page(self, fetched_mods: Dict[str, Dict]) -> List[File]:
         """
-        Iterates over all addons to find files (or content) that are not listed on the main page.
-        @return: A list of files of addons not on the main pange.
+        Iterates over all mods to find files (or content) that are not listed on the main page.
+        @param fetched_mods: Contains the fetched mods of the course
+        @return: A list of files of mod modules not on the main page.
         """
         files = []
-        for addon_modname in self.course_fetch_addons:
-            section_name = f"{self._get_modplural(addon_modname)} not on main page"
-            section_id = -1
+        for mod_name, mod_modules in fetched_mods.items():
+            location = {
+                'section_id': -1,
+                'section_name': f"{self.get_mod_plural_name(mod_name)} not on main page",
+            }
 
-            for addon_module_id in self.course_fetch_addons[addon_modname]:
-                addon = self.course_fetch_addons[addon_modname][addon_module_id]
-                if 'on_main_page' in addon:
+            for _, module in mod_modules.items():
+                if 'on_main_page' in module:
                     continue
-
-                module_name = addon.get('name', '')
-                module_modname = addon_modname
-                module_id = addon.get('id', 0)
-                module_contents = addon.get('files', [])
+                location.update(
+                    {
+                        'module_id': module.get('id', 0),
+                        'module_name': module.get('name', ''),
+                        'module_modname': mod_name,
+                    }
+                )
 
                 # Handle not supported modules that results in an index.html special
-                if module_modname in ['page'] and self.version < 2017051500:
-                    module_modname = 'index_mod-' + module_modname
+                if location['module_modname'] in ['page'] and self.version < 2017051500:
+                    location['module_modname'] = 'index_mod-' + location['module_modname']
 
-                files += self._handle_files(
-                    section_name, section_id, module_name, module_modname, module_id, module_contents
-                )
+                files += self._handle_files(module.get('files', []), **location)
 
         return files
 
     @staticmethod
-    def _filter_changing_attributes(description: str) -> str:
+    def filter_changing_attributes(description: str) -> str:
         """
         Tries to filter ids and stuff,
         that is knowing to change over time in descriptions.
@@ -197,28 +192,20 @@ class ResultBuilder:
 
     def _find_all_urls(
         self,
-        section_name: str,
-        section_id: int,
-        module_name: str,
-        module_modname: str,
-        module_id: str,
-        content_filepath: str,
         content_html: str,
         no_search_for_moodle_urls: bool,
         filter_urls_containing: List[str],
+        **location,
     ) -> List[File]:
         """Parses a html string to find all urls in it. Then it creates for every url a file entry.
 
-        Args:
-            section_name (str): The name of the course section
-            section_id (int): The id of the course section
-            module_name (str): Name of the Module
-            module_modname (str): Type of the Module
-            module_id (str): Module Id
-            content_html (str): The html string
-
-        Returns:
-            [File]: A list of created file entries.
+        @param location: contains
+            section_id: int,
+            section_name: str,
+            module_id: str,
+            module_name: str,
+            module_modname: str,
+            content_filepath: str,
         """
 
         urls = list(set(re.findall(r'href=[\'"]?([^\'" >]+)', content_html)))
@@ -227,7 +214,7 @@ class ResultBuilder:
         urls = list(set(urls))
 
         result = []
-        original_module_modname = module_modname
+        original_module_modname = location['module_modname']
 
         for url in urls:
             if url == '':
@@ -259,13 +246,13 @@ class ResultBuilder:
                     url,
                 )
 
-            module_modname = 'url-description-' + original_module_modname
+            location['module_modname'] = 'url-description-' + original_module_modname
 
             if url_parts.hostname == self.moodle_domain and url_parts.path.find('/webservice/') >= 0:
-                module_modname = 'index_mod-description-' + original_module_modname
+                location['module_modname'] = 'index_mod-description-' + original_module_modname
 
             elif url_parts.hostname == self.moodle_domain:
-                module_modname = 'cookie_mod-description-' + original_module_modname
+                location['module_modname'] = 'cookie_mod-description-' + original_module_modname
 
             fist_guess_filename = url
             if fist_guess_filename.startswith('data:image/'):
@@ -279,118 +266,87 @@ class ResultBuilder:
             if len(fist_guess_filename) > 254:
                 fist_guess_filename = fist_guess_filename[:254]
 
-            new_file = File(
-                module_id=module_id,
-                section_name=section_name,
-                section_id=section_id,
-                module_name=module_name,
-                content_filepath=content_filepath,
-                content_filename=fist_guess_filename,
-                content_fileurl=url,
-                content_filesize=0,
-                content_timemodified=0,
-                module_modname=module_modname,
-                content_type='description-url',
-                content_isexternalfile=True,
+            result.append(
+                File(
+                    **location,
+                    content_filename=fist_guess_filename,
+                    content_fileurl=url,
+                    content_filesize=0,
+                    content_timemodified=0,
+                    content_type='description-url',
+                    content_isexternalfile=True,
+                )
             )
-            result.append(new_file)
         return result
 
-    def _handle_cookie_mod(
-        self, section_name: str, section_id: int, module_name: str, module_modname: str, module_id: str, module_url: str
-    ) -> List[File]:
+    def _handle_cookie_mod(self, module_url: str, **location) -> List[File]:
         """
-        Creates a list of files out of a cookie module
+        Create a list of files out of a cookie module
         @param module_url: The url to the cookie module.
-        @params: All necessary parameters to create a file.
-        @return: A list of files that were created out of the module.
+        @param location: contains
+            section_id: int,
+            section_name: str,
+            module_id: str,
+            module_name: str,
+            module_modname: str,
         """
-        files = []
+        return [
+            File(
+                **location,
+                content_filepath='/',
+                content_filename=location['module_name'],
+                content_fileurl=module_url,
+                content_filesize=0,
+                content_timemodified=0,
+                content_type='cookie_mod',
+                content_isexternalfile=True,
+            )
+        ]
 
-        new_file = File(
-            module_id=module_id,
-            section_name=section_name,
-            section_id=section_id,
-            module_name=module_name,
-            content_filepath='/',
-            content_filename=module_name,
-            content_fileurl=module_url,
-            content_filesize=0,
-            content_timemodified=0,
-            module_modname=module_modname,
-            content_type='cookie_mod',
-            content_isexternalfile=True,
-        )
-
-        files.append(new_file)
-        return files
-
-    def _handle_files(
-        self,
-        section_name: str,
-        section_id: int,
-        module_name: str,
-        module_modname: str,
-        module_id: str,
-        module_contents: List,
-    ) -> List[File]:
+    def _handle_files(self, module_contents: List, **location) -> List[File]:
         """
-        Iterates over all files that are in a module or assignment and
-        returns a list of all files
+        Create a list of all files in a module
         @param module_contents: The list of content of the module
-                                or assignment.
-        @params: All necessary parameters to create a file.
-        @return: A list of files that exist in a module.
+        @param location: contains
+            section_id: int,
+            section_name: str,
+            module_id: str,
+            module_name: str,
+            module_modname: str,
         """
         files = []
         for content in module_contents:
             content_type = content.get('type', '')
             content_filename = content.get('filename', '')
-            content_filepath = content.get('filepath', '/')
-            if content_filepath is None:
-                content_filepath = '/'
-            content_filesize = content.get('filesize', 0)
+            content_filepath = content.get('filepath', '/') or '/'
             content_fileurl = content.get('fileurl', '')
-            content_timemodified = content.get('timemodified', 0)
-            content_isexternalfile = content.get('isexternalfile', False)
 
-            # description related
             content_description = content.get('description', '')
-            no_search_for_urls = content.get('no_search_for_urls', False)
-            no_search_for_moodle_urls = content.get('no_search_for_moodle_urls', False)
-            filter_urls_during_search_containing = content.get('filter_urls_during_search_containing', [])
-            content_no_hash = content.get('no_hash', False)
-
-            # html related
             content_html = content.get('html', '')
 
-            if content_fileurl == '' and module_modname.startswith(('url', 'index_mod', 'cookie_mod')):
+            if content_fileurl == '' and location['module_modname'].startswith(('url', 'index_mod', 'cookie_mod')):
                 continue
 
             # Add the extention condition to avoid renaming pdf files or other downloaded content from moodle pages.
-            if module_modname.startswith('index_mod') and content_filename.endswith('.html'):
-                content_filename = module_name
+            if location['module_modname'].startswith('index_mod') and content_filename.endswith('.html'):
+                content_filename = location['module_name']
 
             hash_description = None
-            if content_type == 'description' and not content_no_hash:
-                hashable_description = ResultBuilder._filter_changing_attributes(content_description)
+            if content_type == 'description' and not content.get('no_hash', False):
+                hashable_description = self.filter_changing_attributes(content_description)
                 m = hashlib.sha1()
                 m.update(hashable_description.encode('utf-8'))
                 hash_description = m.hexdigest()
 
             new_file = File(
-                module_id=module_id,
-                section_name=section_name,
-                section_id=section_id,
-                module_name=module_name,
+                **location,
                 content_filepath=content_filepath,
                 content_filename=content_filename,
                 content_fileurl=content_fileurl,
-                content_filesize=content_filesize,
-                content_timemodified=content_timemodified,
-                module_modname=module_modname,
+                content_filesize=content.get('filesize', 0),
+                content_timemodified=content.get('timemodified', 0),
                 content_type=content_type,
-                content_isexternalfile=content_isexternalfile,
+                content_isexternalfile=content.get('isexternalfile', False),
                 file_hash=hash_description,
             )
 
@@ -400,17 +356,13 @@ class ResultBuilder:
             if content_type == 'html':
                 new_file.html_content = content_html
 
-            if content_type in ['description', 'html'] and not no_search_for_urls:
+            if content_type in ['description', 'html'] and not content.get('no_search_for_urls', False):
                 files += self._find_all_urls(
-                    section_name,
-                    section_id,
-                    module_name,
-                    module_modname,
-                    module_id,
-                    content_filepath,
                     content_html,
-                    no_search_for_moodle_urls,
-                    filter_urls_during_search_containing,
+                    no_search_for_moodle_urls=content.get('no_search_for_moodle_urls', False),
+                    filter_urls_containing=content.get('filter_urls_during_search_containing', []),
+                    **location,
+                    content_filepath=content_filepath,
                 )
 
             files.append(new_file)
@@ -418,80 +370,54 @@ class ResultBuilder:
 
     def _handle_description(
         self,
-        section_name: str,
-        section_id: int,
-        module_name: str,
-        module_modname: str,
-        module_id: str,
         module_description: str,
+        **location,
     ) -> List[File]:
         """
         Creates a description file
         @param module_description: The description of the module
-        @params: All necessary parameters to create a file.
-        @return: A list of files that exist in a module.
+        @param location: contains
+            section_id: int,
+            section_name: str,
+            module_id: str,
+            module_name: str,
+            module_modname: str,
+        @return: A list of files containing that description and URLs in that description.
         """
         files = []
-        content_type = 'description'
-        content_filename = module_name
         content_filepath = '/'
-        content_filesize = len(module_description)
-        content_fileurl = ''
-        content_timemodified = 0
-        content_isexternalfile = False
 
         m = hashlib.sha1()
-        hashable_description = ResultBuilder._filter_changing_attributes(module_description)
+        hashable_description = self.filter_changing_attributes(module_description)
         m.update(hashable_description.encode('utf-8'))
         hash_description = m.hexdigest()
 
-        if module_modname.startswith(('url', 'index_mod')):
-            module_modname = 'url_description'
+        if location['module_modname'].startswith(('url', 'index_mod')):
+            location['module_modname'] = 'url_description'
 
         description = File(
-            module_id=module_id,
-            section_name=section_name,
-            section_id=section_id,
-            module_name=module_name,
+            **location,
             content_filepath=content_filepath,
-            content_filename=content_filename,
-            content_fileurl=content_fileurl,
-            content_filesize=content_filesize,
-            content_timemodified=content_timemodified,
-            module_modname=module_modname,
-            content_type=content_type,
-            content_isexternalfile=content_isexternalfile,
+            content_filename=location['module_name'],
+            content_fileurl='',
+            content_filesize=len(module_description),
+            content_timemodified=0,
+            content_type='description',
+            content_isexternalfile=False,
             file_hash=hash_description,
         )
-
-        no_search_for_moodle_urls = False
-        filter_urls_during_search_containing = []
-
         description.text_content = module_description
-        files += self._find_all_urls(
-            section_name,
-            section_id,
-            module_name,
-            module_modname,
-            module_id,
-            content_filepath,
-            module_description,
-            no_search_for_moodle_urls,
-            filter_urls_during_search_containing,
-        )
-
         files.append(description)
 
-        return files
+        files += self._find_all_urls(
+            module_description,
+            no_search_for_moodle_urls=False,
+            filter_urls_containing=[],
+            **location,
+            content_filepath=content_filepath,
+        )
 
-    def set_fetch_addons(self, course_fetch_addons: Dict):
-        """
-        Sets the optional data that will be added to the result list
-         during the process.
-        @params course_fetch_addons: The dictionary of assignments, databases, forums, quizzes, lessons,
-         workshops, pages, ... per course
-        """
-        self.course_fetch_addons = course_fetch_addons
+        return files
 
     def add_files_to_courses(
         self,
@@ -499,8 +425,15 @@ class ResultBuilder:
         course_cores: Dict[int, List[Dict]],
         fetched_mods_files: Dict[str, Dict],
     ):
-        # course_sections =
+        """
+        @param fetched_mods_files:
+            Dictionary of all fetched mod modules files, indexed by mod name, then by courses, then module id
+        """
+        for course in courses:
+            course_sections = course_cores.get(course.id, [])
 
-        # files = self._get_files_in_sections(course_sections)
-        # course.files = result_builder.fetch_files(course)
-        return files
+            fetched_mods = {}
+            for mod_name, mod_courses in fetched_mods_files.items():
+                fetched_mods[mod_name] = mod_courses.get(course.id, {})
+
+            course.files = self.get_files_in_sections(course_sections, fetched_mods)
