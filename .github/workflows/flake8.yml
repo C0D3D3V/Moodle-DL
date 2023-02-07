@@ -17,6 +17,6 @@ jobs:
         uses: py-actions/flake8@v2
         with:
           ignore: "E203,E266,W503"
-          exclude: "moodle_dl/moodle_connector/moodle_constants.py"
+          exclude: "moodle_dl/moodle/moodle_constants.py"
           max-line-length: "120"
           path: "moodle_dl"

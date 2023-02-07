@@ -21,18 +21,18 @@ except ImportError:
 
 from colorama import just_fix_windows_console
 
-from moodle_dl.config_service import ConfigHelper, ConfigService
-from moodle_dl.download_service.download_service import DownloadService
-from moodle_dl.download_service.fake_download_service import FakeDownloadService
-from moodle_dl.moodle_connector.moodle_service import MoodleService
-from moodle_dl.notification_services import (
+from moodle_dl.config import ConfigHelper, ConfigService
+from moodle_dl.downloader.download_service import DownloadService
+from moodle_dl.downloader.fake_download_service import FakeDownloadService
+from moodle_dl.moodle.moodle_service import MoodleService
+from moodle_dl.notifications import (
     get_all_notify_services,
     get_remote_notify_services,
     MailService,
     TelegramService,
     XmppService,
 )
-from moodle_dl.state_recorder.offline_service import OfflineService
+from moodle_dl.database.offline_service import OfflineService
 from moodle_dl.utils import Log, Cutie, ProcessLock, check_debug, PathTools as PT
 from moodle_dl.version import __version__
 
@@ -132,7 +132,7 @@ def run_main(config: ConfigHelper, opts):
         else:
             downloader = DownloadService(changed_courses, config, opts)
         downloader.run()
-        failed_downloads = downloader.get_failed_url_targets()
+        failed_downloads = downloader.get_failed_tasks()
 
         changed_courses_to_notify = moodle.recorder.changes_to_notify()
 
