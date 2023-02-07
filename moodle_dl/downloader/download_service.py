@@ -6,7 +6,7 @@ import time
 from typing import List
 
 from moodle_dl.config import ConfigHelper
-from moodle_dl.database.state_recorder import StateRecorder
+from moodle_dl.database import StateRecorder
 from moodle_dl.downloader.task import Task
 from moodle_dl.types import Course, File
 from moodle_dl.utils import format_bytes, SslHelper, PathTools as PT, calc_speed, format_speed

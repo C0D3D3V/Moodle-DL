@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import List
 
 from moodle_dl.config import ConfigHelper
-from moodle_dl.database.state_recorder import StateRecorder
+from moodle_dl.database import StateRecorder
 from moodle_dl.downloader.download_service import DownloadService
 from moodle_dl.types import Course
 from moodle_dl.utils import PathTools as PT

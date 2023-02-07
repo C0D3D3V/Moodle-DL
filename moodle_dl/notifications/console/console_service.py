@@ -9,9 +9,6 @@ from moodle_dl.utils import Log
 
 
 class ConsoleService(NotificationService):
-    def interactively_configure(self) -> None:
-        raise RuntimeError('Not yet implemendet!')
-
     def notify_about_changes_in_moodle(self, changes: List[Course]) -> None:
         """
         Creates a terminal output about the downloaded changes.

@@ -21,19 +21,13 @@ except ImportError:
 
 from colorama import just_fix_windows_console
 
-from moodle_dl.config import ConfigHelper, ConfigService
+from moodle_dl.cli import ConfigWizard, DatabaseManager, MoodleWizard, NotificationsWizard, init_config
+from moodle_dl.config import ConfigHelper
 from moodle_dl.downloader.download_service import DownloadService
 from moodle_dl.downloader.fake_download_service import FakeDownloadService
 from moodle_dl.moodle.moodle_service import MoodleService
-from moodle_dl.notifications import (
-    get_all_notify_services,
-    get_remote_notify_services,
-    MailService,
-    TelegramService,
-    XmppService,
-)
-from moodle_dl.database.offline_service import OfflineService
-from moodle_dl.utils import Log, Cutie, ProcessLock, check_debug, PathTools as PT
+from moodle_dl.notifications import get_all_notify_services
+from moodle_dl.utils import ProcessLock, check_debug, PathTools as PT
 from moodle_dl.version import __version__
 
 
@@ -48,68 +42,41 @@ class ReRaiseOnError(logging.StreamHandler):
             raise record.exception
 
 
-def run_init(config: ConfigHelper, opts):
-    if config.is_present():
-        do_override_input = Cutie.prompt_yes_or_no(Log.error_str('Do you want to override the existing config?'))
-
-        if not do_override_input:
-            sys.exit(0)
-
-    notify_services = get_remote_notify_services(config)
-    for service in notify_services:
-        service.interactively_configure()
-
-    do_sentry = Cutie.prompt_yes_or_no('Do you want to configure Error Reporting via Sentry?')
-    if do_sentry:
-        sentry_dsn = input('Please enter your Sentry DSN:   ')
-        config.set_property('sentry_dsn', sentry_dsn)
-
-    MoodleService(config, opts).interactively_acquire_token()
-
-    Log.success('Configuration finished and saved!')
-
-    if os.name != 'nt':
-        working_dir = os.path.abspath(opts.path)
-        moodle_dl_path = os.path.abspath(sys.argv[0])
-        Log.info(
-            '  To set a cron-job for this program on your Unix-System:\n'
-            + '    1. `crontab -e`\n'
-            + f'    2. Add `*/15 * * * * cd "{working_dir}" && "{moodle_dl_path}" >/dev/null 2>&1`\n'
-            + '    3. Save and you\'re done!'
-        )
-
-        Log.info(
-            'For more ways to run `moodle-dl` periodically, take a look at the wiki'
-            + ' (https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Start-Moodle-dl-periodically-or-via-Telegram)'
-        )
+def choose_task(config: ConfigHelper, opts):
+    if opts.add_all_visible_courses:
+        ConfigWizard(config, opts).interactively_add_all_visible_courses()
+    elif opts.change_notification_mail:
+        NotificationsWizard(config, opts).interactively_configure_mail()
+    elif opts.change_notification_telegram:
+        NotificationsWizard(config, opts).interactively_configure_telegram()
+    elif opts.change_notification_xmpp:
+        NotificationsWizard(config, opts).interactively_configure_xmpp()
+    elif opts.config:
+        ConfigWizard(config, opts).interactively_acquire_config()
+    elif opts.delete_old_files:
+        DatabaseManager(config, opts).delete_old_files()
+    elif opts.manage_database:
+        DatabaseManager(config, opts).interactively_manage_database()
+    elif opts.new_token:
+        MoodleWizard(config, opts).interactively_acquire_token(use_stored_url=True)
     else:
-        Log.info(
-            'If you want to run moodle-dl periodically, you can take a look at the wiki '
-            + '(https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Start-Moodle-dl-periodically-or-via-Telegram)'
-        )
-
-    print('')
-
-    Log.info('You can always do the additional configuration later with the --config option.')
-
-    do_config = Cutie.prompt_yes_or_no('Do you want to make additional configurations now?')
-    if do_config:
-        ConfigService(config, opts).interactively_acquire_config()
-
-    print('')
-    Log.success('All set and ready to go!')
+        run_main(config, opts)
 
 
-def run_main(config: ConfigHelper, opts):
-    sentry_connected = False
+def connect_sentry(config: ConfigHelper) -> bool:
+    "Return True if connected"
     try:
         sentry_dsn = config.get_property('sentry_dsn')
         if sentry_dsn:
             sentry_sdk.init(sentry_dsn)
-            sentry_connected = True
+            return True
     except (ValueError, sentry_sdk.utils.BadDsn, sentry_sdk.utils.ServerlessTimeoutWarning):
         pass
+    return False
 
+
+def run_main(config: ConfigHelper, opts):
+    sentry_connected = connect_sentry(config)
     notify_services = get_all_notify_services(config)
 
     # TODO: Change this
@@ -223,8 +190,7 @@ def setup_logger(opts):
 def _dir_path(path):
     if os.path.isdir(path):
         return path
-    else:
-        raise argparse.ArgumentTypeError(f'"{str(path)}" is not a valid path. Make sure the directory exists.')
+    raise argparse.ArgumentTypeError(f'"{str(path)}" is not a valid path. Make sure the directory exists.')
 
 
 def win_max_path_length_workaround(path):
@@ -527,38 +493,21 @@ def main(args=None):
 
     config = ConfigHelper(opts.path)
     if opts.init:
-        run_init(config, opts)
-        exit(0)
+        init_config(config, opts)
+        sys.exit(0)
     else:
         try:
             config.load()
         except ConfigHelper.NoConfigError as err_config:
             logging.error('Error: %s', err_config)
             logging.warning('You can create a configuration with the --init option')
-            exit(-1)
+            sys.exit(-1)
 
     try:
         if not check_debug():
             ProcessLock.lock(opts.path)
 
-        if opts.config:
-            ConfigService(config, opts).interactively_acquire_config()
-        elif opts.new_token:
-            MoodleService(config, opts).interactively_acquire_token(use_stored_url=True)
-        elif opts.change_notification_mail:
-            MailService(config).interactively_configure()
-        elif opts.change_notification_telegram:
-            TelegramService(config).interactively_configure()
-        elif opts.change_notification_xmpp:
-            XmppService(config).interactively_configure()
-        elif opts.manage_database:
-            OfflineService(config, opts).interactively_manage_database()
-        elif opts.delete_old_files:
-            OfflineService(config, opts).delete_old_files()
-        elif opts.add_all_visible_courses:
-            ConfigService(config, opts).interactively_add_all_visible_courses()
-        else:
-            run_main(config, opts)
+        choose_task(config, opts)
 
         logging.info('All done. Exiting..')
         ProcessLock.unlock(opts.path)

@@ -11,7 +11,7 @@ from moodle_dl.types import Course
 from moodle_dl.utils import Cutie, Log, PathTools as PT
 
 
-class ConfigService:
+class ConfigWizard:
     def __init__(self, config: ConfigHelper, opts):
         self.config = config
         self.opts = opts

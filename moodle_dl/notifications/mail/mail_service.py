@@ -1,80 +1,20 @@
 import logging
 import traceback
 
-from getpass import getpass
 from typing import List
 
 from moodle_dl.downloader.task import Task
 from moodle_dl.notifications.mail.mail_shooter import MailShooter
 from moodle_dl.notifications.notification_service import NotificationService
 from moodle_dl.types import Course
-from moodle_dl.utils import Cutie
 from moodle_dl.notifications.mail.mail_formater import (
     create_full_error_mail,
     create_full_failed_downloads_mail,
     create_full_moodle_diff_mail,
-    create_full_welcome_mail,
 )
 
 
 class MailService(NotificationService):
-    def interactively_configure(self) -> None:
-        """
-        Guides the user through the configuration of the mail notification.
-        """
-
-        do_mail = Cutie.prompt_yes_or_no('Do you want to activate Notifications via mail?')
-
-        if not do_mail:
-            self.config.remove_property('mail')
-        else:
-            print('[The following Inputs are not validated!]')
-
-            config_valid = False
-            while not config_valid:
-                sender = input('E-Mail-Address of the Sender:   ')
-                server_host = input('Host of the SMTP-Server:   ')
-                server_port = input('Port of the SMTP-Server [STARTTLS, default 587]:   ')
-                if server_port == '':
-                    print('Using default port 587!')
-                    server_port = '587'
-                username = input('Username for the SMTP-Server:   ')
-                password = getpass('Password for the SMTP-Server [no output]:   ')
-                target = input('E-Mail-Address of the Target:   ')
-
-                print('Testing Mail-Config...')
-                welcome_content = create_full_welcome_mail()
-                mail_shooter = MailShooter(sender, server_host, int(server_port), username, password)
-                try:
-                    mail_shooter.send(target, 'Hey!', welcome_content[0], welcome_content[1])
-                except OSError as e:
-                    print(f'Error while sending the test mail: {str(e)}')
-                    continue
-                else:
-                    input(
-                        'Please check if you received the Welcome-Mail.'
-                        + ' If yes, confirm with Return.\nIf not, exit'
-                        + ' this program ([CTRL]+[C]) and try again later.'
-                    )
-                    config_valid = True
-
-                raw_send_error_msg = ''
-                while raw_send_error_msg not in ['y', 'n']:
-                    raw_send_error_msg = input('Do you want to also get error reports sent by mail? [y/n]   ')
-                do_send_error_msg = raw_send_error_msg == 'y'
-
-                mail_cfg = {
-                    'sender': sender,
-                    'server_host': server_host,
-                    'server_port': server_port,
-                    'username': username,
-                    'password': password,
-                    'target': target,
-                    'send_error_msg': do_send_error_msg,
-                }
-
-                self.config.set_property('mail', mail_cfg)
-
     def _is_configured(self) -> bool:
         # Checks if the sending of emails has been configured.
         try:

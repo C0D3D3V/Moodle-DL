@@ -1,74 +1,16 @@
 import logging
 import traceback
 
-from getpass import getpass
 from typing import List
-
-import aioxmpp
 
 from moodle_dl.downloader.task import Task
 from moodle_dl.notifications.notification_service import NotificationService
 from moodle_dl.notifications.xmpp.xmpp_formater import XmppFormater as XF
 from moodle_dl.notifications.xmpp.xmpp_shooter import XmppShooter
 from moodle_dl.types import Course
-from moodle_dl.utils import Cutie
 
 
 class XmppService(NotificationService):
-    def interactively_configure(self) -> None:
-        """
-        Guides the user through the configuration of the xmpp notification.
-        """
-
-        do_xmpp = Cutie.prompt_yes_or_no('Do you want to activate Notifications via XMPP?')
-
-        if not do_xmpp:
-            self.config.remove_property('xmpp')
-        else:
-            print('[The following Inputs are not validated!]')
-            config_valid = False
-            while not config_valid:
-                sender = input('JID of the Sender:   ')
-                password = getpass('Password for the Sender [no output]:   ')
-                target = input('JID of the Target:   ')
-                print('Testing XMPP-Config...')
-
-                try:
-                    xmpp_shooter = XmppShooter(sender, password, target)
-                    xmpp_shooter.send('This is a Testmessage from Moodle Downloader!')
-                except (
-                    ConnectionError,
-                    aioxmpp.errors.StanzaError,
-                    aioxmpp.errors.UserError,
-                    OSError,
-                    RuntimeError,
-                ) as e:
-                    print(f'Error while sending the test message: {str(e)}')
-                    continue
-
-                else:
-                    input(
-                        'Please check if you received the Testmessage.'
-                        + ' If yes, confirm with Return.\nIf not, exit'
-                        + ' this program ([CTRL]+[C]) and try again later.'
-                    )
-                    config_valid = True
-
-                raw_send_error_msg = ''
-                while raw_send_error_msg not in ['y', 'n']:
-                    raw_send_error_msg = input('Do you want to also get error reports sent in xmpp? [y/n]   ')
-
-                do_send_error_msg = raw_send_error_msg == 'y'
-
-                xmpp_cfg = {
-                    'sender': sender,
-                    'password': password,
-                    'target': target,
-                    'send_error_msg': do_send_error_msg,
-                }
-
-                self.config.set_property('xmpp', xmpp_cfg)
-
     def _is_configured(self) -> bool:
         # Checks if the sending of XMPP messages has been configured.
         try:
