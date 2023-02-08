@@ -7,9 +7,7 @@ from moodle_dl.types import Course
 
 
 class NotificationService(metaclass=ABCMeta):
-    """
-    Common class for a notification service
-    """
+    "Common class for a notification service"
 
     def __init__(self, config: ConfigHelper):
         self.config = config

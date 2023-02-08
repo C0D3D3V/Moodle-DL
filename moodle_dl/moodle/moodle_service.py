@@ -20,7 +20,6 @@ class MoodleService:
     def __init__(self, config: ConfigHelper, opts):
         self.config = config
         self.opts = opts
-        self.recorder = StateRecorder(opts)
 
     @staticmethod
     def obtain_login_token(opts, username: str, password: str, moodle_url: MoodleURL) -> str:
@@ -88,7 +87,7 @@ class MoodleService:
             core_handler.version = version
         return user_id, version
 
-    async def fetch_state(self) -> List[Course]:
+    async def fetch_state(self, database: StateRecorder) -> List[Course]:
         """
         Fetch the current status of the configured Moodle account and compare it with the last known state
         It does not change the known state, nor does it download the files.
@@ -110,18 +109,17 @@ class MoodleService:
 
         courses = self.get_courses_list(core_handler, user_id)
 
-        mods = get_all_mods(
-            request_helper, version, user_id, self.recorder.get_last_timestamp_per_mod_module(), self.config
-        )
+        mods = get_all_mods(request_helper, version, user_id, database.get_last_timestamp_per_mod_module(), self.config)
         fetched_mods_files = await fetch_mods_files(mods, courses)
         course_cores = await core_handler.async_load_course_cores(courses)
 
         logging.debug('Combine API results...')
-        result_builder = ResultBuilder(moodle_url, version, get_mod_plurals())
-        result_builder.add_files_to_courses(courses, course_cores, fetched_mods_files)
+        ResultBuilder(moodle_url, version, get_mod_plurals()).add_files_to_courses(
+            courses, course_cores, fetched_mods_files
+        )
 
         logging.debug('Checking for changes...')
-        changes = self.recorder.changes_of_new_version(courses)
+        changes = database.changes_of_new_version(courses)
         changes = self.add_options_to_courses(changes)
         changes = self.filter_courses(changes, self.config, cookie_handler, courses)
 

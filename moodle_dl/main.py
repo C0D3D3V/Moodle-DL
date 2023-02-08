@@ -23,6 +23,7 @@ from colorama import just_fix_windows_console
 
 from moodle_dl.cli import ConfigWizard, DatabaseManager, MoodleWizard, NotificationsWizard, init_config
 from moodle_dl.config import ConfigHelper
+from moodle_dl.database import StateRecorder
 from moodle_dl.downloader.download_service import DownloadService
 from moodle_dl.downloader.fake_download_service import FakeDownloadService
 from moodle_dl.moodle.moodle_service import MoodleService
@@ -32,10 +33,7 @@ from moodle_dl.version import __version__
 
 
 class ReRaiseOnError(logging.StreamHandler):
-    """
-    A logging-handler class which allows the exception-catcher of i.e. PyCharm
-    to intervene
-    """
+    "A logging-handler class which allows the exception-catcher of i.e. PyCharm to intervene"
 
     def emit(self, record):
         if hasattr(record, 'exception'):
@@ -86,7 +84,8 @@ def run_main(config: ConfigHelper, opts):
         moodle = MoodleService(config, opts)
 
         logging.debug('Checking for changes for the configured Moodle-Account....')
-        changed_courses = asyncio.run(moodle.fetch_state())
+        database = StateRecorder(opts)
+        changed_courses = asyncio.run(moodle.fetch_state(database))
 
         if opts.log_responses:
             logging.info("All JSON-responses from Moodle have been written to the responses.log file.")
@@ -101,13 +100,13 @@ def run_main(config: ConfigHelper, opts):
         downloader.run()
         failed_downloads = downloader.get_failed_tasks()
 
-        changed_courses_to_notify = moodle.recorder.changes_to_notify()
+        changed_courses_to_notify = database.changes_to_notify()
 
         if len(changed_courses_to_notify) > 0:
             for service in notify_services:
                 service.notify_about_changes_in_moodle(changed_courses_to_notify)
 
-            moodle.recorder.notified(changed_courses_to_notify)
+            database.notified(changed_courses_to_notify)
 
         else:
             logging.info('No changes found for the configured Moodle-Account.')

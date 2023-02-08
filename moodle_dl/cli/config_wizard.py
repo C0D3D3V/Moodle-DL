@@ -388,15 +388,15 @@ class ConfigWizard:
 
         excluded_sections = current_course_settings.get('excluded_sections', [])
 
-        change_excluded_sections_promt = 'Do you want to exclude individual sections of this course from download?'
+        change_excluded_sections_prompt = 'Do you want to exclude individual sections of this course from download?'
         if len(excluded_sections) > 0:
-            change_excluded_sections_promt = (
+            change_excluded_sections_prompt = (
                 'Do you want to change the selection of sections that should not be'
                 + f' downloaded? Currently {len(excluded_sections)} sections of this course are excluded from download.'
             )
 
         change_excluded_sections = Cutie.prompt_yes_or_no(
-            Log.blue_str(change_excluded_sections_promt),
+            Log.blue_str(change_excluded_sections_prompt),
             default_is_yes=(len(excluded_sections) > 0),
         )
 
