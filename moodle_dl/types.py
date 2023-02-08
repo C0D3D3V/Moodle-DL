@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Dict
 
 from moodle_dl.utils import PathTools as PT
 
@@ -213,6 +213,21 @@ class Course:
         message += f', files: {len(self.files)}'
         message += ')'
         return message
+
+
+@dataclass
+class DownloadOptions:
+    token: str
+    download_linked_files: bool
+    download_domains_whitelist: List
+    download_domains_blacklist: List
+    cookies_path: str
+    yt_dlp_options: Dict
+    videopasswords: Dict
+    external_file_downloaders: Dict
+    ignore_ytdl_errors: bool
+    skip_cert_verify: bool
+    allow_insecure_ssl: bool
 
 
 @dataclass

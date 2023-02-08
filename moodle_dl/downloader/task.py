@@ -22,14 +22,13 @@ from typing import Dict, List
 from urllib.error import ContentTooShortError
 
 import html2text
-import requests
 import yt_dlp
 
 from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema, RequestException
 
 from moodle_dl.moodle.request_helper import RequestHelper
 from moodle_dl.types import Course, File
-from moodle_dl.utils import format_bytes, timeconvert, SslHelper, PathTools as PT
+from moodle_dl.utils import format_bytes, timeconvert, SslHelper, PathTools as PT, format_seconds
 from moodle_dl.downloader.extractors import add_additional_extractors
 
 
@@ -61,7 +60,6 @@ class Task(object):
         self.fs_lock = fs_lock
         self.ssl_context = ssl_context
         self.skip_cert_verify = skip_cert_verify
-        self.verify_cert = not skip_cert_verify
         self.options = options
 
         # get valid filename
@@ -80,6 +78,30 @@ class Task(object):
 
         # For yt-dlp errors
         self.yt_dlp_failed_with_error = False
+
+    @staticmethod
+    def gen_path(storage_path: str, course: Course, file: File):
+        """
+        Generates the directory path where a file should be stored
+        """
+        course_name = course.fullname
+        if course.overwrite_name_with is not None:
+            course_name = course.overwrite_name_with
+
+        # if a flat path is requested
+        if not course.create_directory_structure:
+            return PT.flat_path_of_file(storage_path, course_name, file.content_filepath)
+
+        # If the file is located in a folder or in an assignment,
+        # it should be saved in a sub-folder
+        # (with the name of the module).
+        if file.module_modname.endswith(('assign', 'folder', 'data', 'forum', 'quiz', 'lesson', 'workshop', 'page')):
+            file_path = file.content_filepath
+            if file.content_type == 'submission_file':
+                file_path = os.path.join('/submissions/', file_path.strip('/'))
+
+            return PT.path_of_file_in_module(storage_path, course_name, file.section_name, file.module_name, file_path)
+        return PT.path_of_file(storage_path, course_name, file.section_name, file.content_filepath)
 
     def add_progress(self, count: int, block_size: int, total_size: int):
         """
@@ -380,7 +402,7 @@ class Task(object):
         isHTML = False
         new_filename = ""
         total_bytes_estimate = -1
-        session = SslHelper.custom_requests_session(self.verify_cert)
+        session = SslHelper.custom_requests_session(self.skip_cert_verify)
 
         if cookies_path is not None:
             session.cookies = MozillaCookieJar(cookies_path)
@@ -1003,21 +1025,10 @@ class Task(object):
 
         end = time.time()
         logging.debug(
-            'T%s - Download of %s finished in %s', self.thread_id, format_bytes(read), self.format_seconds(end - start)
+            'T%s - Download of %s finished in %s', self.thread_id, format_bytes(read), format_seconds(end - start)
         )
 
         return result
-
-    @staticmethod
-    def format_seconds(seconds):
-        (mins, secs) = divmod(seconds, 60)
-        (hours, mins) = divmod(mins, 60)
-        if hours > 99:
-            return '--:--:--'
-        if hours == 0:
-            return f'{int(mins):02d}:{int(secs):02d}'
-        else:
-            return f'{int(hours):02d}:{int(mins):02d}:{int(secs):02d}'
 
     def __str__(self):
         # Task to string

@@ -4,13 +4,11 @@ import json
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-from moodle_dl.types import MoodleURL
+from moodle_dl.types import MoodleURL, DownloadOptions
 
 
 class ConfigHelper:
-    """
-    Handles the saving, formatting and loading of the local configuration.
-    """
+    "Handles the saving, formatting and loading of the local configuration."
 
     class NoConfigError(ValueError):
         """An Exception which gets thrown if config could not be loaded."""
@@ -42,11 +40,18 @@ class ConfigHelper:
             config_file.write(config_formatted)
 
     def get_property(self, key: str) -> any:
-        # returns a property if configured
+        # return a property if configured
         try:
             return self._whole_config[key]
         except KeyError:
             raise ValueError(f'The {key}-Property is not yet configured!')
+
+    def get_property_or(self, key: str, default: any = None) -> any:
+        # return a property if configured
+        try:
+            return self._whole_config[key]
+        except KeyError:
+            return default
 
     def set_property(self, key: str, value: any):
         # sets a property in the JSON object
@@ -62,103 +67,67 @@ class ConfigHelper:
     # ---------------------------- GETTERS ------------------------------------
 
     def get_download_submissions(self) -> str:
-        # returns a stored boolean if submissions should be downloaded
-        try:
-            return self.get_property('download_submissions')
-        except ValueError:
-            return False
+        # return a stored boolean if submissions should be downloaded
+        return self.get_property_or('download_submissions', False)
 
     def get_download_descriptions(self) -> bool:
-        # returns a stored boolean if descriptions should be downloaded
-        try:
-            return self.get_property('download_descriptions')
-        except ValueError:
-            return False
+        # return a stored boolean if descriptions should be downloaded
+        return self.get_property_or('download_descriptions', False)
 
     def get_download_links_in_descriptions(self) -> bool:
-        # returns a stored boolean if links in descriptions should be downloaded
-        try:
-            return self.get_property('download_links_in_descriptions')
-        except ValueError:
-            return False
+        # return a stored boolean if links in descriptions should be downloaded
+        return self.get_property_or('download_links_in_descriptions', False)
 
     def get_download_databases(self) -> bool:
-        # returns a stored boolean if databases should be downloaded
-        try:
-            return self.get_property('download_databases')
-        except ValueError:
-            return False
+        # return a stored boolean if databases should be downloaded
+        return self.get_property_or('download_databases', False)
 
     def get_download_forums(self) -> bool:
-        # returns a stored boolean if forums should be downloaded
-        try:
-            return self.get_property('download_forums')
-        except ValueError:
-            return False
+        # return a stored boolean if forums should be downloaded
+        return self.get_property_or('download_forums', False)
 
     def get_download_quizzes(self) -> bool:
-        # returns a stored boolean if quizzes should be downloaded
-        try:
-            return self.get_property('download_quizzes')
-        except ValueError:
-            return False
+        # return a stored boolean if quizzes should be downloaded
+        return self.get_property_or('download_quizzes', False)
 
     def get_download_lessons(self) -> bool:
-        # returns a stored boolean if lessons should be downloaded
-        try:
-            return self.get_property('download_lessons')
-        except ValueError:
-            return False
+        # return a stored boolean if lessons should be downloaded
+        return self.get_property_or('download_lessons', False)
 
     def get_download_workshops(self) -> bool:
-        # returns a stored boolean if workshops should be downloaded
-        try:
-            return self.get_property('download_workshops')
-        except ValueError:
-            return False
+        # return a stored boolean if workshops should be downloaded
+        return self.get_property_or('download_workshops', False)
 
     def get_userid_and_version(self) -> Tuple[str, int]:
-        # returns the userid and a version
+        # return the userid and a version
         try:
-            userid = self.get_property('userid')
+            user_id = self.get_property('userid')
             version = int(self.get_property('version'))
-            return userid, version
+            return user_id, version
         except ValueError:
             return None, None
 
     def get_do_not_ask_to_save_userid_and_version(self) -> bool:
-        try:
-            return self.get_property('do_not_ask_to_save_userid_and_version')
-        except ValueError:
-            return False
+        return self.get_property_or('do_not_ask_to_save_userid_and_version', False)
 
     def get_download_course_ids(self) -> str:
-        # returns a stored list of course ids hat should be downloaded
-        try:
-            return self.get_property('download_course_ids')
-        except ValueError:
-            return []
+        # return a stored list of course ids hat should be downloaded
+        return self.get_property_or('download_course_ids', [])
 
     def get_download_public_course_ids(self) -> str:
-        # returns a stored list of public course ids hat should be downloaded
-        try:
-            return self.get_property('download_public_course_ids')
-        except ValueError:
-            return []
+        # return a stored list of public course ids hat should be downloaded
+        return self.get_property_or('download_public_course_ids', [])
 
     def get_token(self) -> str:
-        # returns a stored token
+        # return a stored token
         try:
             return self.get_property('token')
         except ValueError:
             raise ValueError('Not yet configured!')
 
     def get_privatetoken(self) -> str:
-        # returns a stored privatetoken
-        try:
-            return self.get_property('privatetoken')
-        except ValueError:
-            return None
+        # return a stored privatetoken
+        return self.get_property_or('privatetoken', None)
 
     def get_moodle_URL(self) -> MoodleURL:
         moodle_domain = self.get_moodle_domain()
@@ -167,42 +136,60 @@ class ConfigHelper:
         return MoodleURL(use_http, moodle_domain, moodle_path)
 
     def get_moodle_domain(self) -> str:
-        # returns a stored moodle_domain
+        # return a stored moodle_domain
         try:
             return self.get_property('moodle_domain')
         except ValueError:
             raise ValueError('Not yet configured!')
 
     def get_moodle_path(self) -> str:
-        # returns a stored moodle_path
+        # return a stored moodle_path
         try:
             return self.get_property('moodle_path')
         except ValueError:
             raise ValueError('Not yet configured!')
 
     def get_options_of_courses(self) -> Dict:
-        # returns a stored dictionary of options for courses
-        try:
-            return self.get_property('options_of_courses')
-        except ValueError:
-            return {}
+        # return a stored dictionary of options for courses
+        return self.get_property_or('options_of_courses', {})
 
     def get_dont_download_course_ids(self) -> List:
-        # returns a stored list of ids that should not be downloaded
-        try:
-            return self.get_property('dont_download_course_ids')
-        except ValueError:
-            return []
+        # return a stored list of ids that should not be downloaded
+        return self.get_property_or('dont_download_course_ids', [])
 
-    def get_download_linked_files(self) -> Dict:
-        # returns if linked files should be downloaded
-        try:
-            return self.get_property('download_linked_files')
-        except ValueError:
-            return False
+    def get_download_linked_files(self) -> bool:
+        # return if linked files should be downloaded
+        return self.get_property_or('download_linked_files', False)
+
+    def get_download_domains_whitelist(self) -> List:
+        # return a list of white listed domains that should be downloaded
+        return self.get_property_or('download_domains_whitelist', [])
+
+    def get_download_domains_blacklist(self) -> List:
+        # return a list of black listed domains that should not be downloaded
+        return self.get_property_or('download_domains_blacklist', [])
+
+    def get_cookies_path(self) -> str:
+        # return the path to the cookies file, if it exists
+        cookies_path = str(Path(self.storage_path) / 'Cookies.txt')
+        if os.path.exists(cookies_path):
+            return cookies_path
+        return None
+
+    def get_yt_dlp_options(self) -> Dict:
+        # return additional yt-dlp options
+        return self.get_property_or('yt_dlp_options', {})
+
+    def get_videopasswords(self) -> Dict:
+        # return dict with passwords that get passed to yt-dlp
+        return self.get_property_or('videopasswords', {})
+
+    def get_external_file_downloaders(self) -> Dict:
+        # return dict with configured external downloaders
+        return self.get_property_or('external_file_downloaders', {})
 
     def get_exclude_file_extensions(self) -> Dict:
-        # returns a list of file extensions that should not be downloaded
+        # return a list of file extensions that should not be downloaded
         try:
             exclude_file_extensions = self.get_property('exclude_file_extensions')
             if not isinstance(exclude_file_extensions, list):
@@ -212,66 +199,32 @@ class ConfigHelper:
             return []
 
     def get_download_also_with_cookie(self) -> Dict:
-        # returns if files for which a cookie is required should be downloaded
-        try:
-            return self.get_property('download_also_with_cookie')
-        except ValueError:
-            return False
+        # return if files for which a cookie is required should be downloaded
+        return self.get_property_or('download_also_with_cookie', False)
 
-    def get_download_options(self) -> Dict:
-        # returns the option dictionary for downloading files
-        options = {}
-        try:
-            options.update({'download_linked_files': self.get_property('download_linked_files')})
-        except ValueError:
-            options.update({'download_linked_files': False})
-
-        try:
-            options.update({'download_domains_whitelist': self.get_property('download_domains_whitelist')})
-        except ValueError:
-            options.update({'download_domains_whitelist': []})
-
-        try:
-            options.update({'download_domains_blacklist': self.get_property('download_domains_blacklist')})
-        except ValueError:
-            options.update({'download_domains_blacklist': []})
-
-        cookies_path = str(Path(self.storage_path) / 'Cookies.txt')
-        if os.path.exists(cookies_path):
-            options.update({'cookies_path': cookies_path})
-        else:
-            options.update({'cookies_path': None})
-
-        try:
-            options.update({'yt_dlp_options': self.get_property('yt_dlp_options')})
-        except ValueError:
-            options.update({'yt_dlp_options': {}})
-
-        try:
-            options.update({'videopasswords': self.get_property('videopasswords')})
-        except ValueError:
-            options.update({'videopasswords': {}})
-
-        try:
-            options.update({'external_file_downloaders': self.get_property('external_file_downloaders')})
-        except ValueError:
-            options.update({'external_file_downloaders': {}})
-
-        return options
+    def get_download_options(self, opts) -> DownloadOptions:
+        # return the option dictionary for downloading files
+        return DownloadOptions(
+            token=self.get_token(),
+            download_linked_files=self.get_download_linked_files(),
+            download_domains_whitelist=self.get_download_domains_whitelist(),
+            download_domains_blacklist=self.get_download_domains_blacklist(),
+            cookies_path=self.get_cookies_path(),
+            yt_dlp_options=self.get_yt_dlp_options(),
+            videopasswords=self.get_videopasswords(),
+            external_file_downloaders=self.get_external_file_downloaders(),
+            ignore_ytdl_errors=opts.ignore_ytdl_errors,
+            skip_cert_verify=opts.skip_cert_verify,
+            allow_insecure_ssl=opts.allow_insecure_ssl,
+        )
 
     def get_restricted_filenames(self) -> Dict:
-        # returns the filenames should be restricted
-        try:
-            return self.get_property('restricted_filenames')
-        except ValueError:
-            return False
+        # return the filenames should be restricted
+        return self.get_property_or('restricted_filenames', False)
 
     def get_use_http(self) -> bool:
-        # returns a stored boolean if http should be used instead of https
-        try:
-            return self.get_property('use_http')
-        except ValueError:
-            return False
+        # return a stored boolean if http should be used instead of https
+        return self.get_property_or('use_http', False)
 
     # ---------------------------- SETTERS ------------------------------------
 

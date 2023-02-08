@@ -18,26 +18,28 @@ class FakeDownloadService:
     This way a local database of Moodle's current files can be created without actually downloading the files.
     """
 
-    def __init__(self, courses: List[Course], config: ConfigHelper, opts):
-        """
-        Initiates the FakeDownloadService with all files that need to be saved in the database
-        @param courses: A list of courses that contains all modified files
-        @param config: Config helper
-        @param opts: Moodle-dl options
-        """
+    def __init__(self, courses: List[Course], config: ConfigHelper, opts, database: StateRecorder):
         self.courses = courses
         self.opts = opts
         self.config = config
-        self.state_recorder = StateRecorder(opts)
+        self.database = database
 
+    def get_failed_tasks(self):
+        """
+        Return a list of failed downloads.
+        No download can fail, so this is only a dummy function.
+        """
+        return []
+
+    def run(self):
         # delete files, that should be deleted
-        self.state_recorder.batch_delete_files(self.courses)
+        self.database.batch_delete_files(self.courses)
 
         # save files, that should be saved
         for course in self.courses:
             for file in course.files:
                 if file.deleted is False:
-                    save_destination = DownloadService.gen_path(opts.path, course, file)
+                    save_destination = Task.gen_path(self.opts.path, course, file)
 
                     filename = PT.to_valid_name(file.content_filename)
 
@@ -54,15 +56,6 @@ class FakeDownloadService:
                         if os.name == 'nt' or platform.system() == "Darwin":
                             file.saved_to = str(Path(save_destination) / (filename + '.URL'))
 
-                    self.state_recorder.save_file(file, course.id, course.fullname)
+                    self.database.save_file(file, course.id, course.fullname)
 
-    def get_failed_tasks(self):
-        """
-        Return a list of failed downloads.
-        No download can fail, so this is only a dummy function.
-        """
-        return []
-
-    def run(self):
-        """Dummy function"""
         logging.info('All files stored in the Database!')

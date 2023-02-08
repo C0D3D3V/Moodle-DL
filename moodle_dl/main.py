@@ -94,9 +94,9 @@ def run_main(config: ConfigHelper, opts):
         logging.debug('Start downloading changed files...')
 
         if opts.without_downloading_files:
-            downloader = FakeDownloadService(changed_courses, config, opts)
+            downloader = FakeDownloadService(changed_courses, config, opts, database)
         else:
-            downloader = DownloadService(changed_courses, config, opts)
+            downloader = DownloadService(changed_courses, config, opts, database)
         downloader.run()
         failed_downloads = downloader.get_failed_tasks()
 

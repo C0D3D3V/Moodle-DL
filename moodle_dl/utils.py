@@ -13,6 +13,7 @@ import unicodedata
 
 from pathlib import Path
 from typing import List, Optional, Dict
+from functools import lru_cache
 
 import readchar
 import requests
@@ -29,6 +30,16 @@ def check_verbose() -> bool:
 def check_debug() -> bool:
     """Return if the debugger is currently active"""
     return 'pydevd' in sys.modules or (hasattr(sys, 'gettrace') and sys.gettrace() is not None)
+
+
+def format_seconds(seconds):
+    (mins, secs) = divmod(seconds, 60)
+    (hours, mins) = divmod(mins, 60)
+    if hours > 99:
+        return '--:--:--'
+    if hours == 0:
+        return f'{int(mins):02d}:{int(secs):02d}'
+    return f'{int(hours):02d}:{int(mins):02d}:{int(secs):02d}'
 
 
 def calc_speed(start, now, byte_count):
@@ -450,8 +461,9 @@ class SslHelper:
                 ssl_context.load_verify_locations(capath=cert_loc)
 
     @classmethod
-    def get_ssl_context(cls, verify_cert: bool = True, allow_insecure_ssl: bool = False):
-        if verify_cert:
+    @lru_cache(maxsize=4)
+    def get_ssl_context(cls, skip_cert_verify: bool = False, allow_insecure_ssl: bool = False):
+        if not skip_cert_verify:
             ssl_context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
             cls.load_default_certs(ssl_context)
         else:
@@ -496,12 +508,12 @@ class SslHelper:
             )
 
     @classmethod
-    def custom_requests_session(cls, verify_cert: bool = True, allow_insecure_ssl: bool = False):
+    def custom_requests_session(cls, skip_cert_verify: bool = False, allow_insecure_ssl: bool = False):
         """
         Return a new requests session with custom SSL context
         """
         session = requests.Session()
-        ssl_context = cls.get_ssl_context(verify_cert, allow_insecure_ssl)
+        ssl_context = cls.get_ssl_context(skip_cert_verify, allow_insecure_ssl)
         session.mount('https://', cls.CustomHttpAdapter(ssl_context))
         return session
 
