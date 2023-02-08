@@ -28,10 +28,10 @@ class DownloadService:
         dl_options = self.config.get_download_options(self.opts)
         all_tasks = []
         for course in self.courses:
-            for file in course.files:
-                if file.deleted is False:
-                    all_tasks.append(Task(file, course, dl_options, callback))
-                    self.total_to_download += file.content_filesize
+            for course_file in course.files:
+                if course_file.deleted is False:
+                    all_tasks.append(Task(course_file, course, dl_options, callback))
+                    self.total_to_download += course_file.content_filesize
                     self.total_files += 1
         logging.debug('Queue contains %d tasks', self.total_files)
         return all_tasks

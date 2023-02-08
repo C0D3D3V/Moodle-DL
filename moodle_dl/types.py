@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List, Dict
+from typing import List, Dict, Any
 
 from moodle_dl.utils import PathTools as PT
 
@@ -213,6 +213,15 @@ class Course:
         message += f', files: {len(self.files)}'
         message += ')'
         return message
+
+
+@dataclass
+class TaskStatus:
+    bytes_downloaded: int = field(init=False, default=0)
+    external_total_size: int = field(init=False, default=None)
+    finished_successfully: bool = field(init=False, default=False)
+    error: Any = field(init=False, default=None)
+    yt_dlp_failed_with_error: bool = field(init=False, default=False)
 
 
 @dataclass

@@ -9,7 +9,6 @@ import shutil
 import socket
 import ssl
 import subprocess
-import threading
 import time
 import traceback
 import urllib
@@ -18,7 +17,7 @@ import urllib.parse as urlparse
 from email.utils import unquote
 from http.cookiejar import MozillaCookieJar
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Callable
 from urllib.error import ContentTooShortError
 
 import html2text
@@ -26,58 +25,23 @@ import yt_dlp
 
 from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema, RequestException
 
-from moodle_dl.moodle.request_helper import RequestHelper
-from moodle_dl.types import Course, File
-from moodle_dl.utils import format_bytes, timeconvert, SslHelper, PathTools as PT, format_seconds
 from moodle_dl.downloader.extractors import add_additional_extractors
+from moodle_dl.moodle.request_helper import RequestHelper
+from moodle_dl.types import Course, File, DownloadOptions, TaskStatus
+from moodle_dl.utils import format_bytes, timeconvert, SslHelper, PathTools as PT, format_seconds
 
 
 class Task(object):
-    """
-    Task is responsible to download or create a file
-    """
+    "Task is responsible to download or create a file"
 
-    def __init__(
-        self,
-        file: File,
-        course: Course,
-        destination: str,
-        token: str,
-        thread_report: List,
-        fs_lock: threading.Lock,
-        ssl_context: ssl.SSLContext,
-        skip_cert_verify: bool,
-        options: Dict,
-    ):
-        """
-        Initiating an URL target.
-        """
-
+    def __init__(self, file: File, course: Course, options: DownloadOptions, callback: Callable[[], None]):
         self.file = file
         self.course = course
-        self.destination = destination
-        self.token = token
-        self.fs_lock = fs_lock
-        self.ssl_context = ssl_context
-        self.skip_cert_verify = skip_cert_verify
         self.options = options
+        self.callback = callback
 
-        # get valid filename
         self.filename = PT.to_valid_name(self.file.content_filename)
-
-        # To return errors
-        self.success = False
-        self.error = None
-
-        # To create live reports.
-        self.thread_id = 0
-        self.thread_report = thread_report
-
-        # Total downloaded.
-        self.downloaded = 0
-
-        # For yt-dlp errors
-        self.yt_dlp_failed_with_error = False
+        self.status = TaskStatus()
 
     @staticmethod
     def gen_path(storage_path: str, course: Course, file: File):
@@ -125,7 +89,7 @@ class Task(object):
     def _add_token_to_url(self, url: str) -> str:
         """
         Adds the Moodle token to a URL
-        @param url: The URL where the token should be added.
+        @param url: The URL to that the token should be added.
         @return: The URL with the token.
         """
         url_parts = list(urlparse.urlparse(url))
@@ -964,8 +928,7 @@ class Task(object):
         https://github.com/python/cpython/blob/
         21bee0bd71e1ad270274499f9f58194ebb52e236/Lib/urllib/request.py#L229
 
-        Because urlopen also supports context,
-        I decided to adapt the download function.
+        Because urlopen also supports context, I decided to adapt the download function.
         """
         start = time.time()
         url_parsed = urlparse.urlparse(url)
@@ -1031,10 +994,8 @@ class Task(object):
         return result
 
     def __str__(self):
-        # Task to string
-        return 'Task (%(file)s, %(course)s, %(success)s, Error: %(error)s)' % {
+        return 'Task (%(file)s, %(course)s, %(status)s)' % {
             'file': self.file,
             'course': self.course,
-            'success': self.success,
-            'error': self.error,
+            'status': self.status
         }
