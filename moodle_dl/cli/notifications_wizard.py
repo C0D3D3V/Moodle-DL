@@ -7,11 +7,12 @@ from moodle_dl.notifications.mail.mail_formater import create_full_welcome_mail
 from moodle_dl.notifications.mail.mail_shooter import MailShooter
 from moodle_dl.notifications.telegram.telegram_shooter import TelegramShooter, RequestRejectedError
 from moodle_dl.notifications.xmpp.xmpp_shooter import XmppShooter
+from moodle_dl.types import MoodleDlOpts
 from moodle_dl.utils import Cutie
 
 
 class NotificationsWizard:
-    def __init__(self, config: ConfigHelper, opts):
+    def __init__(self, config: ConfigHelper, opts: MoodleDlOpts):
         self.config = config
         self.opts = opts
 

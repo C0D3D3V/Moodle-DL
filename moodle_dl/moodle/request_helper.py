@@ -13,7 +13,7 @@ import requests
 
 from requests.exceptions import RequestException
 
-from moodle_dl.types import MoodleURL
+from moodle_dl.types import MoodleURL, MoodleDlOpts
 from moodle_dl.utils import SslHelper, PathTools as PT
 
 
@@ -31,7 +31,7 @@ class RequestHelper:
     }
     MAX_RETRIES = 5
 
-    def __init__(self, opts, moodle_url: MoodleURL, token: str = ''):
+    def __init__(self, opts: MoodleDlOpts, moodle_url: MoodleURL, token: str = ''):
         self.token = token
         self.moodle_url = moodle_url
         self.opts = opts

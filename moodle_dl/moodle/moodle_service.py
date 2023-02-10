@@ -12,12 +12,12 @@ from moodle_dl.moodle.core_handler import CoreHandler
 from moodle_dl.moodle.mods import fetch_mods_files, get_all_mods, get_all_mods_classes, get_mod_plurals
 from moodle_dl.moodle.request_helper import RequestHelper
 from moodle_dl.moodle.result_builder import ResultBuilder
-from moodle_dl.types import Course, MoodleURL
+from moodle_dl.types import Course, MoodleURL, MoodleDlOpts
 from moodle_dl.utils import determine_ext
 
 
 class MoodleService:
-    def __init__(self, config: ConfigHelper, opts):
+    def __init__(self, config: ConfigHelper, opts: MoodleDlOpts):
         self.config = config
         self.opts = opts
 

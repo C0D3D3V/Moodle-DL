@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-from moodle_dl.types import MoodleURL, DownloadOptions
+from moodle_dl.types import MoodleURL, MoodleDlOpts, DownloadOptions
 
 
 class ConfigHelper:
@@ -202,7 +202,7 @@ class ConfigHelper:
         # return if files for which a cookie is required should be downloaded
         return self.get_property_or('download_also_with_cookie', False)
 
-    def get_download_options(self, opts) -> DownloadOptions:
+    def get_download_options(self, opts: MoodleDlOpts) -> DownloadOptions:
         # return the option dictionary for downloading files
         return DownloadOptions(
             token=self.get_token(),
@@ -213,9 +213,7 @@ class ConfigHelper:
             yt_dlp_options=self.get_yt_dlp_options(),
             videopasswords=self.get_videopasswords(),
             external_file_downloaders=self.get_external_file_downloaders(),
-            ignore_ytdl_errors=opts.ignore_ytdl_errors,
-            skip_cert_verify=opts.skip_cert_verify,
-            allow_insecure_ssl=opts.allow_insecure_ssl,
+            global_opts=opts,
         )
 
     def get_restricted_filenames(self) -> Dict:

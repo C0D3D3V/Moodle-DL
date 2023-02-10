@@ -3,12 +3,12 @@ import os
 from moodle_dl.config import ConfigHelper
 from moodle_dl.database import StateRecorder
 from moodle_dl.moodle.moodle_service import MoodleService
-from moodle_dl.types import File
+from moodle_dl.types import File, MoodleDlOpts
 from moodle_dl.utils import Cutie, Log
 
 
 class DatabaseManager:
-    def __init__(self, config: ConfigHelper, opts):
+    def __init__(self, config: ConfigHelper, opts: MoodleDlOpts):
         self.config = config
         self.opts = opts
         self.state_recorder = StateRecorder(opts)

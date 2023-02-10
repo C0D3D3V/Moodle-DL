@@ -7,8 +7,7 @@ from typing import List
 
 from moodle_dl.config import ConfigHelper
 from moodle_dl.database import StateRecorder
-from moodle_dl.downloader.download_service import DownloadService
-from moodle_dl.types import Course
+from moodle_dl.types import Course, MoodleDlOpts
 from moodle_dl.utils import PathTools as PT
 
 
@@ -18,7 +17,7 @@ class FakeDownloadService:
     This way a local database of Moodle's current files can be created without actually downloading the files.
     """
 
-    def __init__(self, courses: List[Course], config: ConfigHelper, opts, database: StateRecorder):
+    def __init__(self, courses: List[Course], config: ConfigHelper, opts: MoodleDlOpts, database: StateRecorder):
         self.courses = courses
         self.opts = opts
         self.config = config

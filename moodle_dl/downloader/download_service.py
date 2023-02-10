@@ -7,14 +7,14 @@ from typing import List
 from moodle_dl.config import ConfigHelper
 from moodle_dl.database import StateRecorder
 from moodle_dl.downloader.task import Task
-from moodle_dl.types import Course
+from moodle_dl.types import Course, MoodleDlOpts
 from moodle_dl.utils import format_bytes, calc_speed, format_speed
 
 
 class DownloadService:
     "Manages jobs to download, delete or create files of courses"
 
-    def __init__(self, courses: List[Course], config: ConfigHelper, opts, database: StateRecorder):
+    def __init__(self, courses: List[Course], config: ConfigHelper, opts: MoodleDlOpts, database: StateRecorder):
         self.courses = courses
         self.config = config
         self.opts = opts

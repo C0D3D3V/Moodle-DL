@@ -4,7 +4,7 @@ import logging
 from sqlite3 import Error
 from typing import Dict, List
 
-from moodle_dl.types import File, Course
+from moodle_dl.types import File, Course, MoodleDlOpts
 from moodle_dl.utils import PathTools as PT
 
 
@@ -14,7 +14,7 @@ class StateRecorder:
     state against the previous.
     """
 
-    def __init__(self, opts):
+    def __init__(self, opts: MoodleDlOpts):
         """
         Initiates the database.
         If no database exists yet, a new one is created.

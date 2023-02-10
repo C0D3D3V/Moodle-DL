@@ -2,6 +2,7 @@ import os
 import sys
 
 from moodle_dl.config import ConfigHelper
+from moodle_dl.types import MoodleDlOpts
 from moodle_dl.utils import Cutie, Log
 
 from moodle_dl.cli.config_wizard import ConfigWizard
@@ -12,7 +13,7 @@ from moodle_dl.cli.notifications_wizard import NotificationsWizard
 __all__ = ["ConfigWizard", "DatabaseManager", "NotificationsWizard"]
 
 
-def init_config(config: ConfigHelper, opts):
+def init_config(config: ConfigHelper, opts: MoodleDlOpts):
     if config.is_present():
         do_override_input = Cutie.prompt_yes_or_no(Log.error_str('Do you want to override the existing config?'))
 

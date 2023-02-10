@@ -7,12 +7,12 @@ from moodle_dl.config import ConfigHelper
 from moodle_dl.moodle.core_handler import CoreHandler
 from moodle_dl.moodle.moodle_service import MoodleService
 from moodle_dl.moodle.request_helper import RequestRejectedError, RequestHelper
-from moodle_dl.types import Course
+from moodle_dl.types import Course, MoodleDlOpts
 from moodle_dl.utils import Cutie, Log, PathTools as PT
 
 
 class ConfigWizard:
-    def __init__(self, config: ConfigHelper, opts):
+    def __init__(self, config: ConfigHelper, opts: MoodleDlOpts):
         self.config = config
         self.opts = opts
 

@@ -28,6 +28,7 @@ from moodle_dl.downloader.download_service import DownloadService
 from moodle_dl.downloader.fake_download_service import FakeDownloadService
 from moodle_dl.moodle.moodle_service import MoodleService
 from moodle_dl.notifications import get_all_notify_services
+from moodle_dl.types import MoodleDlOpts
 from moodle_dl.utils import ProcessLock, check_debug, PathTools as PT
 from moodle_dl.version import __version__
 
@@ -40,7 +41,7 @@ class ReRaiseOnError(logging.StreamHandler):
             raise record.exception
 
 
-def choose_task(config: ConfigHelper, opts):
+def choose_task(config: ConfigHelper, opts: MoodleDlOpts):
     if opts.add_all_visible_courses:
         ConfigWizard(config, opts).interactively_add_all_visible_courses()
     elif opts.change_notification_mail:
@@ -73,7 +74,7 @@ def connect_sentry(config: ConfigHelper) -> bool:
     return False
 
 
-def run_main(config: ConfigHelper, opts):
+def run_main(config: ConfigHelper, opts: MoodleDlOpts):
     sentry_connected = connect_sentry(config)
     notify_services = get_all_notify_services(config)
 
@@ -129,7 +130,7 @@ def run_main(config: ConfigHelper, opts):
         raise base_err
 
 
-def setup_logger(opts):
+def setup_logger(opts: MoodleDlOpts):
     file_log_handler = RotatingFileHandler(
         PT.make_path(opts.path, 'MoodleDL.log'),
         mode='a',
@@ -310,6 +311,7 @@ def get_parser():
 
     group.add_argument(
         '--add-all-visible-courses',
+        dest='add_all_visible_courses',
         default=False,
         action='store_true',
         help='Add all courses visible to the user to the configuration file.',
@@ -476,7 +478,7 @@ def get_parser():
     return parser
 
 
-def pre_process_opts(opts):
+def pre_process_opts(opts: MoodleDlOpts):
     if opts.max_path_length_workaround:
         opts.path = win_max_path_length_workaround(opts.path)
 
@@ -486,7 +488,7 @@ def main(args=None):
     """The main routine."""
     just_fix_windows_console()
     parser = get_parser()
-    opts = parser.parse_args(args)  # opts is of type Namespace
+    opts = MoodleDlOpts(**vars(parser.parse_args(args)))
     setup_logger(opts)
     pre_process_opts(opts)
 

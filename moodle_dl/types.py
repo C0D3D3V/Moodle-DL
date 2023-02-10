@@ -225,21 +225,6 @@ class TaskStatus:
 
 
 @dataclass
-class DownloadOptions:
-    token: str
-    download_linked_files: bool
-    download_domains_whitelist: List
-    download_domains_blacklist: List
-    cookies_path: str
-    yt_dlp_options: Dict
-    videopasswords: Dict
-    external_file_downloaders: Dict
-    ignore_ytdl_errors: bool
-    skip_cert_verify: bool
-    allow_insecure_ssl: bool
-
-
-@dataclass
 class MoodleURL:
     use_http: bool
     domain: str
@@ -253,3 +238,45 @@ class MoodleURL:
         else:
             self.scheme = 'https://'
         self.url_base = self.scheme + self.domain + self.path
+
+
+@dataclass
+class MoodleDlOpts:
+    init: bool
+    config: bool
+    new_token: bool
+    change_notification_mail: bool
+    change_notification_telegram: bool
+    change_notification_xmpp: bool
+    manage_database: bool
+    delete_old_files: bool
+    log_responses: bool
+    add_all_visible_courses: bool
+    sso: bool
+    username: str
+    password: str
+    token: str
+    path: str
+    max_parallel_downloads: int
+    max_parallel_api_calls: int
+    ignore_ytdl_errors: bool
+    without_downloading_files: bool
+    max_path_length_workaround: bool
+    allow_insecure_ssl: bool
+    skip_cert_verify: bool
+    verbose: bool
+    quiet: bool
+    log_to_file: bool
+
+
+@dataclass
+class DownloadOptions:
+    token: str
+    download_linked_files: bool
+    download_domains_whitelist: List
+    download_domains_blacklist: List
+    cookies_path: str
+    yt_dlp_options: Dict
+    videopasswords: Dict
+    external_file_downloaders: Dict
+    global_opts: MoodleDlOpts
