@@ -7,7 +7,7 @@ from typing import List
 from moodle_dl.config import ConfigHelper
 from moodle_dl.database import StateRecorder
 from moodle_dl.downloader.task import Task
-from moodle_dl.types import Course, MoodleDlOpts
+from moodle_dl.types import Course, MoodleDlOpts, DlEvent, DownloadStatus
 from moodle_dl.utils import format_bytes, calc_speed, format_speed
 
 
@@ -20,21 +20,37 @@ class DownloadService:
         self.opts = opts
         self.database = database
 
-        self.total_to_download = 0
-        self.last_total_downloaded = 0
-        self.total_files = 0
+        self.status = DownloadStatus()
 
     def gen_all_tasks(self) -> List:
+        # Set custom chunk size
+        Task.CHUNK_SIZE = self.opts.download_chunk_size
         dl_options = self.config.get_download_options(self.opts)
         all_tasks = []
         for course in self.courses:
             for course_file in course.files:
                 if course_file.deleted is False:
-                    all_tasks.append(Task(course_file, course, dl_options, callback))
-                    self.total_to_download += course_file.content_filesize
-                    self.total_files += 1
-        logging.debug('Queue contains %d tasks', self.total_files)
+                    all_tasks.append(
+                        Task(
+                            task_id=self.status.files_to_download,
+                            file=course_file,
+                            course=course,
+                            options=dl_options,
+                            callback=self.status_callback,
+                        )
+                    )
+                    self.status.bytes_to_download += course_file.content_filesize
+                    self.status.files_to_download += 1
+        logging.info('Download queue contains %d tasks', self.status.files_to_download)
         return all_tasks
+
+    def status_callback(self, event: DlEvent, task: Task, **extra_args):
+        if event == DlEvent.RECEIVED:
+            self.status.bytes_downloaded += extra_args['bytes_received']
+        elif event == DlEvent.FAILED:
+            self.status.files_failed += 1
+        elif event == DlEvent.FINISHED:
+            self.status.files_downloaded += 1
 
     def run(self):
         "Starts all tasks and issues status messages at regular intervals"

@@ -9,6 +9,7 @@ import re
 import shutil
 import ssl
 import sys
+import time
 import unicodedata
 
 from pathlib import Path
@@ -154,6 +155,37 @@ ACCENT_CHARS = dict(
 )
 
 NO_DEFAULT = object()
+
+
+class Timer:
+    '''
+    Timing Context Manager
+    Can be used for future speed comparisons, like this:
+
+    with Timer() as t:
+        Do.stuff()
+    print(f'Do.stuff() took:\t {t.duration:.3f} \tseconds.')
+    '''
+
+    def __init__(self, nanoseconds=False):
+        self.start = 0.0
+        self.duration = 0.0
+        self.nanoseconds = nanoseconds
+
+    def __enter__(self):
+        if self.nanoseconds:
+            self.start = time.perf_counter_ns()
+        else:
+            self.start = time.time()
+        return self
+
+    def __exit__(self, *args):
+        if self.nanoseconds:
+            end = time.perf_counter_ns()
+            self.duration = (end - self.start) * 10**-9  # 1 nano-sec = 10^-9 sec
+        else:
+            end = time.time()
+            self.duration = end - self.start
 
 
 class PathTools:
@@ -326,6 +358,11 @@ class PathTools:
             / PathTools.sanitize_path(file_path).strip('/')
         )
         return path
+
+    @staticmethod
+    def remove_file(file_path: str):
+        if os.path.exists(file_path):
+            os.unlink(file_path)
 
     @staticmethod
     def get_abs_path(path: str):

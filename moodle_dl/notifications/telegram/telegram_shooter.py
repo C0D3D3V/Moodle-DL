@@ -6,7 +6,7 @@ from moodle_dl.utils import SslHelper
 
 
 class TelegramShooter:
-    stdHeader = {
+    RQ_HEADER = {
         'User-Agent': (
             'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36'
         ),
@@ -25,7 +25,7 @@ class TelegramShooter:
 
         session = SslHelper.custom_requests_session()
         try:
-            response = session.post(url, data=data_urlencoded, headers=self.stdHeader, timeout=60)
+            response = session.post(url, data=data_urlencoded, headers=self.RQ_HEADER, timeout=60)
         except RequestException as error:
             raise ConnectionError(f"Connection error: {str(error)}") from None
 

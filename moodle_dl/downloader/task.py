@@ -1,3 +1,4 @@
+import asyncio
 import contextlib
 import logging
 import os
@@ -20,6 +21,8 @@ from pathlib import Path
 from typing import Dict, List, Callable
 from urllib.error import ContentTooShortError
 
+import aiofiles
+import aiohttp
 import html2text
 import yt_dlp
 
@@ -27,19 +30,33 @@ from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema, Reques
 
 from moodle_dl.downloader.extractors import add_additional_extractors
 from moodle_dl.moodle.request_helper import RequestHelper
-from moodle_dl.types import Course, File, DownloadOptions, TaskStatus
+from moodle_dl.types import Course, File, DownloadOptions, TaskStatus, DlEvent
 from moodle_dl.utils import format_bytes, timeconvert, SslHelper, PathTools as PT, format_seconds
 
 
 class Task(object):
     "Task is responsible to download or create a file"
+    CHUNK_SIZE = 102400  # default: 1024 * 100 = 100kb; will be overwritten with download_chunk_size
+    MAX_DL_RETRIES = 3
 
-    def __init__(self, file: File, course: Course, options: DownloadOptions, callback: Callable[[], None]):
+    RQ_HEADER = {
+        'User-Agent': (
+            'Mozilla/5.0 (Linux; Android 7.1.1; Moto G Play Build/NPIS26.48-43-2; wv) AppleWebKit/537.36'
+            + ' (KHTML, like Gecko) Version/4.0 Chrome/71.0.3578.99 Mobile Safari/537.36 MoodleMobile'
+        ),
+        'Content-Type': 'application/x-www-form-urlencoded',
+    }
+
+    def __init__(
+        self, task_id: int, file: File, course: Course, options: DownloadOptions, callback: Callable[[], None]
+    ):
+        self.task_id = task_id
         self.file = file
         self.course = course
-        self.options = options
+        self.opts = options
         self.callback = callback
 
+        self.destination = self.gen_path(options.storage_path, course, file)
         self.filename = PT.to_valid_name(self.file.content_filename)
         self.status = TaskStatus()
 
@@ -376,7 +393,7 @@ class Task(object):
         try:
             response = session.head(
                 url_to_download,
-                headers=RequestHelper.stdHeader,
+                headers=self.RQ_HEADER,
                 allow_redirects=True,
                 timeout=60,
             )
@@ -933,7 +950,7 @@ class Task(object):
         start = time.time()
         url_parsed = urlparse.urlparse(url)
 
-        request = urllib.request.Request(url=url, headers=RequestHelper.stdHeader)
+        request = urllib.request.Request(url=url, headers=self.RQ_HEADER)
         if cookies_path is not None:
             cookie_jar = MozillaCookieJar(cookies_path)
             if os.path.isfile(cookies_path):
@@ -993,9 +1010,114 @@ class Task(object):
 
         return result
 
+    async def check_range_download_opt(self, url, session):
+        try:
+            headers = self.RQ_HEADER.copy()
+            headers['Range'] = 'bytes=0-4'
+            resp = await session.request("GET", url, headers=headers)
+            return resp.headers.get('Content-Range') is not None and resp.status == 206
+        except Exception as err:
+            logging.debug("Failed to check if download can be continued on fail: %s", err)
+        return False
+
+    def received_bytes(self, bytes_received):
+        self.status.bytes_downloaded += bytes_received
+        self.callback(DlEvent.RECEIVED, self, bytes_received=bytes_received)
+
+    async def download_url(self, dl_url: str, dest_path: str, semaphore: asyncio.Semaphore, timeout: int = 60):
+        total_bytes_received = 0
+        content_length = 0
+        done_tries = 0
+        file_obj = None
+        can_continue_on_fail = False
+        headers = self.RQ_HEADER.copy()
+        ssl_context = SslHelper.get_ssl_context(
+            self.opts.global_opts.skip_cert_verify, self.opts.global_opts.allow_insecure_ssl
+        )
+        async with semaphore, aiohttp.ClientSession() as session:
+            while done_tries < self.MAX_DL_RETRIES:
+                try:
+                    logging.debug('Start downloading (Try %d of %d)', done_tries, self.MAX_DL_RETRIES)
+
+                    if done_tries > 0 and can_continue_on_fail:
+                        headers["Range"] = f"bytes={total_bytes_received}-"
+
+                    async with session.request(
+                        "GET", dl_url, headers=headers, raise_for_status=True, ssl=ssl_context, timeout=timeout
+                    ) as resp:
+                        content_length = int(resp.headers.get("Content-Length", 0))
+                        content_range = resp.headers.get("Content-Range", "")  # Exp: bytes 200-1000/67589
+
+                        if resp.status not in [200, 206]:
+                            logging.debug('Warning got status %s', resp.status)
+
+                        if done_tries > 0 and can_continue_on_fail and not content_range and resp.status != 206:
+                            raise ContentRangeError("Server did not response with requested range data")
+
+                        file_obj = file_obj or await aiofiles.open(dest_path, "wb")
+                        async for chunk in resp.content.iter_chunked(self.CHUNK_SIZE):
+                            bytes_received = len(chunk)
+                            total_bytes_received += bytes_received
+                            self.received_bytes(bytes_received)
+                            await file_obj.write(chunk)
+
+                    if file_obj is not None and not file_obj.closed:
+                        await file_obj.close()
+
+                    if content_length >= 0 and total_bytes_received < content_length:
+                        raise ContentTooShortError(
+                            f'Download incomplete: Got only {format_bytes(total_bytes_received)}'
+                            + f' out of {format_bytes(content_length)} bytes',
+                            dest_path,
+                        )
+
+                    logging.debug('Successfully downloaded %s', dest_path)
+                    break
+
+                except (aiohttp.ClientError, OSError, ValueError, ContentRangeError) as err:
+                    if done_tries == 0:
+                        can_continue_on_fail = await self.check_range_download_opt(dl_url, session)
+
+                    done_tries += 1
+                    if (
+                        (not can_continue_on_fail and total_bytes_received > 0)
+                        or isinstance(err, ContentRangeError)
+                        or (done_tries >= self.MAX_DL_RETRIES)
+                    ):
+                        can_continue_on_fail = False
+                        # Clean up failed file because we can not recover
+                        if file_obj is not None and not file_obj.closed:
+                            await file_obj.close()
+                        file_obj = None
+
+                        # TODO: If download can be continued and size > 0, remember that the file started downloading,
+                        #  and continue downloading on next run instead of deleting it.
+                        PT.remove_file(dest_path)
+                        self.received_bytes(-total_bytes_received)
+                        total_bytes_received = 0
+
+                    if isinstance(err, aiohttp.ClientResponseError):
+                        if err.status not in [408, 409, 429]:
+                            # 408 (timeout) or 409 (conflict) and 429 (too many requests)
+                            logging.warning('Download failed with status: %s %s', err.status, err.message)
+                            raise err from None
+
+                    if done_tries < self.MAX_DL_RETRIES:
+                        logging.debug('Download error occurred: %s', err)
+                        await asyncio.sleep(1)
+                        continue
+
+                    # No more tries
+                    raise err from None
+
     def __str__(self):
-        return 'Task (%(file)s, %(course)s, %(status)s)' % {
+        return 'Task (%(task_id)s, %(file)s, %(course)s, %(status)s)' % {
+            'task_id': self.task_id,
             'file': self.file,
             'course': self.course,
-            'status': self.status
+            'status': self.status,
         }
+
+
+class ContentRangeError(RequestException):
+    pass

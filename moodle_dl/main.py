@@ -376,6 +376,15 @@ def get_parser():
     )
 
     parser.add_argument(
+        '-mpac',
+        '--max-parallel-api-calls',
+        dest='max_parallel_api_calls',
+        default=10,
+        type=int,
+        help=('Sets the number of max parallel Moodle Mobile API calls. (default: %(default)s)'),
+    )
+
+    parser.add_argument(
         '-mpd',
         '--max-parallel-downloads',
         dest='max_parallel_downloads',
@@ -385,12 +394,12 @@ def get_parser():
     )
 
     parser.add_argument(
-        '-mpac',
-        '--max-parallel-api-calls',
-        dest='max_parallel_api_calls',
-        default=10,
+        '-dcs',
+        '--download-chunk-size',
+        dest='download_chunk_size',
+        default=102400,
         type=int,
-        help=('Sets the number of max parallel Moodle Mobile API calls. (default: %(default)s)'),
+        help=('Sets the chunk size in bytes used when downloading files. (default: %(default)s)'),
     )
 
     parser.add_argument(

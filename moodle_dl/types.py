@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import List, Dict, Any
 
 from moodle_dl.utils import PathTools as PT
@@ -216,15 +217,6 @@ class Course:
 
 
 @dataclass
-class TaskStatus:
-    bytes_downloaded: int = field(init=False, default=0)
-    external_total_size: int = field(init=False, default=None)
-    finished_successfully: bool = field(init=False, default=False)
-    error: Any = field(init=False, default=None)
-    yt_dlp_failed_with_error: bool = field(init=False, default=False)
-
-
-@dataclass
 class MoodleURL:
     use_http: bool
     domain: str
@@ -257,8 +249,9 @@ class MoodleDlOpts:
     password: str
     token: str
     path: str
-    max_parallel_downloads: int
     max_parallel_api_calls: int
+    max_parallel_downloads: int
+    download_chunk_size: int
     ignore_ytdl_errors: bool
     without_downloading_files: bool
     max_path_length_workaround: bool
@@ -267,6 +260,31 @@ class MoodleDlOpts:
     verbose: bool
     quiet: bool
     log_to_file: bool
+
+
+@dataclass
+class TaskStatus:
+    bytes_downloaded: int = field(init=False, default=0)
+    external_total_size: int = field(init=False, default=None)
+    finished_successfully: bool = field(init=False, default=False)
+    error: Any = field(init=False, default=None)
+    yt_dlp_failed_with_error: bool = field(init=False, default=False)
+
+
+@dataclass
+class DownloadStatus:
+    bytes_downloaded: int = field(init=False, default=0)
+    bytes_to_download: int = field(init=False, default=0)
+
+    files_downloaded: int = field(init=False, default=0)
+    files_failed: int = field(init=False, default=0)
+    files_to_download: int = field(init=False, default=0)
+
+
+class DlEvent(Enum):
+    FINISHED = 'FINISHED'
+    FAILED = 'FAILED'
+    RECEIVED = 'RECEIVED'
 
 
 @dataclass

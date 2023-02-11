@@ -22,7 +22,7 @@ class RequestHelper:
     Functions for sending out requests to the Moodle System.
     """
 
-    stdHeader = {
+    RQ_HEADER = {
         'User-Agent': (
             'Mozilla/5.0 (Linux; Android 7.1.1; Moto G Play Build/NPIS26.48-43-2; wv) AppleWebKit/537.36'
             + ' (KHTML, like Gecko) Version/4.0 Chrome/71.0.3578.99 Mobile Safari/537.36 MoodleMobile'
@@ -69,7 +69,7 @@ class RequestHelper:
                 session.cookies.load(ignore_discard=True, ignore_expires=True)
 
         try:
-            response = session.post(url, data=data_urlencoded, headers=self.stdHeader, timeout=60)
+            response = session.post(url, data=data_urlencoded, headers=self.RQ_HEADER, timeout=60)
         except RequestException as error:
             raise ConnectionError(f"Connection error: {str(error)}") from None
 
@@ -97,7 +97,7 @@ class RequestHelper:
             if os.path.exists(cookie_jar_path):
                 session.cookies.load(ignore_discard=True, ignore_expires=True)
         try:
-            response = session.get(url, headers=self.stdHeader, timeout=60)
+            response = session.get(url, headers=self.RQ_HEADER, timeout=60)
         except RequestException as error:
             raise ConnectionError(f"Connection error: {str(error)}") from None
 
@@ -106,7 +106,7 @@ class RequestHelper:
 
         return response, session
 
-    async def async_post(self, function: str, data: Dict[str, str] = None, timeout: str = 60) -> Dict:
+    async def async_post(self, function: str, data: Dict[str, str] = None, timeout: int = 60) -> Dict:
         """
         Sends async a POST request to the REST endpoint of the Moodle system
         @param function: The Web service function to be called.
@@ -115,7 +115,7 @@ class RequestHelper:
         """
 
         if self.token is None:
-            raise ValueError('The required Token is not set!')
+            raise ValueError('The required token is not set!')
 
         data_urlencoded = self._get_POST_DATA(function, self.token, data)
         url = self._get_REST_POST_URL(self.url_base, function)
@@ -123,12 +123,12 @@ class RequestHelper:
 
         error_ctr = 0
         async with self.semaphore, aiohttp.ClientSession() as session:
-            while error_ctr <= self.MAX_RETRIES:
+            while error_ctr < self.MAX_RETRIES:
                 try:
                     async with session.post(
                         url,
                         data=data_urlencoded,
-                        headers=self.stdHeader,
+                        headers=self.RQ_HEADER,
                         timeout=timeout,
                         ssl=ssl_context,
                         raise_for_status=True,
@@ -137,16 +137,19 @@ class RequestHelper:
                         resp_url = resp.url
                     break
                 except (aiohttp.client_exceptions.ClientError, OSError, ValueError) as req_err:
-                    error_ctr += 1
-                    if isinstance(req_err, aiohttp.client_exceptions.ClientResponseError) and req_err.status == 404:
+                    if (isinstance(req_err, aiohttp.client_exceptions.ClientResponseError)) and (
+                        req_err.status not in [408, 409, 429]
+                    ):
+                        # 408 (timeout) or 409 (conflict) and 429 (too many requests)
                         raise ConnectionError(f"Connection error: {req_err}") from None
                     if isinstance(req_err, aiohttp.client_exceptions.ContentTypeError):
                         raise RequestRejectedError(
                             'The Moodle Mobile API does not appear to be available at this time.'
                         ) from None
 
+                    error_ctr += 1
                     if error_ctr < self.MAX_RETRIES:
-                        logging.debug("The %sth Connection Error occurred, retrying. %s", error_ctr, req_err)
+                        logging.debug("The %sth connection error occurred, retrying. %s", error_ctr, req_err)
                         asyncio.sleep(1)
                         continue
                     raise ConnectionError(f"Connection error: {req_err}") from None
@@ -156,7 +159,7 @@ class RequestHelper:
 
         return resp_json
 
-    def post(self, function: str, data: Dict[str, str] = None, timeout: str = 60) -> Dict:
+    def post(self, function: str, data: Dict[str, str] = None, timeout: int = 60) -> Dict:
         """
         Sends a POST request to the REST endpoint of the Moodle system
         @param function: The Web service function to be called.
@@ -174,7 +177,7 @@ class RequestHelper:
         error_ctr = 0
         while error_ctr <= self.MAX_RETRIES:
             try:
-                response = session.post(url, data=data_urlencoded, headers=self.stdHeader, timeout=timeout)
+                response = session.post(url, data=data_urlencoded, headers=self.RQ_HEADER, timeout=timeout)
                 break
             except (requests.ConnectionError, requests.Timeout) as req_err:
                 # We treat requests.ConnectionErrors here specially, since they normally mean,
@@ -243,7 +246,7 @@ class RequestHelper:
             response = session.post(
                 f'{self.url_base}login/token.php',
                 data=urllib.parse.urlencode(data),
-                headers=self.stdHeader,
+                headers=self.RQ_HEADER,
                 timeout=60,
             )
         except RequestException as error:
