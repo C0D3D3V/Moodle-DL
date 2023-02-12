@@ -1,5 +1,4 @@
 import asyncio
-import contextlib
 import logging
 import os
 import platform
@@ -7,8 +6,6 @@ import posixpath
 import re
 import shlex
 import shutil
-import socket
-import ssl
 import subprocess
 import time
 import traceback
@@ -16,9 +13,9 @@ import urllib
 import urllib.parse as urlparse
 
 from email.utils import unquote
-from http.cookiejar import MozillaCookieJar
+from io import StringIO
 from pathlib import Path
-from typing import Dict, List, Callable
+from typing import Callable
 from urllib.error import ContentTooShortError
 
 import aiofiles
@@ -29,9 +26,8 @@ import yt_dlp
 from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema, RequestException
 
 from moodle_dl.downloader.extractors import add_additional_extractors
-from moodle_dl.moodle.request_helper import RequestHelper
 from moodle_dl.types import Course, File, DownloadOptions, TaskStatus, DlEvent
-from moodle_dl.utils import format_bytes, timeconvert, SslHelper, PathTools as PT, format_seconds
+from moodle_dl.utils import format_bytes, timeconvert, SslHelper, PathTools as PT, MoodleDLCookieJar
 
 
 class Task(object):
@@ -386,7 +382,7 @@ class Task(object):
         session = SslHelper.custom_requests_session(self.skip_cert_verify)
 
         if cookies_path is not None:
-            session.cookies = MozillaCookieJar(cookies_path)
+            session.cookies = MoodleDLCookieJar(cookies_path)
             if os.path.isfile(cookies_path):
                 session.cookies.load(ignore_discard=True, ignore_expires=True)
 
@@ -939,76 +935,12 @@ class Task(object):
 
         return self.success
 
-    def urlretrieve(self, url: str, filename: str, context: ssl.SSLContext, reporthook=None, cookies_path=None):
-        """
-        original source:
-        https://github.com/python/cpython/blob/
-        21bee0bd71e1ad270274499f9f58194ebb52e236/Lib/urllib/request.py#L229
-
-        Because urlopen also supports context, I decided to adapt the download function.
-        """
-        start = time.time()
-        url_parsed = urlparse.urlparse(url)
-
-        request = urllib.request.Request(url=url, headers=self.RQ_HEADER)
-        if cookies_path is not None:
-            cookie_jar = MozillaCookieJar(cookies_path)
-            if os.path.isfile(cookies_path):
-                cookie_jar.load(ignore_discard=True, ignore_expires=True)
-                cookie_jar.add_cookie_header(request)
-
-        with contextlib.closing(urllib.request.urlopen(request, context=context, timeout=60)) as fp:
-            headers = fp.info()
-
-            # Just return the local path and the 'headers' for file://
-            # URLs. No sense in performing a copy unless requested.
-            if url_parsed.scheme == 'file' and not filename:
-                return os.path.normpath(url_parsed.path), headers
-
-            if not filename:
-                raise RuntimeError('No filename specified!')
-
-            tfp = open(filename, 'wb')
-
-            with tfp:
-                result = filename, headers
-
-                # read overall
-                read = 0
-
-                # 4kb at once
-                bs = 1024 * 8
-                blocknum = 0
-
-                # guess size
-                size = int(headers.get('Content-Length', -1))
-
-                if reporthook:
-                    reporthook(blocknum, bs, size)
-
-                while True:
-                    try:
-                        block = fp.read(bs)
-                    except (socket.timeout, socket.error) as error:
-                        raise ConnectionError(f"Connection error: {str(error)}") from None
-
-                    if not block:
-                        break
-                    read += len(block)
-                    tfp.write(block)
-                    blocknum += 1
-                    if reporthook:
-                        reporthook(blocknum, bs, size)
-
-        if size >= 0 and read < size:
-            raise ContentTooShortError(f'retrieval incomplete: got only {read} out of {size} bytes', result)
-
-        end = time.time()
-        logging.debug(
-            'T%s - Download of %s finished in %s', self.thread_id, format_bytes(read), format_seconds(end - start)
-        )
-
-        return result
+    def get_cookie_jar(self):
+        cookie_jar = None
+        if self.opts.cookies_text is not None:
+            cookie_jar = MoodleDLCookieJar(StringIO(self.opts.cookies_text))
+            cookie_jar.load(ignore_discard=True, ignore_expires=True)
+        return cookie_jar
 
     async def check_range_download_opt(self, url, session):
         try:
@@ -1020,13 +952,18 @@ class Task(object):
             logging.debug("Failed to check if download can be continued on fail: %s", err)
         return False
 
-    def received_bytes(self, bytes_received):
+    def report_received_bytes(self, bytes_received: int):
         self.status.bytes_downloaded += bytes_received
         self.callback(DlEvent.RECEIVED, self, bytes_received=bytes_received)
 
+    def report_content_length(self, content_length: int):
+        if content_length is not None and content_length != 0:
+            if self.file.content_filesize is None or self.file.content_filesize <= 0:
+                self.status.external_total_size = content_length
+                self.callback(DlEvent.TOTAL_SIZE, self, content_length=content_length)
+
     async def download_url(self, dl_url: str, dest_path: str, semaphore: asyncio.Semaphore, timeout: int = 60):
         total_bytes_received = 0
-        content_length = 0
         done_tries = 0
         file_obj = None
         can_continue_on_fail = False
@@ -1034,18 +971,21 @@ class Task(object):
         ssl_context = SslHelper.get_ssl_context(
             self.opts.global_opts.skip_cert_verify, self.opts.global_opts.allow_insecure_ssl
         )
-        async with semaphore, aiohttp.ClientSession() as session:
+        async with semaphore, aiohttp.ClientSession(cookie_jar=self.get_cookie_jar(), raise_for_status=True) as session:
             while done_tries < self.MAX_DL_RETRIES:
                 try:
                     logging.debug('Start downloading (Try %d of %d)', done_tries, self.MAX_DL_RETRIES)
 
                     if done_tries > 0 and can_continue_on_fail:
-                        headers["Range"] = f"bytes={total_bytes_received}-"
+                        headers['Range'] = f'bytes={total_bytes_received}-'
+                    elif not can_continue_on_fail and 'Range' in headers:
+                        del headers['Range']
 
                     async with session.request(
-                        "GET", dl_url, headers=headers, raise_for_status=True, ssl=ssl_context, timeout=timeout
+                        "GET", dl_url, headers=headers, ssl=ssl_context, timeout=timeout
                     ) as resp:
                         content_length = int(resp.headers.get("Content-Length", 0))
+                        self.report_content_length(content_length)
                         content_range = resp.headers.get("Content-Range", "")  # Exp: bytes 200-1000/67589
 
                         if resp.status not in [200, 206]:
@@ -1058,7 +998,7 @@ class Task(object):
                         async for chunk in resp.content.iter_chunked(self.CHUNK_SIZE):
                             bytes_received = len(chunk)
                             total_bytes_received += bytes_received
-                            self.received_bytes(bytes_received)
+                            self.report_received_bytes(bytes_received)
                             await file_obj.write(chunk)
 
                     if file_obj is not None and not file_obj.closed:
@@ -1093,7 +1033,7 @@ class Task(object):
                         # TODO: If download can be continued and size > 0, remember that the file started downloading,
                         #  and continue downloading on next run instead of deleting it.
                         PT.remove_file(dest_path)
-                        self.received_bytes(-total_bytes_received)
+                        self.report_received_bytes(-total_bytes_received)
                         total_bytes_received = 0
 
                     if isinstance(err, aiohttp.ClientResponseError):

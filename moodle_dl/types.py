@@ -285,6 +285,7 @@ class DlEvent(Enum):
     FINISHED = 'FINISHED'
     FAILED = 'FAILED'
     RECEIVED = 'RECEIVED'
+    TOTAL_SIZE = 'TOTAL_SIZE'
 
 
 @dataclass
@@ -293,7 +294,7 @@ class DownloadOptions:
     download_linked_files: bool
     download_domains_whitelist: List
     download_domains_blacklist: List
-    cookies_path: str
+    cookies_text: str
     yt_dlp_options: Dict
     videopasswords: Dict
     external_file_downloaders: Dict

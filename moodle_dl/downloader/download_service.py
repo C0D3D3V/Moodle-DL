@@ -51,6 +51,8 @@ class DownloadService:
             self.status.files_failed += 1
         elif event == DlEvent.FINISHED:
             self.status.files_downloaded += 1
+        elif event == DlEvent.TOTAL_SIZE:
+            self.status.bytes_to_download += extra_args['content_length']
 
     def run(self):
         "Starts all tasks and issues status messages at regular intervals"

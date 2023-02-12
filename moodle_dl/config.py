@@ -176,6 +176,14 @@ class ConfigHelper:
             return cookies_path
         return None
 
+    def get_cookies_text(self) -> str:
+        # return the text to the cookies file, if it exists
+        cookies_path = self.get_cookies_path()
+        if os.path.isfile(cookies_path):
+            with open(cookies_path, 'r', encoding='utf-8') as cookie_file:
+                return cookie_file.read()
+        return None
+
     def get_yt_dlp_options(self) -> Dict:
         # return additional yt-dlp options
         return self.get_property_or('yt_dlp_options', {})
@@ -209,7 +217,7 @@ class ConfigHelper:
             download_linked_files=self.get_download_linked_files(),
             download_domains_whitelist=self.get_download_domains_whitelist(),
             download_domains_blacklist=self.get_download_domains_blacklist(),
-            cookies_path=self.get_cookies_path(),
+            cookies_text=self.get_cookies_text(),
             yt_dlp_options=self.get_yt_dlp_options(),
             videopasswords=self.get_videopasswords(),
             external_file_downloaders=self.get_external_file_downloaders(),

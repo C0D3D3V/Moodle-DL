@@ -4,7 +4,6 @@ import logging
 import os
 import urllib
 
-from http.cookiejar import MozillaCookieJar
 from time import sleep
 from typing import Dict
 
@@ -14,7 +13,7 @@ import requests
 from requests.exceptions import RequestException
 
 from moodle_dl.types import MoodleURL, MoodleDlOpts
-from moodle_dl.utils import SslHelper, PathTools as PT
+from moodle_dl.utils import SslHelper, PathTools as PT, MoodleDLCookieJar
 
 
 class RequestHelper:
@@ -63,7 +62,7 @@ class RequestHelper:
 
         session = SslHelper.custom_requests_session(self.opts.skip_cert_verify, self.opts.allow_insecure_ssl)
         if cookie_jar_path is not None:
-            session.cookies = MozillaCookieJar(cookie_jar_path)
+            session.cookies = MoodleDLCookieJar(cookie_jar_path)
 
             if os.path.exists(cookie_jar_path):
                 session.cookies.load(ignore_discard=True, ignore_expires=True)
@@ -92,7 +91,7 @@ class RequestHelper:
 
         session = SslHelper.custom_requests_session(self.opts.skip_cert_verify, self.opts.allow_insecure_ssl)
         if cookie_jar_path is not None:
-            session.cookies = MozillaCookieJar(cookie_jar_path)
+            session.cookies = MoodleDLCookieJar(cookie_jar_path)
 
             if os.path.exists(cookie_jar_path):
                 session.cookies.load(ignore_discard=True, ignore_expires=True)

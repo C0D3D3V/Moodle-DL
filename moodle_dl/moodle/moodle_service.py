@@ -104,7 +104,7 @@ class MoodleService:
 
         cookie_handler = None
         if self.config.get_download_also_with_cookie():
-            cookie_handler = CookieHandler(request_helper, version, self.opts.path)
+            cookie_handler = CookieHandler(request_helper, version, self.config)
             cookie_handler.check_and_fetch_cookies(privatetoken, user_id)
 
         courses = self.get_courses_list(core_handler, user_id)
