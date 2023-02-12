@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import shutil
 import time
@@ -25,7 +26,7 @@ class DownloadService:
     def gen_all_tasks(self) -> List:
         # Set custom chunk size
         Task.CHUNK_SIZE = self.opts.download_chunk_size
-        dl_options = self.config.get_download_options(self.opts)
+        dl_options = self.config.get_download_options(self.opts, asyncio.Semaphore(self.opts.max_parallel_downloads))
         all_tasks = []
         for course in self.courses:
             for course_file in course.files:
@@ -55,7 +56,7 @@ class DownloadService:
         elif event == DlEvent.TOTAL_SIZE:
             self.status.bytes_to_download += extra_args['content_length']
 
-    def run(self):
+    async def run(self):
         "Starts all tasks and issues status messages at regular intervals"
 
         # delete files, that should be deleted

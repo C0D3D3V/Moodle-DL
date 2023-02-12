@@ -268,7 +268,7 @@ class Task:
                 '[%d] Access time and modification time of the downloaded file could not be set', self.task_id
             )
 
-    def try_download_link(
+    async def try_download_link(
         self, add_token: bool = False, delete_if_successful: bool = False, use_cookies: bool = False
     ) -> bool:
         """This function should only be used for shortcut/URL files.
@@ -531,7 +531,7 @@ class Task:
         if total_bytes_estimate != -1:
             self.thread_report[self.task_id]['extra_totalsize'] = total_bytes_estimate
 
-        self.download_url(url_to_download,  self.file.saved_to)
+        await self.download_url(url_to_download, self.file.saved_to)
         return True
 
     def is_filtered_external_domain(self):
@@ -561,7 +561,7 @@ class Task:
     async def create_shortcut(self):
         "Create a Shortcut to a URL"
         logging.debug('[%d] Creating a shortcut', self.task_id)
-        async with self.opts.semaphore, aiofiles.open(self.file.saved_to, 'w+', encoding='utf-8') as shortcut:
+        async with aiofiles.open(self.file.saved_to, 'w+', encoding='utf-8') as shortcut:
             if os.name == 'nt' or platform.system() == "Darwin":
                 await shortcut.write('[InternetShortcut]' + os.linesep)
                 await shortcut.write('URL=' + self.file.content_fileurl + os.linesep)
@@ -612,7 +612,7 @@ class Task:
             os.remove(self.file.saved_to)
             return
 
-        async with self.opts.semaphore, aiofiles.open(self.file.saved_to, 'w+', encoding='utf-8') as md_file:
+        async with aiofiles.open(self.file.saved_to, 'w+', encoding='utf-8') as md_file:
             md_file.write(md_content)
 
     async def create_html_file(self):
@@ -628,7 +628,7 @@ class Task:
             os.remove(self.file.saved_to)
             return
 
-        async with self.opts.semaphore, aiofiles.open(self.file.saved_to, 'w+', encoding='utf-8') as html_file:
+        async with aiofiles.open(self.file.saved_to, 'w+', encoding='utf-8') as html_file:
             html_file.write(html_content)
 
     def move_old_file(self) -> bool:
@@ -654,39 +654,31 @@ class Task:
             logging.warning('[%d] Moving the old file %s failed unexpectedly!  Error: %s', self.task_id, old_path, e)
         return False
 
-    def store_data_url(self):
+    async def create_data_url_file(self):
         url_to_download = self.file.content_fileurl
-        logging.debug('[%d] Data-URL detected', self.task_id)
-        try:
-            os.remove(self.file.saved_to)
-        except OSError as e:
-            logging.warning(
-                '[%d] Could not delete %s before storing data url. Error: %s',
-                self.task_id,
-                self.file.saved_to,
-                e,
-            )
+        logging.debug('[%d] Creating a Data-URL file', self.task_id)
+        PT.remove_file(self.file.saved_to)
         self.set_path(True)
         with urllib.request.urlopen(url_to_download) as response:
             data = response.read()
 
-        with open(self.file.saved_to, "wb") as target_file:
+        async with aiofiles.open(self.file.saved_to, "wb") as target_file:
             target_file.write(data)
 
-    def download(self):
+    async def download(self):
         if self.status.state != TaskState.INIT:
             logging.debug('[%d] Task was already started', self.task_id)
             return
         self.status.state = TaskState.STARTED
 
-        success = self.real_download()
+        async with self.opts.semaphore:
+            success = await self.real_download()
 
         if success:
             self.set_utime()
             self.file.time_stamp = int(time.time())
 
-
-    def real_download(self) -> bool:
+    async def real_download(self) -> bool:
         try:
             logging.debug('[%d] Starting downloading of: %s', self.task_id, self)
             PT.make_dirs(self.destination)
@@ -705,61 +697,58 @@ class Task:
 
             if self.file.content_type == 'description':
                 # Create a description file instead of downloading it
-                self.create_description()
+                await self.create_description()
 
             elif self.file.content_type == 'html':
                 # Create a HTML file instead of downloading it
-                self.create_html_file()
+                await self.create_html_file()
 
             elif self.file.module_modname.startswith('index_mod'):
-                self.try_download_link(add_token=True, delete_if_successful=True, use_cookies=False)
+                await self.try_download_link(add_token=True, delete_if_successful=True, use_cookies=False)
 
             elif self.file.module_modname.startswith('cookie_mod'):
-                self.try_download_link(add_token=False, delete_if_successful=True, use_cookies=True)
+                await self.try_download_link(add_token=False, delete_if_successful=True, use_cookies=True)
 
             elif self.file.module_modname.startswith('url') and not self.file.content_fileurl.startswith('data:'):
                 # Create a shortcut and maybe downloading it
-                self.create_shortcut()
+                await self.create_shortcut()
                 if self.opts.download_linked_files and not self.is_filtered_external_domain():
-                    self.try_download_link(add_token=False, delete_if_successful=False, use_cookies=False)
+                    await self.try_download_link(add_token=False, delete_if_successful=False, use_cookies=False)
 
             elif self.file.content_fileurl.startswith('data:'):
-                self.store_data_url()
+                await self.create_data_url_file()
 
             else:
                 url_to_download = self.file.content_fileurl
-                logging.debug('[%d] Downloading %s', self.task_id, url_to_download)
+                logging.info('[%d] Downloading %s', self.task_id, url_to_download)
                 url_to_download = self.add_token_to_url(self.file.content_fileurl)
-                self.download_url(url_to_download, self.file.saved_to)
+                await self.download_url(url_to_download, self.file.saved_to)
 
             return True
         except Exception as dl_err:
             self.status.error = dl_err
-            filesize = 0
-            try:
-                filesize = os.path.getsize(self.file.saved_to)
-            except OSError:
-                pass
 
             logging.error('[%d] Error while trying to download file: %s', self.task_id, dl_err)
+
+            if os.path.isfile(self.file.saved_to):
+                file_size = 0
+                try:
+                    file_size = os.path.getsize(self.file.saved_to)
+                except OSError:
+                    pass
+                logging.debug(
+                    '[%d] file size: %d; downloaded: %d',
+                    self.task_id,
+                    file_size,
+                    self.status.bytes_downloaded,
+                )
+
             logging.debug('[%d] Traceback:\n%s', self.task_id, traceback.format_exc())
 
-            if self.downloaded == 0 and filesize == 0:
-                try:
-                    # remove touched file
-                    if os.path.exists(self.file.saved_to):
-                        os.remove(self.file.saved_to)
-                except OSError as err_remove:
-                    logging.warning(
-                        '[%d] Could not delete %s after thread failed. Error: %s',
-                        self.task_id,
-                        self.file.saved_to,
-                        err_remove,
-                    )
-            else:
-                # Subtract the already downloaded content in case of an error.
-                self.thread_report[self.task_id]['total'] -= self.downloaded
-                self.thread_report[self.task_id]['percentage'] = 100
+            # TODO: Do this in the error handlers of download functions
+            # TODO: See download_url; remove only if not recoverable
+            PT.remove_file(self.file.saved_to)
+            self.report_received_bytes(-self.status.bytes_downloaded)
 
         return False
 
@@ -800,9 +789,7 @@ class Task:
             self.opts.global_opts.skip_cert_verify, self.opts.global_opts.allow_insecure_ssl
         )
         with Timer() as watch:
-            async with self.opts.semaphore, aiohttp.ClientSession(
-                cookie_jar=self.get_cookie_jar(), raise_for_status=True
-            ) as session:
+            async with aiohttp.ClientSession(cookie_jar=self.get_cookie_jar(), raise_for_status=True) as session:
                 while done_tries < self.MAX_DL_RETRIES:
                     try:
                         logging.debug(
