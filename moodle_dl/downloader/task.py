@@ -671,8 +671,7 @@ class Task:
             return
         self.status.state = TaskState.STARTED
 
-        async with self.opts.semaphore:
-            success = await self.real_download()
+        success = await self.real_download()
 
         if success:
             self.set_utime()

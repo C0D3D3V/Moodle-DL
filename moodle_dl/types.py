@@ -1,4 +1,3 @@
-from asyncio import Semaphore
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import List, Dict, Any
@@ -308,4 +307,3 @@ class DownloadOptions:
     videopasswords: Dict
     external_file_downloaders: Dict
     global_opts: MoodleDlOpts
-    semaphore: Semaphore

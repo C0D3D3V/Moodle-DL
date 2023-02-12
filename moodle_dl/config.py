@@ -1,7 +1,6 @@
 import os
 import json
 
-from asyncio import Semaphore
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -211,7 +210,7 @@ class ConfigHelper:
         # return if files for which a cookie is required should be downloaded
         return self.get_property_or('download_also_with_cookie', False)
 
-    def get_download_options(self, opts: MoodleDlOpts, semaphore: Semaphore) -> DownloadOptions:
+    def get_download_options(self, opts: MoodleDlOpts) -> DownloadOptions:
         # return the option dictionary for downloading files
         return DownloadOptions(
             token=self.get_token(),
@@ -223,7 +222,6 @@ class ConfigHelper:
             videopasswords=self.get_videopasswords(),
             external_file_downloaders=self.get_external_file_downloaders(),
             global_opts=opts,
-            semaphore=semaphore,
         )
 
     def get_restricted_filenames(self) -> Dict:

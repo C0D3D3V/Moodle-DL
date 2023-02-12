@@ -29,6 +29,8 @@ Also, be sure to check our documentation first: https://github.com/C0D3D3V/Moodl
 
 <!-- Include screenshots-->
 
+<!-- Include the arguments you used to run moodle-dl --> 
+
 <!-- Include the terminal protocol--> 
 
 <!-- 

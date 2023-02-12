@@ -26,7 +26,7 @@ class DownloadService:
     def gen_all_tasks(self) -> List:
         # Set custom chunk size
         Task.CHUNK_SIZE = self.opts.download_chunk_size
-        dl_options = self.config.get_download_options(self.opts, asyncio.Semaphore(self.opts.max_parallel_downloads))
+        dl_options = self.config.get_download_options(self.opts)
         all_tasks = []
         for course in self.courses:
             for course_file in course.files:
@@ -64,6 +64,22 @@ class DownloadService:
 
         # run all other tasks
         all_tasks = self.gen_all_tasks()
+
+        status_logger_task = asyncio.create_task(self.log_download_status())
+
+        dl_tasks = set()
+        for task in all_tasks:
+            if len(dl_tasks) >= self.opts.max_parallel_downloads:
+                # Wait for some download to finish before adding a new one
+                _done, dl_tasks = await asyncio.wait(dl_tasks, return_when=asyncio.FIRST_COMPLETED)
+            dl_tasks.add(asyncio.create_task(task.run()))
+
+        # Wait for the remaining downloads to finish
+        await asyncio.wait(dl_tasks)
+        status_logger_task.cancel()
+
+    async def log_download_status(self):
+        pass
 
     def _get_status_message(self) -> str:
         """
