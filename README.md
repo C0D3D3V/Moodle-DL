@@ -11,7 +11,7 @@
 
 `moodle-dl` is a console application that can download all the files from your Moodle courses that are necessary for your daily study routine. Furthermore, moodle-dl can notify you about various activities on your Moodle server. Notifications can be sent to Telegram, XMPP and Mail. The current implementation includes: 
 
-- Download files, assignments including submissions, forums, workshops, lessons, quizzes, descriptions, as well as external links.
+- Download files, assignments including submissions, forums, workshops, lessons, quizzes, descriptions, as well as external links (OpenCast, Youtube, Sciebo, Owncloud, Kaltura, Helixmedia, Google drive,... videos/files).
 - Notifications about all downloaded files
 - Text from your Moodle courses (like pages, descriptions or forum posts) will be directly attached to the notifications, so you can read them directly in your messaging app.
 - A configuration wizard is also included, allowing all settings to be made very easily.
@@ -87,7 +87,37 @@ If you need help configuring telegram notifications [click here](https://github.
 - Your Moodle token is stored in the configuration file (`config.json`). Be careful that no unauthorized person reads this file, especially the token must not be given to an unauthorized person, this can cause a lot of trouble.
 - The `privatetoken` can be used to create a cookie for your Moodle account. A Cookie is what is used to tell Moodle that you are logged in. The `cookie.txt` always keeps a valid cookie for you, take great care of this file, if it falls into the wrong hands someone can take over your entire Moodle account. This feature is only important for Moodles with plugins installed that are not supported by the Moodle app. If you do not want to generate cookies, remove the `privatetoken` from the `config.json`.
 
+
+### Alternativ downloader
+
+[webeep-sync](https://github.com/toto04/webeep-sync#english-version)
+- Written with node.js
+- Has a nice GUI that allows you to sync your courses easily
+- Is only built for the moodle of the Polytechnic University of Milan 
+
+[syncMyMoodle](https://github.com/Romern/syncMyMoodle)
+- Has pretty much the same goals as moodle-dl
+- Is only built for the moodle of the Rhenish-Westphalian Technical University (RWTH) Aachen
+
+[edu-sync](https://github.com/mkroening/edu-sync)
+- Is built in Rust and therefore quite fast
+
+[moodle-buddy](https://github.com/marcelreppi/moodle-buddy)
+- Plugin for Firefox and Chrome
+- Mass file download and notification functionality for the Moodle
+
+[moodle-downloader](https://github.com/harsilspatel/moodle-downloader)
+- A chrome extension for batch downloading Moodle resources
+
+[discord-moodle-bot](https://github.com/tjarbo/discord-moodle-bot)
+- Discord Notification Service for your moodle courses
+
+If someone wants to link another downloader here, which offers e.g. functions that moodle-dl does not offer, feel free to open an issue. 
+
+
 ---
+
+
 
 
 ## 🏆 Contributing

@@ -159,7 +159,6 @@ class Task:
                 return
             msg = self.clean_msg(msg)
             logging.debug('[%d] yt-dlp Debug: %s', self.task_id, msg)
-            pass
 
         def warning(self, msg):
             msg = self.clean_msg(msg)
