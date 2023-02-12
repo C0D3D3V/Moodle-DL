@@ -50,6 +50,7 @@ class DownloadService:
         elif event == DlEvent.FAILED:
             self.status.files_failed += 1
         elif event == DlEvent.FINISHED:
+            self.database.save_file(task.file, task.course.id, task.course.fullname)
             self.status.files_downloaded += 1
         elif event == DlEvent.TOTAL_SIZE:
             self.status.bytes_to_download += extra_args['content_length']

@@ -1,3 +1,4 @@
+from asyncio import Semaphore
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import List, Dict, Any
@@ -262,8 +263,16 @@ class MoodleDlOpts:
     log_to_file: bool
 
 
+class TaskState(Enum):
+    INIT = 'INIT'
+    STARTED = 'STARTED'
+    FAILED = 'FAILED'
+    FINISHED = 'FINISHED'
+
+
 @dataclass
 class TaskStatus:
+    state: TaskState = field(init=False, default=TaskState.INIT)
     bytes_downloaded: int = field(init=False, default=0)
     external_total_size: int = field(init=False, default=None)
     finished_successfully: bool = field(init=False, default=False)
@@ -299,3 +308,4 @@ class DownloadOptions:
     videopasswords: Dict
     external_file_downloaders: Dict
     global_opts: MoodleDlOpts
+    semaphore: Semaphore

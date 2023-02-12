@@ -7,6 +7,7 @@ from typing import List
 
 from moodle_dl.config import ConfigHelper
 from moodle_dl.database import StateRecorder
+from moodle_dl.downloader.task import Task
 from moodle_dl.types import Course, MoodleDlOpts
 from moodle_dl.utils import PathTools as PT
 

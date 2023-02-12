@@ -26,11 +26,19 @@ import yt_dlp
 from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema, RequestException
 
 from moodle_dl.downloader.extractors import add_additional_extractors
-from moodle_dl.types import Course, File, DownloadOptions, TaskStatus, DlEvent
-from moodle_dl.utils import format_bytes, timeconvert, SslHelper, PathTools as PT, MoodleDLCookieJar
+from moodle_dl.types import Course, File, DownloadOptions, TaskStatus, DlEvent, TaskState
+from moodle_dl.utils import (
+    format_bytes,
+    timeconvert,
+    SslHelper,
+    PathTools as PT,
+    MoodleDLCookieJar,
+    format_seconds,
+    Timer,
+)
 
 
-class Task(object):
+class Task:
     "Task is responsible to download or create a file"
     CHUNK_SIZE = 102400  # default: 1024 * 100 = 100kb; will be overwritten with download_chunk_size
     MAX_DL_RETRIES = 3
@@ -58,21 +66,20 @@ class Task(object):
 
     @staticmethod
     def gen_path(storage_path: str, course: Course, file: File):
-        """
-        Generates the directory path where a file should be stored
-        """
+        "Generate the directory path where a file should be stored"
         course_name = course.fullname
         if course.overwrite_name_with is not None:
             course_name = course.overwrite_name_with
 
+        # TODO: Move this out of the downloader
         # if a flat path is requested
         if not course.create_directory_structure:
             return PT.flat_path_of_file(storage_path, course_name, file.content_filepath)
 
+        # TODO: Get mod names automated; all mods should be in a sub-folder
         # If the file is located in a folder or in an assignment,
-        # it should be saved in a sub-folder
-        # (with the name of the module).
-        if file.module_modname.endswith(('assign', 'folder', 'data', 'forum', 'quiz', 'lesson', 'workshop', 'page')):
+        # it should be saved in a sub-folder (with the name of the module).
+        if file.module_modname.endswith(('assign', 'data', 'folder', 'forum', 'lesson', 'page', 'quiz', 'workshop')):
             file_path = file.content_filepath
             if file.content_type == 'submission_file':
                 file_path = os.path.join('/submissions/', file_path.strip('/'))
@@ -80,26 +87,7 @@ class Task(object):
             return PT.path_of_file_in_module(storage_path, course_name, file.section_name, file.module_name, file_path)
         return PT.path_of_file(storage_path, course_name, file.section_name, file.content_filepath)
 
-    def add_progress(self, count: int, block_size: int, total_size: int):
-        """
-        Callback function for urlretrieve to
-        calculate the current download progress
-        """
-        self.thread_report[self.thread_id]['total'] += block_size
-        self.downloaded += block_size
-
-        # if urlretrieve cannot determine the actual download size,
-        # use that of moodle.
-        if total_size == -1:
-            total_size = self.file.content_filesize
-
-        percent = 100
-        if total_size > 0:
-            percent = int(self.downloaded * 100 / total_size)
-
-        self.thread_report[self.thread_id]['percentage'] = percent
-
-    def _add_token_to_url(self, url: str) -> str:
+    def add_token_to_url(self, url: str) -> str:
         """
         Adds the Moodle token to a URL
         @param url: The URL to that the token should be added.
@@ -107,71 +95,23 @@ class Task(object):
         """
         url_parts = list(urlparse.urlparse(url))
         query = dict(urlparse.parse_qsl(url_parts[4]))
-        query.update({'token': self.token})
+        query.update({'token': self.opts.token})
         url_parts[4] = urlparse.urlencode(query)
         return urlparse.urlunparse(url_parts)
 
-    def create_dir(self, path: str):
-        # Creates the folders of a path if they do not exist.
-        if not os.path.exists(path):
-            try:
-                # raise condition
-                logging.debug('T%s - Create directory: "%s"', self.thread_id, path)
-                os.makedirs(path)
-            except FileExistsError:
-                pass
-
-    def _get_path_of_non_existent_file(self, wish_path: str) -> str:
-        """Generates a path to a non existing file, based on a wish path
-
-        Args:
-            wish_path (str): the ideal path that is wished
-
-        Returns:
-            str: a path to a non existing file
+    def create_target_file(self, target_path: str) -> str:
         """
-        new_path = wish_path
-
-        count = 0
-        content_filename = os.path.basename(wish_path)
-        destination = os.path.dirname(wish_path)
-        filename, file_extension = os.path.splitext(content_filename)
-
-        while os.path.exists(new_path):
-            count += 1
-            new_filename = f'{filename}_{count:02d}{file_extension}'
-            new_path = str(Path(destination) / new_filename)
-
-        return new_path
-
-    def _rename_if_exists(self, path: str) -> str:
+        Rename target_path if necessary to a unused filename and touch the target_path
+        @return: Path to the touched target file
         """
-        Rename a file name until no file with the same name exists.
-        @param path: The path to the file to be renamed.
-        @return: A path to a file that does not yet exist.
+        target_path = PT.get_unused_file_path(target_path)
+        PT.touch_file(target_path)
+        return target_path
+
+    def rename_old_file(self) -> bool:
         """
-
-        # lock because of raise condition
-        self.fs_lock.acquire()
-        new_path = self._get_path_of_non_existent_file(path)
-
-        logging.debug('T%s - Seting up target file: "%s"', self.thread_id, new_path)
-        try:
-            open(new_path, 'a', encoding='utf-8').close()
-        except Exception as e:
-            self.fs_lock.release()
-            logging.error('T%s - Failed seting up target file: "%s"', self.thread_id, new_path)
-            raise e
-
-        self.fs_lock.release()
-
-        return new_path
-
-    def try_rename_old_file(self) -> bool:
-        """
-        This tries to rename an existing modified file.
-        It will add the file name extension '_old' if possible.
-        On success it returns True
+        Try to rename an existing modified file. Add the extension '_old' to the filename if possible.
+        @return: True on success
         """
         if self.file.old_file is None:
             return False
@@ -180,28 +120,19 @@ class Task(object):
         if not os.path.exists(old_path):
             return False
 
-        logging.debug('T%s - Renaming old file', self.thread_id)
+        logging.debug('[%d] Renaming old file', self.task_id)
 
-        content_filename = os.path.basename(old_path)
-        filename, file_extension = os.path.splitext(content_filename)
-        content_filename = f'{filename}_old{file_extension}'
-
-        destination = os.path.dirname(old_path)
-        new_path = str(Path(destination) / content_filename)
-
-        # lock because of raise condition
-        self.fs_lock.acquire()
-        new_path = self._get_path_of_non_existent_file(new_path)
+        destination, filename, file_extension = PT.get_path_parts(old_path)
+        new_filename = f'{filename}_old{file_extension}'
+        new_path = PT.get_unused_file_path(PT.make_path(destination, new_filename))
 
         try:
             shutil.move(old_path, new_path)
             self.file.old_file.saved_to = new_path
         except OSError:
-            logging.warning('T%s - Failed to renaming old file "%s" to "%s"', self.thread_id, old_path, new_path)
-            self.fs_lock.release()
+            logging.warning('[%d] Failed to renaming old file %r to %r', self.task_id, old_path, new_path)
             return False
 
-        self.fs_lock.release()
         return True
 
     class YtLogger(object):
@@ -211,7 +142,7 @@ class Task(object):
 
         def __init__(self, task):
             self.task = task
-            self.thread_id = task.thread_id
+            self.task_id = task.thread_id
 
         def clean_msg(self, msg: str) -> str:
             msg = msg.replace('\n', '')
@@ -227,29 +158,29 @@ class Task(object):
             if msg.find('ETA') >= 0:
                 return
             msg = self.clean_msg(msg)
-            logging.debug('T%s - yt-dlp Debug: %s', self.thread_id, msg)
+            logging.debug('[%d] yt-dlp Debug: %s', self.task_id, msg)
             pass
 
         def warning(self, msg):
             msg = self.clean_msg(msg)
             if msg.find('Falling back') >= 0:
-                logging.debug('T%s - yt-dlp Warning: %s', self.thread_id, msg)
+                logging.debug('[%d] yt-dlp Warning: %s', self.task_id, msg)
                 return
             if msg.find('Requested formats are incompatible for merge') >= 0:
-                logging.debug('T%s - yt-dlp Warning: %s', self.thread_id, msg)
+                logging.debug('[%d] yt-dlp Warning: %s', self.task_id, msg)
                 return
-            logging.warning('T%s - yt-dlp Warning: %s', self.thread_id, msg)
+            logging.warning('[%d] yt-dlp Warning: %s', self.task_id, msg)
 
         def error(self, msg):
             msg = self.clean_msg(msg)
             if msg.find('Unsupported URL') >= 0:
-                logging.debug('T%s - yt-dlp Error: %s', self.thread_id, msg)
+                logging.debug('[%d] yt-dlp Error: %s', self.task_id, msg)
                 return
             if msg.find('no suitable InfoExtractor') >= 0:
-                logging.debug('T%s - yt-dlp Error: %s', self.thread_id, msg)
+                logging.debug('[%d] yt-dlp Error: %s', self.task_id, msg)
                 return
             # This is a critical error, with high probability the link can be downloaded at a later time.
-            logging.error('T%s - yt-dlp Error: %s', self.thread_id, msg)
+            logging.error('[%d] yt-dlp Error: %s', self.task_id, msg)
             self.task.yt_dlp_failed_with_error = True
 
     def yt_hook(self, d):
@@ -264,7 +195,7 @@ class Task(object):
             total_bytes = 0
 
         difference = downloaded_bytes - self.downloaded
-        self.thread_report[self.thread_id]['total'] += difference
+        self.thread_report[self.task_id]['total'] += difference
         self.downloaded += difference
 
         if total_bytes_estimate <= 0:
@@ -274,30 +205,30 @@ class Task(object):
             total_bytes_estimate = self.file.content_filesize
 
         # Update status information
-        if self.thread_report[self.thread_id]['extra_totalsize'] is None and total_bytes_estimate > 0:
-            self.thread_report[self.thread_id]['extra_totalsize'] = total_bytes_estimate
-            self.thread_report[self.thread_id]['old_extra_totalsize'] = total_bytes_estimate
+        if self.thread_report[self.task_id]['extra_totalsize'] is None and total_bytes_estimate > 0:
+            self.thread_report[self.task_id]['extra_totalsize'] = total_bytes_estimate
+            self.thread_report[self.task_id]['old_extra_totalsize'] = total_bytes_estimate
 
         if (
-            self.thread_report[self.thread_id]['extra_totalsize'] == -1
-            and total_bytes_estimate > self.thread_report[self.thread_id]['old_extra_totalsize']
+            self.thread_report[self.task_id]['extra_totalsize'] == -1
+            and total_bytes_estimate > self.thread_report[self.task_id]['old_extra_totalsize']
         ):
-            self.thread_report[self.thread_id]['extra_totalsize'] = (
-                total_bytes_estimate - self.thread_report[self.thread_id]['old_extra_totalsize']
+            self.thread_report[self.task_id]['extra_totalsize'] = (
+                total_bytes_estimate - self.thread_report[self.task_id]['old_extra_totalsize']
             )
 
-            self.thread_report[self.thread_id]['old_extra_totalsize'] = total_bytes_estimate
+            self.thread_report[self.task_id]['old_extra_totalsize'] = total_bytes_estimate
 
         percent = 100
         if total_bytes_estimate != 0:
             percent = int(100 * downloaded_bytes / total_bytes_estimate)
 
-        self.thread_report[self.thread_id]['percentage'] = percent
+        self.thread_report[self.task_id]['percentage'] = percent
 
         if d['status'] == 'finished':
             self.downloaded = 0
-            self.thread_report[self.thread_id]['percentage'] = 100
-            self.thread_report[self.thread_id]['extra_totalsize'] = None
+            self.thread_report[self.task_id]['percentage'] = 100
+            self.thread_report[self.task_id]['extra_totalsize'] = None
 
     def yt_hook_after_move(self, final_filename: str):
         rel_pos = final_filename.find(self.destination)
@@ -305,32 +236,37 @@ class Task(object):
             final_filename = final_filename[rel_pos:]
         self.file.saved_to = final_filename
 
-    def is_blocked_for_yt_dlp(self, url_to_download: str):
-        url_parsed = urlparse.urlparse(url_to_download)
+    def is_blocked_for_yt_dlp(self, url: str):
+        url_parsed = urlparse.urlparse(url)
+        # Do not download whole YT channels
         if url_parsed.hostname.endswith('youtube.com') and url_parsed.path.startswith('/channel/'):
-            # We do not want to download whole channels
             return True
         return False
 
-    def set_utime(self, last_modified: str = None):
-        """Sets the last modified and last activated time of a downloaded file
-
-        Args:
-            last_modified (str, optional): The last_modified header from the Webpage. Defaults to None.
+    def set_utime(self, last_modified_header: str = None):
         """
+        Sets the last modified time of the downloaded file
+        Modified time will be set based on the given last_modified value or the moodle file attribute timemodified
+        Access time will always be set to now
 
+        @param last_modified_header: The last_modified header from the Webpage. Defaults to None.
+        """
+        if not os.path.isfile(self.file.saved_to):
+            return
         try:
-            if last_modified is not None:
-                filetime = timeconvert(last_modified)
-                if filetime is not None and filetime > 0:
-                    os.utime(self.file.saved_to, (time.time(), filetime))
+            if last_modified_header is not None:
+                server_modified_time = timeconvert(last_modified_header)
+                if server_modified_time is not None and server_modified_time > 0:
+                    os.utime(self.file.saved_to, (time.time(), server_modified_time))
                     return
 
             if self.file.content_timemodified is not None and self.file.content_timemodified > 0:
                 os.utime(self.file.saved_to, (time.time(), self.file.content_timemodified))
 
         except OSError:
-            logging.debug('T%s - Could not change utime', self.thread_id)
+            logging.debug(
+                '[%d] Access time and modification time of the downloaded file could not be set', self.task_id
+            )
 
     def try_download_link(
         self, add_token: bool = False, delete_if_successful: bool = False, use_cookies: bool = False
@@ -350,10 +286,10 @@ class Task(object):
         """
 
         url_to_download = self.file.content_fileurl
-        logging.debug('T%s - Try to download linked file %s', self.thread_id, url_to_download)
+        logging.debug('[%d] Try to download linked file %s', self.task_id, url_to_download)
 
         if add_token:
-            url_to_download = self._add_token_to_url(self.file.content_fileurl)
+            url_to_download = self.add_token_to_url(self.file.content_fileurl)
 
         cookies_path = self.options.get('cookies_path', None)
         if use_cookies:
@@ -370,8 +306,8 @@ class Task(object):
                 os.remove(self.file.saved_to)
             except OSError as e:
                 logging.warning(
-                    'T%s - Could not delete %s before download is started. Error: %s',
-                    self.thread_id,
+                    '[%d] Could not delete %s before download is started. Error: %s',
+                    self.task_id,
                     self.file.saved_to,
                     e,
                 )
@@ -395,7 +331,7 @@ class Task(object):
             )
         except (InvalidSchema, InvalidURL, MissingSchema):
             # don't download urls like 'mailto:name@provider.com'
-            logging.debug('T%s - Attempt is aborted because the URL has no correct format', self.thread_id)
+            logging.debug('[%d] Attempt is aborted because the URL has no correct format', self.task_id)
             self.success = True
             return False
         except RequestException as error:
@@ -404,8 +340,8 @@ class Task(object):
         if not response.ok:
             # The URL reports an HTTP error, so we give up trying to download the URL.
             logging.warning(
-                'T%s - Stopping the attemp to download %s because of the HTTP ERROR %s',
-                self.thread_id,
+                '[%d] Stopping the attemp to download %s because of the HTTP ERROR %s',
+                self.task_id,
                 self.file.content_fileurl,
                 response.status_code,
             )
@@ -421,9 +357,9 @@ class Task(object):
 
         if response.url != url_to_download:
             if response.history and len(response.history) > 0:
-                logging.debug('T%s - URL was %s time(s) redirected', self.thread_id, len(response.history))
+                logging.debug('[%d] URL was %s time(s) redirected', self.task_id, len(response.history))
             else:
-                logging.debug('T%s - URL has changed after information retrieval', self.thread_id)
+                logging.debug('[%d] URL has changed after information retrieval', self.task_id)
             url_to_download = response.url
 
         url_parsed = urlparse.urlparse(url_to_download)
@@ -440,8 +376,8 @@ class Task(object):
             # This link is to be downloaded from an external program.
             cmd = external_file_downloader.replace('%U', self.file.content_fileurl)
             logging.debug(
-                'T%s - Run external downloader using the following command: `%s`',
-                self.thread_id,
+                '[%d] Run external downloader using the following command: `%s`',
+                self.task_id,
                 cmd,
             )
             external_dl_failed_with_error = False
@@ -457,7 +393,7 @@ class Task(object):
 
                 for lines in p.stdout:
                     # line = line.decode('utf-8', 'replace')
-                    self.thread_report[self.thread_id]['external_dl'] = lines.splitlines()[-1]
+                    self.thread_report[self.task_id]['external_dl'] = lines.splitlines()[-1]
 
                 _, stderr = p.communicate()
 
@@ -468,15 +404,15 @@ class Task(object):
                 external_dl_failed_with_error = True
 
             if external_dl_failed_with_error:
-                logging.error('T%s - External Downloader Error: %s', self.thread_id, stderr)
+                logging.error('[%d] External Downloader Error: %s', self.task_id, stderr)
                 if not delete_if_successful:
                     # cleanup the url-link file
                     try:
                         os.remove(self.file.saved_to)
                     except OSError as e:
                         logging.warning(
-                            'T%s - Could not delete %s after external downloader failed. Error: %s',
-                            self.thread_id,
+                            '[%d] Could not delete %s after external downloader failed. Error: %s',
+                            self.task_id,
                             self.file.saved_to,
                             e,
                         )
@@ -546,8 +482,8 @@ class Task(object):
                         break
                 except Exception as e:
                     logging.error(
-                        'T%s - yt-dlp failed! Error: %s',
-                        self.thread_id,
+                        '[%d] yt-dlp failed! Error: %s',
+                        self.task_id,
                         e,
                     )
                     self.yt_dlp_failed_with_error = True
@@ -564,8 +500,8 @@ class Task(object):
                         os.remove(self.file.saved_to)
                     except OSError as e:
                         logging.warning(
-                            'T%s - Could not delete %s after yt-dlp failed. Error: %s',
-                            self.thread_id,
+                            '[%d] Could not delete %s after yt-dlp failed. Error: %s',
+                            self.task_id,
                             self.file.saved_to,
                             e,
                         )
@@ -575,7 +511,7 @@ class Task(object):
                     + 'You can ignore this error by running `moodle-dl --ignore-ytdl-errors` once.'
                 )
 
-        logging.debug('T%s - Downloading file directly', self.thread_id)
+        logging.debug('[%d] Downloading file directly', self.task_id)
 
         # generate file extension for modules names
         new_name, new_extension = os.path.splitext(new_filename)
@@ -593,85 +529,56 @@ class Task(object):
         self.set_path(True)
 
         if total_bytes_estimate != -1:
-            self.thread_report[self.thread_id]['extra_totalsize'] = total_bytes_estimate
+            self.thread_report[self.task_id]['extra_totalsize'] = total_bytes_estimate
 
-        self.urlretrieve(
-            url_to_download,
-            self.file.saved_to,
-            context=self.ssl_context,
-            reporthook=self.add_progress,
-            cookies_path=cookies_path,
-        )
-
-        self.set_utime(last_modified)
-        self.file.time_stamp = int(time.time())
-
-        self.success = True
+        self.download_url(url_to_download,  self.file.saved_to)
         return True
 
     def is_filtered_external_domain(self):
         """
-        This function is used for external linked files.
-        It checks if the domain of the download link is on the blacklist
-        or is not on the whitelist.
+        Filter external linked files.
+        Check if the domain of the download link is on the blacklist or is not on the whitelist.
 
-        Returns True if the domain is filtered.
+        @return: True if the domain is filtered.
         """
 
-        url_parsed = urlparse.urlparse(self.file.content_fileurl)
-        domain = url_parsed.hostname
-
-        blacklist = self.options.get('download_domains_blacklist', [])
-        whitelist = self.options.get('download_domains_whitelist', [])
+        domain = urlparse.urlparse(self.file.content_fileurl).hostname
 
         in_blacklist = False
-
-        for entry in blacklist:
+        for entry in self.opts.download_domains_blacklist:
             if domain == entry or domain.endswith('.' + entry):
                 in_blacklist = True
                 break
 
-        in_whitelist = len(whitelist) == 0
-
-        for entry in whitelist:
+        in_whitelist = len(self.opts.download_domains_whitelist) == 0
+        for entry in self.opts.download_domains_whitelist:
             if domain == entry or domain.endswith('.' + entry):
                 in_whitelist = True
                 break
 
         return not in_whitelist or in_blacklist
 
-    def create_shortcut(self):
-        """
-        Creates a Shortcut to a URL
-        Because shortcuts are different under Windows and Unix,
-        both cases are covered here.
-        """
-
-        logging.debug('T%s - Creating a shortcut', self.thread_id)
-        with open(self.file.saved_to, 'w+', encoding='utf-8') as shortcut:
+    async def create_shortcut(self):
+        "Create a Shortcut to a URL"
+        logging.debug('[%d] Creating a shortcut', self.task_id)
+        async with self.opts.semaphore, aiofiles.open(self.file.saved_to, 'w+', encoding='utf-8') as shortcut:
             if os.name == 'nt' or platform.system() == "Darwin":
-                shortcut.write('[InternetShortcut]' + os.linesep)
-                shortcut.write('URL=' + self.file.content_fileurl + os.linesep)
+                await shortcut.write('[InternetShortcut]' + os.linesep)
+                await shortcut.write('URL=' + self.file.content_fileurl + os.linesep)
             else:
-                shortcut.write('[Desktop Entry]' + os.linesep)
-                shortcut.write('Encoding=UTF-8' + os.linesep)
-                shortcut.write('Name=' + self.filename + os.linesep)
-                shortcut.write('Type=Link' + os.linesep)
-                shortcut.write('URL=' + self.file.content_fileurl + os.linesep)
-                shortcut.write('Icon=text-html' + os.linesep)
-                shortcut.write('Name[en_US]=' + self.filename + os.linesep)
-
-        self.file.time_stamp = int(time.time())
-
-        self.success = True
+                await shortcut.write('[Desktop Entry]' + os.linesep)
+                await shortcut.write('Encoding=UTF-8' + os.linesep)
+                await shortcut.write('Name=' + self.filename + os.linesep)
+                await shortcut.write('Type=Link' + os.linesep)
+                await shortcut.write('URL=' + self.file.content_fileurl + os.linesep)
+                await shortcut.write('Icon=text-html' + os.linesep)
+                await shortcut.write('Name[en_US]=' + self.filename + os.linesep)
 
     def set_path(self, ignore_attributes: bool = False):
-        """Sets the path where a file should be created.
-        It takes into account which file type is involved.
-        An empty temporary file is created which may need to be cleaned up.
+        """Set the path where a file should be created. The file type is used to set the needed file extension.
+        An empty target file is created which may need to be cleaned up.
 
-        Args:
-            ignore_attributes (bool, optional): If the file attributes should be ignored. Defaults to False.
+        @param ignore_attributes: If the file attributes should be ignored.
         """
 
         if self.file.content_type == 'description' and not ignore_attributes:
@@ -688,70 +595,46 @@ class Task(object):
         else:  # normal path
             self.file.saved_to = str(Path(self.destination) / self.filename)
 
-        self.file.saved_to = self._rename_if_exists(self.file.saved_to)
+        self.file.saved_to = self.create_target_file(self.file.saved_to)
 
-    def create_description(self):
-        """
-        Creates a Description file
-        """
-        logging.debug('T%s - Creating a description file', self.thread_id)
-        description = open(self.file.saved_to, 'w+', encoding='utf-8')
-        to_save = ""
+    async def create_description(self):
+        "Create a description file"
+        logging.debug('[%d] Creating a description file', self.task_id)
+
+        md_content = ''
         if self.file.text_content is not None:
             h2t_handler = html2text.HTML2Text()
-            to_save = h2t_handler.handle(self.file.text_content).strip()
-            # to_save could also be html.unescape(),
-            # but this could destroy the md file
-            if to_save != '':
-                description.write(to_save)
+            md_content = h2t_handler.handle(self.file.text_content).strip()
+            # we could run html.unescape() over to_save, but this could destroy the md file
 
-        description.close()
-
-        if to_save == '':
-            logging.debug('T%s - Remove target file because description file would be empty', self.thread_id)
+        if md_content == '':
+            logging.debug('[%d] Remove target file because description file would be empty', self.task_id)
             os.remove(self.file.saved_to)
+            return
 
-            self.file.time_stamp = int(time.time())
+        async with self.opts.semaphore, aiofiles.open(self.file.saved_to, 'w+', encoding='utf-8') as md_file:
+            md_file.write(md_content)
 
-            self.success = True
-        else:
-            self.set_utime()
-            self.file.time_stamp = int(time.time())
+    async def create_html_file(self):
+        "Create a HTML file"
+        logging.debug('[%d] Creating a html file', self.task_id)
 
-            self.success = True
-
-    def create_html_file(self):
-        """
-        Creates a HTML file
-        """
-        logging.debug('T%s - Creating a html file', self.thread_id)
-        html_file = open(self.file.saved_to, 'w+', encoding='utf-8')
-        to_save = ""
+        html_content = ''
         if self.file.html_content is not None:
-            to_save = self.file.html_content
+            html_content = self.file.html_content
 
-            if to_save != '':
-                html_file.write(to_save)
-
-        html_file.close()
-
-        if to_save == '':
-            logging.debug('T%s - Remove target file because html file would be empty', self.thread_id)
+        if html_content == '':
+            logging.debug('[%d] Remove target file because html file would be empty', self.task_id)
             os.remove(self.file.saved_to)
+            return
 
-            self.file.time_stamp = int(time.time())
+        async with self.opts.semaphore, aiofiles.open(self.file.saved_to, 'w+', encoding='utf-8') as html_file:
+            html_file.write(html_content)
 
-            self.success = True
-        else:
-            self.set_utime()
-            self.file.time_stamp = int(time.time())
-
-            self.success = True
-
-    def try_move_file(self) -> bool:
+    def move_old_file(self) -> bool:
         """
-        It will try to move the old file to the new location.
-        If it worked it returns True. Else the file needs to be redownloaded.
+        Try to move the old file to the new location.
+        @return: True if successful. Else the file needs to be re-downloaded.
         """
 
         if self.file.old_file is None:
@@ -761,43 +644,25 @@ class Task(object):
         if not os.path.exists(old_path):
             return False
 
-        logging.debug('T%s - Moving old file "%s" to new target location', self.thread_id, old_path)
+        logging.debug('[%d] Moving old file "%s" to new target location', self.task_id, old_path)
         try:
-            shutil.move(old_path, self.file.saved_to)
-            self.file.time_stamp = int(time.time())
-            self.success = True
-            return True
-        except FileExistsError:
             # On Windows, the temporary file must be deleted first.
-            # lock because of raise condition
-            self.fs_lock.acquire()
-
-            try:
-                os.remove(self.file.saved_to)
-                shutil.move(old_path, self.file.saved_to)
-                self.file.time_stamp = int(time.time())
-                self.success = True
-
-                self.fs_lock.release()
-                return True
-            except OSError as e:
-                logging.warning('T%s - Moving the old file %s failed!  Error: %s', self.thread_id, old_path, e)
-
-            self.fs_lock.release()
+            os.remove(self.file.saved_to)
+            shutil.move(old_path, self.file.saved_to)
+            return True
         except OSError as e:
-            logging.warning('T%s - Moving the old file %s failed unexpectedly!  Error: %s', self.thread_id, old_path, e)
-
+            logging.warning('[%d] Moving the old file %s failed unexpectedly!  Error: %s', self.task_id, old_path, e)
         return False
 
     def store_data_url(self):
         url_to_download = self.file.content_fileurl
-        logging.debug('T%s - Data-URL detected', self.thread_id)
+        logging.debug('[%d] Data-URL detected', self.task_id)
         try:
             os.remove(self.file.saved_to)
         except OSError as e:
             logging.warning(
-                'T%s - Could not delete %s before storing data url. Error: %s',
-                self.thread_id,
+                '[%d] Could not delete %s before storing data url. Error: %s',
+                self.task_id,
                 self.file.saved_to,
                 e,
             )
@@ -808,113 +673,76 @@ class Task(object):
         with open(self.file.saved_to, "wb") as target_file:
             target_file.write(data)
 
-        self.set_utime()
-        self.file.time_stamp = int(time.time())
-        self.success = True
+    def download(self):
+        if self.status.state != TaskState.INIT:
+            logging.debug('[%d] Task was already started', self.task_id)
+            return
+        self.status.state = TaskState.STARTED
 
-    def download(self, thread_id: int):
-        sucessfull = self.real_download()
+        success = self.real_download()
 
-        if sucessfull:
-            self.state_recorder.save_file(self.file, self.course.id, self.course.fullname)
+        if success:
+            self.set_utime()
+            self.file.time_stamp = int(time.time())
 
-    def real_download(self):
-        """
-        Downloads a file
-        """
-        self.thread_id = thread_id
 
-        # reset download status
-        self.downloaded = 0
-        self.thread_report[self.thread_id]['percentage'] = 0
-        self.thread_report[self.thread_id]['extra_totalsize'] = None
-        self.thread_report[self.thread_id]['current_url'] = self.file.content_fileurl
-        self.thread_report[self.thread_id]['external_dl'] = None
-        self.yt_dlp_failed_with_error = False
-
+    def real_download(self) -> bool:
         try:
-            logging.debug('T%s - Starting downloading of: %s', self.thread_id, self)
-            self.create_dir(self.destination)
+            logging.debug('[%d] Starting downloading of: %s', self.task_id, self)
+            PT.make_dirs(self.destination)
 
-            # if file was modified try rename the old file,
-            # before create new one
+            # If file was modified try rename the old file, before create new one
             if self.file.modified:
-                self.try_rename_old_file()
+                self.rename_old_file()
 
-            # create a empty destination file
+            # Create an empty destination file
             self.set_path()
 
             # Try to move the old file if it still exists
             if self.file.moved:
-                if self.try_move_file():
-                    return self.success
+                if self.move_old_file():
+                    return True
 
-            # if it is a Description we have to create a description file
-            # instead of downloading it
             if self.file.content_type == 'description':
+                # Create a description file instead of downloading it
                 self.create_description()
-                return self.success
 
-            # if it is a HTML-File we have to create a HTML file
-            # instead of downloading it
-            if self.file.content_type == 'html':
+            elif self.file.content_type == 'html':
+                # Create a HTML file instead of downloading it
                 self.create_html_file()
-                return self.success
 
-            add_token = True
-            if self.file.module_modname.startswith('index_mod'):
-                add_token = True
-                self.try_download_link(add_token, delete_if_successful=True, use_cookies=False)
-                return self.success
+            elif self.file.module_modname.startswith('index_mod'):
+                self.try_download_link(add_token=True, delete_if_successful=True, use_cookies=False)
 
-            if self.file.module_modname.startswith('cookie_mod'):
-                add_token = False
-                self.try_download_link(add_token, delete_if_successful=True, use_cookies=True)
-                return self.success
+            elif self.file.module_modname.startswith('cookie_mod'):
+                self.try_download_link(add_token=False, delete_if_successful=True, use_cookies=True)
 
-            # if it is a URL we have to create a shortcut and maybe downloading it
-            if self.file.module_modname.startswith('url') and not self.file.content_fileurl.startswith('data:'):
+            elif self.file.module_modname.startswith('url') and not self.file.content_fileurl.startswith('data:'):
+                # Create a shortcut and maybe downloading it
                 self.create_shortcut()
-                add_token = False
-                if self.options.get('download_linked_files', False) and not self.is_filtered_external_domain():
-                    self.try_download_link(add_token, False, False)
-                return self.success
+                if self.opts.download_linked_files and not self.is_filtered_external_domain():
+                    self.try_download_link(add_token=False, delete_if_successful=False, use_cookies=False)
 
-            if self.file.content_fileurl.startswith('data:'):
+            elif self.file.content_fileurl.startswith('data:'):
                 self.store_data_url()
-                return self.success
 
-            url_to_download = self.file.content_fileurl
-            logging.debug('T%s - Downloading %s', self.thread_id, url_to_download)
+            else:
+                url_to_download = self.file.content_fileurl
+                logging.debug('[%d] Downloading %s', self.task_id, url_to_download)
+                url_to_download = self.add_token_to_url(self.file.content_fileurl)
+                self.download_url(url_to_download, self.file.saved_to)
 
-            if add_token:
-                url_to_download = self._add_token_to_url(self.file.content_fileurl)
-
-            cookies_path = self.options.get('cookies_path', None)
-
-            self.urlretrieve(
-                url_to_download,
-                self.file.saved_to,
-                context=self.ssl_context,
-                reporthook=self.add_progress,
-                cookies_path=cookies_path,
-            )
-
-            self.set_utime()
-            self.file.time_stamp = int(time.time())
-
-            self.success = True
-
-        except Exception as e:
-            self.error = e
+            return True
+        except Exception as dl_err:
+            self.status.error = dl_err
             filesize = 0
             try:
                 filesize = os.path.getsize(self.file.saved_to)
             except OSError:
                 pass
 
-            logging.error('T%s - Error while trying to download file: %s', self.thread_id, self)
-            logging.error('T%s - Traceback:\n%s', self.thread_id, traceback.format_exc())
+            logging.error('[%d] Error while trying to download file: %s', self.task_id, dl_err)
+            logging.debug('[%d] Traceback:\n%s', self.task_id, traceback.format_exc())
 
             if self.downloaded == 0 and filesize == 0:
                 try:
@@ -923,17 +751,17 @@ class Task(object):
                         os.remove(self.file.saved_to)
                 except OSError as err_remove:
                     logging.warning(
-                        'T%s - Could not delete %s after thread failed. Error: %s',
-                        self.thread_id,
+                        '[%d] Could not delete %s after thread failed. Error: %s',
+                        self.task_id,
                         self.file.saved_to,
                         err_remove,
                     )
             else:
                 # Subtract the already downloaded content in case of an error.
-                self.thread_report[self.thread_id]['total'] -= self.downloaded
-                self.thread_report[self.thread_id]['percentage'] = 100
+                self.thread_report[self.task_id]['total'] -= self.downloaded
+                self.thread_report[self.task_id]['percentage'] = 100
 
-        return self.success
+        return False
 
     def get_cookie_jar(self):
         cookie_jar = None
@@ -962,93 +790,108 @@ class Task(object):
                 self.status.external_total_size = content_length
                 self.callback(DlEvent.TOTAL_SIZE, self, content_length=content_length)
 
-    async def download_url(self, dl_url: str, dest_path: str, semaphore: asyncio.Semaphore, timeout: int = 60):
+    async def download_url(self, dl_url: str, dest_path: str, timeout: int = 60):
         total_bytes_received = 0
         done_tries = 0
-        file_obj = None
         can_continue_on_fail = False
+        file_obj = None
         headers = self.RQ_HEADER.copy()
         ssl_context = SslHelper.get_ssl_context(
             self.opts.global_opts.skip_cert_verify, self.opts.global_opts.allow_insecure_ssl
         )
-        async with semaphore, aiohttp.ClientSession(cookie_jar=self.get_cookie_jar(), raise_for_status=True) as session:
-            while done_tries < self.MAX_DL_RETRIES:
-                try:
-                    logging.debug('Start downloading (Try %d of %d)', done_tries, self.MAX_DL_RETRIES)
-
-                    if done_tries > 0 and can_continue_on_fail:
-                        headers['Range'] = f'bytes={total_bytes_received}-'
-                    elif not can_continue_on_fail and 'Range' in headers:
-                        del headers['Range']
-
-                    async with session.request(
-                        "GET", dl_url, headers=headers, ssl=ssl_context, timeout=timeout
-                    ) as resp:
-                        content_length = int(resp.headers.get("Content-Length", 0))
-                        self.report_content_length(content_length)
-                        content_range = resp.headers.get("Content-Range", "")  # Exp: bytes 200-1000/67589
-
-                        if resp.status not in [200, 206]:
-                            logging.debug('Warning got status %s', resp.status)
-
-                        if done_tries > 0 and can_continue_on_fail and not content_range and resp.status != 206:
-                            raise ContentRangeError("Server did not response with requested range data")
-
-                        file_obj = file_obj or await aiofiles.open(dest_path, "wb")
-                        async for chunk in resp.content.iter_chunked(self.CHUNK_SIZE):
-                            bytes_received = len(chunk)
-                            total_bytes_received += bytes_received
-                            self.report_received_bytes(bytes_received)
-                            await file_obj.write(chunk)
-
-                    if file_obj is not None and not file_obj.closed:
-                        await file_obj.close()
-
-                    if content_length >= 0 and total_bytes_received < content_length:
-                        raise ContentTooShortError(
-                            f'Download incomplete: Got only {format_bytes(total_bytes_received)}'
-                            + f' out of {format_bytes(content_length)} bytes',
-                            dest_path,
+        with Timer() as watch:
+            async with self.opts.semaphore, aiohttp.ClientSession(
+                cookie_jar=self.get_cookie_jar(), raise_for_status=True
+            ) as session:
+                while done_tries < self.MAX_DL_RETRIES:
+                    try:
+                        logging.debug(
+                            '[%d] Start downloading (Try %d of %d)', self.task_id, done_tries, self.MAX_DL_RETRIES
                         )
 
-                    logging.debug('Successfully downloaded %s', dest_path)
-                    break
+                        if done_tries > 0 and can_continue_on_fail:
+                            headers['Range'] = f'bytes={total_bytes_received}-'
+                        elif not can_continue_on_fail and 'Range' in headers:
+                            del headers['Range']
 
-                except (aiohttp.ClientError, OSError, ValueError, ContentRangeError) as err:
-                    if done_tries == 0:
-                        can_continue_on_fail = await self.check_range_download_opt(dl_url, session)
+                        async with session.request(
+                            "GET", dl_url, headers=headers, ssl=ssl_context, timeout=timeout
+                        ) as resp:
+                            content_length = int(resp.headers.get("Content-Length", 0))
+                            self.report_content_length(content_length)
+                            content_range = resp.headers.get("Content-Range")  # Exp: bytes 200-1000/67589
 
-                    done_tries += 1
-                    if (
-                        (not can_continue_on_fail and total_bytes_received > 0)
-                        or isinstance(err, ContentRangeError)
-                        or (done_tries >= self.MAX_DL_RETRIES)
-                    ):
-                        can_continue_on_fail = False
-                        # Clean up failed file because we can not recover
+                            if resp.status not in [200, 206]:
+                                logging.debug('[%d] Warning got status %s', self.task_id, resp.status)
+
+                            if done_tries > 0 and can_continue_on_fail and not content_range and resp.status != 206:
+                                raise ContentRangeError(
+                                    f"[{self.task_id}] Server did not response with requested range data"
+                                )
+
+                            file_obj = file_obj or await aiofiles.open(dest_path, "wb")
+                            async for chunk in resp.content.iter_chunked(self.CHUNK_SIZE):
+                                bytes_received = len(chunk)
+                                total_bytes_received += bytes_received
+                                self.report_received_bytes(bytes_received)
+                                await file_obj.write(chunk)
+
                         if file_obj is not None and not file_obj.closed:
                             await file_obj.close()
-                        file_obj = None
 
-                        # TODO: If download can be continued and size > 0, remember that the file started downloading,
-                        #  and continue downloading on next run instead of deleting it.
-                        PT.remove_file(dest_path)
-                        self.report_received_bytes(-total_bytes_received)
-                        total_bytes_received = 0
+                        if content_length >= 0 and total_bytes_received < content_length:
+                            raise ContentTooShortError(
+                                f'[{self.task_id}] Download incomplete: Got only {format_bytes(total_bytes_received)}'
+                                + f' out of {format_bytes(content_length)} bytes',
+                                dest_path,
+                            )
 
-                    if isinstance(err, aiohttp.ClientResponseError):
-                        if err.status not in [408, 409, 429]:
-                            # 408 (timeout) or 409 (conflict) and 429 (too many requests)
-                            logging.warning('Download failed with status: %s %s', err.status, err.message)
-                            raise err from None
+                        logging.debug('[%d] Successfully downloaded %s', self.task_id, dest_path)
+                        break
 
-                    if done_tries < self.MAX_DL_RETRIES:
-                        logging.debug('Download error occurred: %s', err)
-                        await asyncio.sleep(1)
-                        continue
+                    except (aiohttp.ClientError, OSError, ValueError, ContentRangeError) as err:
+                        if done_tries == 0:
+                            can_continue_on_fail = await self.check_range_download_opt(dl_url, session)
 
-                    # No more tries
-                    raise err from None
+                        done_tries += 1
+                        if (
+                            (not can_continue_on_fail and total_bytes_received > 0)
+                            or isinstance(err, ContentRangeError)
+                            or (done_tries >= self.MAX_DL_RETRIES)
+                        ):
+                            can_continue_on_fail = False
+                            # Clean up failed file because we can not recover
+                            if file_obj is not None and not file_obj.closed:
+                                await file_obj.close()
+                            file_obj = None
+
+                            # TODO: If download can be continued and size > 0, remember that the file started downloading,
+                            #  and continue downloading on next run instead of deleting it.
+                            PT.remove_file(dest_path)
+                            self.report_received_bytes(-total_bytes_received)
+                            total_bytes_received = 0
+
+                        if isinstance(err, aiohttp.ClientResponseError):
+                            if err.status not in [408, 409, 429]:
+                                # 408 (timeout) or 409 (conflict) and 429 (too many requests)
+                                logging.warning(
+                                    '[%d] Download failed with status: %s %s', self.task_id, err.status, err.message
+                                )
+                                raise err from None
+
+                        if done_tries < self.MAX_DL_RETRIES:
+                            logging.debug('[%d] Download error occurred: %s', self.task_id, err)
+                            await asyncio.sleep(1)
+                            continue
+
+                        # No more tries
+                        raise err from None
+        logging.debug(
+            '[%d] Download of %s finished in %s',
+            self.task_id,
+            format_bytes(total_bytes_received),
+            format_seconds(watch.duration),
+        )
 
     def __str__(self):
         return 'Task (%(task_id)s, %(file)s, %(course)s, %(status)s)' % {

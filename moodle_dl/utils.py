@@ -339,6 +339,9 @@ class Timer:
             self.duration = end - self.start
 
 
+PathParts = collections.namedtuple('PathParts', ('dir_name', 'file_name', 'file_extension'))
+
+
 class PathTools:
     """A set of methods to create correct paths."""
 
@@ -606,11 +609,26 @@ class PathTools:
         return new_file_path
 
     @staticmethod
+    def get_path_parts(file_path: str) -> PathParts:
+        destination = os.path.dirname(file_path)
+        filename, file_extension = os.path.splitext(os.path.basename(file_path))
+        return PathParts(destination, filename, file_extension)
+
+    @classmethod
+    def get_unused_file_path(cls, file_path: str, start_clear=True):
+        destination, filename, file_extension = cls.get_path_parts(file_path)
+        return cls.get_unused_filename(destination, filename, file_extension, start_clear)
+
+    @classmethod
+    def touch_file(cls, file_path: str):
+        open(file_path, 'a', encoding='utf-8').close()
+
+    @staticmethod
     def get_file_exts(filename: str) -> (str, str):
         file_splits = filename.rsplit('.', 2)
         if len(file_splits) == 2:
             return None, file_splits[-1].lower()
-        elif len(file_splits) == 3:
+        if len(file_splits) == 3:
             return file_splits[-2].lower(), file_splits[-1].lower()
         return None, None
 
