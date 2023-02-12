@@ -393,7 +393,7 @@ class Task:
 
                 for lines in p.stdout:
                     # line = line.decode('utf-8', 'replace')
-                    self.thread_report[self.task_id]['external_dl'] = lines.splitlines()[-1]
+                    logging.info('[%d] Ext-Dl: %s', self.task_id, lines.splitlines()[-1])
 
                 _, stderr = p.communicate()
 

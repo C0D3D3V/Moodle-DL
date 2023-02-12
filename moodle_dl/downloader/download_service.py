@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import shutil
 import time
 
 from typing import List
@@ -79,84 +78,40 @@ class DownloadService:
         status_logger_task.cancel()
 
     async def log_download_status(self):
-        pass
+        last_bytes_downloaded = 0
+        last_status_timestamp = time.time()
+        while True:
+            # Print every 2 sec the current status
+            await asyncio.sleep(2)
 
-    def _get_status_message(self) -> str:
-        """
-        Creates a string that combines the status messages of all threads.
-        The current download progress of a file is displayed in percent
-        per Thread.
-        A total display is also created, showing the total amount downloaded
-        in relation to what still needs to be downloaded.
-        @return: A status message string
-        """
+            percentage = None
+            if self.status.bytes_to_download != 0:
+                percentage = int(self.status.bytes_downloaded * 100 / self.status.bytes_to_download)
+                if percentage > 100 or percentage < 0:
+                    percentage = None
+            if percentage is None:
+                percentage = ' NA%'
+            else:
+                percentage = f'{percentage:3}%'
 
-        # to limit the output to one line
-        limits = shutil.get_terminal_size()
+            speed = calc_speed(last_status_timestamp, time.time(), self.status.bytes_downloaded - last_bytes_downloaded)
+            last_status_timestamp = time.time()
+            last_bytes_downloaded = self.status.bytes_downloaded
 
-        # Starting with a carriage return to overwrite the last message
-        progressmessage = f'\033[{len(self.threads)}A\r'
+            message_line = (
+                f'Total: {percentage}'
+                + f' {format_bytes(self.status.bytes_downloaded):>5} / {format_bytes(self.status.bytes_to_download):<5}'
+                + f' | Done: {(self.status.files_downloaded + self.status.files_failed):>5}'
+                + f' / {self.status.files_to_download:<5}'
+                + f' | Speed: {format_speed(speed)}'
+            )
+            if self.status.files_failed > 0:
+                message_line += f' | Failed: {self.status.files_failed}'
 
-        threads_status_message = ''
-        threads_total_downloaded = 0
-        for thread in self.threads:
-            i = thread.thread_id
-            # A thread status contains it id and the progress
-            # of the current file
-            thread_percentage = self.thread_report[i]['percentage']
-            thread_current_url = self.thread_report[i]['current_url']
-            if self.thread_report[i]['external_dl'] is not None:
-                thread_current_url = 'ExtDL: ' + self.thread_report[i]['external_dl']
+            logging.info(message_line)
 
-            if not thread.is_alive():
-                thread_percentage = 100
-                thread_current_url = 'Finished!'
-
-            if len(thread_current_url) + 13 > limits.columns:
-                thread_current_url = thread_current_url[0 : limits.columns - 15] + '..'
-
-            threads_status_message += f'\033[KT{int(i):2}: {int(thread_percentage):3}% - {thread_current_url}\n'
-
-            threads_total_downloaded += self.thread_report[i]['total']
-
-            extra_totalsize = self.thread_report[i]['extra_totalsize']
-            if extra_totalsize is not None and extra_totalsize != -1:
-                self.total_to_download += extra_totalsize
-                self.thread_report[i]['extra_totalsize'] = -1
-
-        progressmessage += threads_status_message
-
-        percentage = 100
-        if self.total_to_download != 0:
-            percentage = int(threads_total_downloaded * 100 / self.total_to_download)
-
-        # The overall progress also includes the total size that needs to be
-        # downloaded and the size that has already been downloaded.
-        progressmessage_line = (
-            f'Total: {percentage:3}%'
-            + f' {format_bytes(threads_total_downloaded):>12} / {format_bytes(self.total_to_download):<12}'
-        )
-
-        progressmessage_line += f" | Files: {len(self.report['success']):>5} / {self.total_files:<5}"
-
-        diff_to_last_status = threads_total_downloaded - self.last_threads_total_downloaded
-
-        speed = calc_speed(self.last_status_timestamp, time.time(), diff_to_last_status)
-        progressmessage_line += ' | ' + format_speed(speed)
-
-        if len(progressmessage_line) > limits.columns:
-            progressmessage_line = progressmessage_line[0 : limits.columns]
-        progressmessage_line = '\033[K' + progressmessage_line
-
-        progressmessage += progressmessage_line
-
-        self.last_status_timestamp = time.time()
-        self.last_threads_total_downloaded = threads_total_downloaded
-
-        return progressmessage
-
-    def get_failed_tasks(self):
+    def get_failed_tasks(self) -> List[Task]:
         """
         Return a list of failed downloads.
         """
-        return []
+        raise Exception('Not yet implemented')
