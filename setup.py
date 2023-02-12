@@ -15,10 +15,16 @@ def readme():
 setup(
     name='moodle-dl',
     version=__version__,
-    description='A Moodle downloader that downloads course content fast from Moodle (eg. lecture pdfs)',
+    description='Moodle-DL downloads course content fast from Moodle (eg. lecture pdfs)',
     long_description=readme(),
     long_description_content_type='text/markdown',
-    url='https://github.com/C0D3D3V/Moodle-Downloader-2',
+    url='https://github.com/C0D3D3V/Moodle-DL',
+    project_urls={
+        'Documentation': 'https://github.com/C0D3D3V/Moodle-DL#readme',
+        'Wiki': 'https://github.com/C0D3D3V/Moodle-DL/wiki',
+        'Source': 'https://github.com/C0D3D3V/Moodle-DL',
+        'Tracker': 'https://github.com/C0D3D3V/Moodle-DL/issues',
+    },
     author='C0D3D3V',
     author_email='moodle-dl@ist-ein-knaller.de',
     license='GPL-3.0',

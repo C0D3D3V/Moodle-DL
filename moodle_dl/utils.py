@@ -286,7 +286,7 @@ class MoodleDLCookieJar(http.cookiejar.MozillaCookieJar):
                     if f'{line.strip()} '[0] in '[{"':
                         raise http.cookiejar.LoadError(
                             'Cookies file must be Netscape formatted, not JSON. See  '
-                            'https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Use-cookies-when-downloading'
+                            'https://github.com/C0D3D3V/Moodle-DL/wiki/Use-cookies-when-downloading'
                         )
                     logging.info('WARNING: Skipping cookie file entry due to %s: %r', cookie_err, line)
                     continue

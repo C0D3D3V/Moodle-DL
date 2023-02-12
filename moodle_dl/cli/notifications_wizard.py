@@ -93,7 +93,7 @@ class NotificationsWizard:
             print('[The following Inputs are not validated!]')
             print(
                 'Open the following link for help in setting up telegram notifications:'
-                + ' https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Telegram-Notification'
+                + ' https://github.com/C0D3D3V/Moodle-DL/wiki/Telegram-Notification'
             )
             config_valid = False
             while not config_valid:

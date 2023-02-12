@@ -1,6 +1,6 @@
 <div align="center">
     <br>
-    <h2>Moodle Downloader 2</h2>
+    <h2>Moodle-DL</h2>
     <small>Because manually downloading all the course files every few days is just <del>way too easy</del> inefficient.</small> 
     <br>
     <small>Built with ❤︎</small>
@@ -18,16 +18,16 @@
 - Running moodle-dl again will only download files that have not been downloaded yet. Do not miss any files, if files are deleted online, they are still available offline.
 - It is possible to download Moodle courses you are enrolled in, as well as courses that are publicly visible to you.
 
-Discussions about the development take place mainly on [Github](https://github.com/C0D3D3V/Moodle-Downloader-2/issues), but also on [Discord](https://discord.gg/HNg7CsqEnZ).
+Discussions about the development take place mainly on [Github](https://github.com/C0D3D3V/Moodle-DL/issues), but also on [Discord](https://discord.gg/HNg7CsqEnZ).
 
 ## 🚀 Setup
-[![Deploy with Docker](https://img.shields.io/badge/deploy%20with-docker-0db7ed)](https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Run-with-Docker)
+[![Deploy with Docker](https://img.shields.io/badge/deploy%20with-docker-0db7ed)](https://github.com/C0D3D3V/Moodle-DL/wiki/Run-with-Docker)
 [![latest packaged version(s)](https://repology.org/badge/latest-versions/moodle-dl.svg)](https://repology.org/project/moodle-dl/versions)
 [![Packaging status](https://repology.org/badge/tiny-repos/moodle-dl.svg)](https://repology.org/project/moodle-dl/versions)
 [![Discord Shield](https://discordapp.com/api/guilds/969140782655242281/widget.png?style=shield)](https://discord.gg/HNg7CsqEnZ)
 
 1. Install [Python](https://www.python.org/) >=3.7
-2. Install [ffmpeg](https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Installing-ffmpeg)
+2. Install [ffmpeg](https://github.com/C0D3D3V/Moodle-DL/wiki/Installing-ffmpeg)
 3. Run `pip install moodle-dl` as administrator. </br>
     <sup>(To upgrade from an older Version use `pip install -U moodle-dl` instead)</sup>
 4. **[Windows only]** 
@@ -72,12 +72,12 @@ If you don't want moodle-dl to use the current working directory, then you shoul
       - set whether submissions (files uploaded to assignments by yourself or a teacher), descriptions, links inside descriptions, databases, quizzes, lessons, workshops and forum discussions should be downloaded
       - set if external files should be downloaded (files like Youtube videos)
       - set if files on moodle that require a cookie should be downloaded
-      - to add extra courses to your download list which you can see but you are not enrolled in, check out [this wiki entry](https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Download-public-courses)
-    - Not all moodle-dl settings are available in the CLI configuration wizard for configuration, see [the wiki](https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Config.json) for more available options.
+      - to add extra courses to your download list which you can see but you are not enrolled in, check out [this wiki entry](https://github.com/C0D3D3V/Moodle-DL/wiki/Download-public-courses)
+    - Not all moodle-dl settings are available in the CLI configuration wizard for configuration, see [the wiki](https://github.com/C0D3D3V/Moodle-DL/wiki/Config.json) for more available options.
 
 By default a private token is stored in the initial configuration, this is only needed for special Moodle modules that cannot be queried via the Moodle API. If no such module is available in your Moodle you are welcome to delete this token.
 
-If you need help configuring telegram notifications [click here](https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Telegram-Notification)
+If you need help configuring telegram notifications [click here](https://github.com/C0D3D3V/Moodle-DL/wiki/Telegram-Notification)
 
 
 

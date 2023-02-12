@@ -43,12 +43,12 @@ def init_config(config: ConfigHelper, opts: MoodleDlOpts):
 
         Log.info(
             'For more ways to run `moodle-dl` periodically, take a look at the wiki'
-            + ' (https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Start-Moodle-dl-periodically-or-via-Telegram)'
+            + ' (https://github.com/C0D3D3V/Moodle-DL/wiki/Start-Moodle-dl-periodically-or-via-Telegram)'
         )
     else:
         Log.info(
             'If you want to run moodle-dl periodically, you can take a look at the wiki '
-            + '(https://github.com/C0D3D3V/Moodle-Downloader-2/wiki/Start-Moodle-dl-periodically-or-via-Telegram)'
+            + '(https://github.com/C0D3D3V/Moodle-DL/wiki/Start-Moodle-dl-periodically-or-via-Telegram)'
         )
 
     print('')

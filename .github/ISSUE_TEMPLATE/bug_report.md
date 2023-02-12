@@ -14,7 +14,7 @@ The following comments are only meant to encourage you to provide helpful inform
 
 Before opening a new issue, please make sure that we do not have any duplicates already open. You can ensure this by searching the issue list for this repository. If there is a duplicate, please close your issue and add a comment to the existing issue instead.
 
-Also, be sure to check our documentation first: https://github.com/C0D3D3V/Moodle-Downloader-2
+Also, be sure to check our documentation first: https://github.com/C0D3D3V/Moodle-DL
 -->
 
 ## Avoid duplicates

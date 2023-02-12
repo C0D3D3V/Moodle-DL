@@ -7,7 +7,7 @@ from typing import List
 from moodle_dl.config import ConfigHelper
 from moodle_dl.database import StateRecorder
 from moodle_dl.downloader.task import Task
-from moodle_dl.types import Course, MoodleDlOpts, DlEvent, DownloadStatus
+from moodle_dl.types import Course, MoodleDlOpts, DlEvent, DownloadStatus, TaskState
 from moodle_dl.utils import format_bytes, calc_speed, format_speed
 
 
@@ -21,6 +21,7 @@ class DownloadService:
         self.database = database
 
         self.status = DownloadStatus()
+        self.all_tasks = self.gen_all_tasks()
 
     def gen_all_tasks(self) -> List:
         # Set custom chunk size
@@ -62,12 +63,10 @@ class DownloadService:
         self.database.batch_delete_files(self.courses)
 
         # run all other tasks
-        all_tasks = self.gen_all_tasks()
-
         status_logger_task = asyncio.create_task(self.log_download_status())
 
         dl_tasks = set()
-        for task in all_tasks:
+        for task in self.all_tasks:
             if len(dl_tasks) >= self.opts.max_parallel_downloads:
                 # Wait for some download to finish before adding a new one
                 _done, dl_tasks = await asyncio.wait(dl_tasks, return_when=asyncio.FIRST_COMPLETED)
@@ -111,7 +110,9 @@ class DownloadService:
             logging.info(message_line)
 
     def get_failed_tasks(self) -> List[Task]:
-        """
-        Return a list of failed downloads.
-        """
-        raise Exception('Not yet implemented')
+        "Return a list of failed downloads."
+        result = []
+        for task in self.all_tasks:
+            if task.status.state == TaskState.FAILED:
+                result.append(task)
+        return result
