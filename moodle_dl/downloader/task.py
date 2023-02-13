@@ -390,9 +390,8 @@ class Task:
                     if self.file.module_name != 'index_mod-page':
                         # We want to download legacy moodle pages
                         return False
-                    else:
-                        # yt-dlp has an extractor for this URL so we do not want to download the URL extra
-                        return True
+                    # yt-dlp has an extractor for this URL so we do not want to download the URL extra
+                    return True
             except Exception as yt_err:
                 logging.error('[%d] yt-dlp failed! Error: %s', self.task_id, yt_err)
                 self.status.yt_dlp_failed_with_error = True
@@ -419,21 +418,20 @@ class Task:
         )
         external_dl_failed_with_error = False
         try:
-            p = subprocess.Popen(
+            proc = await asyncio.create_subprocess_exec(
                 shlex.split(cmd),
                 cwd=str(self.destination),
                 stderr=subprocess.PIPE,
                 stdout=subprocess.PIPE,
-                universal_newlines=True,
             )
 
-            for lines in p.stdout:
+            for lines in await proc.stdout.readline():
                 # line = line.decode('utf-8', 'replace')
                 logging.info('[%d] Ext-Dl: %s', self.task_id, lines.splitlines()[-1])
 
-            _, stderr = p.communicate()
+            _, stderr = await proc.communicate()
 
-            if p.returncode != 0:
+            if proc.returncode != 0:
                 external_dl_failed_with_error = True
         except (subprocess.SubprocessError, ValueError, TypeError) as e:
             stderr = str(e)
