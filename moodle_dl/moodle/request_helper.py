@@ -137,7 +137,7 @@ class RequestHelper:
                     break
                 except (aiohttp.client_exceptions.ClientError, OSError, ValueError) as req_err:
                     if (isinstance(req_err, aiohttp.client_exceptions.ClientResponseError)) and (
-                        req_err.status not in [408, 409, 429]
+                        req_err.status not in [408, 409, 429]  # pylint: disable=no-member
                     ):
                         # 408 (timeout) or 409 (conflict) and 429 (too many requests)
                         raise ConnectionError(f"Connection error: {req_err}") from None

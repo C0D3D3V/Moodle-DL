@@ -384,7 +384,7 @@ class Task:
             self.status.yt_dlp_failed_with_error = False
             ydl._download_retcode = 0  # pylint: disable=protected-access
             try:
-                ydl_result = ydl.download([dl_url])
+                ydl_result = await asyncio.to_thread(ydl.download, [dl_url])
                 # We set the saved_to path in yt_hook_after_move
                 if ydl_result == 0:
                     if self.file.module_name != 'index_mod-page':
@@ -409,6 +409,44 @@ class Task:
 
         # We want to download the URL because yt-dlp has no extractor for it
         return False
+
+    async def download_using_external_downloader(self, dl_url: str, external_dl_cmd: str, delete_if_successful: bool):
+        cmd = external_dl_cmd.replace('%U', dl_url)
+        logging.debug(
+            '[%d] Run external downloader using the following command: `%s`',
+            self.task_id,
+            cmd,
+        )
+        external_dl_failed_with_error = False
+        try:
+            p = subprocess.Popen(
+                shlex.split(cmd),
+                cwd=str(self.destination),
+                stderr=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                universal_newlines=True,
+            )
+
+            for lines in p.stdout:
+                # line = line.decode('utf-8', 'replace')
+                logging.info('[%d] Ext-Dl: %s', self.task_id, lines.splitlines()[-1])
+
+            _, stderr = p.communicate()
+
+            if p.returncode != 0:
+                external_dl_failed_with_error = True
+        except (subprocess.SubprocessError, ValueError, TypeError) as e:
+            stderr = str(e)
+            external_dl_failed_with_error = True
+
+        if external_dl_failed_with_error:
+            logging.error('[%d] External downloader error: %s', self.task_id, stderr)
+            if not delete_if_successful:
+                # cleanup the url-link file
+                PT.remove_file(self.file.saved_to)
+            raise RuntimeError('The external downloader could not download the URL')
+
+        self.file.saved_to = str(Path(self.destination) / self.filename)
 
     async def external_download_url(self, add_token: bool, delete_if_successful: bool, use_cookies: bool):
         """
@@ -445,61 +483,13 @@ class Task:
 
         external_dl_cmd = self.opts.external_file_downloaders.get(infos.netloc, "")
         if infos.is_html and external_dl_cmd != "":
-            # Download the URL using an external program
-            cmd = external_dl_cmd.replace('%U', self.file.content_fileurl)
-            logging.debug(
-                '[%d] Run external downloader using the following command: `%s`',
-                self.task_id,
-                cmd,
+            await self.download_using_external_downloader(
+                dl_url=url_to_download,
+                external_dl_cmd=external_dl_cmd,
+                delete_if_successful=delete_if_successful,
             )
-            external_dl_failed_with_error = False
-
-            try:
-                p = subprocess.Popen(
-                    shlex.split(cmd),
-                    cwd=str(self.destination),
-                    stderr=subprocess.PIPE,
-                    stdout=subprocess.PIPE,
-                    universal_newlines=True,
-                )
-
-                for lines in p.stdout:
-                    # line = line.decode('utf-8', 'replace')
-                    logging.info('[%d] Ext-Dl: %s', self.task_id, lines.splitlines()[-1])
-
-                _, stderr = p.communicate()
-
-                if p.returncode != 0:
-                    external_dl_failed_with_error = True
-            except (subprocess.SubprocessError, ValueError, TypeError) as e:
-                stderr = str(e)
-                external_dl_failed_with_error = True
-
-            if external_dl_failed_with_error:
-                logging.error('[%d] External Downloader Error: %s', self.task_id, stderr)
-                if not delete_if_successful:
-                    # cleanup the url-link file
-                    try:
-                        os.remove(self.file.saved_to)
-                    except OSError as e:
-                        logging.warning(
-                            '[%d] Could not delete %s after external downloader failed. Error: %s',
-                            self.task_id,
-                            self.file.saved_to,
-                            e,
-                        )
-                self.success = False
-                raise RuntimeError(
-                    'The external downloader could not download the URL.'
-                    + ' For details, see the error messages in the log file.'
-                )
-            else:
-                self.file.saved_to = str(Path(self.destination) / self.filename)
-                self.file.time_stamp = int(time.time())
-                self.success = True
-                return True
-
-        elif infos.is_html and not self.is_blocked_for_yt_dlp(url_to_download):
+            return
+        if infos.is_html and not self.is_blocked_for_yt_dlp(url_to_download):
             yt_dlp_processed = await self.download_using_yt_dlp(
                 dl_url=url_to_download,
                 infos=infos,
@@ -509,9 +499,9 @@ class Task:
             if yt_dlp_processed:
                 return
 
-        logging.debug('[%d] Downloading file directly', self.task_id)
+        logging.debug('[%d] Downloading URL directly', self.task_id)
 
-        # generate file extension for modules names
+        # Generate file name for external file
         new_name, new_extension = os.path.splitext(infos.guessed_file_name)
         if new_extension == '' and infos.is_html:
             new_extension = '.html'
@@ -520,7 +510,6 @@ class Task:
             self.filename = new_name + new_extension
 
         _old_name, old_extension = os.path.splitext(self.filename)
-
         if old_extension != new_extension:
             self.filename = self.filename + new_extension
 
@@ -854,7 +843,7 @@ class Task:
                             total_bytes_received = 0
 
                         if isinstance(err, aiohttp.ClientResponseError):
-                            if err.status not in [408, 409, 429]:
+                            if err.status not in [408, 409, 429]:  # pylint: disable=no-member
                                 # 408 (timeout) or 409 (conflict) and 429 (too many requests)
                                 logging.warning(
                                     '[%d] Download failed with status: %s %s', self.task_id, err.status, err.message
@@ -884,5 +873,5 @@ class Task:
         }
 
 
-class ContentRangeError(RequestException):
+class ContentRangeError(ConnectionError):
     pass
