@@ -15,7 +15,7 @@ import urllib.parse as urlparse
 from email.utils import unquote
 from io import StringIO
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Dict
 from urllib.error import ContentTooShortError
 
 import aiofiles
@@ -135,14 +135,12 @@ class Task:
 
         return True
 
-    class YtLogger(object):
-        """
-        Just a logger for yt-dlp
-        """
+    class YtLogger:
+        "logger for yt-dlp"
 
         def __init__(self, task):
             self.task = task
-            self.task_id = task.thread_id
+            self.task_id = task.task_id
 
         def clean_msg(self, msg: str) -> str:
             msg = msg.replace('\n', '')
@@ -180,56 +178,62 @@ class Task:
                 return
             # This is a critical error, with high probability the link can be downloaded at a later time.
             logging.error('[%d] yt-dlp Error: %s', self.task_id, msg)
-            self.task.yt_dlp_failed_with_error = True
+            self.task.status.yt_dlp_failed_with_error = True
 
-    def yt_hook(self, d):
-        downloaded_bytes = d.get('downloaded_bytes', 0)
-        if downloaded_bytes is None:
-            downloaded_bytes = 0
-        total_bytes_estimate = d.get('total_bytes_estimate', 0)
-        if total_bytes_estimate is None:
-            total_bytes_estimate = 0
-        total_bytes = d.get('total_bytes', 0)
-        if total_bytes is None:
-            total_bytes = 0
+    def yt_hook(self, data: Dict):
+        """
+        @param data: a dictionary with the entries
+            * status: One of "downloading", "error", or "finished". Check this first and ignore unknown values.
+            * info_dict: The extracted info_dict
 
-        difference = downloaded_bytes - self.downloaded
-        self.thread_report[self.task_id]['total'] += difference
-        self.downloaded += difference
+            If status is one of "downloading", or "finished", the following properties may also be present:
+            * filename: The final filename (always present)
+            * tmpfilename: The filename we're currently writing to
+            * downloaded_bytes: Bytes on disk
+            * total_bytes: Size of the whole file, None if unknown
+            * total_bytes_estimate: Guess of the eventual file size, None if unavailable.
+            * elapsed: The number of seconds since download started.
+            * eta: The estimated time in seconds, None if unknown
+            * speed: The download speed in bytes/second, None if unknown
+            * fragment_index: The counter of the currently downloaded video fragment.
+            * fragment_count: The number of fragments (= individual files that will be merged)
 
-        if total_bytes_estimate <= 0:
-            total_bytes_estimate = total_bytes
+            Progress hooks are guaranteed to be called at least once
+            (with status "finished") if the download is successful.
+        """
+        if data['status'] == 'error':
+            return
 
-        if total_bytes_estimate <= 0:
-            total_bytes_estimate = self.file.content_filesize
+        tmp_file_name = data.get('tmpfilename', 'unknown') or 'unknown'
+        is_new_file = False
+        if self.status.yt_dlp_current_file is None or tmp_file_name != self.status.yt_dlp_current_file:
+            self.status.yt_dlp_current_file = tmp_file_name
+            is_new_file = True
 
-        # Update status information
-        if self.thread_report[self.task_id]['extra_totalsize'] is None and total_bytes_estimate > 0:
-            self.thread_report[self.task_id]['extra_totalsize'] = total_bytes_estimate
-            self.thread_report[self.task_id]['old_extra_totalsize'] = total_bytes_estimate
+        content_length = data.get('total_bytes', 0) or 0
+        if content_length <= 0:
+            total_bytes_estimate = data.get('total_bytes_estimate', 0) or 0
+            content_length = total_bytes_estimate
 
-        if (
-            self.thread_report[self.task_id]['extra_totalsize'] == -1
-            and total_bytes_estimate > self.thread_report[self.task_id]['old_extra_totalsize']
-        ):
-            self.thread_report[self.task_id]['extra_totalsize'] = (
-                total_bytes_estimate - self.thread_report[self.task_id]['old_extra_totalsize']
-            )
+        if is_new_file:
+            self.report_content_length(content_length)
+        elif self.status.external_total_size != content_length:
+            # We always take the new estimation
+            self.report_content_length(-self.status.external_total_size, False)
+            self.report_content_length(content_length)
 
-            self.thread_report[self.task_id]['old_extra_totalsize'] = total_bytes_estimate
+        downloaded_bytes = data.get('downloaded_bytes', 0) or 0
 
-        percent = 100
-        if total_bytes_estimate != 0:
-            percent = int(100 * downloaded_bytes / total_bytes_estimate)
-
-        self.thread_report[self.task_id]['percentage'] = percent
-
-        if d['status'] == 'finished':
-            self.downloaded = 0
-            self.thread_report[self.task_id]['percentage'] = 100
-            self.thread_report[self.task_id]['extra_totalsize'] = None
+        bytes_received = downloaded_bytes - self.status.bytes_downloaded
+        if bytes_received != 0:
+            self.report_received_bytes(bytes_received)
+            self.status.bytes_downloaded += bytes_received
 
     def yt_hook_after_move(self, final_filename: str):
+        """
+        Get called as the final step for each video file, after all postprocessors have been called.
+        @param final_filename: The filename will be passed as the only argument.
+        """
         rel_pos = final_filename.find(self.destination)
         if rel_pos >= 0:
             final_filename = final_filename[rel_pos:]
@@ -463,7 +467,7 @@ class Task:
                 if idx_pw + 1 <= len(password_list):
                     ydl.params['videopassword'] = password_list[idx_pw]
 
-                self.yt_dlp_failed_with_error = False
+                self.status.yt_dlp_failed_with_error = False
                 # we restart yt-dlp, so we need to reset the return code
                 ydl._download_retcode = 0  # pylint: disable=protected-access
                 try:
@@ -485,14 +489,14 @@ class Task:
                         self.task_id,
                         e,
                     )
-                    self.yt_dlp_failed_with_error = True
+                    self.status.yt_dlp_failed_with_error = True
                 idx_pw += 1
                 if idx_pw + 1 > len(password_list):
                     break
 
-            # if we want we could save ydl.cookiejar (Also the cookiejar of moodle-dl)
+            # If we want we could save ydl.cookiejar (Also the cookiejar of moodle-dl)
 
-            if self.yt_dlp_failed_with_error is True and not self.options.get('ignore_ytdl_errors', False):
+            if self.status.yt_dlp_failed_with_error is True and not self.opts.global_opts.ignore_ytdl_errors:
                 if not delete_if_successful:
                     # cleanup the url-link file
                     try:
@@ -771,10 +775,11 @@ class Task:
         self.status.bytes_downloaded += bytes_received
         self.callback(DlEvent.RECEIVED, self, bytes_received=bytes_received)
 
-    def report_content_length(self, content_length: int):
+    def report_content_length(self, content_length: int, save_in_status: bool = True):
         if content_length is not None and content_length != 0:
             if self.file.content_filesize is None or self.file.content_filesize <= 0:
-                self.status.external_total_size = content_length
+                if save_in_status:
+                    self.status.external_total_size = content_length
                 self.callback(DlEvent.TOTAL_SIZE, self, content_length=content_length)
 
     async def download_url(self, dl_url: str, dest_path: str, timeout: int = 60):
@@ -850,8 +855,9 @@ class Task:
                                 await file_obj.close()
                             file_obj = None
 
-                            # TODO: If download can be continued and size > 0, remember that the file started downloading,
-                            #  and continue downloading on next run instead of deleting it.
+                            # TODO: If download can be continued and size > 0,
+                            #  remember that the file started downloading, and continue downloading
+                            #  on next run instead of deleting it.
                             PT.remove_file(dest_path)
                             self.report_received_bytes(-total_bytes_received)
                             total_bytes_received = 0

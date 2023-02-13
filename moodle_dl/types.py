@@ -273,10 +273,11 @@ class TaskState(Enum):
 class TaskStatus:
     state: TaskState = field(init=False, default=TaskState.INIT)
     bytes_downloaded: int = field(init=False, default=0)
-    external_total_size: int = field(init=False, default=None)
+    external_total_size: int = field(init=False, default=0)
     finished_successfully: bool = field(init=False, default=False)
     error: Any = field(init=False, default=None)
     yt_dlp_failed_with_error: bool = field(init=False, default=False)
+    yt_dlp_current_file: str = field(init=False, default=None)
 
 
 @dataclass
