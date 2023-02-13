@@ -37,6 +37,7 @@ setup(
     },
     python_requires='>=3.7',
     install_requires=[
+        'aiodns>=3.0.0',
         'aiofiles>=22.1.0',
         'aiohttp>=3.8.3',
         'aioxmpp>=0.12.2',

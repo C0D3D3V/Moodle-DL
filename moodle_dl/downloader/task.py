@@ -23,10 +23,8 @@ import aiohttp
 import html2text
 import yt_dlp
 
-from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema, RequestException
-
 from moodle_dl.downloader.extractors import add_additional_extractors
-from moodle_dl.types import Course, File, DownloadOptions, TaskStatus, DlEvent, TaskState
+from moodle_dl.types import Course, File, DownloadOptions, TaskStatus, DlEvent, TaskState, HeadInfo
 from moodle_dl.utils import (
     format_bytes,
     timeconvert,
@@ -271,110 +269,108 @@ class Task:
                 '[%d] Access time and modification time of the downloaded file could not be set', self.task_id
             )
 
-    async def try_download_link(
-        self, add_token: bool = False, delete_if_successful: bool = False, use_cookies: bool = False
-    ) -> bool:
-        """This function should only be used for shortcut/URL files.
-        It tests whether a URL refers to a file, that is not an HTML web page.
-        Then downloads it. Otherwise an attempt will be made to download an HTML video
-        from the website.
-
-        Args:
-            add_token (bool, optional): Adds the ws-token to the url. Defaults to False.
-            delete_if_successful (bool, optional): Deletes the tmp file if download was successful. Defaults to False.
-            use_cookies (bool, optional): Adds the cookies to the requests. Defaults to False.
-
-        Returns:
-            bool: If it was successful.
+    async def get_head_infos(self, dl_url) -> HeadInfo:
         """
+        Do a Head request to collect some information about the URL
+        @return: If download should be aborted then None; else HeadInfo
+        """
+        ssl_context = SslHelper.get_ssl_context(
+            self.opts.global_opts.skip_cert_verify, self.opts.global_opts.allow_insecure_ssl
+        )
+        async with aiohttp.ClientSession(cookie_jar=self.get_cookie_jar(), raise_for_status=True) as session:
+            try:
+                async with session.request("HEAD", dl_url, headers=self.RQ_HEADER, ssl=ssl_context, timeout=30) as resp:
+                    if resp.url != dl_url:
+                        if resp.history and len(resp.history) > 0:
+                            logging.debug('[%d] URL was %s time(s) redirected', self.task_id, len(resp.history))
+                        else:
+                            logging.debug('[%d] URL has changed after information retrieval', self.task_id)
 
+                    url_parsed = urlparse.urlparse(resp.url)
+                    guessed_file_name = posixpath.basename(url_parsed.path)
+                    netloc = url_parsed.netloc
+                    if "Content-Disposition" in resp.headers.keys():
+                        # Exp: Content-Disposition: attachment; filename="filename.jpg"
+                        found_names = re.findall("filename=(.+)", resp.headers["Content-Disposition"])
+                        if len(found_names) > 0:
+                            guessed_file_name = unquote(found_names[0])
+
+                    return HeadInfo(
+                        # Exp: Content-Type: text/html; charset=utf-8
+                        content_type=resp.headers.get('Content-Type', 'text/html').split(';')[0],
+                        content_length=int(resp.headers.get('Content-Length', -1)),
+                        # Exp: Last-Modified: Wed, 21 Oct 2015 07:28:00 GMT
+                        last_modified=resp.headers.get('Last-Modified', None),
+                        final_url=resp.url,
+                        guessed_file_name=guessed_file_name,
+                        netloc=netloc,
+                    )
+
+            except aiohttp.InvalidURL:
+                # don't download urls like 'mailto:name@provider.com'
+                logging.debug(
+                    '[%d] Download of the external file was canceled because the URL has an invalid format',
+                    self.task_id,
+                )
+                return None
+            except aiohttp.ClientResponseError as head_err:
+                if head_err.status in [408, 409, 429]:
+                    # 408 (timeout) or 409 (conflict) and 429 (too many requests)
+                    logging.warning(
+                        '[%d] Head request failed with status: %s %s', self.task_id, head_err.status, head_err.message
+                    )
+                    raise head_err from None
+
+                logging.warning(
+                    '[%d] Download of the external file was canceled because of HTTP error: %s %s',
+                    self.task_id,
+                    head_err.status,
+                    head_err.message,
+                )
+                return None
+
+            except (aiohttp.ClientError, OSError, ValueError, ContentRangeError) as head_err:
+                logging.warning(
+                    '[%d] Head request for external file failed with unexpected error: %s',
+                    self.task_id,
+                    head_err,
+                )
+                raise head_err from None
+
+    async def external_download_url(self, add_token: bool, delete_if_successful: bool, use_cookies: bool):
+        """
+        Use only for "external" shortcut/URL files.
+        It tests whether a URL refers to a file, that is not an HTML web page then downloads it.
+        Otherwise an attempt will be made to download it using yt-dlp.
+
+        @param add_token: Adds the ws-token to the url
+        @param delete_if_successful: Deletes the tmp file if download was successful
+        @param use_cookies:  Adds the cookies to the requests
+        In case of an failure an exception will be raised
+        """
         url_to_download = self.file.content_fileurl
-        logging.debug('[%d] Try to download linked file %s', self.task_id, url_to_download)
+        logging.debug('[%d] Try to download external file %s', self.task_id, url_to_download)
 
         if add_token:
-            url_to_download = self.add_token_to_url(self.file.content_fileurl)
-
-        cookies_path = self.options.get('cookies_path', None)
-        if use_cookies:
-            if cookies_path is None or not os.path.isfile(cookies_path):
-                self.success = False
-                raise ValueError(
-                    'Moodle Cookies are missing. Run `moodle-dl -nt` to set a privatetoken for cookie generation'
-                    + '(If necessary additionally `-sso`)'
-                )
+            url_to_download = self.add_token_to_url(url_to_download)
 
         if delete_if_successful:
-            # if temporary file is not needed delete it as soon as possible
-            try:
-                os.remove(self.file.saved_to)
-            except OSError as e:
-                logging.warning(
-                    '[%d] Could not delete %s before download is started. Error: %s',
-                    self.task_id,
-                    self.file.saved_to,
-                    e,
-                )
+            # If temporary file is not needed delete it as soon as possible
+            PT.remove_file(self.file.saved_to)
 
-        isHTML = False
-        new_filename = ""
-        total_bytes_estimate = -1
-        session = SslHelper.custom_requests_session(self.skip_cert_verify)
-
-        if cookies_path is not None:
-            session.cookies = MoodleDLCookieJar(cookies_path)
-            if os.path.isfile(cookies_path):
-                session.cookies.load(ignore_discard=True, ignore_expires=True)
-
-        try:
-            response = session.head(
-                url_to_download,
-                headers=self.RQ_HEADER,
-                allow_redirects=True,
-                timeout=60,
+        if use_cookies and self.opts.cookies_text is None:
+            # Without cookies we can not proceed
+            raise ValueError(
+                'Moodle cookies are missing. Set a private token so that moodle-dl can obtain moodle cookies'
             )
-        except (InvalidSchema, InvalidURL, MissingSchema):
-            # don't download urls like 'mailto:name@provider.com'
-            logging.debug('[%d] Attempt is aborted because the URL has no correct format', self.task_id)
-            self.success = True
-            return False
-        except RequestException as error:
-            raise ConnectionError(f"Connection error: {str(error)}") from None
 
-        if not response.ok:
-            # The URL reports an HTTP error, so we give up trying to download the URL.
-            logging.warning(
-                '[%d] Stopping the attemp to download %s because of the HTTP ERROR %s',
-                self.task_id,
-                self.file.content_fileurl,
-                response.status_code,
-            )
-            self.success = True
-            return True
+        infos = await self.get_head_infos(url_to_download)
+        if infos is None:
+            # Request failed but we declare it as success
+            return
+        url_to_download = infos.final_url
 
-        content_type = response.headers.get('Content-Type', 'text/html').split(';')[0]
-        if content_type == 'text/html' or content_type == 'text/plain':
-            isHTML = True
-
-        total_bytes_estimate = int(response.headers.get('Content-Length', -1))
-        last_modified = response.headers.get('Last-Modified', None)
-
-        if response.url != url_to_download:
-            if response.history and len(response.history) > 0:
-                logging.debug('[%d] URL was %s time(s) redirected', self.task_id, len(response.history))
-            else:
-                logging.debug('[%d] URL has changed after information retrieval', self.task_id)
-            url_to_download = response.url
-
-        url_parsed = urlparse.urlparse(url_to_download)
-        new_filename = posixpath.basename(url_parsed.path)
-
-        if "Content-Disposition" in response.headers.keys():
-            found_names = re.findall("filename=(.+)", response.headers["Content-Disposition"])
-            if len(found_names) > 0:
-                new_filename = unquote(found_names[0])
-
-        external_file_downloaders = self.options.get('external_file_downloaders', {})
-        external_file_downloader = external_file_downloaders.get(url_parsed.netloc, "")
+        external_file_downloader = self.opts.external_file_downloaders.get(infos.netloc, "")
         if isHTML and external_file_downloader != "":
             # This link is to be downloaded from an external program.
             cmd = external_file_downloader.replace('%U', self.file.content_fileurl)
@@ -508,7 +504,6 @@ class Task:
                             self.file.saved_to,
                             e,
                         )
-                self.success = False
                 raise RuntimeError(
                     'yt-dlp could not download the URL. For details see yt-dlp error messages in the log file. '
                     + 'You can ignore this error by running `moodle-dl --ignore-ytdl-errors` once.'
@@ -524,18 +519,14 @@ class Task:
         if self.file.content_type == 'description-url' and new_name != '':
             self.filename = new_name + new_extension
 
-        old_name, old_extension = os.path.splitext(self.filename)
+        _old_name, old_extension = os.path.splitext(self.filename)
 
         if old_extension != new_extension:
             self.filename = self.filename + new_extension
 
         self.set_path(True)
 
-        if total_bytes_estimate != -1:
-            self.thread_report[self.task_id]['extra_totalsize'] = total_bytes_estimate
-
         await self.download_url(url_to_download, self.file.saved_to)
-        return True
 
     def is_filtered_external_domain(self):
         """
@@ -706,16 +697,16 @@ class Task:
                 await self.create_html_file()
 
             elif self.file.module_modname.startswith('index_mod'):
-                await self.try_download_link(add_token=True, delete_if_successful=True, use_cookies=False)
+                await self.external_download_url(add_token=True, delete_if_successful=True, use_cookies=False)
 
             elif self.file.module_modname.startswith('cookie_mod'):
-                await self.try_download_link(add_token=False, delete_if_successful=True, use_cookies=True)
+                await self.external_download_url(add_token=False, delete_if_successful=True, use_cookies=True)
 
             elif self.file.module_modname.startswith('url') and not self.file.content_fileurl.startswith('data:'):
                 # Create a shortcut and maybe downloading it
                 await self.create_shortcut()
                 if self.opts.download_linked_files and not self.is_filtered_external_domain():
-                    await self.try_download_link(add_token=False, delete_if_successful=False, use_cookies=False)
+                    await self.external_download_url(add_token=False, delete_if_successful=False, use_cookies=False)
 
             elif self.file.content_fileurl.startswith('data:'):
                 await self.create_data_url_file()

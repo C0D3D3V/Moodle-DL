@@ -308,3 +308,18 @@ class DownloadOptions:
     videopasswords: Dict
     external_file_downloaders: Dict
     global_opts: MoodleDlOpts
+
+
+@dataclass
+class HeadInfo:
+    content_type: str
+    is_html: bool = field(init=False, default=False)
+    content_length: int
+    last_modified: str
+    final_url: str
+    guessed_file_name: str
+    netloc: str
+
+    def __post_init__(self):
+        if self.content_type == 'text/html' or self.content_type == 'text/plain':
+            self.isHTML = True
