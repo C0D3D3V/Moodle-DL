@@ -188,9 +188,9 @@ class ConfigHelper:
         # return additional yt-dlp options
         return self.get_property_or('yt_dlp_options', {})
 
-    def get_videopasswords(self) -> Dict:
+    def get_video_passwords(self) -> Dict:
         # return dict with passwords that get passed to yt-dlp
-        return self.get_property_or('videopasswords', {})
+        return self.get_property_or('video_passwords', {})
 
     def get_external_file_downloaders(self) -> Dict:
         # return dict with configured external downloaders
@@ -219,7 +219,7 @@ class ConfigHelper:
             download_domains_blacklist=self.get_download_domains_blacklist(),
             cookies_text=self.get_cookies_text(),
             yt_dlp_options=self.get_yt_dlp_options(),
-            videopasswords=self.get_videopasswords(),
+            video_passwords=self.get_video_passwords(),
             external_file_downloaders=self.get_external_file_downloaders(),
             global_opts=opts,
         )

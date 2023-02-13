@@ -305,7 +305,7 @@ class DownloadOptions:
     download_domains_blacklist: List
     cookies_text: str
     yt_dlp_options: Dict
-    videopasswords: Dict
+    video_passwords: Dict
     external_file_downloaders: Dict
     global_opts: MoodleDlOpts
 

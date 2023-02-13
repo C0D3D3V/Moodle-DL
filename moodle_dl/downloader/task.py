@@ -269,7 +269,7 @@ class Task:
                 '[%d] Access time and modification time of the downloaded file could not be set', self.task_id
             )
 
-    async def get_head_infos(self, dl_url) -> HeadInfo:
+    async def get_head_infos(self, dl_url: str) -> HeadInfo:
         """
         Do a Head request to collect some information about the URL
         @return: If download should be aborted then None; else HeadInfo
@@ -337,6 +337,79 @@ class Task:
                 )
                 raise head_err from None
 
+    async def download_using_yt_dlp(self, dl_url: str, infos: HeadInfo, delete_if_successful: bool, use_cookies: bool):
+        """
+        @param delete_if_successful: Deletes the tmp file if download was successful
+        @param use_cookies:  Adds the cookies to the requests
+        @return: False if the page should be downloaded anyway; True if yt-dlp has processed the URL and we are done
+        """
+        filename_template = self.filename + ' - %(title)s (%(id)s).%(ext)s'
+        if self.file.content_type == 'description-url':
+            filename_template = '%(title)s (%(id)s).%(ext)s'
+        output_template = str(Path(self.destination) / filename_template)
+
+        ydl_opts = {
+            'logger': self.YtLogger(self),
+            'progress_hooks': [self.yt_hook],
+            'post_hooks': [self.yt_hook_after_move],
+            'outtmpl': output_template,
+            'nocheckcertificate': self.opts.global_opts.skip_cert_verify,
+            'retries': 10,
+            'fragment_retries': 10,
+            'ignoreerrors': True,
+            'addmetadata': True,
+        }
+
+        ydl_opts.update(self.opts.yt_dlp_options)
+
+        if use_cookies and self.opts.cookies_text is not None:
+            ydl_opts.update({'cookiefile': StringIO(self.opts.cookies_text)})
+
+        ydl = yt_dlp.YoutubeDL(ydl_opts)
+        add_additional_extractors(ydl)
+
+        password_list = self.opts.video_passwords.get(infos.netloc, [None])
+        if not isinstance(password_list, list):
+            password_list = [password_list]
+        if len(password_list) == 0:
+            # Try at least once with no password
+            password_list = [None]
+
+        for password in password_list:
+            if password is not None:
+                # We allow to set videopassword via yt_dlp_options, so do not overwrite it with None
+                ydl.params['videopassword'] = password
+
+            # We restart yt-dlp, so we need to reset the return code
+            self.status.yt_dlp_failed_with_error = False
+            ydl._download_retcode = 0  # pylint: disable=protected-access
+            try:
+                ydl_result = ydl.download([dl_url])
+                # We set the saved_to path in yt_hook_after_move
+                if ydl_result == 0:
+                    if self.file.module_name != 'index_mod-page':
+                        # We want to download legacy moodle pages
+                        return False
+                    else:
+                        # yt-dlp has an extractor for this URL so we do not want to download the URL extra
+                        return True
+            except Exception as yt_err:
+                logging.error('[%d] yt-dlp failed! Error: %s', self.task_id, yt_err)
+                self.status.yt_dlp_failed_with_error = True
+
+        # If we want we could save ydl.cookiejar (Also the cookiejar of moodle-dl)
+
+        if self.status.yt_dlp_failed_with_error and not self.opts.global_opts.ignore_ytdl_errors:
+            if not delete_if_successful:
+                PT.remove_file(self.file.saved_to)
+            raise RuntimeError(
+                'yt-dlp could not download the URL.'
+                + ' You can ignore this error by running `moodle-dl --ignore-ytdl-errors` once.'
+            )
+
+        # We want to download the URL because yt-dlp has no extractor for it
+        return False
+
     async def external_download_url(self, add_token: bool, delete_if_successful: bool, use_cookies: bool):
         """
         Use only for "external" shortcut/URL files.
@@ -366,14 +439,14 @@ class Task:
 
         infos = await self.get_head_infos(url_to_download)
         if infos is None:
-            # Request failed but we declare it as success
+            # Head request failed but we declare it as success (because URL is broken)
             return
         url_to_download = infos.final_url
 
-        external_file_downloader = self.opts.external_file_downloaders.get(infos.netloc, "")
-        if isHTML and external_file_downloader != "":
-            # This link is to be downloaded from an external program.
-            cmd = external_file_downloader.replace('%U', self.file.content_fileurl)
+        external_dl_cmd = self.opts.external_file_downloaders.get(infos.netloc, "")
+        if infos.is_html and external_dl_cmd != "":
+            # Download the URL using an external program
+            cmd = external_dl_cmd.replace('%U', self.file.content_fileurl)
             logging.debug(
                 '[%d] Run external downloader using the following command: `%s`',
                 self.task_id,
@@ -426,94 +499,21 @@ class Task:
                 self.success = True
                 return True
 
-        elif isHTML and not self.is_blocked_for_yt_dlp(url_to_download):
-            filename_tmpl = self.filename + ' - %(title)s (%(id)s).%(ext)s'
-            if self.file.content_type == 'description-url':
-                filename_tmpl = '%(title)s (%(id)s).%(ext)s'
-            outtmpl = str(Path(self.destination) / filename_tmpl)
-
-            ydl_opts = {
-                'logger': self.YtLogger(self),
-                'progress_hooks': [self.yt_hook],
-                'post_hooks': [self.yt_hook_after_move],
-                'outtmpl': outtmpl,
-                'nocheckcertificate': self.skip_cert_verify,
-                'retries': 10,
-                'fragment_retries': 10,
-                'ignoreerrors': True,
-                'addmetadata': True,
-            }
-
-            yt_dlp_options = self.options.get('yt_dlp_options', {})
-            ydl_opts.update(yt_dlp_options)
-
-            if cookies_path is not None and os.path.isfile(cookies_path):
-                ydl_opts.update({'cookiefile': cookies_path})
-
-            ydl = yt_dlp.YoutubeDL(ydl_opts)
-            add_additional_extractors(ydl)
-
-            videopasswords = self.options.get('videopasswords', {})
-            password_list = videopasswords.get(url_parsed.netloc, [])
-            if not isinstance(password_list, list):
-                password_list = [password_list]
-
-            idx_pw = 0
-            while True:
-                if idx_pw + 1 <= len(password_list):
-                    ydl.params['videopassword'] = password_list[idx_pw]
-
-                self.status.yt_dlp_failed_with_error = False
-                # we restart yt-dlp, so we need to reset the return code
-                ydl._download_retcode = 0  # pylint: disable=protected-access
-                try:
-                    ydl_results = ydl.download([url_to_download])
-                    if ydl_results == 1:
-                        pass
-                    elif self.file.module_name != 'index_mod-page':
-                        # we now set the saved_to path in yt_hook_after_move
-                        # self.file.saved_to = str(Path(self.destination) / self.filename)
-                        self.file.time_stamp = int(time.time())
-
-                        self.success = True
-                        return True
-                    else:
-                        break
-                except Exception as e:
-                    logging.error(
-                        '[%d] yt-dlp failed! Error: %s',
-                        self.task_id,
-                        e,
-                    )
-                    self.status.yt_dlp_failed_with_error = True
-                idx_pw += 1
-                if idx_pw + 1 > len(password_list):
-                    break
-
-            # If we want we could save ydl.cookiejar (Also the cookiejar of moodle-dl)
-
-            if self.status.yt_dlp_failed_with_error is True and not self.opts.global_opts.ignore_ytdl_errors:
-                if not delete_if_successful:
-                    # cleanup the url-link file
-                    try:
-                        os.remove(self.file.saved_to)
-                    except OSError as e:
-                        logging.warning(
-                            '[%d] Could not delete %s after yt-dlp failed. Error: %s',
-                            self.task_id,
-                            self.file.saved_to,
-                            e,
-                        )
-                raise RuntimeError(
-                    'yt-dlp could not download the URL. For details see yt-dlp error messages in the log file. '
-                    + 'You can ignore this error by running `moodle-dl --ignore-ytdl-errors` once.'
-                )
+        elif infos.is_html and not self.is_blocked_for_yt_dlp(url_to_download):
+            yt_dlp_processed = await self.download_using_yt_dlp(
+                dl_url=url_to_download,
+                infos=infos,
+                delete_if_successful=delete_if_successful,
+                use_cookies=use_cookies,
+            )
+            if yt_dlp_processed:
+                return
 
         logging.debug('[%d] Downloading file directly', self.task_id)
 
         # generate file extension for modules names
-        new_name, new_extension = os.path.splitext(new_filename)
-        if new_extension == '' and isHTML:
+        new_name, new_extension = os.path.splitext(infos.guessed_file_name)
+        if new_extension == '' and infos.is_html:
             new_extension = '.html'
 
         if self.file.content_type == 'description-url' and new_name != '':
