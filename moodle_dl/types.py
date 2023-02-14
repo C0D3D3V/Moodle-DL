@@ -307,6 +307,7 @@ class DownloadOptions:
     yt_dlp_options: Dict
     video_passwords: Dict
     external_file_downloaders: Dict
+    restrictfilenames: bool
     global_opts: MoodleDlOpts
 
 

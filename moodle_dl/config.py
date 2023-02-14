@@ -221,6 +221,7 @@ class ConfigHelper:
             yt_dlp_options=self.get_yt_dlp_options(),
             video_passwords=self.get_video_passwords(),
             external_file_downloaders=self.get_external_file_downloaders(),
+            restrictfilenames=self.get_restricted_filenames(),
             global_opts=opts,
         )
 

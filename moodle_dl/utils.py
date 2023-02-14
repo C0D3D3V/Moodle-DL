@@ -19,6 +19,7 @@ import unicodedata
 from functools import lru_cache
 from pathlib import Path
 from typing import List, Optional, Dict
+from aiohttp.abc import AbstractCookieJar
 
 import readchar
 import requests
@@ -169,7 +170,7 @@ def str_or_none(v, default=None):
     return default if v is None else str(v)
 
 
-class MoodleDLCookieJar(http.cookiejar.MozillaCookieJar):
+class MoodleDLCookieJar(http.cookiejar.MozillaCookieJar, AbstractCookieJar):
     """
     Taken from yt-dlp: Last update 9. Sep. 2022
     See [1] for cookie file format.

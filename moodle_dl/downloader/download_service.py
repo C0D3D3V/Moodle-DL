@@ -56,7 +56,10 @@ class DownloadService:
         elif event == DlEvent.TOTAL_SIZE:
             self.status.bytes_to_download += extra_args['content_length']
 
-    async def run(self):
+    def run(self):
+        asyncio.run(self.real_run())
+
+    async def real_run(self):
         "Starts all tasks and issues status messages at regular intervals"
 
         # delete files, that should be deleted

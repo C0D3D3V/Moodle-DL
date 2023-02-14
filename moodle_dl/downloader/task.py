@@ -58,7 +58,7 @@ class Task:
         self.opts = options
         self.callback = callback
 
-        self.destination = self.gen_path(options.storage_path, course, file)
+        self.destination = self.gen_path(options.global_opts.path, course, file)
         self.filename = PT.to_valid_name(self.file.content_filename)
         self.status = TaskStatus()
 
@@ -358,6 +358,7 @@ class Task:
             'fragment_retries': 10,
             'ignoreerrors': True,
             'addmetadata': True,
+            'restrictfilenames': self.opts.restrictfilenames,
         }
 
         ydl_opts.update(self.opts.yt_dlp_options)
@@ -646,21 +647,21 @@ class Task:
         async with aiofiles.open(self.file.saved_to, "wb") as target_file:
             target_file.write(data)
 
-    async def download(self):
+    async def run(self):
         if self.status.state != TaskState.INIT:
             logging.debug('[%d] Task was already started', self.task_id)
             return
         self.status.state = TaskState.STARTED
 
-        success = await self.real_download()
+        success = await self.real_run()
 
         if success:
             self.set_utime()
             self.file.time_stamp = int(time.time())
 
-    async def real_download(self) -> bool:
+    async def real_run(self) -> bool:
         try:
-            logging.debug('[%d] Starting downloading of: %s', self.task_id, self)
+            logging.debug('[%d] Starting Task: %s', self.task_id, self)
             PT.make_dirs(self.destination)
 
             # If file was modified try rename the old file, before create new one
@@ -669,6 +670,7 @@ class Task:
 
             # Create an empty destination file
             self.set_path()
+            logging.info('[%d] Starting downloading of: %s', self.task_id, self.file.saved_to)
 
             # Try to move the old file if it still exists
             if self.file.moved:
@@ -704,6 +706,7 @@ class Task:
                 url_to_download = self.add_token_to_url(self.file.content_fileurl)
                 await self.download_url(url_to_download, self.file.saved_to)
 
+            logging.info('[%d] Download finished', self.task_id)
             return True
         except Exception as dl_err:
             self.status.error = dl_err
