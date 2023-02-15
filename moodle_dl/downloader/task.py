@@ -33,6 +33,7 @@ from moodle_dl.utils import (
     MoodleDLCookieJar,
     format_seconds,
     Timer,
+    convert_to_aiohttp_cookie_jar,
 )
 
 
@@ -286,9 +287,7 @@ class Task:
                         else:
                             logging.debug('[%d] URL has changed after information retrieval', self.task_id)
 
-                    url_parsed = urlparse.urlparse(resp.url)
-                    guessed_file_name = posixpath.basename(url_parsed.path)
-                    netloc = url_parsed.netloc
+                    guessed_file_name = posixpath.basename(resp.url.path)
                     if "Content-Disposition" in resp.headers.keys():
                         # Exp: Content-Disposition: attachment; filename="filename.jpg"
                         found_names = re.findall("filename=(.+)", resp.headers["Content-Disposition"])
@@ -303,7 +302,7 @@ class Task:
                         last_modified=resp.headers.get('Last-Modified', None),
                         final_url=resp.url,
                         guessed_file_name=guessed_file_name,
-                        netloc=netloc,
+                        host=resp.url.host,
                     )
 
             except aiohttp.InvalidURL:
@@ -358,7 +357,7 @@ class Task:
             'fragment_retries': 10,
             'ignoreerrors': True,
             'addmetadata': True,
-            'restrictfilenames': self.opts.restrictfilenames,
+            'restrictfilenames': self.opts.restricted_filenames,
         }
 
         ydl_opts.update(self.opts.yt_dlp_options)
@@ -369,7 +368,7 @@ class Task:
         ydl = yt_dlp.YoutubeDL(ydl_opts)
         add_additional_extractors(ydl)
 
-        password_list = self.opts.video_passwords.get(infos.netloc, [None])
+        password_list = self.opts.video_passwords.get(infos.host, [None])
         if not isinstance(password_list, list):
             password_list = [password_list]
         if len(password_list) == 0:
@@ -480,7 +479,7 @@ class Task:
             return
         url_to_download = infos.final_url
 
-        external_dl_cmd = self.opts.external_file_downloaders.get(infos.netloc, "")
+        external_dl_cmd = self.opts.external_file_downloaders.get(infos.host, "")
         if infos.is_html and external_dl_cmd != "":
             await self.download_using_external_downloader(
                 dl_url=url_to_download,
@@ -707,11 +706,12 @@ class Task:
                 await self.download_url(url_to_download, self.file.saved_to)
 
             logging.info('[%d] Download finished', self.task_id)
+            self.report_success()
             return True
         except Exception as dl_err:
             self.status.error = dl_err
 
-            logging.error('[%d] Error while trying to download file: %s', self.task_id, dl_err)
+            logging.error('[%d] Error while trying to download file: %r', self.task_id, dl_err)
 
             if os.path.isfile(self.file.saved_to):
                 file_size = 0
@@ -732,15 +732,17 @@ class Task:
             # TODO: See download_url; remove only if not recoverable
             PT.remove_file(self.file.saved_to)
             self.report_received_bytes(-self.status.bytes_downloaded)
+            self.report_failure()
 
         return False
 
-    def get_cookie_jar(self):
+    def get_cookie_jar(self) -> aiohttp.CookieJar:
+        # TODO: Since we currently do not modify the cookieJar we could just use a deep copied instance.
         cookie_jar = None
         if self.opts.cookies_text is not None:
             cookie_jar = MoodleDLCookieJar(StringIO(self.opts.cookies_text))
             cookie_jar.load(ignore_discard=True, ignore_expires=True)
-        return cookie_jar
+        return convert_to_aiohttp_cookie_jar(cookie_jar)
 
     async def check_range_download_opt(self, url, session):
         try:
@@ -751,6 +753,12 @@ class Task:
         except Exception as err:
             logging.debug("Failed to check if download can be continued on fail: %s", err)
         return False
+
+    def report_success(self):
+        self.callback(DlEvent.FINISHED, self)
+
+    def report_failure(self):
+        self.callback(DlEvent.FAILED, self)
 
     def report_received_bytes(self, bytes_received: int):
         self.status.bytes_downloaded += bytes_received
@@ -777,7 +785,7 @@ class Task:
                 while done_tries < self.MAX_DL_RETRIES:
                     try:
                         logging.debug(
-                            '[%d] Start downloading (Try %d of %d)', self.task_id, done_tries, self.MAX_DL_RETRIES
+                            '[%d] Start downloading (Try %d of %d)', self.task_id, done_tries + 1, self.MAX_DL_RETRIES
                         )
 
                         if done_tries > 0 and can_continue_on_fail:

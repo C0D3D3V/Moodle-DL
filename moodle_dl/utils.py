@@ -19,7 +19,7 @@ import unicodedata
 from functools import lru_cache
 from pathlib import Path
 from typing import List, Optional, Dict
-from aiohttp.abc import AbstractCookieJar
+from aiohttp.cookiejar import CookieJar
 
 import readchar
 import requests
@@ -170,7 +170,45 @@ def str_or_none(v, default=None):
     return default if v is None else str(v)
 
 
-class MoodleDLCookieJar(http.cookiejar.MozillaCookieJar, AbstractCookieJar):
+def convert_to_aiohttp_cookie_jar(mozilla_cookie_jar: http.cookiejar.MozillaCookieJar):
+    """
+    Convert an http.cookiejar.MozillaCookieJar that uses a Netscape HTTP Cookie File to an aiohttp.cookiejar.CookieJar
+    """
+    aiohttp_cookie_jar = CookieJar(unsafe=True)  # unsafe = Allow also cookies for IPs
+
+    for cookie_domain, domain_cookies in mozilla_cookie_jar._cookies.items():  # pylint: disable=protected-access
+        cookie_names = {}
+        for _cookie_path, path_cookies in domain_cookies.items():
+            for cookie_name, cookie in path_cookies.items():
+                # cookie_name is cookie.name; _cookie_path is cookie.path; cookie_domain is cookie.domain
+                morsel = http.cookies.Morsel()
+                morsel.update(
+                    {
+                        "expires": cookie.expires,
+                        "path": cookie.path,
+                        "comment": cookie.comment,
+                        "domain": cookie.domain,
+                        # "max-age"  : "Max-Age",
+                        "secure": cookie.secure,
+                        # "httponly": "HttpOnly",
+                        "version": cookie.version,
+                        # "samesite": "SameSite",
+                    }
+                )
+
+                # pylint: disable=protected-access
+                morsel.set(cookie.name, cookie.value, http.cookies._quote(cookie.value))
+                simple_cookie = cookie_names.get(cookie_name, http.cookies.SimpleCookie())
+                simple_cookie[cookie_name] = morsel
+                cookie_names[cookie_name] = simple_cookie
+
+        for cookie_name, simple_cookie in cookie_names.items():
+            aiohttp_cookie_jar._cookies[cookie_domain][cookie_name] = simple_cookie  # pylint: disable=protected-access
+
+    return aiohttp_cookie_jar
+
+
+class MoodleDLCookieJar(http.cookiejar.MozillaCookieJar):
     """
     Taken from yt-dlp: Last update 9. Sep. 2022
     See [1] for cookie file format.

@@ -143,7 +143,7 @@ def setup_logger(opts: MoodleDlOpts):
         logging.Formatter('%(asctime)s  %(levelname)s  {%(module)s}  %(message)s', '%Y-%m-%d %H:%M:%S')
     )
     stdout_log_handler = colorlog.StreamHandler()
-    if sys.stdout.isatty():
+    if sys.stdout.isatty() and not opts.verbose:
         stdout_log_handler.setFormatter(colorlog.ColoredFormatter('%(log_color)s%(asctime)s %(message)s', '%H:%M:%S'))
     else:
         stdout_log_handler.setFormatter(

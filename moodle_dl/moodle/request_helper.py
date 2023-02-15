@@ -66,7 +66,6 @@ class RequestHelper:
 
             if os.path.exists(cookie_jar_path):
                 session.cookies.load(ignore_discard=True, ignore_expires=True)
-
         try:
             response = session.post(url, data=data_urlencoded, headers=self.RQ_HEADER, timeout=60)
         except RequestException as error:
@@ -95,6 +94,7 @@ class RequestHelper:
 
             if os.path.exists(cookie_jar_path):
                 session.cookies.load(ignore_discard=True, ignore_expires=True)
+            session.cookies = session.cookies
         try:
             response = session.get(url, headers=self.RQ_HEADER, timeout=60)
         except RequestException as error:

@@ -307,7 +307,7 @@ class DownloadOptions:
     yt_dlp_options: Dict
     video_passwords: Dict
     external_file_downloaders: Dict
-    restrictfilenames: bool
+    restricted_filenames: bool
     global_opts: MoodleDlOpts
 
 
@@ -319,7 +319,7 @@ class HeadInfo:
     last_modified: str
     final_url: str
     guessed_file_name: str
-    netloc: str
+    host: str
 
     def __post_init__(self):
         if self.content_type == 'text/html' or self.content_type == 'text/plain':
