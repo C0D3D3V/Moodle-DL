@@ -1,5 +1,3 @@
-import logging
-
 from typing import List
 
 from moodle_dl.downloader.task import Task
@@ -21,9 +19,7 @@ class ConsoleService(NotificationService):
             diff_count += len(course.files)
 
         if diff_count > 0:
-            msg_changes = '%s changes found for the configured Moodle-Account.'
-            logging.info(msg_changes, diff_count)
-            Log.success(msg_changes % (diff_count))
+            Log.success(f'{diff_count} changes found for the configured Moodle-Account.')
 
         for course in changes:
             if len(course.files) == 0:

@@ -159,7 +159,10 @@ class Task:
 
         def warning(self, msg):
             msg = self.clean_msg(msg)
-            if msg.find('Falling back') >= 0:
+            if (msg.find('Falling back on generic information extractor')) >= 0 or (
+                msg.find('Forcing generic information extractor') >= 0
+            ):
+                self.task.status.yt_dlp_used_generic_extractor = True
                 logging.debug('[%d] yt-dlp Warning: %s', self.task_id, msg)
                 return
             if msg.find('Requested formats are incompatible for merge') >= 0:
@@ -300,7 +303,7 @@ class Task:
                         content_length=int(resp.headers.get('Content-Length', -1)),
                         # Exp: Last-Modified: Wed, 21 Oct 2015 07:28:00 GMT
                         last_modified=resp.headers.get('Last-Modified', None),
-                        final_url=resp.url,
+                        final_url=str(resp.url),
                         guessed_file_name=guessed_file_name,
                         host=resp.url.host,
                     )
@@ -378,6 +381,7 @@ class Task:
 
             # We restart yt-dlp, so we need to reset the return code
             self.status.yt_dlp_failed_with_error = False
+            self.status.yt_dlp_used_generic_extractor = False
             ydl._download_retcode = 0  # pylint: disable=protected-access
             try:
                 ydl_result = await asyncio.to_thread(ydl.download, [dl_url])
@@ -387,7 +391,11 @@ class Task:
                         # We want to download legacy moodle pages
                         return False
                     # yt-dlp has an extractor for this URL so we do not want to download the URL extra
-                    return True
+                    if not self.task.status.yt_dlp_used_generic_extractor:
+                        return True
+                    else:
+                        # We want to download a page if it is generic !?
+                        return False
             except Exception as yt_err:
                 logging.error('[%d] yt-dlp failed! Error: %s', self.task_id, yt_err)
                 self.status.yt_dlp_failed_with_error = True
@@ -423,7 +431,7 @@ class Task:
 
             for lines in await proc.stdout.readline():
                 # line = line.decode('utf-8', 'replace')
-                logging.info('[%d] Ext-Dl: %s', self.task_id, lines.splitlines()[-1])
+                logging.debug('[%d] Ext-Dl: %s', self.task_id, lines.splitlines()[-1])
 
             _, stderr = await proc.communicate()
 
@@ -497,7 +505,7 @@ class Task:
 
         # Generate file name for external file
         new_name, new_extension = os.path.splitext(infos.guessed_file_name)
-        if new_extension == '' and infos.is_html:
+        if new_extension == '' or infos.is_html:
             new_extension = '.html'
 
         if self.file.content_type == 'description-url' and new_name != '':
@@ -590,7 +598,7 @@ class Task:
             return
 
         async with aiofiles.open(self.file.saved_to, 'w+', encoding='utf-8') as md_file:
-            md_file.write(md_content)
+            await md_file.write(md_content)
 
     async def create_html_file(self):
         "Create a HTML file"
@@ -606,7 +614,7 @@ class Task:
             return
 
         async with aiofiles.open(self.file.saved_to, 'w+', encoding='utf-8') as html_file:
-            html_file.write(html_content)
+            await html_file.write(html_content)
 
     def move_old_file(self) -> bool:
         """
@@ -640,7 +648,7 @@ class Task:
             data = response.read()
 
         async with aiofiles.open(self.file.saved_to, "wb") as target_file:
-            target_file.write(data)
+            await target_file.write(data)
 
     async def run(self):
         if self.status.state != TaskState.INIT:
@@ -665,7 +673,7 @@ class Task:
 
             # Create an empty destination file
             self.set_path()
-            logging.info('[%d] Starting downloading of: %s', self.task_id, self.file.saved_to)
+            logging.debug('[%d] Starting downloading of: %s', self.task_id, self.file.saved_to)
 
             # Try to move the old file if it still exists
             if self.file.moved:
@@ -697,11 +705,11 @@ class Task:
 
             else:
                 url_to_download = self.file.content_fileurl
-                logging.info('[%d] Downloading %s', self.task_id, url_to_download)
+                logging.debug('[%d] Downloading %s', self.task_id, url_to_download)
                 url_to_download = self.add_token_to_url(self.file.content_fileurl)
                 await self.download_url(url_to_download, self.file.saved_to)
 
-            logging.info('[%d] Download finished', self.task_id)
+            logging.debug('[%d] Download finished', self.task_id)
             self.report_success()
             return True
         except Exception as dl_err:

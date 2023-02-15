@@ -14,10 +14,10 @@ from yt_dlp.utils import (
     url_or_none,
     urlencode_postdata,
     HEADRequest,
-    determine_ext,
     mimetype2ext,
     encode_compat_str,
 )
+from moodle_dl.utils import determine_ext
 
 
 class OwncloudIE(InfoExtractor):

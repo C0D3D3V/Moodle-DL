@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Moodle-Dl",
+            "name": "Moodle-Dl Verbose",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/moodle-dl",
@@ -10,6 +10,30 @@
             "cwd": "${workspaceFolder}/debugging-moodle/",
             "args": [
                 "-v"
+            ],
+            "justMyCode": false
+        },
+        {
+            "name": "Moodle-Dl Normal",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/moodle-dl",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/debugging-moodle/",
+            "args": [],
+            "justMyCode": false
+        },
+        {
+            "name": "Moodle-Dl Single Tasks",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/moodle-dl",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/debugging-moodle/",
+            "args": [
+                "-v",
+                "-mpd",
+                "1"
             ],
             "justMyCode": false
         }

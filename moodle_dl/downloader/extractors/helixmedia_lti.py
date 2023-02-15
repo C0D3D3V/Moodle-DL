@@ -14,11 +14,12 @@ from yt_dlp.utils import (
     ExtractorError,
     urlencode_postdata,
     js_to_json,
-    determine_ext,
     mimetype2ext,
     extract_attributes,
     HEADRequest,
 )
+
+from moodle_dl.utils import determine_ext
 
 
 class HelixmediaLtiIE(InfoExtractor):

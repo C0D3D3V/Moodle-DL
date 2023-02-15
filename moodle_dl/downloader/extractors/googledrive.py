@@ -5,13 +5,14 @@ import re
 from yt_dlp.extractor.common import InfoExtractor
 from yt_dlp.compat import compat_parse_qs
 from yt_dlp.utils import (
-    determine_ext,
     ExtractorError,
     int_or_none,
     lowercase_escape,
     try_get,
     update_url_query,
 )
+
+from moodle_dl.utils import determine_ext
 
 
 class GoogleDriveIE(InfoExtractor):

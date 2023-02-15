@@ -527,8 +527,7 @@ def main(args=None):
             ProcessLock.unlock(opts.path)
 
         if opts.verbose or check_debug():
-            error_formatted = traceback.format_exc()
-            logging.error(error_formatted, extra={'exception': base_err})
+            logging.error(traceback.format_exc(), extra={'exception': base_err})
         else:
             logging.error('Exception: %s', base_err)
 

@@ -85,6 +85,13 @@ KNOWN_EXTENSIONS = (
     + ['wmv', 'aiff', 'alac', 'flac', 'm4a', 'mka', 'mp3', 'ogg', 'opus', 'wav', 'aac', 'ape', 'asf', 'f4a', 'f4b']
     + ['m4b', 'm4p', 'm4r', 'oga', 'ogx', 'spx', 'vorbis', 'wma', 'weba', 'jpg', 'png', 'webp']
     + ['mhtml', 'srt', 'vtt', 'ass', 'lrc', 'f4f', 'f4m', 'm3u8', 'smil', 'mpd', 'pdf', 'doc', 'docx', 'excl']
+    + ['aac', 'abw', 'arc', 'avif', 'avi', 'azw', 'bin', 'bmp', 'bz', 'bz2', 'cda', 'csh']
+    + ['css', 'csv', 'doc', 'docx', 'eot', 'epub', 'gz', 'gif', 'htm', 'html', 'ico']
+    + ['ics', 'jar', 'jpeg', 'jpg', 'js', 'json', 'jsonld', 'mid', 'midi', 'mjs', 'mp3']
+    + ['mp4', 'mpeg', 'mpkg', 'odp', 'ods', 'odt', 'oga', 'ogv', 'ogx', 'opus', 'otf']
+    + ['png', 'pdf', 'php', 'ppt', 'pptx', 'rar', 'rtf', 'sh', 'svg', 'tar', 'tif']
+    + ['tiff', 'ts', 'ttf', 'txt', 'vsd', 'wav', 'weba', 'webm', 'webp', 'woff', 'woff2']
+    + ['xhtml', 'xls', 'xlsx', 'xml', 'xml', 'xul', 'zip', '3gp', '3g2', '7z']
 )
 
 
@@ -651,6 +658,8 @@ class PathTools:
     def get_path_parts(file_path: str) -> PathParts:
         destination = os.path.dirname(file_path)
         filename, file_extension = os.path.splitext(os.path.basename(file_path))
+        if file_extension.startswith('.'):
+            file_extension = file_extension[1:]
         return PathParts(destination, filename, file_extension)
 
     @classmethod

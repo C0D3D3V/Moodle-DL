@@ -37,8 +37,7 @@ class TelegramService(NotificationService):
             try:
                 telegram_shooter.send(message_content)
             except BaseException as e:
-                error_formatted = traceback.format_exc()
-                logging.error('While sending notification:\n%s', error_formatted, extra={'exception': e})
+                logging.error('While sending notification:\n%s', traceback.format_exc(), extra={'exception': e})
                 raise e  # to be properly notified via Sentry
 
     def notify_about_changes_in_moodle(self, changes: List[Course]) -> None:

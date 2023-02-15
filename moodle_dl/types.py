@@ -276,6 +276,7 @@ class TaskStatus:
     external_total_size: int = field(init=False, default=0)
     error: Any = field(init=False, default=None)
     yt_dlp_failed_with_error: bool = field(init=False, default=False)
+    yt_dlp_used_generic_extractor: bool = field(init=False, default=False)
     yt_dlp_current_file: str = field(init=False, default=None)
 
 
@@ -321,5 +322,5 @@ class HeadInfo:
     host: str
 
     def __post_init__(self):
-        if self.content_type == 'text/html' or self.content_type == 'text/plain':
-            self.isHTML = True
+        if self.content_type in ('text/html', 'text/plain'):
+            self.is_html = True
