@@ -5,6 +5,7 @@ import html2text
 
 from moodle_dl.types import Course
 from moodle_dl.downloader.task import Task
+from moodle_dl.utils import PathTools as PT
 
 
 class TelegramFormater:
@@ -134,11 +135,14 @@ class TelegramFormater:
             + '\r\nList of failed downloads:\r\n\r\n'
         )
         for task in failed_downloads:
-            new_line = f'⚠️ {task.file.content_filename}:\r\n{task.status.error}\r\n\r\n'
+            new_line = (
+                f'⚠️ {PT.to_valid_name(task.file.content_filename)}:\r\n{task.status.error!s}'
+                + f'\r\n{task.status.error!r}\r\n\r\n'
+            )
             if task.file.content_filename != task.file.content_fileurl:
                 new_line = (
-                    f'⚠️ {task.file.content_filename} ({task.file.content_fileurl}):'
-                    + f'\r\n{task.status.error}\r\n\r\n'
+                    f'⚠️ {PT.to_valid_name(task.file.content_filename)} ({task.file.content_fileurl}):'
+                    + f'\r\n{task.status.error!s}\r\n{task.status.error!r}\r\n\r\n'
                 )
 
             one_msg_content = cls.append_with_limit(new_line, one_msg_content, result_list)

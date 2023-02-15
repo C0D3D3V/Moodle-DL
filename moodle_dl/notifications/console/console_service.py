@@ -5,7 +5,7 @@ from typing import List
 from moodle_dl.downloader.task import Task
 from moodle_dl.notifications.notification_service import NotificationService
 from moodle_dl.types import Course
-from moodle_dl.utils import Log
+from moodle_dl.utils import Log, PathTools as PT
 
 
 class ConsoleService(NotificationService):
@@ -63,7 +63,7 @@ class ConsoleService(NotificationService):
             print('')
 
         for task in failed_downloads:
-            Log.cyan(task.file.content_filename)
-            Log.error('\t' + str(task.status.error))
+            Log.cyan(PT.to_valid_name(task.file.content_filename))
+            Log.error('\t' + str(task.status.error) + repr(task.status.error))
 
         print('')

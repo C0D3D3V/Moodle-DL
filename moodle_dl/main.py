@@ -417,6 +417,7 @@ def get_parser():
     )
 
     parser.add_argument(
+        '-wdf',
         '--without-downloading-files',
         dest='without_downloading_files',
         default=False,
