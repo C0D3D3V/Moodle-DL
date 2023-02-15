@@ -280,7 +280,7 @@ class Task:
         )
         async with aiohttp.ClientSession(cookie_jar=self.get_cookie_jar(), raise_for_status=True) as session:
             try:
-                async with session.request("HEAD", dl_url, headers=self.RQ_HEADER, ssl=ssl_context, timeout=30) as resp:
+                async with session.request("HEAD", dl_url, headers=self.RQ_HEADER, ssl=ssl_context, timeout=20) as resp:
                     if resp.url != dl_url:
                         if resp.history and len(resp.history) > 0:
                             logging.debug('[%d] URL was %s time(s) redirected', self.task_id, len(resp.history))
@@ -329,11 +329,7 @@ class Task:
                 return None
 
             except (aiohttp.ClientError, OSError, ValueError, ContentRangeError) as head_err:
-                logging.warning(
-                    '[%d] Head request for external file failed with unexpected error: %s',
-                    self.task_id,
-                    head_err,
-                )
+                logging.warning('[%d] Head request for external file failed with unexpected error', self.task_id)
                 raise head_err from None
 
     async def download_using_yt_dlp(self, dl_url: str, infos: HeadInfo, delete_if_successful: bool, use_cookies: bool):
@@ -711,7 +707,7 @@ class Task:
         except Exception as dl_err:
             self.status.error = dl_err
 
-            logging.error('[%d] Error while trying to download file: %r', self.task_id, dl_err)
+            logging.error('[%d] Error while trying to download file: %s %r', self.task_id, dl_err, dl_err)
 
             if os.path.isfile(self.file.saved_to):
                 file_size = 0
@@ -755,9 +751,11 @@ class Task:
         return False
 
     def report_success(self):
+        self.status.state = TaskState.FINISHED
         self.callback(DlEvent.FINISHED, self)
 
     def report_failure(self):
+        self.status.state = TaskState.FAILED
         self.callback(DlEvent.FAILED, self)
 
     def report_received_bytes(self, bytes_received: int):
@@ -771,7 +769,7 @@ class Task:
                     self.status.external_total_size = content_length
                 self.callback(DlEvent.TOTAL_SIZE, self, content_length=content_length)
 
-    async def download_url(self, dl_url: str, dest_path: str, timeout: int = 60):
+    async def download_url(self, dl_url: str, dest_path: str, timeout: int = None):
         total_bytes_received = 0
         done_tries = 0
         can_continue_on_fail = False

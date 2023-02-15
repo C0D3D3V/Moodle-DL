@@ -64,6 +64,6 @@ class ConsoleService(NotificationService):
 
         for task in failed_downloads:
             Log.cyan(task.file.content_filename)
-            Log.error('\t' + str(task.error))
+            Log.error('\t' + str(task.status.error))
 
         print('')

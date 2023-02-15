@@ -134,10 +134,11 @@ class TelegramFormater:
             + '\r\nList of failed downloads:\r\n\r\n'
         )
         for task in failed_downloads:
-            new_line = f'⚠️ {task.file.content_filename}:\r\n{task.error}\r\n\r\n'
+            new_line = f'⚠️ {task.file.content_filename}:\r\n{task.status.error}\r\n\r\n'
             if task.file.content_filename != task.file.content_fileurl:
                 new_line = (
-                    f'⚠️ {task.file.content_filename} ({task.file.content_fileurl}):' + f'\r\n{task.error}\r\n\r\n'
+                    f'⚠️ {task.file.content_filename} ({task.file.content_fileurl}):'
+                    + f'\r\n{task.status.error}\r\n\r\n'
                 )
 
             one_msg_content = cls.append_with_limit(new_line, one_msg_content, result_list)
