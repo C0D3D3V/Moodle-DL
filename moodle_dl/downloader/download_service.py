@@ -2,6 +2,7 @@ import asyncio
 import logging
 import time
 
+from concurrent.futures import ThreadPoolExecutor
 from typing import List
 
 from moodle_dl.config import ConfigHelper
@@ -27,6 +28,7 @@ class DownloadService:
         # Set custom chunk size
         Task.CHUNK_SIZE = self.opts.download_chunk_size
         dl_options = self.config.get_download_options(self.opts)
+        thread_pool = ThreadPoolExecutor(max_workers=self.opts.max_parallel_downloads)
         all_tasks = []
         for course in self.courses:
             for course_file in course.files:
@@ -37,6 +39,7 @@ class DownloadService:
                             file=course_file,
                             course=course,
                             options=dl_options,
+                            thread_pool=thread_pool,
                             callback=self.status_callback,
                         )
                     )
@@ -46,6 +49,7 @@ class DownloadService:
         return all_tasks
 
     def status_callback(self, event: DlEvent, task: Task, **extra_args):
+        self.status.lock.acquire()
         if event == DlEvent.RECEIVED:
             self.status.bytes_downloaded += extra_args['bytes_received']
         elif event == DlEvent.FAILED:
@@ -55,6 +59,7 @@ class DownloadService:
             self.status.files_downloaded += 1
         elif event == DlEvent.TOTAL_SIZE:
             self.status.bytes_to_download += extra_args['content_length']
+        self.status.lock.release()
 
     def run(self):
         asyncio.run(self.real_run())
@@ -64,6 +69,9 @@ class DownloadService:
 
         # delete files, that should be deleted
         self.database.batch_delete_files(self.courses)
+
+        if len(self.all_tasks) <= 0:
+            return
 
         # run all other tasks
         status_logger_task = asyncio.create_task(self.log_download_status())

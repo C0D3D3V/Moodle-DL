@@ -141,14 +141,26 @@ class ForumMod(MoodleMod):
         for post in posts:
             post_message = post.get('message', '') or ''
 
+            post_files = post.get('attachments', [])
             if self.version >= 2019052000:  # 3.7
                 post_parent = post.get('parentid', 0)
                 post_user_fullname = post.get('author', {}).get('fullname', None) or 'Unknown'
                 post_modified = post.get('timecreated', 0)
+                for post_file in post_files:
+                    # New return structure uses url instead of fileurl
+                    post_file['fileurl'] = post_file.get('url', '')
+                    # And also do return normal URLs instead of webservice URLs
+                    if post_file['fileurl'].find('/webservice/') < 0:
+                        post_file['fileurl'] = post_file['fileurl'].replace(
+                            '/pluginfile.php/', '/webservice/pluginfile.php/'
+                        )
             else:
                 post_parent = post.get('parent', 0)
                 post_user_fullname = post.get('userfullname', '') or 'Unknown'
                 post_modified = post.get('modified', 0)
+
+                # Also add legacy inline files from messageinlinefiles attribute
+                self.add_legacy_inline_files(post.get('messageinlinefiles', []), post_file)
 
             post_filename = PT.to_valid_name(f"[{post.get('id', 0)}] " + post_user_fullname)
             if post_parent is not None and post_parent != 0:
@@ -159,22 +171,6 @@ class ForumMod(MoodleMod):
                 + ' '
                 + discussion.get('subject', '')
             )
-
-            post_files = post.get('attachments', [])
-            for inline_file in post.get('messageinlinefiles', []):
-                new_inline_file = True
-                for attachment in post_files:
-                    if attachment.get('fileurl', '').replace('attachment', 'post') == inline_file.get('fileurl', ''):
-                        if (
-                            attachment.get('filesize', 0) == inline_file.get('filesize', 0)
-                            # we assume that inline attachments can have different timestamps than the actual
-                            # attachment. However, they are still the same file.
-                            and attachment.get('filename', '') == inline_file.get('filename', '')
-                        ):
-                            new_inline_file = False
-                            break
-                if new_inline_file:
-                    post_files.append(inline_file)
 
             result.append(
                 {
@@ -193,3 +189,19 @@ class ForumMod(MoodleMod):
             result.extend(post_files)
 
         return result
+
+    def add_legacy_inline_files(self, inline_files: List, post_files: List):
+        for inline_file in inline_files:
+            new_inline_file = True
+            for attachment in post_files:
+                if attachment.get('fileurl', '').replace('attachment', 'post') == inline_file.get('fileurl', ''):
+                    if (
+                        attachment.get('filesize', 0) == inline_file.get('filesize', 0)
+                        # we assume that inline attachments can have different timestamps than the actual
+                        # attachment. However, they are still the same file.
+                        and attachment.get('filename', '') == inline_file.get('filename', '')
+                    ):
+                        new_inline_file = False
+                        break
+            if new_inline_file:
+                post_files.append(inline_file)

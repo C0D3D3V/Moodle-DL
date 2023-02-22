@@ -1,3 +1,5 @@
+import threading
+
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import List, Dict, Any
@@ -288,6 +290,8 @@ class DownloadStatus:
     files_downloaded: int = field(init=False, default=0)
     files_failed: int = field(init=False, default=0)
     files_to_download: int = field(init=False, default=0)
+
+    lock: threading.Lock = field(init=False, default_factory=threading.Lock)
 
 
 class DlEvent(Enum):

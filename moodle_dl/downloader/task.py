@@ -1,4 +1,5 @@
 import asyncio
+import functools
 import logging
 import os
 import platform
@@ -12,6 +13,7 @@ import traceback
 import urllib
 import urllib.parse as urlparse
 
+from concurrent.futures import ThreadPoolExecutor
 from email.utils import unquote
 from io import StringIO
 from pathlib import Path
@@ -51,12 +53,19 @@ class Task:
     }
 
     def __init__(
-        self, task_id: int, file: File, course: Course, options: DownloadOptions, callback: Callable[[], None]
+        self,
+        task_id: int,
+        file: File,
+        course: Course,
+        options: DownloadOptions,
+        thread_pool: ThreadPoolExecutor,
+        callback: Callable[[], None],
     ):
         self.task_id = task_id
         self.file = file
         self.course = course
         self.opts = options
+        self.thread_pool = thread_pool
         self.callback = callback
 
         self.destination = self.gen_path(options.global_opts.path, course, file)
@@ -384,18 +393,16 @@ class Task:
             self.status.yt_dlp_used_generic_extractor = False
             ydl._download_retcode = 0  # pylint: disable=protected-access
             try:
-                ydl_result = await asyncio.to_thread(ydl.download, [dl_url])
+                loop = asyncio.get_running_loop()
+                ydl_result = await loop.run_in_executor(self.thread_pool, functools.partial(ydl.download, dl_url))
                 # We set the saved_to path in yt_hook_after_move
                 if ydl_result == 0:
                     if self.file.module_name != 'index_mod-page':
                         # We want to download legacy moodle pages
                         return False
                     # yt-dlp has an extractor for this URL so we do not want to download the URL extra
-                    if not self.task.status.yt_dlp_used_generic_extractor:
-                        return True
-                    else:
-                        # We want to download a page if it is generic !?
-                        return False
+                    # We want to download a page if it is generic !?
+                    return not self.status.yt_dlp_used_generic_extractor
             except Exception as yt_err:
                 logging.error('[%d] yt-dlp failed! Error: %s', self.task_id, yt_err)
                 self.status.yt_dlp_failed_with_error = True
@@ -715,7 +722,8 @@ class Task:
         except Exception as dl_err:
             self.status.error = dl_err
 
-            logging.error('[%d] Error while trying to download file: %s %r', self.task_id, dl_err, dl_err)
+            logging.error('[%d] %r', self.task_id, dl_err)
+            logging.error('[%d] Error while trying to download file: %s', self.task_id, dl_err)
 
             if os.path.isfile(self.file.saved_to):
                 file_size = 0
