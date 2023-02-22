@@ -77,6 +77,7 @@ class ResultBuilder:
                 location['module_modname'] = 'index_mod-' + location['module_modname']
 
             if location['module_modname'] in ['page'] and self.version < 2017051500:
+                # legacy pages
                 location['module_modname'] = 'index_mod-' + location['module_modname']
 
             if module_description is not None and location['module_modname'] not in fetched_mods:

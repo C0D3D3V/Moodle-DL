@@ -316,7 +316,7 @@ def create_full_failed_downloads_mail(failed_downloads: [Task]) -> (str, {str: s
     list_entries = ''
     for task in failed_downloads:
         list_entries += failed_downloads_list_entry_box.substitute(
-            file_name=task.file.content_filename, error_msg=task.status.error
+            file_name=task.file.content_filename, error_msg=task.status.get_error_text()
         )
 
     content = failed_downloads_message_box.substitute(list_entries=list_entries)

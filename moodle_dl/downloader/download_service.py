@@ -62,6 +62,8 @@ class DownloadService:
             self.status.files_downloaded += 1
         elif event == DlEvent.TOTAL_SIZE:
             self.status.bytes_to_download += extra_args['content_length']
+        elif event == DlEvent.TOTAL_SIZE_UPDATE:
+            self.status.bytes_to_download += extra_args['content_length_diff']
         self.status.lock.release()
 
     def run(self):

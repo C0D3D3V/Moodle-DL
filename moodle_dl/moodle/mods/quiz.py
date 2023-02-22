@@ -55,6 +55,7 @@ class QuizMod(MoodleMod):
                 },
             )
 
+        await self.add_quizzes_files(result)
         return result
 
     async def add_quizzes_files(self, quizzes: Dict[int, Dict[int, Dict]]):

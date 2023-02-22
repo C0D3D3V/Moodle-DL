@@ -215,30 +215,47 @@ class Task:
         if data['status'] == 'error':
             return
 
-        tmp_file_name = data.get('tmpfilename', 'unknown') or 'unknown'
-        is_new_file = False
-        if self.status.yt_dlp_current_file is None or tmp_file_name != self.status.yt_dlp_current_file:
-            self.status.yt_dlp_current_file = tmp_file_name
-            is_new_file = True
-
+        tmp_file_name = data.get('tmpfilename')
+        if tmp_file_name is None or tmp_file_name == '':
+            # for some unknown reason sometimes the filename is missing
+            return
         content_length = data.get('total_bytes', 0) or 0
         if content_length <= 0:
             total_bytes_estimate = data.get('total_bytes_estimate', 0) or 0
             content_length = total_bytes_estimate
+        bytes_received_total = data.get('downloaded_bytes', 0) or 0
 
-        if is_new_file:
-            self.report_content_length(content_length)
-        elif self.status.external_total_size != content_length:
-            # We always take the new estimation
-            self.report_content_length(-self.status.external_total_size, False)
-            self.report_content_length(content_length)
+        self.status.yt_dlp_current_file = tmp_file_name
+        self.report_yt_dlp_content_length(content_length, tmp_file_name)
+        self.report_yt_dlp_received_bytes(bytes_received_total, tmp_file_name)
 
-        downloaded_bytes = data.get('downloaded_bytes', 0) or 0
+    def report_yt_dlp_content_length(self, content_length: int, file_name: str):
+        if file_name not in self.status.yt_dlp_total_size_per_file:
+            self.status.yt_dlp_total_size_per_file[file_name] = content_length
+            self.status.external_total_size += content_length
+            self.callback(DlEvent.TOTAL_SIZE, self, content_length=content_length)
+            return
+        old_content_length = self.status.yt_dlp_total_size_per_file[file_name]
+        if old_content_length != content_length:
+            content_length_diff = content_length - old_content_length
+            self.status.external_total_size += content_length_diff
+            self.callback(DlEvent.TOTAL_SIZE_UPDATE, self, content_length_diff=content_length_diff)
+            self.status.yt_dlp_total_size_per_file[file_name] = content_length
 
-        bytes_received = downloaded_bytes - self.status.bytes_downloaded
-        if bytes_received != 0:
-            self.report_received_bytes(bytes_received)
+    def report_yt_dlp_received_bytes(self, bytes_received_total: int, file_name: str):
+        if file_name not in self.status.yt_dlp_bytes_downloaded_per_file:
+            self.status.yt_dlp_bytes_downloaded_per_file[file_name] = bytes_received_total
+            self.status.bytes_downloaded += bytes_received_total
+            self.callback(DlEvent.RECEIVED, self, bytes_received=bytes_received_total)
+            return
+        old_bytes_downloaded = self.status.yt_dlp_bytes_downloaded_per_file[file_name]
+        bytes_received = bytes_received_total - old_bytes_downloaded
+        if bytes_received > 0:
+            self.status.yt_dlp_bytes_downloaded_per_file[file_name] = bytes_received_total
             self.status.bytes_downloaded += bytes_received
+            self.callback(DlEvent.RECEIVED, self, bytes_received=bytes_received)
+        elif bytes_received < 0:
+            logging.debug('Calculation error in report_yt_dlp_received_bytes')
 
     def yt_hook_after_move(self, final_filename: str):
         """
@@ -397,11 +414,11 @@ class Task:
                 ydl_result = await loop.run_in_executor(self.thread_pool, functools.partial(ydl.download, dl_url))
                 # We set the saved_to path in yt_hook_after_move
                 if ydl_result == 0:
-                    if self.file.module_name != 'index_mod-page':
+                    if self.file.module_name == 'index_mod-page':
                         # We want to download legacy moodle pages
                         return False
                     # yt-dlp has an extractor for this URL so we do not want to download the URL extra
-                    # We want to download a page if it is generic !?
+                    # only if yt-dlp used a generic extractor
                     return not self.status.yt_dlp_used_generic_extractor
             except Exception as yt_err:
                 logging.error('[%d] yt-dlp failed! Error: %s', self.task_id, yt_err)

@@ -281,6 +281,14 @@ class TaskStatus:
     yt_dlp_failed_with_error: bool = field(init=False, default=False)
     yt_dlp_used_generic_extractor: bool = field(init=False, default=False)
     yt_dlp_current_file: str = field(init=False, default=None)
+    yt_dlp_total_size_per_file: Dict[str, int] = field(init=False, default_factory=dict)
+    yt_dlp_bytes_downloaded_per_file: Dict[str, int] = field(init=False, default_factory=dict)
+
+    def get_error_text(self) -> str:
+        str_error = str(self.error).strip()
+        if str_error != '':
+            return str_error
+        return repr(self.error)
 
 
 @dataclass
@@ -300,6 +308,7 @@ class DlEvent(Enum):
     FAILED = 'FAILED'
     RECEIVED = 'RECEIVED'
     TOTAL_SIZE = 'TOTAL_SIZE'
+    TOTAL_SIZE_UPDATE = 'TOTAL_SIZE_UPDATE'
 
 
 @dataclass
