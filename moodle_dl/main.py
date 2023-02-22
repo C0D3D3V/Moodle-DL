@@ -394,6 +394,15 @@ def get_parser():
     )
 
     parser.add_argument(
+        '-mpyd',
+        '--max-parallel-yt-dlp',
+        dest='max_parallel_yt_dlp',
+        default=5,
+        type=int,
+        help=('Sets the number of max parallel downloads using yt-dlp. (default: %(default)s)'),
+    )
+
+    parser.add_argument(
         '-dcs',
         '--download-chunk-size',
         dest='download_chunk_size',
@@ -491,6 +500,9 @@ def get_parser():
 def pre_process_opts(opts: MoodleDlOpts):
     if opts.max_path_length_workaround:
         opts.path = win_max_path_length_workaround(opts.path)
+
+    # Max 32 yt-dlp threads
+    opts.max_parallel_yt_dlp = min(opts.max_parallel_downloads, min(32, opts.max_parallel_yt_dlp))
 
 
 # --- called at the program invocation: -------------------------------------

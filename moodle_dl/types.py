@@ -253,6 +253,7 @@ class MoodleDlOpts:
     path: str
     max_parallel_api_calls: int
     max_parallel_downloads: int
+    max_parallel_yt_dlp: int
     download_chunk_size: int
     ignore_ytdl_errors: bool
     without_downloading_files: bool

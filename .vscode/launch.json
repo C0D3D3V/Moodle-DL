@@ -9,7 +9,21 @@
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}/debugging-moodle/",
             "args": [
-                "-v"
+                "-v",
+            ],
+            "justMyCode": false
+        },
+        {
+            "name": "Moodle-Dl Verbose; Max one YT-DLP",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/moodle-dl",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/debugging-moodle/",
+            "args": [
+                "-v",
+                "-mpyd",
+                "1",
             ],
             "justMyCode": false
         },

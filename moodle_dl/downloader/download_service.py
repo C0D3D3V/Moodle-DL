@@ -28,7 +28,7 @@ class DownloadService:
         # Set custom chunk size
         Task.CHUNK_SIZE = self.opts.download_chunk_size
         dl_options = self.config.get_download_options(self.opts)
-        thread_pool = ThreadPoolExecutor(max_workers=self.opts.max_parallel_downloads)
+        thread_pool = ThreadPoolExecutor(max_workers=self.opts.max_parallel_yt_dlp)
         all_tasks = []
         for course in self.courses:
             for course_file in course.files:
@@ -45,7 +45,10 @@ class DownloadService:
                     )
                     self.status.bytes_to_download += course_file.content_filesize
                     self.status.files_to_download += 1
-        logging.info('Download queue contains %d tasks', self.status.files_to_download)
+        if self.status.files_to_download > 0:
+            logging.info('Download queue contains %d tasks', self.status.files_to_download)
+        else:
+            logging.debug('Download queue is empty')
         return all_tasks
 
     def status_callback(self, event: DlEvent, task: Task, **extra_args):
