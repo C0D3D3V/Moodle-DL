@@ -815,9 +815,13 @@ class Task:
             async with aiohttp.ClientSession(cookie_jar=self.get_cookie_jar(), raise_for_status=True) as session:
                 while done_tries < self.MAX_DL_RETRIES:
                     try:
-                        logging.debug(
-                            '[%d] Start downloading (Try %d of %d)', self.task_id, done_tries + 1, self.MAX_DL_RETRIES
-                        )
+                        if done_tries > 0:
+                            logging.debug(
+                                '[%d] Start downloading (Try %d of %d)',
+                                self.task_id,
+                                done_tries + 1,
+                                self.MAX_DL_RETRIES,
+                            )
 
                         if done_tries > 0 and can_continue_on_fail:
                             headers['Range'] = f'bytes={total_bytes_received}-'

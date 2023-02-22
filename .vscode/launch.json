@@ -14,6 +14,19 @@
             "justMyCode": false
         },
         {
+            "name": "Moodle-Dl -v --skip-cert-verify",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/moodle-dl",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/debugging-moodle/",
+            "args": [
+                "-v",
+                "--skip-cert-verify",
+            ],
+            "justMyCode": false
+        },
+        {
             "name": "Moodle-Dl Verbose; Max one YT-DLP",
             "type": "python",
             "request": "launch",

@@ -716,7 +716,7 @@ class SslHelper:
 
     @classmethod
     @lru_cache(maxsize=4)
-    def get_ssl_context(cls, skip_cert_verify: bool = False, allow_insecure_ssl: bool = False):
+    def get_ssl_context(cls, skip_cert_verify: bool, allow_insecure_ssl: bool):
         if not skip_cert_verify:
             ssl_context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
             cls.load_default_certs(ssl_context)
@@ -762,7 +762,7 @@ class SslHelper:
             )
 
     @classmethod
-    def custom_requests_session(cls, skip_cert_verify: bool = False, allow_insecure_ssl: bool = False):
+    def custom_requests_session(cls, skip_cert_verify: bool, allow_insecure_ssl: bool):
         """
         Return a new requests session with custom SSL context
         """

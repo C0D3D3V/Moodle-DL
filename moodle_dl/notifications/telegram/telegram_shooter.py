@@ -23,7 +23,7 @@ class TelegramShooter:
         url = f'https://api.telegram.org/bot{self.telegram_token}/sendMessage'
         data_urlencoded = urllib.parse.urlencode(payload)
 
-        session = SslHelper.custom_requests_session()
+        session = SslHelper.custom_requests_session(skip_cert_verify=False, allow_insecure_ssl=False)
         try:
             response = session.post(url, data=data_urlencoded, headers=self.RQ_HEADER, timeout=60)
         except RequestException as error:
