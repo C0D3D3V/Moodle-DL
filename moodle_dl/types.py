@@ -167,11 +167,11 @@ class File:
         message = 'File ('
 
         message += f'module_id: {self.module_id}'
-        message += f', section_name: "{PT.to_valid_name(self.section_name)}"'
+        message += f', section_name: "{PT.to_valid_name(self.section_name, is_file=False)}"'
         message += f', section_id: "{self.section_id}"'
-        message += f', module_name: "{PT.to_valid_name(self.module_name)}"'
+        message += f', module_name: "{PT.to_valid_name(self.module_name, is_file=False)}"'
         message += f', content_filepath: {self.content_filepath}'
-        message += f', content_filename: "{PT.to_valid_name(self.content_filename)}"'
+        message += f', content_filename: "{PT.to_valid_name(self.content_filename, is_file=True)}"'
         message += f', content_fileurl: "{self.content_fileurl}"'
         message += f', content_filesize: {self.content_filesize}'
         message += f', content_timemodified: {self.content_timemodified}'
@@ -196,7 +196,7 @@ class File:
 class Course:
     def __init__(self, _id: int, fullname: str, files: List[File] = None):
         self.id = _id
-        self.fullname = PT.to_valid_name(fullname)
+        self.fullname = PT.to_valid_name(fullname, is_file=False)
         if files is not None:
             self.files = files
         else:
@@ -211,7 +211,7 @@ class Course:
 
         message += f'id: {self.id}'
         message += f', fullname: "{self.fullname}"'
-        message += f', overwrite_name_with: "{PT.to_valid_name(self.overwrite_name_with)}"'
+        message += f', overwrite_name_with: "{PT.to_valid_name(self.overwrite_name_with, is_file=False)}"'
         message += f', create_directory_structure: {self.create_directory_structure}'
         message += f', files: {len(self.files)}'
         message += ')'

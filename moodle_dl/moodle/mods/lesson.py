@@ -161,7 +161,7 @@ class LessonMod(MoodleMod):
             lesson_html += moodle_html_footer
             result.append(
                 {
-                    'filename': PT.to_valid_name(attempt['lesson_name']),
+                    'filename': PT.to_valid_name(attempt['lesson_name'], is_file=False),
                     'filepath': '/',
                     'timemodified': 0,
                     'html': lesson_html,

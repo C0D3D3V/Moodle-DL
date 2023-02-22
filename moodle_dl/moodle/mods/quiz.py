@@ -92,7 +92,9 @@ class QuizMod(MoodleMod):
         attempt_state = attempt.get('state', 'unknown')
         quiz_name = attempt.get('_quiz_name', '')
 
-        attempt_filename = PT.to_valid_name(quiz_name + ' (attempt ' + str(attempt_id) + ' ' + attempt_state + ')')
+        attempt_filename = PT.to_valid_name(
+            quiz_name + ' (attempt ' + str(attempt_id) + ' ' + attempt_state + ')', is_file=False
+        )
 
         data = {'attemptid': attempt_id}
         try:

@@ -162,14 +162,17 @@ class ForumMod(MoodleMod):
                 # Also add legacy inline files from messageinlinefiles attribute
                 self.add_legacy_inline_files(post.get('messageinlinefiles', []), post_file)
 
-            post_filename = PT.to_valid_name(f"[{post.get('id', 0)}] " + post_user_fullname)
+            post_filename = PT.to_valid_name(f"[{post.get('id', 0)}] " + post_user_fullname, is_file=False)
             if post_parent is not None and post_parent != 0:
-                post_filename = PT.to_valid_name(post_filename + ' response to [' + str(post_parent) + ']')
+                post_filename = PT.to_valid_name(
+                    post_filename + ' response to [' + str(post_parent) + ']', is_file=False
+                )
 
             post_path = PT.to_valid_name(
                 datetime.utcfromtimestamp(discussion.get('created', 0)).strftime('%y-%m-%d')
                 + ' '
-                + discussion.get('subject', '')
+                + discussion.get('subject', ''),
+                is_file=False,
             )
 
             result.append(

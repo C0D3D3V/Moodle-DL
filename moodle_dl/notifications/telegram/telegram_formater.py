@@ -135,10 +135,13 @@ class TelegramFormater:
             + '\r\nList of failed downloads:\r\n\r\n'
         )
         for task in failed_downloads:
-            new_line = f'⚠️ {PT.to_valid_name(task.file.content_filename)}:\r\n{task.status.get_error_text()}\r\n\r\n'
+            new_line = (
+                f'⚠️ {PT.to_valid_name(task.file.content_filename, is_file=True)}:'
+                + f'\r\n{task.status.get_error_text()}\r\n\r\n'
+            )
             if task.file.content_filename != task.file.content_fileurl:
                 new_line = (
-                    f'⚠️ {PT.to_valid_name(task.file.content_filename)} ({task.file.content_fileurl}):'
+                    f'⚠️ {PT.to_valid_name(task.file.content_filename, is_file=True)} ({task.file.content_fileurl}):'
                     + f'\r\n{task.status.get_error_text()}\r\n\r\n'
                 )
 

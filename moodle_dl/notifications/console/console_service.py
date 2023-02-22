@@ -59,7 +59,7 @@ class ConsoleService(NotificationService):
             print('')
 
         for task in failed_downloads:
-            Log.cyan(PT.to_valid_name(task.file.content_filename))
+            Log.cyan(PT.to_valid_name(task.file.content_filename, is_file=True))
             Log.error(f'\t{task.status.get_error_text()}')
 
         print('')

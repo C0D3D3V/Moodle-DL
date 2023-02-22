@@ -40,10 +40,7 @@ class FakeDownloadService:
             for file in course.files:
                 if file.deleted is False:
                     save_destination = Task.gen_path(self.opts.path, course, file)
-
-                    filename = PT.to_valid_name(file.content_filename)
-
-                    file.saved_to = str(Path(save_destination) / filename)
+                    filename = PT.to_valid_name(file.content_filename, is_file=True)
 
                     if file.content_type == 'description':
                         file.saved_to = str(Path(save_destination) / (filename + '.md'))
@@ -55,6 +52,8 @@ class FakeDownloadService:
                         file.saved_to = str(Path(save_destination) / (filename + '.desktop'))
                         if os.name == 'nt' or platform.system() == "Darwin":
                             file.saved_to = str(Path(save_destination) / (filename + '.URL'))
+                    else:
+                        file.saved_to = str(Path(save_destination) / filename)
 
                     self.database.save_file(file, course.id, course.fullname)
 

@@ -394,14 +394,15 @@ class PathTools:
     restricted_filenames = False
 
     @staticmethod
-    def to_valid_name(name: str) -> str:
-        """Filtering invalid characters in filenames and paths.
+    def to_valid_name(name: str, is_file: bool, max_length: int = 200) -> str:
+        """
+        Filtering invalid characters in filenames and paths.
 
-        Args:
-            name (str): The string that will go through the filtering
-
-        Returns:
-            str: The filtered string, that can be used as a filename.
+        @param name: The string that will go through the filtering
+        @param is_file: If true, it is tried to keep the extension of the file name
+        @param max_length: Most filesystems allow a max filename length of 255 chars,
+                            we default use a shorter name to allow long extensions
+        @return: The filtered string, that can be used as a filename.
         """
 
         if name is None:
@@ -420,7 +421,32 @@ class PathTools:
         name = PathTools.sanitize_filename(name, PathTools.restricted_filenames)
         name = name.strip('. ')
         name = name.strip()
+        name = PathTools.truncate_filename(name, is_file, max_length)
 
+        return name
+
+    @staticmethod
+    def truncate_filename(name: str, is_file: bool, max_length: int):
+        if len(name) > max_length:
+            if not is_file:
+                name = PathTools.truncate_name(name, max_length)
+            else:
+                stem, ext = PathTools.get_file_stem_and_ext(name)
+                ext_len = len(ext)
+                if ext is None or ext_len == 0 or ext_len > 20:
+                    # extensions longer then 20 characters are probably no extensions
+                    name = PathTools.truncate_name(name, max_length)
+                else:
+                    stem = PathTools.truncate_name(stem, max_length - ext_len - 1)
+                    name = f'{stem}.{ext}'
+        return name
+
+    @staticmethod
+    def truncate_name(name: str, max_length: int):
+        if PathTools.restricted_filenames:
+            name = name[: max_length - 3] + '...'
+        else:
+            name = name[: max_length - 1] + '…'
         return name
 
     @staticmethod
@@ -493,7 +519,8 @@ class PathTools:
             norm_path.pop(0)
 
         sanitized_path = [
-            path_part if path_part in ['.', '..'] else PathTools.to_valid_name(path_part) for path_part in norm_path
+            path_part if path_part in ['.', '..'] else PathTools.to_valid_name(path_part, is_file=False)
+            for path_part in norm_path
         ]
 
         if drive_or_unc:
@@ -517,9 +544,9 @@ class PathTools:
         """
         path = str(
             Path(storage_path)
-            / PathTools.to_valid_name(course_fullname)
-            / PathTools.to_valid_name(file_section_name)
-            / PathTools.to_valid_name(file_module_name)
+            / PathTools.to_valid_name(course_fullname, is_file=False)
+            / PathTools.to_valid_name(file_section_name, is_file=False)
+            / PathTools.to_valid_name(file_module_name, is_file=False)
             / PathTools.sanitize_path(file_path).strip('/')
         )
         return path
@@ -537,8 +564,8 @@ class PathTools:
         """
         path = str(
             Path(storage_path)
-            / PathTools.to_valid_name(course_fullname)
-            / PathTools.to_valid_name(file_section_name)
+            / PathTools.to_valid_name(course_fullname, is_file=False)
+            / PathTools.to_valid_name(file_section_name, is_file=False)
             / PathTools.sanitize_path(file_path).strip('/')
         )
         return path
@@ -554,7 +581,7 @@ class PathTools:
         """
         path = str(
             Path(storage_path)
-            / PathTools.to_valid_name(course_fullname)
+            / PathTools.to_valid_name(course_fullname, is_file=False)
             / PathTools.sanitize_path(file_path).strip('/')
         )
         return path
@@ -692,8 +719,7 @@ class PathTools:
         file_splits = filename.rsplit('.', 1)
         if len(file_splits) == 2:
             return file_splits[0], file_splits[1]
-        else:
-            return file_splits[0], None
+        return file_splits[0], None
 
 
 class SslHelper:

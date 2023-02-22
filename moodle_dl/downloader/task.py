@@ -69,7 +69,7 @@ class Task:
         self.callback = callback
 
         self.destination = self.gen_path(options.global_opts.path, course, file)
-        self.filename = PT.to_valid_name(self.file.content_filename)
+        self.filename = PT.to_valid_name(self.file.content_filename, is_file=True)
         self.status = TaskStatus()
 
     @staticmethod
@@ -367,9 +367,13 @@ class Task:
         @param use_cookies:  Adds the cookies to the requests
         @return: False if the page should be downloaded anyway; True if yt-dlp has processed the URL and we are done
         """
-        filename_template = self.filename + ' - %(title)s (%(id)s).%(ext)s'
+        # We try to limit the filename to < 250 chars
         if self.file.content_type == 'description-url':
-            filename_template = '%(title)s (%(id)s).%(ext)s'
+            filename_template = '%(title).180B (%(id).32B).%(ext)s'
+        else:
+            filename_template = (
+                PT.truncate_filename(self.filename, is_file=True, max_length=90) + ' - %(title).90B (%(id).32B).%(ext)s'
+            )
         output_template = str(Path(self.destination) / filename_template)
 
         ydl_opts = {
