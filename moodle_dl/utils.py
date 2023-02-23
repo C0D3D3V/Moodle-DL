@@ -721,6 +721,10 @@ class PathTools:
             return file_splits[0], file_splits[1]
         return file_splits[0], None
 
+    @staticmethod
+    def get_cookies_path(storage_path: str) -> str:
+        return str(Path(storage_path) / 'Cookies.txt')
+
 
 class SslHelper:
     warned_about_certifi = False

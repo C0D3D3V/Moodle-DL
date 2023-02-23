@@ -4,7 +4,8 @@ import logging
 from typing import Dict
 
 from moodle_dl.moodle.request_helper import RequestHelper, RequestRejectedError
-from moodle_dl.config import ConfigHelper
+from moodle_dl.types import MoodleDlOpts
+from moodle_dl.utils import PathTools as PT
 
 
 class CookieHandler:
@@ -12,11 +13,10 @@ class CookieHandler:
     Fetches and saves the cookies of Moodle.
     """
 
-    def __init__(self, request_helper: RequestHelper, version: int, config: ConfigHelper):
+    def __init__(self, request_helper: RequestHelper, version: int, opts: MoodleDlOpts):
         self.client = request_helper
         self.version = version
-        self.config = config
-        self.cookies_path = config.get_cookies_path()
+        self.cookies_path = PT.get_cookies_path(opts.path)
 
         self.moodle_test_url = self.client.url_base
 
@@ -36,10 +36,9 @@ class CookieHandler:
             return None
 
     def test_cookies(self) -> bool:
-        """Test if cookies are valide
-
-        Returns:
-            bool: True if valide
+        """
+        Test if cookies are valid
+        @return: True if valid
         """
 
         logging.debug('Testing cookies using this URL: %s', self.moodle_test_url)

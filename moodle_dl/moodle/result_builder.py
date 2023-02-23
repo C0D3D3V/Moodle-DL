@@ -1,13 +1,13 @@
 import hashlib
 import html
 import logging
+import mimetypes
 import re
 import urllib.parse as urlparse
 
 from typing import Dict, List
 
-from moodle_dl.types import Course, File
-from moodle_dl.types import MoodleURL
+from moodle_dl.types import Course, File, MoodleURL
 
 
 class ResultBuilder:
@@ -209,9 +209,11 @@ class ResultBuilder:
             content_filepath: str,
         """
 
+        # TODO: Also parse name or alt of an link to get a better name for URLs
         urls = list(set(re.findall(r'href=[\'"]?([^\'" >]+)', content_html)))
         urls += list(set(re.findall(r'<a[^>]*>(http[^<]*)<\/a>', content_html)))
         urls += list(set(re.findall(r'src=[\'"]?([^\'" >]+)', content_html)))
+        urls += list(set(re.findall(r'data=[\'"]?([^\'" >]+)', content_html)))
         urls = list(set(urls))
 
         result = []
@@ -255,17 +257,27 @@ class ResultBuilder:
             elif url_parts.hostname == self.moodle_domain:
                 location['module_modname'] = 'cookie_mod-description-' + original_module_modname
 
-            fist_guess_filename = url
-            if fist_guess_filename.startswith('data:image/'):
-                file_extension_guess = 'png'
-                if len(fist_guess_filename.split(';')) > 1:
-                    if len(fist_guess_filename.split(';')[0].split('/')) > 1:
-                        file_extension_guess = fist_guess_filename.split(';')[0].split('/')[1]
+            if url.startswith('data:'):
+                # Schema: data:[<mime type>][;charset=<Charset>][;base64],<Data>
+                embedded_data = url.split(',', 1)[1]
+                mime_type = url.split(':', 1)[1].split(',', 1)[0].split(';')[0]
+                media_type = mime_type.split('/', 1)[0]
+                file_extension_guess = mimetypes.guess_extension(mime_type, strict=False)
+                if file_extension_guess is None:
+                    file_extension_guess = f'.{media_type}'
+                m = hashlib.sha1()
+                if len(embedded_data) > 100000:
+                    # To improve speed hash only first 100kb if file is bigger
+                    m.update(embedded_data[:100000].encode(encoding='utf-8'))
+                else:
+                    m.update(embedded_data.encode(encoding='utf-8'))
+                short_data_hash = m.hexdigest()
 
-                fist_guess_filename = 'inline_image.' + file_extension_guess
-
-            if len(fist_guess_filename) > 254:
-                fist_guess_filename = fist_guess_filename[:254]
+                fist_guess_filename = f'embedded_{media_type} ({short_data_hash}){file_extension_guess}'
+            else:
+                fist_guess_filename = url
+                if len(fist_guess_filename) > 254:
+                    fist_guess_filename = fist_guess_filename[:254]
 
             result.append(
                 File(

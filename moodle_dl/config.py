@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 
 from moodle_dl.types import MoodleURL, MoodleDlOpts, DownloadOptions
+from moodle_dl.utils import PathTools as PT
 
 
 class ConfigHelper:
@@ -169,16 +170,9 @@ class ConfigHelper:
         # return a list of black listed domains that should not be downloaded
         return self.get_property_or('download_domains_blacklist', [])
 
-    def get_cookies_path(self) -> str:
-        # return the path to the cookies file, if it exists
-        cookies_path = str(Path(self.storage_path) / 'Cookies.txt')
-        if os.path.exists(cookies_path):
-            return cookies_path
-        return None
-
     def get_cookies_text(self) -> str:
         # return the text to the cookies file, if it exists
-        cookies_path = self.get_cookies_path()
+        cookies_path = PT.get_cookies_path(self.storage_path)
         if os.path.isfile(cookies_path):
             with open(cookies_path, 'r', encoding='utf-8') as cookie_file:
                 return cookie_file.read()
