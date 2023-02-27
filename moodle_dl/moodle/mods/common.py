@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import math
 
 from abc import ABCMeta, abstractmethod
 from typing import Dict, List
@@ -96,6 +97,7 @@ class MoodleMod(metaclass=ABCMeta):
 
         if total_entries == 0:
             return
+        ctr_digits = int(math.log10(total_entries)) + 1
 
         async_features = []
         for course_id, entries_in_course in entries.items():
@@ -104,8 +106,8 @@ class MoodleMod(metaclass=ABCMeta):
 
                 # Example: [5/16] Loaded assign 123 in course 456 "Assignment name"
                 loaded_message = (
-                    '[%(ctr)3d/%(total)-3d] Loaded %(mod_name)s %(module_id)-6d'
-                    + ' in course %(course_id)-6d "%(module_name)s"'
+                    f'[%(ctr){ctr_digits}d/%(total){ctr_digits}d] Loaded %(mod_name)s %(module_id)d'
+                    + ' in course %(course_id)d "%(module_name)s"'
                 )
 
                 async_features.append(
@@ -138,12 +140,14 @@ class MoodleMod(metaclass=ABCMeta):
         total_entries = len(entries)
         if total_entries == 0:
             return []
+        ctr_digits = int(math.log10(total_entries)) + 1
 
         async_features = []
         for ctr, entry in enumerate(entries):
             # Example: [5/16] Loaded forum discussion 123 "Good discussion"
             loaded_message = (
-                '[%(ctr)3d/%(total)-3d] Loaded %(mod_name)s %(collect_kind)s %(collect_id)-6d "%(collect_name)s"'
+                f'[%(ctr){ctr_digits}d/%(total){ctr_digits}d] Loaded %(mod_name)s %(collect_kind)s'
+                + ' %(collect_id)d "%(collect_name)s"'
             )
 
             async_features.append(
