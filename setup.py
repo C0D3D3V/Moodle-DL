@@ -39,7 +39,7 @@ setup(
     install_requires=[
         'aiodns>=3.0.0',
         'aiofiles>=22.1.0',
-        'aiohttp>=3.8.3',
+        'aiohttp>=3.8.4',
         'aioxmpp>=0.12.2',
         'certifi>=2020.4.5.2',
         'colorama>=0.4.6',

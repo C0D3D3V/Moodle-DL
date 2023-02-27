@@ -180,14 +180,15 @@ def str_or_none(v, default=None):
 def convert_to_aiohttp_cookie_jar(mozilla_cookie_jar: http.cookiejar.MozillaCookieJar):
     """
     Convert an http.cookiejar.MozillaCookieJar that uses a Netscape HTTP Cookie File to an aiohttp.cookiejar.CookieJar
+    Tested with aiohttp v3.8.4
     """
     aiohttp_cookie_jar = CookieJar(unsafe=True)  # unsafe = Allow also cookies for IPs
 
-    for cookie_domain, domain_cookies in mozilla_cookie_jar._cookies.items():  # pylint: disable=protected-access
-        cookie_names = {}
-        for _cookie_path, path_cookies in domain_cookies.items():
+    # pylint: disable=protected-access
+    for cookie_domain, domain_cookies in mozilla_cookie_jar._cookies.items():
+        for cookie_path, path_cookies in domain_cookies.items():
             for cookie_name, cookie in path_cookies.items():
-                # cookie_name is cookie.name; _cookie_path is cookie.path; cookie_domain is cookie.domain
+                # cookie_name is cookie.name; cookie_path is cookie.path; cookie_domain is cookie.domain
                 morsel = http.cookies.Morsel()
                 morsel.update(
                     {
@@ -202,15 +203,9 @@ def convert_to_aiohttp_cookie_jar(mozilla_cookie_jar: http.cookiejar.MozillaCook
                         # "samesite": "SameSite",
                     }
                 )
-
                 # pylint: disable=protected-access
                 morsel.set(cookie.name, cookie.value, http.cookies._quote(cookie.value))
-                simple_cookie = cookie_names.get(cookie_name, http.cookies.SimpleCookie())
-                simple_cookie[cookie_name] = morsel
-                cookie_names[cookie_name] = simple_cookie
-
-        for cookie_name, simple_cookie in cookie_names.items():
-            aiohttp_cookie_jar._cookies[cookie_domain][cookie_name] = simple_cookie  # pylint: disable=protected-access
+                aiohttp_cookie_jar._cookies[(cookie_domain, cookie_path)][cookie_name] = morsel
 
     return aiohttp_cookie_jar
 
