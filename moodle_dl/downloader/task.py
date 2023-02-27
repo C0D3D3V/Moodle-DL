@@ -771,11 +771,11 @@ class Task:
 
     def get_cookie_jar(self) -> aiohttp.CookieJar:
         # TODO: Since we currently do not modify the cookieJar we could just use a deep copied instance.
-        cookie_jar = None
         if self.opts.cookies_text is not None:
             cookie_jar = MoodleDLCookieJar(StringIO(self.opts.cookies_text))
             cookie_jar.load(ignore_discard=True, ignore_expires=True)
-        return convert_to_aiohttp_cookie_jar(cookie_jar)
+            return convert_to_aiohttp_cookie_jar(cookie_jar)
+        return None
 
     async def check_range_download_opt(self, url, session):
         try:
