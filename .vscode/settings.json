@@ -4,16 +4,8 @@
     "python.linting.lintOnSave": true,
     "python.linting.pylintEnabled": true,
     "python.linting.pylintArgs": [
-        "--enable=W0614",
-        "--enable=W0611",
-        "--disable=C0103",
-        "--disable=C0111",
-        "--disable=C0114",
-        "--disable=C0115",
-        "--disable=C0116",
-        "--disable=W0223",
-        "--disable=raise-missing-from",
-        "--disable=unnecessary-pass",
+        "--enable=W0614,W0611",
+        "--disable=C0103,C0111,C0114,C0115,C0116,W0223,raise-missing-from,unnecessary-pass",
         "--max-line-length=120"
     ],
     "python.linting.flake8Enabled": true,
@@ -31,5 +23,13 @@
     ],
     "editor.rulers": [
         120
+    ],
+    "cSpell.diagnosticLevel": "Hint",
+    "workbench.colorCustomizations": {
+        "editorHint.foreground": "#ff0000",
+    },
+    "gitlens.advanced.blame.customArguments": [
+        "--ignore-revs-file",
+        "${workspaceRoot}/.git-blame-ignore-revs"
     ]
 }

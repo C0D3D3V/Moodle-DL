@@ -76,4 +76,4 @@ The following rule governs documentation contributions:
 
 * When creating an issue, try using one of our issue templates which already contain some guidelines on which content is expected to process the issue most efficiently. If no template applies, you can of course also create an issue from scratch.
 
-* Please apply one or more applicable [labels](https://github.com/C0D3D3V/Moodle-Downloader-2/labels) to your issue so that all community members are able to cluster the issues better.
+* Please apply one or more applicable [labels](https://github.com/C0D3D3V/Moodle-DL/labels) to your issue so that all community members are able to cluster the issues better.

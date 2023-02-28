@@ -10,6 +10,8 @@ assignees: ''
 <!--
 Thanks for proposing an enhancement 🙌 ❤️
 
+The following comments are only meant to encourage you to provide helpful information when creating the issue. Please be as detailed as possible but keep it as short as possible. Please keep the issue as clear as possible, feel free to remove unused headings.
+
 Before opening a new issue, please make sure that we do not have any duplicates already open. You can ensure this by searching the issue list for this repository. If there is a duplicate, please close your issue and add a comment to the existing issue instead.
 -->
 
