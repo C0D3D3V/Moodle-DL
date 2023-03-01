@@ -10,15 +10,12 @@ assignees: ''
 <!--
 Thanks for reporting a bug 🙌 ❤️
 
-The following comments are only meant to encourage you to provide helpful information when creating the issue. Please be as detailed as possible but keep it as short as possible. Please keep the issue as clear as possible, feel free to remove unused headings.
+The following comments are only meant to encourage you to provide helpful information when creating the issue. Please be as detailed as possible but keep it as short as possible. Please keep the issue as clear as possible, feel free to remove unused headings and comments.
 
 Before opening a new issue, please make sure that we do not have any duplicates already open. You can ensure this by searching the issue list for this repository. If there is a duplicate, please close your issue and add a comment to the existing issue instead.
 
-Also, be sure to check our documentation first: https://github.com/C0D3D3V/Moodle-DL
+Also, be sure to check our documentation first: https://github.com/C0D3D3V/Moodle-DL and the wiki: https://github.com/C0D3D3V/Moodle-DL/wiki
 -->
-
-## Avoid duplicates
-* [ ] Bug is not already reported in another issue
 
 ## Describe the bug
 
@@ -31,27 +28,26 @@ Also, be sure to check our documentation first: https://github.com/C0D3D3V/Moodl
 
 <!-- Include the arguments you used to run moodle-dl --> 
 
-<!-- Include the terminal protocol--> 
+<!-- Include the terminal output:
 
-<!-- 
 To create a verbose log file run: `moodle-dl --verbose --log-to-file`
-Attach the verbose `MoodleDL.log` log file to the issue 
+Attach the `MoodleDL.log` file, that was created after you executed the command, to the issue 
 -->
 
 <!-- Include code or other info to help explain your problem -->
-
-
-## Technical details
-<!--
- - OS: [e.g. Windows]
- - Version [e.g. 22]
--->
 
 ## Expected behavior
 
 <!-- A clear and concise description of what you expected to happen. -->
 
-
 ## Possible Fix
 
 <!--- Not obligatory, but suggest a fix or reason for the bug -->
+
+## Technical details
+<!--
+ - OS: [e.g. Windows]
+ - Moodle-DL Version [e.g. 22]
+-->
+
+
