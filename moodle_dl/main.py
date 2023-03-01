@@ -222,7 +222,7 @@ def get_parser():
         action='store_true',
         help=(
             'Create an initial configuration. A CLI configuration wizard will lead you through'
-            + ' the initial configuration.',
+            + ' the initial configuration.'
         ),
     )
 
