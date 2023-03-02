@@ -62,7 +62,6 @@ def format_speed(speed):
     return f'{speed_text:10}'
 
 
-@staticmethod
 async def run_with_final_message(load_function, entry: Dict, message: str, *format_args):
     result = await load_function(entry)
     logging.info(message, *format_args)

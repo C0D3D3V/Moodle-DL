@@ -1,9 +1,9 @@
 <div align="center">
     <br>
     <h2>Moodle-DL</h2>
-    <small>Because manually downloading all the course files every few days is just <del>way too easy</del> inefficient.</small> 
+    Because manually downloading all the course files every few days is just <del>way too easy</del> inefficient.
     <br>
-    <small>Built with ❤︎</small>
+    Built with ❤︎
 </div>
 
 ---

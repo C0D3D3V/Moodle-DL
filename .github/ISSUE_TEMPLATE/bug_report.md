@@ -17,24 +17,29 @@ Before opening a new issue, please make sure that we do not have any duplicates 
 Also, be sure to check our documentation first: https://github.com/C0D3D3V/Moodle-DL and the wiki: https://github.com/C0D3D3V/Moodle-DL/wiki
 -->
 
-## Describe the bug
+## Description of the bug
 
-<!-- Describe your issue, but please be descriptive! Thanks again 🙌 ❤️ -->
+<!-- 
+Describe the bug
+Describe your issue, but please be descriptive! Thanks again 🙌 ❤️ 
+-->
  
 
 ## Steps to reproduce the issue
 
-<!-- Include screenshots-->
+<!-- 
+Include screenshots
 
-<!-- Include the arguments you used to run moodle-dl --> 
+Include the arguments you used to run moodle-dl
 
-<!-- Include the terminal output:
+Include the terminal output:
 
 To create a verbose log file run: `moodle-dl --verbose --log-to-file`
 Attach the `MoodleDL.log` file, that was created after you executed the command, to the issue 
--->
 
-<!-- Include code or other info to help explain your problem -->
+Include code or other info to help explain your problem
+
+-->
 
 ## Expected behavior
 

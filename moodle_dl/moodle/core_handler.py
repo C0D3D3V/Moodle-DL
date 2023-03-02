@@ -1,5 +1,6 @@
 import asyncio
 import json
+import math
 
 from typing import Dict, List
 
@@ -131,11 +132,14 @@ class CoreHandler:
 
         if total_courses == 0:
             return {}
+        ctr_digits = int(math.log10(total_courses)) + 1
 
         async_features = []
         for ctr, course in enumerate(courses):
-            # Example: [5/16] Loaded course core 123 "Best course"
-            loaded_message = '[%(ctr)3d/%(total)-3d] Loaded course core %(course_id)-6d "%(course_name)s"'
+            # Example: [ 5/16] Loaded course core 123 "Best course"
+            loaded_message = (
+                f'[%(ctr){ctr_digits}d/%(total){ctr_digits}d] Loaded course core %(course_id)d "%(course_name)s"'
+            )
 
             async_features.append(
                 run_with_final_message(

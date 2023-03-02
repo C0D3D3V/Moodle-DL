@@ -104,7 +104,7 @@ class MoodleMod(metaclass=ABCMeta):
             for module_id, entry in entries_in_course.items():
                 ctr += 1
 
-                # Example: [5/16] Loaded assign 123 in course 456 "Assignment name"
+                # Example: [ 5/16] Loaded assign 123 in course 456 "Assignment name"
                 loaded_message = (
                     f'[%(ctr){ctr_digits}d/%(total){ctr_digits}d] Loaded %(mod_name)s %(module_id)d'
                     + ' in course %(course_id)d "%(module_name)s"'
@@ -144,7 +144,7 @@ class MoodleMod(metaclass=ABCMeta):
 
         async_features = []
         for ctr, entry in enumerate(entries):
-            # Example: [5/16] Loaded forum discussion 123 "Good discussion"
+            # Example: [ 5/16] Loaded forum discussion 123 "Good discussion"
             loaded_message = (
                 f'[%(ctr){ctr_digits}d/%(total){ctr_digits}d] Loaded %(mod_name)s %(collect_kind)s'
                 + ' %(collect_id)d "%(collect_name)s"'
