@@ -131,7 +131,7 @@ class Task:
         logging.debug('[%d] Renaming old file', self.task_id)
 
         destination, filename, file_extension = PT.get_path_parts(old_path)
-        new_filename = f'{filename}_old{file_extension}'
+        new_filename = f'{filename}_old.{file_extension}'
         new_path = PT.get_unused_file_path(PT.make_path(destination, new_filename))
 
         try:

@@ -109,6 +109,16 @@ class LessonMod(MoodleMod):
     async def _get_files_of_attempt(self, attempt: Dict) -> List[Dict]:
         result = []
 
+        # Calculate last modified
+        completed = attempt.get('userstats', {}).get('completed', 0)
+        for answerpage in attempt.get('answerpages', []):
+            answerpage_page = answerpage.get('page', {})
+            last_modified = answerpage_page.get('timemodified', 0)
+            if last_modified == 0:
+                last_modified = answerpage_page.get('timecreated', 0)
+            if completed < last_modified:
+                completed = last_modified
+
         # Create grade file
         grade = attempt.get('userstats', {}).get('gradeinfo', {}).get('earned', None)
         grade_total = attempt.get('userstats', {}).get('gradeinfo', {}).get('total', None)
@@ -117,7 +127,7 @@ class LessonMod(MoodleMod):
                 {
                     'filename': 'grade',
                     'filepath': '/',
-                    'timemodified': 0,
+                    'timemodified': completed,
                     'description': str(grade) + ' / ' + str(grade_total),
                     'type': 'description',
                 }
@@ -163,7 +173,7 @@ class LessonMod(MoodleMod):
                 {
                     'filename': PT.to_valid_name(attempt['lesson_name'], is_file=False),
                     'filepath': '/',
-                    'timemodified': 0,
+                    'timemodified': completed,
                     'html': lesson_html,
                     'filter_urls_during_search_containing': ['/mod_lesson/page_contents/'],
                     'type': 'html',

@@ -344,12 +344,12 @@ class ResultBuilder:
             if location['module_modname'].startswith('index_mod') and content_filename.endswith('.html'):
                 content_filename = location['module_name']
 
-            hash_description = None
-            if content_type == 'description' and not content.get('no_hash', False):
+            file_hash = None
+            if content_type in ('description', 'html') and not content.get('no_hash', False):
                 hashable_description = self.filter_changing_attributes(content_description)
                 m = hashlib.sha1()
                 m.update(hashable_description.encode('utf-8'))
-                hash_description = m.hexdigest()
+                file_hash = m.hexdigest()
 
             new_file = File(
                 **location,
@@ -360,7 +360,7 @@ class ResultBuilder:
                 content_timemodified=content.get('timemodified', 0),
                 content_type=content_type,
                 content_isexternalfile=content.get('isexternalfile', False),
-                file_hash=hash_description,
+                file_hash=file_hash,
             )
 
             if content_type == 'description':

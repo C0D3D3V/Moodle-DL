@@ -125,7 +125,7 @@ class QuizMod(MoodleMod):
             {
                 'filename': attempt_filename,
                 'filepath': '/',
-                'timemodified': 0,
+                'timemodified': attempt.get('timemodified', 0),
                 'html': quiz_html,
                 'type': 'html',
                 'no_search_for_urls': True,

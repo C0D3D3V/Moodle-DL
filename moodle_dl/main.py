@@ -206,9 +206,6 @@ def win_max_path_length_workaround(path):
 
 
 def get_parser():
-    """
-    Creates a new argument parser.
-    """
     parser = argparse.ArgumentParser(
         description=('Moodle-DL helps you download all the course files from your Moodle account.')
     )
@@ -438,7 +435,7 @@ def get_parser():
     )
 
     parser.add_argument(
-        '--mpl',
+        '-mplw',
         '--max-path-length-workaround',
         dest='max_path_length_workaround',
         default=False,

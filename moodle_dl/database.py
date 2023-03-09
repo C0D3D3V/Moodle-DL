@@ -180,7 +180,8 @@ class StateRecorder:
         except Error as error:
             raise RuntimeError(f'Could not create database! Error: {error}')
 
-    def __files_have_same_type(self, file1: File, file2: File) -> bool:
+    @staticmethod
+    def files_have_same_type(file1: File, file2: File) -> bool:
         # Returns True if the files have the same type attributes
 
         if file1.content_type == file2.content_type and file1.module_modname == file2.module_modname:
@@ -199,7 +200,8 @@ class StateRecorder:
 
         return False
 
-    def __files_have_same_path(self, file1: File, file2: File) -> bool:
+    @classmethod
+    def files_have_same_path(cls, file1: File, file2: File) -> bool:
         # Returns True if the files have the same path attributes
 
         if (
@@ -207,13 +209,14 @@ class StateRecorder:
             and file1.section_name == file2.section_name
             and file1.content_filepath == file2.content_filepath
             and file1.content_filename == file2.content_filename
-            and self.__files_have_same_type(file1, file2)
+            and cls.files_have_same_type(file1, file2)
             and (file1.content_type != 'description' or file1.module_name == file2.module_name)
         ):
             return True
         return False
 
-    def __files_are_diffrent(self, file1: File, file2: File) -> bool:
+    @staticmethod
+    def files_are_diffrent(file1: File, file2: File) -> bool:
         # Returns True if these files differ from each other
 
         # Not sure if this would be a good idea
@@ -223,7 +226,7 @@ class StateRecorder:
         ):
             return True
         if (
-            file1.content_type == 'description'
+            file1.content_type in ('description', 'html')
             and file1.content_type == file2.content_type
             and (file1.hash != file2.hash or file1.content_timemodified != file2.content_timemodified)
         ):
@@ -239,25 +242,33 @@ class StateRecorder:
             return True
         return False
 
-    def __files_are_moveable(self, file1: File, file2: File) -> bool:
+    @staticmethod
+    def files_are_moveable(file1: File, file2: File) -> bool:
         # Descriptions are not not movable at all
-        if file1.content_type != 'description' and file2.content_type != 'description':
-            return True
-        return False
+        if file1.content_type == 'description' or file2.content_type == 'description':
+            return False
+        # HTMLs with no hash are not moveable
+        if (file1.content_type == 'html' and file1.hash is None) or (
+            file2.content_type == 'html' and file2.hash is None
+        ):
+            return False
+        return True
 
-    def __file_was_moved(self, file1: File, file2: File) -> bool:
+    @classmethod
+    def file_was_moved(cls, file1: File, file2: File) -> bool:
         # Returns True if the file was moved to an other path
 
         if (
-            not self.__files_are_diffrent(file1, file2)
-            and self.__files_have_same_type(file1, file2)
-            and not self.__files_have_same_path(file1, file2)
-            and self.__files_are_moveable(file1, file2)
+            not cls.files_are_diffrent(file1, file2)
+            and cls.files_have_same_type(file1, file2)
+            and not cls.files_have_same_path(file1, file2)
+            and cls.files_are_moveable(file1, file2)
         ):
             return True
         return False
 
-    def __ignore_deleted(self, file: File):
+    @staticmethod
+    def ignore_deleted(file: File):
         # Returns true if the deleted file should be ignored.
         if file.module_modname.endswith('forum'):
             return True
@@ -351,7 +362,7 @@ class StateRecorder:
         conn.close()
         return stored_courses
 
-    def __get_modified_files(self, stored_courses: List[Course], current_courses: List[Course]) -> List[Course]:
+    def get_modified_files(self, stored_courses: List[Course], current_courses: List[Course]) -> List[Course]:
         # returns courses with modified and deleted files
         changed_courses = []
 
@@ -384,7 +395,7 @@ class StateRecorder:
 
                 for current_file in same_course_in_current.files:
                     # Try to find a matching file with same path
-                    if self.__files_have_same_path(current_file, stored_file):
+                    if self.files_have_same_path(current_file, stored_file):
                         matching_file = current_file
                         # file does still exist
                         break
@@ -392,7 +403,7 @@ class StateRecorder:
                 if matching_file is not None:
                     # An matching file was found
                     # Test for modification
-                    if self.__files_are_diffrent(matching_file, stored_file):
+                    if self.files_are_diffrent(matching_file, stored_file):
                         # file is modified
                         matching_file.modified = True
                         matching_file.old_file = stored_file
@@ -405,12 +416,12 @@ class StateRecorder:
 
                 for current_file in same_course_in_current.files:
                     # Try to find a matching file that was moved
-                    if self.__file_was_moved(current_file, stored_file):
+                    if self.file_was_moved(current_file, stored_file):
                         matching_file = current_file
                         # file does still exist
                         break
 
-                if matching_file is None and not self.__ignore_deleted(stored_file):
+                if matching_file is None and not self.ignore_deleted(stored_file):
                     # No matching file was found --> file was deleted
                     stored_file.deleted = True
                     stored_file.notified = False
@@ -426,7 +437,7 @@ class StateRecorder:
 
         return changed_courses
 
-    def __get_new_files(
+    def get_new_files(
         self, changed_courses: List[Course], stored_courses: List[Course], current_courses: List[Course]
     ) -> List[Course]:
         # check for new files
@@ -453,9 +464,9 @@ class StateRecorder:
 
                 for stored_file in same_course_in_stored.files:
                     # Try to find a matching file
-                    if self.__files_have_same_path(current_file, stored_file) or self.__file_was_moved(
-                        current_file, stored_file
-                    ):
+                    has_same_path = self.files_have_same_path(current_file, stored_file)
+                    was_moved = self.file_was_moved(current_file, stored_file)
+                    if has_same_path or was_moved:
                         matching_file = current_file
                         break
 
@@ -492,11 +503,11 @@ class StateRecorder:
         # first get all stored files (that are not yet deleted)
         stored_courses = self.get_stored_files()
 
-        changed_courses = self.__get_modified_files(stored_courses, current_courses)
+        changed_courses = self.get_modified_files(stored_courses, current_courses)
         # ----------------------------------------------------------
 
         # check for new files
-        changed_courses = self.__get_new_files(changed_courses, stored_courses, current_courses)
+        changed_courses = self.get_new_files(changed_courses, stored_courses, current_courses)
 
         return changed_courses
 

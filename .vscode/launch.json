@@ -27,7 +27,21 @@
             "justMyCode": false
         },
         {
-            "name": "Moodle-Dl Verbose; Max one YT-DLP",
+            "name": "Moodle-Dl Single API Calls",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/moodle-dl",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/debugging-moodle/",
+            "args": [
+                "-v",
+                "-mpac",
+                "1",
+            ],
+            "justMyCode": false
+        },
+        {
+            "name": "Moodle-Dl Max one YT-DLP",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/moodle-dl",
@@ -38,16 +52,6 @@
                 "-mpyd",
                 "1",
             ],
-            "justMyCode": false
-        },
-        {
-            "name": "Moodle-Dl Normal",
-            "type": "python",
-            "request": "launch",
-            "program": "${workspaceFolder}/moodle-dl",
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}/debugging-moodle/",
-            "args": [],
             "justMyCode": false
         },
         {
@@ -62,6 +66,16 @@
                 "-mpd",
                 "1"
             ],
+            "justMyCode": false
+        },
+        {
+            "name": "Moodle-Dl Normal",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/moodle-dl",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/debugging-moodle/",
+            "args": [],
             "justMyCode": false
         }
     ]

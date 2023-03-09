@@ -677,6 +677,9 @@ class PathTools:
 
     @staticmethod
     def get_path_parts(file_path: str) -> PathParts:
+        """
+        @return: PathParts - File extension is without a dot!
+        """
         destination = os.path.dirname(file_path)
         filename, file_extension = os.path.splitext(os.path.basename(file_path))
         if file_extension.startswith('.'):
