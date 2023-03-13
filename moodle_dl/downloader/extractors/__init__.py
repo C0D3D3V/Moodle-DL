@@ -3,11 +3,14 @@ from typing import List
 from yt_dlp.YoutubeDL import YoutubeDL
 from yt_dlp.extractor.common import InfoExtractor
 
+from moodle_dl.downloader.extractors.echo360 import Echo360IE  # noqa: F401
 from moodle_dl.downloader.extractors.googledrive import GoogleDriveIE  # noqa: F401
 from moodle_dl.downloader.extractors.helixmedia_lti import HelixmediaLtiIE  # noqa: F401
 from moodle_dl.downloader.extractors.kalvidres_lti import KalvidresLtiIE  # noqa: F401
 from moodle_dl.downloader.extractors.opencast_lti import OpencastLtiIE  # noqa: F401
-from moodle_dl.downloader.extractors.owncloud import OwncloudIE  # noqa: F401
+from moodle_dl.downloader.extractors.owncloud import OwnCloudIE  # noqa: F401
+from moodle_dl.downloader.extractors.sharepoint import SharePointIE  # noqa: F401
+from moodle_dl.downloader.extractors.sharepointfiles import SharePointFilesIE  # noqa: F401
 
 ALL_ADDITIONAL_EXTRACTORS = [Class for name, Class in globals().items() if name.endswith('IE')]
 
