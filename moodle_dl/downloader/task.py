@@ -361,10 +361,9 @@ class Task:
                 logging.warning('[%d] Head request for external file failed with unexpected error', self.task_id)
                 raise head_err from None
 
-    async def download_using_yt_dlp(self, dl_url: str, infos: HeadInfo, delete_if_successful: bool, use_cookies: bool):
+    async def download_using_yt_dlp(self, dl_url: str, infos: HeadInfo, delete_if_successful: bool):
         """
         @param delete_if_successful: Deletes the tmp file if download was successful
-        @param use_cookies:  Adds the cookies to the requests
         @return: False if the page should be downloaded anyway; True if yt-dlp has processed the URL and we are done
         """
         # We try to limit the filename to < 250 chars
@@ -391,7 +390,7 @@ class Task:
 
         ydl_opts.update(self.opts.yt_dlp_options)
 
-        if use_cookies and self.opts.cookies_text is not None:
+        if self.opts.cookies_text is not None:
             ydl_opts.update({'cookiefile': StringIO(self.opts.cookies_text)})
 
         ydl = yt_dlp.YoutubeDL(ydl_opts)
@@ -478,7 +477,7 @@ class Task:
 
         self.file.saved_to = str(Path(self.destination) / self.filename)
 
-    async def external_download_url(self, add_token: bool, delete_if_successful: bool, use_cookies: bool):
+    async def external_download_url(self, add_token: bool, delete_if_successful: bool, needs_moodle_cookies: bool):
         """
         Use only for "external" shortcut/URL files.
         It tests whether a URL refers to a file, that is not an HTML web page then downloads it.
@@ -486,7 +485,7 @@ class Task:
 
         @param add_token: Adds the ws-token to the url
         @param delete_if_successful: Deletes the tmp file if download was successful
-        @param use_cookies:  Adds the cookies to the requests
+        @param needs_moodle_cookies: For this URL moodle cookies are required
         In case of an failure an exception will be raised
         """
         url_to_download = self.file.content_fileurl
@@ -499,8 +498,10 @@ class Task:
             # If temporary file is not needed delete it as soon as possible
             PT.remove_file(self.file.saved_to)
 
-        if use_cookies and self.opts.cookies_text is None:
-            # Without cookies we can not proceed
+        if needs_moodle_cookies and self.opts.cookies_text is None:
+            # Without Moodle cookies we should not continue
+            # We assume that there are Moodle cookies in the cookie file, if one exists.
+            # TODO: Perhaps explicitly check if Moodle cookies are set
             raise ValueError(
                 'Moodle cookies are missing. Set a private token so that moodle-dl can obtain moodle cookies'
             )
@@ -523,7 +524,6 @@ class Task:
                 dl_url=url_to_download,
                 infos=infos,
                 delete_if_successful=delete_if_successful,
-                use_cookies=use_cookies,
             )
             if yt_dlp_processed:
                 return
@@ -716,16 +716,18 @@ class Task:
                 await self.create_html_file()
 
             elif self.file.module_modname.startswith('index_mod'):
-                await self.external_download_url(add_token=True, delete_if_successful=True, use_cookies=False)
+                await self.external_download_url(add_token=True, delete_if_successful=True, needs_moodle_cookies=False)
 
             elif self.file.module_modname.startswith('cookie_mod'):
-                await self.external_download_url(add_token=False, delete_if_successful=True, use_cookies=True)
+                await self.external_download_url(add_token=False, delete_if_successful=True, needs_moodle_cookies=True)
 
             elif self.file.module_modname.startswith('url') and not self.file.content_fileurl.startswith('data:'):
                 # Create a shortcut and maybe downloading it
                 await self.create_shortcut()
                 if self.opts.download_linked_files and not self.is_filtered_external_domain():
-                    await self.external_download_url(add_token=False, delete_if_successful=False, use_cookies=False)
+                    await self.external_download_url(
+                        add_token=False, delete_if_successful=False, needs_moodle_cookies=False
+                    )
 
             elif self.file.content_fileurl.startswith('data:'):
                 await self.create_data_url_file()
