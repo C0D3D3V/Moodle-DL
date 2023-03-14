@@ -509,7 +509,6 @@ class Task:
         if infos is None:
             # Head request failed but we declare it as success (because URL is broken)
             return
-        url_to_download = infos.final_url
 
         external_dl_cmd = self.opts.external_file_downloaders.get(infos.host, "")
         if infos.is_html and external_dl_cmd != "":
