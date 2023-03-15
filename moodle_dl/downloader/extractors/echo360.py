@@ -1,28 +1,20 @@
 import re
 
+from urllib.parse import urlparse, urlunparse
+
 from yt_dlp.extractor.common import InfoExtractor
 from yt_dlp.utils import (
     determine_ext,
     float_or_none,
     traverse_obj,
-    variadic,
 )
 
 
 class Echo360IE(InfoExtractor):
-    _INSTANCES_RE = r'''(?:
-                            echo360\.ca|
-                            echo360\.net\.au|
-                            echo360\.org\.au|
-                            echo360\.org\.uk|
-                            echo360\.org|
-                        )'''
-    _UUID_RE = r'[\da-fA-F]{8}-[\da-fA-F]{4}-[\da-fA-F]{4}-[\da-fA-F]{4}-[\da-fA-F]{12}'
-    _VALID_URL = rf'''(?x)
-        https?://(?P<host>{_INSTANCES_RE})
-        /media/(?P<id>{_UUID_RE})/public'''
-
-    _API_BASE = 'https://%s/api/ui/echoplayer/public-links/%s/media/%s/player-properties'
+    _VALID_URL = r'''(?x)
+        https?://(?P<host>echo360\.(?:ca|net\.au|org|org\.au|org\.uk))/
+        media/(?P<id>[\da-fA-F]{8}-(?:[\da-fA-F]{4}-){3}[\da-fA-F]{12})/public
+    '''
 
     _TESTS = [
         {
@@ -49,24 +41,25 @@ class Echo360IE(InfoExtractor):
 
     def _call_api(self, host, video_id, media_id, session_token, **kwargs):
         return self._download_json(
-            self._API_BASE % (host, video_id, media_id),
+            f'https://{host}/api/ui/echoplayer/public-links/{video_id}/media/{media_id}/player-properties',
             video_id,
             headers={'Authorization': f'Bearer {session_token}'},
             **kwargs,
         )
 
-    @staticmethod
-    def _update_url_query(uri, query_string):
+    def _replace_url_query(self, url, query_string):
         if query_string is not None:
-            return f'{uri.split("?", 1)[0]}?{query_string}'
-        return uri
+            return urlunparse(urlparse(url)._replace(query=query_string))
+        return url
 
-    @staticmethod
-    def _get_query_string(uri, query_strings):
-        uri_base = uri.split("?", 1)[0]
+    def _get_query_string(self, uri, query_strings):
+        uri_base = urlparse(uri)._replace(query='', fragment='').geturl()
         for query_string in query_strings:
-            if re.match(query_string['uriPattern'], uri_base):
-                return query_string['queryString']
+            try:
+                if re.match(query_string['uriPattern'], uri_base):
+                    return query_string['queryString']
+            except re.error as re_error:
+                self.report_warning(f'Error in query string pattern `{re_error.pattern}`: {re_error.msg}')
         return None
 
     def _parse_mediapackage(self, video):
@@ -74,11 +67,11 @@ class Echo360IE(InfoExtractor):
         query_strings = traverse_obj(video, ('sourceQueryStrings', 'queryStrings')) or []
 
         formats = []
-        for track in variadic(traverse_obj(video, ('playableAudioVideo', 'playableMedias')) or []):
+        for track in traverse_obj(video, ('playableAudioVideo', 'playableMedias', ...)):
             href = track.get('uri')
             if href is None:
                 continue
-            href = self._update_url_query(href, self._get_query_string(href, query_strings))
+            href = self._replace_url_query(href, self._get_query_string(href, query_strings))
             if track.get('isHls') or determine_ext(href, None) == 'm3u8':
                 hls_formats = self._extract_m3u8_formats(
                     href, video_id, live=track.get('isLive'), m3u8_id='hls', entry_protocol='m3u8_native', fatal=False
@@ -87,7 +80,7 @@ class Echo360IE(InfoExtractor):
                 for hls_format in hls_formats:
                     query_string = self._get_query_string(hls_format['url'], query_strings)
                     hls_format['extra_param_to_segment_url'] = query_string
-                    hls_format['url'] = self._update_url_query(hls_format['url'], query_string)
+                    hls_format['url'] = self._replace_url_query(hls_format['url'], query_string)
 
                 formats.extend(hls_formats)
 
@@ -97,10 +90,9 @@ class Echo360IE(InfoExtractor):
             'title': video.get('mediaName'),
             'duration': float_or_none(
                 self._search_regex(
-                    r'PT(\d+\.?\d+)S',
+                    r'PT([\d.]+)S',
                     traverse_obj(video, ('playableAudioVideo', 'duration')),
                     'video duration',
-                    default=None,
                     fatal=False,
                 )
             ),
@@ -121,8 +113,8 @@ class Echo360IE(InfoExtractor):
         urlh = self._request_webpage(
             f'https://{host}/api/ui/sessions/{player_config["sessionId"]}',
             video_id,
-            note='Open video session',
-            errnote='Unable to open video session',
+            'Open video session',
+            'Unable to open video session',
         )
 
         return self._parse_mediapackage(

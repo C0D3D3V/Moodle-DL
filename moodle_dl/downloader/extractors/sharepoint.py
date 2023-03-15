@@ -1,14 +1,21 @@
 import json
 
+from urllib.parse import (
+    parse_qs,
+    urlencode,
+    urljoin,
+    urlparse,
+    urlunparse,
+)
+
 from yt_dlp.extractor.common import InfoExtractor
 from yt_dlp.utils import (
-    float_or_none,
     traverse_obj,
 )
 
 
 class SharePointIE(InfoExtractor):
-    _VALID_URL = r'https?://[^\.]+\.sharepoint\.com/:v:/g/[^/]+/[^/]+/(?P<id>[^/?]+)'
+    _VALID_URL = r'https?://[^.]+\.sharepoint\.com/:v:/g/(?:[^/]+/){2}(?P<id>[^/?#]+)'
 
     _TESTS = [
         {
@@ -16,7 +23,7 @@ class SharePointIE(InfoExtractor):
             + 'EUrAmrktb4ZMhUcY9J2PqMEBD_9x_l0DyYWVgAvp-TTOMw?e=ZpQOOw',
             'info_dict': {
                 'id': 'EUrAmrktb4ZMhUcY9J2PqMEBD_9x_l0DyYWVgAvp-TTOMw',
-                'ext': 'mp4',
+                'ext': 'unknown_video',
                 'title': 'CmvpJST.mp4',
                 'duration': 54.567,
             },
@@ -24,47 +31,44 @@ class SharePointIE(InfoExtractor):
         },
     ]
 
-    def _parse_mediapackage(self, video, video_id):
-        formats = []
+    def _real_extract(self, url):
+        video_id = self._match_id(url)
+        webpage = self._download_webpage(url, video_id)
 
-        base_media_url = video['.transformUrl'].replace('/thumbnail?', '/videomanifest?')
-        base_media_url += f"&cTag={video['.ctag']}&action=Access&part=index"
+        video = self._search_json(r'g_fileInfo\s*=', webpage, 'player config', video_id)
 
-        metadata = json.loads(video.get('MediaServiceFastMetadata'))
-
-        # Normally the player is configured with all possible options added to the format URLs,
-        # but we always get all formats back no matter what settings you send
-        formats.extend(self._extract_mpd_formats(f"{base_media_url}&format=dash", video_id, mpd_id='dash', fatal=False))
-        formats.extend(
-            self._extract_m3u8_formats(
-                f"{base_media_url}&format=hls", video_id, m3u8_id='hls', entry_protocol='m3u8_native', fatal=False
-            )
-        )
-        # HLSv6
-        formats.extend(
-            self._extract_m3u8_formats(
-                f"{base_media_url}&format=hls-vnext",
-                video_id,
-                m3u8_id='hls-vnext',
-                entry_protocol='m3u8_native',
-                fatal=False,
+        parsed_url = urlparse(video['.transformUrl'])
+        base_media_url = urlunparse(
+            parsed_url._replace(
+                path=urljoin(f'{parsed_url.path}/', '../videomanifest'),
+                query=urlencode(
+                    {
+                        **parse_qs(parsed_url.query),
+                        'cTag': video['.ctag'],
+                        'action': 'Access',
+                        'part': 'index',
+                    },
+                    doseq=True,
+                ),
             )
         )
 
-        # Most formats are found multiple times, we remove the occurrences without metadata
-        formats = [x for x in formats if x.get('ext') is not None]
+        # The player is configured with a number of options that are then added to the format URLs,
+        # but we always get all formats back no matter what options we send
+        hls_formats = self._extract_m3u8_formats(f'{base_media_url}&format=hls', video_id, m3u8_id='hls', fatal=False)
+        hls_formats.extend(
+            self._extract_m3u8_formats(f'{base_media_url}&format=hls-vnext', video_id, m3u8_id='hls-vnext', fatal=False)
+        )
+        for hls_format in hls_formats:
+            hls_format['preference'] = -2
+        formats = self._extract_mpd_formats(f'{base_media_url}&format=dash', video_id, mpd_id='dash', fatal=False)
+        formats.extend(hls_formats)
 
         return {
             'id': video_id,
             'formats': formats,
             'title': video.get('name'),
-            'duration': float_or_none(traverse_obj(metadata, ('media', 'duration')), scale=10000000),
+            'duration': traverse_obj(
+                video, ('MediaServiceFastMetadata', {json.loads}, 'media', 'duration', {lambda x: x / 10000000})
+            ),
         }
-
-    def _real_extract(self, url):
-        video_id = self._match_valid_url(url).group('id')
-        webpage = self._download_webpage(url, video_id)
-
-        player_config = self._search_json(r'g_fileInfo\s*=', webpage, 'player config', video_id)
-
-        return self._parse_mediapackage(player_config, video_id)
