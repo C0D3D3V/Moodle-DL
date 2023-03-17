@@ -31,7 +31,7 @@ class WorkshopMod(MoodleMod):
             workshop_files += workshop.get('instructauthorsfiles', [])
             workshop_files += workshop.get('instructreviewersfiles', [])
             workshop_files += workshop.get('conclusionfiles', [])
-            self.set_files_types_if_empty(workshop_files, 'workshop_introfile')
+            self.set_props_of_files(workshop_files, type='workshop_introfile')
 
             workshop_intro = workshop.get('intro', '')
             if workshop_intro != '':
@@ -208,11 +208,9 @@ class WorkshopMod(MoodleMod):
 
             submission_files = submission.get('contentfiles', [])
             submission_files += submission.get('attachmentfiles', [])
-            submission_files += submission.get('files', [])
+            self.set_props_of_files(submission_files, type='workshop_file', filepath=filepath)
 
-            for submission_file in submission_files:
-                self.set_file_type_if_empty(submission_file, 'workshop_file')
-                submission_file['filepath'] = filepath
+            submission_files += submission.get('files', [])  # Already pares files
 
             if submission_content != '':
                 submission_files.append(

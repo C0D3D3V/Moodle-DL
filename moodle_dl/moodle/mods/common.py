@@ -58,11 +58,23 @@ class MoodleMod(metaclass=ABCMeta):
         logging.info('Loaded all %s', self.MOD_PLURAL_NAME)
         return result
 
+    def get_indexed_ids_of_mod_instances(self, mod_instances: Dict[int, Dict[int, Dict]]):
+        """
+        @param mod_instances: Dictionary of all mod instanced, indexed by courses, then module id
+        """
+        mod_instances_ids = {}
+        idx = 0
+        for _, modules in mod_instances.items():
+            for _, mod in modules.items():
+                mod_instances_ids[str(idx)] = mod['id']
+                idx += 1
+        return mod_instances_ids
+
     def get_data_for_mod_entries_endpoint(self, courses: List[Course]):
         # Create a dictionary with all the courses we want to request
         course_ids = {}
-        for index, course in enumerate(courses):
-            course_ids.update({str(index): course.id})
+        for idx, course in enumerate(courses):
+            course_ids[str(idx)] = course.id
         return {'courseids': course_ids}
 
     @abstractmethod
@@ -74,15 +86,21 @@ class MoodleMod(metaclass=ABCMeta):
         pass
 
     @staticmethod
-    def set_file_type_if_empty(file_dict: Dict, type_to_set: str):
-        file_type = file_dict.get('type', '')
-        if file_type is None or file_type == '':
-            file_dict['type'] = type_to_set
+    def set_props_of_file(file_dict: Dict, **props):
+        for prop, value in props.items():
+            if (
+                file_dict.get(prop) is not None
+                and file_dict[prop] != ''
+                and file_dict[prop] != value
+                and (prop != 'filepath' or file_dict[prop] != '/')
+            ):
+                logging.debug('Overwriting %r with %r of file %s', prop, value, file_dict)
+            file_dict[prop] = value
 
     @classmethod
-    def set_files_types_if_empty(cls, files: List[Dict], type_to_set: str):
+    def set_props_of_files(cls, files: List[Dict], **props):
         for file_dict in files:
-            cls.set_file_type_if_empty(file_dict, type_to_set)
+            cls.set_props_of_file(file_dict, **props)
 
     @classmethod
     async def run_async_load_function_on_mod_entries(cls, entries: Dict[int, Dict[int, Dict]], load_function):

@@ -34,7 +34,7 @@ class AssignMod(MoodleMod):
             assign_files = assign.get('introfiles', [])
             assign_files += assign.get('introattachments', [])
 
-            self.set_files_types_if_empty(assign_files, 'assign_file')
+            self.set_props_of_files(assign_files, type='assign_file')
 
             assign_intro = assign.get('intro', '')
             if assign_intro != '':
@@ -68,6 +68,18 @@ class AssignMod(MoodleMod):
 
         await self.run_async_load_function_on_mod_entries(assignments, self.load_submissions)
 
+        # get submissions of all students for all assignments (only teachers can see that)
+        # assignments_with_all_submissions = (
+        #     await self.client.async_post(
+        #         'mod_assign_get_submissions', {'assignmentids': self.get_indexed_ids_of_mod_instances(assignments)}
+        #     )
+        # ).get('assignments', [])
+        # for assignment in assignments_with_all_submissions:
+        #     participants = await self.client.async_post(
+        #         'mod_assign_list_participants',
+        #         {'assignid': assignment['assignmentid'], 'groupid': 0, 'filter': '', 'includeenrolments': 0},
+        #     )
+
     async def load_submissions(self, assign: Dict):
         "Fetches for a given assign module the submissions"
         data = {'userid': self.user_id, 'assignid': assign.get('id', 0)}
@@ -76,10 +88,12 @@ class AssignMod(MoodleMod):
 
     def _get_files_of_submission(self, submission: Dict) -> List[Dict]:
         result = []
-        # get own submissions
+        # get own submission
         last_attempt = submission.get('lastattempt', {})
         last_submission = last_attempt.get('submission', {})
         last_team_submission = last_attempt.get('teamsubmission', {})
+        # We could also extract previous attempts, but for now we are only interested in last attempt
+        # Multiple attempts on assignments are very raw and therefore not implemented yet
 
         # get teachers feedback
         feedback = submission.get('feedback', {})
@@ -112,20 +126,25 @@ class AssignMod(MoodleMod):
         plugins = obj.get('plugins', [])
 
         for plugin in plugins:
+            file_path = '/'
+            if 'name' in plugin:
+                file_path = f"/{plugin['name']}/"
             for file_area in plugin.get('fileareas', []):
                 files = file_area.get('files', [])
-                self.set_files_types_if_empty(files, 'submission_file')
+                self.set_props_of_files(files, type='submission_file', filepath=file_path)
                 result += files
 
             for editor_field in plugin.get('editorfields', []):
                 filename = editor_field.get('description', '')
                 description = editor_field.get('text', '')
                 if filename != '' and description != '':
-                    description_file = {
-                        'filename': filename,
-                        'description': description,
-                        'type': 'description',
-                    }
-                    result.append(description_file)
+                    result.append(
+                        {
+                            'filename': filename,
+                            'description': description,
+                            'type': 'description',
+                            'filepath': file_path,
+                        }
+                    )
 
         return result

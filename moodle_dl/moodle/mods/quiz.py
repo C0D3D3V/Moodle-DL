@@ -31,7 +31,7 @@ class QuizMod(MoodleMod):
             course_id = quiz.get('course', 0)
 
             quiz_files = quiz.get('introfiles', [])
-            self.set_files_types_if_empty(quiz_files, 'quiz_introfile')
+            self.set_props_of_files(quiz_files, type='quiz_introfile')
 
             quiz_intro = quiz.get('intro', '')
             if quiz_intro != '':
@@ -117,7 +117,7 @@ class QuizMod(MoodleMod):
             quiz_html += question_html + '\n'
 
             question_files = question.get('responsefileareas', [])
-            self.set_files_types_if_empty(question_files, 'quiz_file')
+            self.set_props_of_files(question_files, type='quiz_file')
             result.extend(question_files)
 
         quiz_html += moodle_html_footer

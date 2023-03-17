@@ -30,7 +30,7 @@ class PageMod(MoodleMod):
 
             page_files = page.get('introfiles', [])
             page_files += page.get('contentfiles', [])
-            self.set_files_types_if_empty(page_files, 'page_file')
+            self.set_props_of_files(page_files, type='page_file')
 
             page_intro = page.get('intro', '')
             if page_intro != '':

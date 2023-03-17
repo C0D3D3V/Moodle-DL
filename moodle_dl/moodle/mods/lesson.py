@@ -32,7 +32,7 @@ class LessonMod(MoodleMod):
             course_id = lesson.get('course', 0)
             lesson_files = lesson.get('introfiles', [])
             lesson_files += lesson.get('mediafiles', [])
-            self.set_files_types_if_empty(lesson_files, 'lesson_introfile')
+            self.set_props_of_files(lesson_files, type='lesson_introfile')
 
             lesson_intro = lesson.get('intro', '')
             if lesson_intro != '':
@@ -96,7 +96,7 @@ class LessonMod(MoodleMod):
             return []
 
         page_files = page_result.get('contentfiles', [])
-        self.set_files_types_if_empty(page_files, 'lesson_file')
+        self.set_props_of_files(page_files, type='lesson_file')
 
         page_files.append(
             {

@@ -12,6 +12,7 @@ import requests
 
 from requests.exceptions import RequestException
 
+from moodle_dl.config import ConfigHelper
 from moodle_dl.types import MoodleURL, MoodleDlOpts
 from moodle_dl.utils import SslHelper, PathTools as PT, MoodleDLCookieJar
 
@@ -30,9 +31,10 @@ class RequestHelper:
     }
     MAX_RETRIES = 5
 
-    def __init__(self, opts: MoodleDlOpts, moodle_url: MoodleURL, token: str = ''):
+    def __init__(self, config: ConfigHelper, opts: MoodleDlOpts, moodle_url: MoodleURL, token: str):
         self.token = token
         self.moodle_url = moodle_url
+        self.config = config
         self.opts = opts
 
         self.url_base = moodle_url.url_base
@@ -43,7 +45,7 @@ class RequestHelper:
 
         self.log_responses_to = None
         if opts.log_responses:
-            self.log_responses_to = PT.make_path(opts.path, 'responses.log')
+            self.log_responses_to = PT.make_path(config.get_misc_files_path(), 'responses.log')
             with open(self.log_responses_to, 'w', encoding='utf-8') as response_log_file:
                 response_log_file.write('JSON Log:\n\n')
 

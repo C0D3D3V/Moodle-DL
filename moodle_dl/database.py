@@ -4,6 +4,7 @@ import logging
 from sqlite3 import Error
 from typing import Dict, List
 
+from moodle_dl.config import ConfigHelper
 from moodle_dl.types import File, Course, MoodleDlOpts
 from moodle_dl.utils import PathTools as PT
 
@@ -14,14 +15,14 @@ class StateRecorder:
     state against the previous.
     """
 
-    def __init__(self, opts: MoodleDlOpts):
+    def __init__(self, config: ConfigHelper, opts: MoodleDlOpts):
         """
         Initiates the database.
         If no database exists yet, a new one is created.
         @param opts: Moodle-dl options
         """
         self.opts = opts
-        self.db_file = PT.make_path(opts.path, 'moodle_state.db')
+        self.db_file = PT.make_path(config.get_misc_files_path(), 'moodle_state.db')
 
         try:
             conn = sqlite3.connect(self.db_file)
@@ -716,9 +717,7 @@ class StateRecorder:
         data_new.update(file.getMap())
 
         if file.old_file is not None:
-            # insert a new file,
-            # but it is already notified because the same file already exists
-            # as moved
+            # insert a new file, but it is already notified because the same file already exists as moved
             data_new.update(
                 {'old_file_id': file.old_file.file_id, 'modified': 0, 'moved': 0, 'deleted': 0, 'notified': 1}
             )
@@ -736,8 +735,7 @@ class StateRecorder:
             )
         else:
             # this should never happen, but the old file is not saved in the
-            # file descriptor, so we need to inform about the new file
-            # notified = 0
+            # file descriptor, so we need to inform about the new file notified = 0
             data_new.update({'modified': 0, 'deleted': 0, 'moved': 0, 'notified': 0})
             cursor.execute(File.INSERT, data_new)
 

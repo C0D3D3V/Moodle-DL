@@ -76,8 +76,8 @@ class MoodleWizard:
                 moodle_password = getpass('Password for Moodle [no output]:   ')
 
             try:
-                moodle_token, moodle_privatetoken = MoodleService.obtain_login_token(
-                    self.opts, moodle_username, moodle_password, moodle_url
+                moodle_token, moodle_privatetoken = MoodleService(self.config, self.opts).obtain_login_token(
+                    moodle_username, moodle_password, moodle_url
                 )
 
             except RequestRejectedError as error:

@@ -29,7 +29,7 @@ class ForumMod(MoodleMod):
             course_id = forum.get('course', 0)
             forum_module_id = forum.get('cmid', 0)
             forum_files = forum.get('introfiles', [])
-            self.set_files_types_if_empty(forum_files, 'forum_introfile')
+            self.set_props_of_files(forum_files, type='forum_introfile')
 
             forum_intro = forum.get('intro', '')
             if forum_intro != '':
@@ -185,9 +185,7 @@ class ForumMod(MoodleMod):
                 }
             )
 
-            for post_file in post_files:
-                self.set_file_type_if_empty(post_file, 'forum_file')
-                post_file['filepath'] = post_path
+            self.set_props_of_files(post_files, type='forum_file', filepath=post_path)
 
             result.extend(post_files)
 

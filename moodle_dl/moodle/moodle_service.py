@@ -21,11 +21,10 @@ class MoodleService:
         self.config = config
         self.opts = opts
 
-    @staticmethod
-    def obtain_login_token(opts, username: str, password: str, moodle_url: MoodleURL) -> str:
+    def obtain_login_token(self, username: str, password: str, moodle_url: MoodleURL) -> str:
         "Send the login credentials to the Moodle-System and extracts the resulting Login-Token"
         login_data = {'username': username, 'password': password, 'service': 'moodle_mobile_app'}
-        response = RequestHelper(opts, moodle_url).get_login(login_data)
+        response = RequestHelper(self.config, self.opts, moodle_url, None).get_login(login_data)
 
         if 'token' not in response:
             # = we didn't get an error page (checked by the RequestHelper) but
@@ -98,13 +97,13 @@ class MoodleService:
         privatetoken = self.config.get_privatetoken()
         moodle_url = self.config.get_moodle_URL()
 
-        request_helper = RequestHelper(self.opts, moodle_url, token)
+        request_helper = RequestHelper(self.config, self.opts, moodle_url, token)
         core_handler = CoreHandler(request_helper)
         user_id, version = self.get_user_id_and_version(core_handler)
 
         cookie_handler = None
         if self.config.get_download_also_with_cookie():
-            cookie_handler = CookieHandler(request_helper, version, self.opts)
+            cookie_handler = CookieHandler(request_helper, version, self.config, self.opts)
             cookie_handler.check_and_fetch_cookies(privatetoken, user_id)
 
         courses = self.get_courses_list(core_handler, user_id)

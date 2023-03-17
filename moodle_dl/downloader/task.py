@@ -68,7 +68,7 @@ class Task:
         self.thread_pool = thread_pool
         self.callback = callback
 
-        self.destination = self.gen_path(options.global_opts.path, course, file)
+        self.destination = self.gen_path(options.download_path, course, file)
         self.filename = PT.to_valid_name(self.file.content_filename, is_file=True)
         self.status = TaskStatus()
 

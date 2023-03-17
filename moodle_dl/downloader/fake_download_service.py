@@ -39,7 +39,7 @@ class FakeDownloadService:
         for course in self.courses:
             for file in course.files:
                 if file.deleted is False:
-                    save_destination = Task.gen_path(self.opts.path, course, file)
+                    save_destination = Task.gen_path(self.config.get_download_path(), course, file)
                     filename = PT.to_valid_name(file.content_filename, is_file=True)
 
                     if file.content_type == 'description':

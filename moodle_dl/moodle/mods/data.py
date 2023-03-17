@@ -27,7 +27,7 @@ class DataMod(MoodleMod):
         for database in databases:
             course_id = database.get('course', 0)
             database_files = database.get('introfiles', [])
-            self.set_files_types_if_empty(database_files, 'database_introfile')
+            self.set_props_of_files(database_files, type='database_introfile')
 
             database_intro = database.get('intro', '')
             if database_intro != '':
@@ -88,7 +88,7 @@ class DataMod(MoodleMod):
                     filename = entry_file.get('filename', '')
                     if filename.startswith('thumb_'):
                         continue
-                    cls.set_file_type_if_empty(entry_file, 'database_file')
+                    cls.set_props_of_file(entry_file, type='database_file')
                     result.append(entry_file)
 
         return result

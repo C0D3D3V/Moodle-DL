@@ -604,6 +604,15 @@ class PathTools:
     def make_dirs(path_to_dir: str):
         Path(path_to_dir).mkdir(parents=True, exist_ok=True)
 
+    @classmethod
+    def win_max_path_length_workaround(cls, path):
+        # Working around MAX_PATH limitation on Windows (see
+        # http://msdn.microsoft.com/en-us/library/windows/desktop/aa365247(v=vs.85).aspx)
+        if os.name == 'nt':
+            abs_file_path = cls.get_abs_path(path)
+            path = '\\\\?\\' + abs_file_path
+        return path
+
     @staticmethod
     def get_user_config_directory():
         """Returns a platform-specific root directory for user config settings."""
@@ -720,7 +729,7 @@ class PathTools:
 
     @staticmethod
     def get_cookies_path(storage_path: str) -> str:
-        return str(Path(storage_path) / 'Cookies.txt')
+        return PathTools.make_path(storage_path, 'Cookies.txt')
 
 
 class SslHelper:

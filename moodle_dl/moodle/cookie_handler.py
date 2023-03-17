@@ -3,6 +3,7 @@ import logging
 
 from typing import Dict
 
+from moodle_dl.config import ConfigHelper
 from moodle_dl.moodle.request_helper import RequestHelper, RequestRejectedError
 from moodle_dl.types import MoodleDlOpts
 from moodle_dl.utils import PathTools as PT
@@ -13,10 +14,12 @@ class CookieHandler:
     Fetches and saves the cookies of Moodle.
     """
 
-    def __init__(self, request_helper: RequestHelper, version: int, opts: MoodleDlOpts):
+    def __init__(self, request_helper: RequestHelper, version: int, config: ConfigHelper, opts: MoodleDlOpts):
         self.client = request_helper
         self.version = version
-        self.cookies_path = PT.get_cookies_path(opts.path)
+        self.config = config
+        self.opts = opts
+        self.cookies_path = PT.get_cookies_path(config.get_misc_files_path())
 
         self.moodle_test_url = self.client.url_base
 

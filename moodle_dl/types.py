@@ -276,6 +276,7 @@ class MoodleDlOpts:
     verbose: bool
     quiet: bool
     log_to_file: bool
+    log_file_path: str
 
 
 class TaskState(Enum):
@@ -335,6 +336,7 @@ class DownloadOptions:
     video_passwords: Dict
     external_file_downloaders: Dict
     restricted_filenames: bool
+    download_path: str
     global_opts: MoodleDlOpts
 
 

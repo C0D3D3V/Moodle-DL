@@ -16,16 +16,17 @@ class ConfigHelper:
 
         pass
 
-    def __init__(self, storage_path: str):
+    def __init__(self, opts: MoodleDlOpts):
         self._whole_config = {}
-        self.storage_path = storage_path
-        self.config_path = str(Path(storage_path) / 'config.json')
+        self.opts = opts
+        self.config_path = str(Path(opts.path) / 'config.json')
 
     def is_present(self) -> bool:
         # Tests if a configuration file exists
         return os.path.isfile(self.config_path)
 
     def load(self):
+        # TODO: Load config into dataclass, so we can access that class instead of using getters
         # Opens the configuration file and parse it to a JSON object
         try:
             with open(self.config_path, 'r', encoding='utf-8') as config_file:
@@ -35,6 +36,7 @@ class ConfigHelper:
             raise ConfigHelper.NoConfigError(f'Configuration could not be loaded from {self.config_path}\n{err_load!s}')
 
     def _save(self):
+        # TODO: Use dataclass and write that back to file, so that all options are always present
         config_formatted = json.dumps(self._whole_config, indent=4)
         # Saves the JSON object back to file
         with open(self.config_path, 'w+', encoding='utf-8') as config_file:
@@ -172,7 +174,7 @@ class ConfigHelper:
 
     def get_cookies_text(self) -> str:
         # return the text to the cookies file, if it exists
-        cookies_path = PT.get_cookies_path(self.storage_path)
+        cookies_path = PT.get_cookies_path(self.get_misc_files_path())
         if os.path.isfile(cookies_path):
             with open(cookies_path, 'r', encoding='utf-8') as cookie_file:
                 return cookie_file.read()
@@ -216,6 +218,7 @@ class ConfigHelper:
             video_passwords=self.get_video_passwords(),
             external_file_downloaders=self.get_external_file_downloaders(),
             restricted_filenames=self.get_restricted_filenames(),
+            download_path=self.get_download_path(),
             global_opts=opts,
         )
 
@@ -226,6 +229,14 @@ class ConfigHelper:
     def get_use_http(self) -> bool:
         # return a stored boolean if http should be used instead of https
         return self.get_property_or('use_http', False)
+
+    def get_download_path(self) -> str:
+        # return path of download location
+        return self.get_property_or('download_path', self.opts.path)
+
+    def get_misc_files_path(self) -> str:
+        # return path of misc files
+        return self.get_property_or('misc_files_path', self.opts.path)
 
     # ---------------------------- SETTERS ------------------------------------
 

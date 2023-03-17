@@ -16,7 +16,9 @@ class ConfigWizard:
         self.config = config
         self.opts = opts
 
-        self.core_handler = CoreHandler(RequestHelper(opts, self.config.get_moodle_URL(), self.config.get_token()))
+        self.core_handler = CoreHandler(
+            RequestHelper(config, opts, self.config.get_moodle_URL(), self.config.get_token())
+        )
 
     def get_user_id_and_version(self) -> Tuple[int, int]:
         user_id, version = self.config.get_userid_and_version()
@@ -96,7 +98,7 @@ class ConfigWizard:
         try:
             user_id, _ = self.get_user_id_and_version()
             courses = self.core_handler.fetch_courses(user_id)
-            log_all_courses_to = PT.make_path(self.opts.path, 'all_courses.json')
+            log_all_courses_to = PT.make_path(self.config.get_misc_files_path(), 'all_courses.json')
             all_visible_courses = self.core_handler.fetch_all_visible_courses(log_all_courses_to)
 
         except (RequestRejectedError, ValueError, RuntimeError, ConnectionError) as error:

@@ -27,7 +27,7 @@ class FolderMod(MoodleMod):
             course_id = folder.get('course', 0)
             folder_files = folder.get('introfiles', [])
             folder_time_modified = folder.get('timemodified', 0)
-            self.set_files_types_if_empty(folder_files, 'folder_file')
+            self.set_props_of_files(folder_files, type='folder_file')
 
             folder_intro = folder.get('intro', '')
             if folder_intro != '':

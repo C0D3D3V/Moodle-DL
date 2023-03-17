@@ -85,7 +85,7 @@ def run_main(config: ConfigHelper, opts: MoodleDlOpts):
         moodle = MoodleService(config, opts)
 
         logging.debug('Checking for changes for the configured Moodle-Account....')
-        database = StateRecorder(opts)
+        database = StateRecorder(config, opts)
         changed_courses = asyncio.run(moodle.fetch_state(database))
 
         if opts.log_responses:
@@ -132,7 +132,7 @@ def run_main(config: ConfigHelper, opts: MoodleDlOpts):
 
 def setup_logger(opts: MoodleDlOpts):
     file_log_handler = RotatingFileHandler(
-        PT.make_path(opts.path, 'MoodleDL.log'),
+        PT.make_path(opts.log_file_path, 'MoodleDL.log'),
         mode='a',
         maxBytes=1 * 1024 * 1024,
         backupCount=2,
@@ -187,25 +187,12 @@ def setup_logger(opts: MoodleDlOpts):
         urllib3.disable_warnings()
 
 
-def _dir_path(path):
-    if os.path.isdir(path):
-        return path
-    raise argparse.ArgumentTypeError(f'"{str(path)}" is not a valid path. Make sure the directory exists.')
-
-
-def win_max_path_length_workaround(path):
-    # Working around MAX_PATH limitation on Windows (see
-    # http://msdn.microsoft.com/en-us/library/windows/desktop/aa365247(v=vs.85).aspx)
-    if os.name == 'nt':
-        abs_file_path = PT.get_abs_path(path)
-        path = '\\\\?\\' + abs_file_path
-        logging.debug("Using windows max path length workaround")
-    else:
-        logging.info("You are not on Windows, you don't need to use this workaround")
-    return path
-
-
 def get_parser():
+    def _dir_path(path):
+        if os.path.isdir(path):
+            return path
+        raise argparse.ArgumentTypeError(f'"{str(path)}" is not a valid path. Make sure the directory exists.')
+
     parser = argparse.ArgumentParser(
         description=('Moodle-DL helps you download all the course files from your Moodle account.')
     )
@@ -491,27 +478,40 @@ def get_parser():
         help='Log all output additionally to a log file called MoodleDL.log',
     )
 
+    parser.add_argument(
+        '-lfp',
+        '--log-file-path',
+        dest='log_file_path',
+        default=None,
+        type=_dir_path,
+        help=(
+            'Sets the location of the log files created with --log-to-file. PATH must be an existing directory'
+            + ' in which you have read and write access. (default: same as --path)'
+        ),
+    )
+
     return parser
 
 
-def pre_process_opts(opts: MoodleDlOpts):
+def post_process_opts(opts: MoodleDlOpts):
+    if opts.log_file_path is None:
+        opts.log_file_path = opts.path
+
     if opts.max_path_length_workaround:
-        opts.path = win_max_path_length_workaround(opts.path)
+        opts.path = PT.win_max_path_length_workaround(opts.path)
 
     # Max 32 yt-dlp threads
     opts.max_parallel_yt_dlp = min(opts.max_parallel_downloads, min(32, opts.max_parallel_yt_dlp))
+    return opts
 
 
 # --- called at the program invocation: -------------------------------------
 def main(args=None):
-    """The main routine."""
     just_fix_windows_console()
-    parser = get_parser()
-    opts = MoodleDlOpts(**vars(parser.parse_args(args)))
+    opts = post_process_opts(MoodleDlOpts(**vars(get_parser().parse_args(args))))
     setup_logger(opts)
-    pre_process_opts(opts)
 
-    config = ConfigHelper(opts.path)
+    config = ConfigHelper(opts)
     if opts.init:
         init_config(config, opts)
         sys.exit(0)
@@ -525,15 +525,15 @@ def main(args=None):
 
     try:
         if not check_debug():
-            ProcessLock.lock(opts.path)
+            ProcessLock.lock(config.get_misc_files_path())
 
         choose_task(config, opts)
 
         logging.info('All done. Exiting..')
-        ProcessLock.unlock(opts.path)
+        ProcessLock.unlock(config.get_misc_files_path())
     except BaseException as base_err:  # pylint: disable=broad-except
         if not isinstance(base_err, ProcessLock.LockError):
-            ProcessLock.unlock(opts.path)
+            ProcessLock.unlock(config.get_misc_files_path())
 
         if opts.verbose or check_debug():
             logging.error(traceback.format_exc(), extra={'exception': base_err})
