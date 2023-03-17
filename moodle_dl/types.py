@@ -336,6 +336,7 @@ class DownloadOptions:
     video_passwords: Dict
     external_file_downloaders: Dict
     restricted_filenames: bool
+    write_links: Dict
     download_path: str
     global_opts: MoodleDlOpts
 

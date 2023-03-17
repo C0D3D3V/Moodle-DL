@@ -79,6 +79,39 @@ def get_nested(from_dict: Dict, key: str, default=None):
         return default
 
 
+# Templates for internet shortcut files, which are plain text files.
+DOT_URL_LINK_TEMPLATE = '''\
+[InternetShortcut]
+URL=%(url)s
+'''
+
+DOT_WEBLOC_LINK_TEMPLATE = '''\
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+\t<key>URL</key>
+\t<string>%(url)s</string>
+</dict>
+</plist>
+'''
+
+DOT_DESKTOP_LINK_TEMPLATE = '''\
+[Desktop Entry]
+Encoding=UTF-8
+Name=%(filename)s
+Type=Link
+URL=%(url)s
+Icon=text-html
+'''
+
+LINK_TEMPLATES = {
+    'url': DOT_URL_LINK_TEMPLATE,
+    'desktop': DOT_DESKTOP_LINK_TEMPLATE,
+    'webloc': DOT_WEBLOC_LINK_TEMPLATE,
+}
+
+
 KNOWN_EXTENSIONS = (
     ['avi', 'flv', 'mkv', 'mov', 'mp4', 'webm', '3g2', '3gp', 'f4v', 'mk3d', 'divx', 'mpg', 'ogv', 'm4v']
     + ['wmv', 'aiff', 'alac', 'flac', 'm4a', 'mka', 'mp3', 'ogg', 'opus', 'wav', 'aac', 'ape', 'asf', 'f4a', 'f4b']
@@ -582,7 +615,7 @@ class PathTools:
 
     @staticmethod
     def remove_file(file_path: str):
-        if os.path.exists(file_path):
+        if file_path is not None and os.path.exists(file_path):
             os.unlink(file_path)
 
     @staticmethod
@@ -608,7 +641,7 @@ class PathTools:
     def win_max_path_length_workaround(cls, path):
         # Working around MAX_PATH limitation on Windows (see
         # http://msdn.microsoft.com/en-us/library/windows/desktop/aa365247(v=vs.85).aspx)
-        if os.name == 'nt':
+        if os.name == 'nt' or sys.platform in ['win32', 'cygwin']:
             abs_file_path = cls.get_abs_path(path)
             path = '\\\\?\\' + abs_file_path
         return path

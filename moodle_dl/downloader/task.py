@@ -2,7 +2,6 @@ import asyncio
 import functools
 import logging
 import os
-import platform
 import posixpath
 import re
 import shlex
@@ -26,16 +25,25 @@ import html2text
 import yt_dlp
 
 from moodle_dl.downloader.extractors import add_additional_extractors
-from moodle_dl.types import Course, File, DownloadOptions, TaskStatus, DlEvent, TaskState, HeadInfo
+from moodle_dl.types import (
+    Course,
+    DlEvent,
+    DownloadOptions,
+    File,
+    HeadInfo,
+    TaskState,
+    TaskStatus,
+)
 from moodle_dl.utils import (
-    format_bytes,
-    timeconvert,
-    SslHelper,
-    PathTools as PT,
-    MoodleDLCookieJar,
-    format_seconds,
-    Timer,
     convert_to_aiohttp_cookie_jar,
+    format_bytes,
+    format_seconds,
+    LINK_TEMPLATES,
+    MoodleDLCookieJar,
+    PathTools as PT,
+    SslHelper,
+    timeconvert,
+    Timer,
 )
 
 
@@ -573,36 +581,32 @@ class Task:
     async def create_shortcut(self):
         "Create a Shortcut to a URL"
         logging.debug('[%d] Creating a shortcut', self.task_id)
-        async with aiofiles.open(self.file.saved_to, 'w+', encoding='utf-8') as shortcut:
-            if os.name == 'nt' or platform.system() == "Darwin":
-                await shortcut.write('[InternetShortcut]' + os.linesep)
-                await shortcut.write('URL=' + self.file.content_fileurl + os.linesep)
-            else:
-                await shortcut.write('[Desktop Entry]' + os.linesep)
-                await shortcut.write('Encoding=UTF-8' + os.linesep)
-                await shortcut.write('Name=' + self.filename + os.linesep)
-                await shortcut.write('Type=Link' + os.linesep)
-                await shortcut.write('URL=' + self.file.content_fileurl + os.linesep)
-                await shortcut.write('Icon=text-html' + os.linesep)
-                await shortcut.write('Name[en_US]=' + self.filename + os.linesep)
+        PT.remove_file(self.file.saved_to)
+        for link_type, should_write in self.opts.write_links.items():
+            if should_write:
+                self.set_path(True, link_type)
+                async with aiofiles.open(
+                    self.file.saved_to, 'w+', encoding='utf-8', newline='\r\n' if link_type == 'url' else '\n'
+                ) as shortcut:
+                    template_vars = {'url': self.file.content_fileurl}
+                    if link_type == 'desktop':
+                        template_vars['filename'] = self.file.saved_to[: -(len(link_type) + 1)]
+                    await shortcut.write(LINK_TEMPLATES[link_type] % template_vars)
 
-    def set_path(self, ignore_attributes: bool = False):
+    def set_path(self, ignore_attributes: bool = False, force_file_extension=None):
         """Set the path where a file should be created. The file type is used to set the needed file extension.
         An empty target file is created which may need to be cleaned up.
 
         @param ignore_attributes: If the file attributes should be ignored.
         """
-
         if self.file.content_type == 'description' and not ignore_attributes:
             self.file.saved_to = str(Path(self.destination) / (self.filename + '.md'))
 
         elif self.file.content_type == 'html' and not ignore_attributes:
             self.file.saved_to = str(Path(self.destination) / (self.filename + '.html'))
 
-        elif self.file.module_modname.startswith('url') and not ignore_attributes:
-            self.file.saved_to = str(Path(self.destination) / (self.filename + '.desktop'))
-            if os.name == 'nt' or platform.system() == "Darwin":
-                self.file.saved_to = str(Path(self.destination) / (self.filename + '.URL'))
+        elif force_file_extension is not None:
+            self.file.saved_to = str(Path(self.destination) / (self.filename + f'.{force_file_extension}'))
 
         else:  # normal path
             self.file.saved_to = str(Path(self.destination) / self.filename)

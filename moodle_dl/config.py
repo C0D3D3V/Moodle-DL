@@ -1,5 +1,6 @@
-import os
 import json
+import os
+import sys
 
 from pathlib import Path
 from typing import Dict, List, Tuple
@@ -206,8 +207,24 @@ class ConfigHelper:
         # return if files for which a cookie is required should be downloaded
         return self.get_property_or('download_also_with_cookie', False)
 
+    def get_write_links(self) -> Dict:
+        # returns what kind of shortcuts should be created
+        write_links = {
+            'url': self.get_property_or('write_url_link', False),
+            'webloc': self.get_property_or('write_webloc_link', False),
+            'desktop': self.get_property_or('write_desktop_link', False),
+        }
+        if self.get_property_or('write_link', True):
+            link_type = (
+                'webloc' if sys.platform == 'darwin' else 'desktop' if sys.platform.startswith('linux') else 'url'
+            )
+            write_links[link_type] = True
+
+        return write_links
+
     def get_download_options(self, opts: MoodleDlOpts) -> DownloadOptions:
         # return the option dictionary for downloading files
+
         return DownloadOptions(
             token=self.get_token(),
             download_linked_files=self.get_download_linked_files(),
@@ -218,6 +235,7 @@ class ConfigHelper:
             video_passwords=self.get_video_passwords(),
             external_file_downloaders=self.get_external_file_downloaders(),
             restricted_filenames=self.get_restricted_filenames(),
+            write_links=self.get_write_links(),
             download_path=self.get_download_path(),
             global_opts=opts,
         )
