@@ -1,8 +1,12 @@
+import logging
+
 from typing import Dict, List
 
 from moodle_dl.config import ConfigHelper
 from moodle_dl.moodle.mods import MoodleMod
+from moodle_dl.moodle.request_helper import RequestRejectedError
 from moodle_dl.types import Course, File
+from moodle_dl.utils import PathTools as PT
 
 
 class AssignMod(MoodleMod):
@@ -26,6 +30,7 @@ class AssignMod(MoodleMod):
             result[course_id] = self.extract_assign_modules(assign_course.get('assignments', []))
 
         await self.add_submissions(result)
+        await self.add_foreign_submissions(result)
         return result
 
     def extract_assign_modules(self, assignments: List[Dict]) -> Dict[int, Dict]:
@@ -68,17 +73,94 @@ class AssignMod(MoodleMod):
 
         await self.run_async_load_function_on_mod_entries(assignments, self.load_submissions)
 
+    async def add_foreign_submissions(self, assignments: Dict[int, Dict[int, Dict]]):
+        """
+        Fetches for the assignments list additionally the submissions of other students
+        @param assignments: Dictionary of all assignments, indexed by courses, then module id
+        """
+        if not self.config.get_download_submissions():
+            return
+
+        if self.version < 2013051400:  # 2.5
+            return
+
         # get submissions of all students for all assignments (only teachers can see that)
-        # assignments_with_all_submissions = (
-        #     await self.client.async_post(
-        #         'mod_assign_get_submissions', {'assignmentids': self.get_indexed_ids_of_mod_instances(assignments)}
-        #     )
-        # ).get('assignments', [])
-        # for assignment in assignments_with_all_submissions:
-        #     participants = await self.client.async_post(
-        #         'mod_assign_list_participants',
-        #         {'assignid': assignment['assignmentid'], 'groupid': 0, 'filter': '', 'includeenrolments': 0},
-        #     )
+        assignments_with_all_submissions = (
+            await self.client.async_post(
+                'mod_assign_get_submissions', {'assignmentids': self.get_indexed_ids_of_mod_instances(assignments)}
+            )
+        ).get('assignments', [])
+
+        if len(assignments_with_all_submissions) == 0:
+            return
+
+        for course_id, modules in assignments.items():
+            found_assignment_in_course = False
+            for assignment in assignments_with_all_submissions:
+                for _module_id, module in modules.items():
+                    if assignment['assignmentid'] == module['id']:
+                        found_assignment_in_course = True
+                        break
+                if found_assignment_in_course:
+                    break
+            if not found_assignment_in_course:
+                continue
+            # TODO: Extract the API call to get enrolled users, if we need the information also in another mod
+            try:
+                course_users = await self.client.async_post('core_enrol_get_enrolled_users', {'courseid': course_id})
+            except RequestRejectedError:
+                logging.debug("No access rights for enrolled users list of course %d", course_id)
+                return
+
+            for assignment in assignments_with_all_submissions:
+                found_module = None
+                for _module_id, module in modules.items():
+                    if assignment['assignmentid'] == module['id']:
+                        found_module = module
+                        break
+                if found_module is None:
+                    continue
+
+                for submission in assignment.get('submissions', []):
+                    user_id = submission.get('userid', 0)
+                    group_id = submission.get('groupid', 0)
+                    subfolder = None
+                    if user_id == 0:
+                        # Its a group submission
+                        found_users = []
+                        group_name = None
+                        for user in course_users:
+                            for group in user.get('groups', []):
+                                if group.get('id', 0) == group_id:
+                                    found_users.append(user)
+                                    if group_name is None:
+                                        group_name = group.get('name')
+                                    break
+                        if len(found_users) == 0:
+                            # should not happen
+                            continue
+                        all_usernames = ' & '.join(
+                            (f"{user.get('fullname')} ({user.get('idnumber') or user.get('id', 0)})")
+                            for user in found_users
+                        )
+                        subfolder = PT.to_valid_name(
+                            f"{group_name or 'Unnamed group'} ({group_id}): {all_usernames}", is_file=False
+                        )
+                    else:
+                        # Its a user submission
+                        found_user = None
+                        for user in course_users:
+                            if user.get('id', 0) == user_id:
+                                found_user = user
+                                break
+                        if found_user is None:
+                            # should not happen
+                            continue
+                        subfolder = PT.to_valid_name(
+                            f"{found_user.get('fullname')} ({found_user.get('idnumber') or found_user.get('id', 0)})",
+                            is_file=False,
+                        )
+                    found_module['files'] += self._get_files_of_plugins(submission, f'/all_submissions/{subfolder}/')
 
     async def load_submissions(self, assign: Dict):
         "Fetches for a given assign module the submissions"
@@ -98,37 +180,38 @@ class AssignMod(MoodleMod):
         # get teachers feedback
         feedback = submission.get('feedback', {})
 
-        result += self._get_files_of_plugins(last_submission)
-        result += self._get_files_of_plugins(last_team_submission)
-        result += self._get_files_of_plugins(feedback)
-        result += self._get_grade_of_feedback(feedback)
+        base_file_path = '/submissions/'
+        result += self._get_files_of_plugins(last_submission, base_file_path)
+        result += self._get_files_of_plugins(last_team_submission, base_file_path)
+        result += self._get_files_of_plugins(feedback, base_file_path)
+        result += self._get_grade_of_feedback(feedback, base_file_path)
 
         return result
 
-    def _get_grade_of_feedback(self, feedback: Dict) -> List[Dict]:
-        grade_for_display = feedback.get('gradefordisplay', "")
-        graded_date = feedback.get('gradeddate', 0)
-        if graded_date is None or grade_for_display is None or graded_date == 0 or grade_for_display == "":
+    def _get_grade_of_feedback(self, feedback: Dict, base_file_path: str) -> List[Dict]:
+        grade_for_display = feedback.get('gradefordisplay')
+        graded_date = feedback.get('gradeddate')
+        if graded_date is None or grade_for_display is None:
             return []
 
         return [
             {
                 'filename': 'grade',
-                'filepath': '/',
+                'filepath': base_file_path,
                 'timemodified': graded_date,
                 'description': grade_for_display,
                 'type': 'description',
             }
         ]
 
-    def _get_files_of_plugins(self, obj: Dict) -> List[Dict]:
+    def _get_files_of_plugins(self, obj: Dict, base_file_path: str) -> List[Dict]:
         result = []
         plugins = obj.get('plugins', [])
 
         for plugin in plugins:
-            file_path = '/'
+            file_path = base_file_path
             if 'name' in plugin:
-                file_path = f"/{plugin['name']}/"
+                file_path = PT.make_path(base_file_path, PT.to_valid_name(plugin['name'], is_file=False))
             for file_area in plugin.get('fileareas', []):
                 files = file_area.get('files', [])
                 self.set_props_of_files(files, type='submission_file', filepath=file_path)

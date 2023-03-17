@@ -11,7 +11,7 @@ class DatabaseManager:
     def __init__(self, config: ConfigHelper, opts: MoodleDlOpts):
         self.config = config
         self.opts = opts
-        self.state_recorder = StateRecorder(opts)
+        self.state_recorder = StateRecorder(config, opts)
 
     def interactively_manage_database(self):
         stored_files = self.state_recorder.get_stored_files()

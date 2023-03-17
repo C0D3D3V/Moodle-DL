@@ -96,11 +96,9 @@ class Task:
         # If the file is located in a folder or in an assignment,
         # it should be saved in a sub-folder (with the name of the module).
         if file.module_modname.endswith(('assign', 'data', 'folder', 'forum', 'lesson', 'page', 'quiz', 'workshop')):
-            file_path = file.content_filepath
-            if file.content_type == 'submission_file':
-                file_path = os.path.join('/submissions/', file_path.strip('/'))
-
-            return PT.path_of_file_in_module(storage_path, course_name, file.section_name, file.module_name, file_path)
+            return PT.path_of_file_in_module(
+                storage_path, course_name, file.section_name, file.module_name, file.content_filepath
+            )
         return PT.path_of_file(storage_path, course_name, file.section_name, file.content_filepath)
 
     def add_token_to_url(self, url: str) -> str:
