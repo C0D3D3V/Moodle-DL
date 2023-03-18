@@ -102,6 +102,11 @@ If you need help configuring telegram notifications [click here](https://github.
 [edu-sync](https://github.com/mkroening/edu-sync)
 - Is built in Rust and therefore quite fast
 
+[tum-moodle-downloader](https://github.com/omareldeeb/tum-moodle-downloader)
+- Uses a web scraper instead of the moodle mobile API
+- It has some interesting commands implemented to download only specific content
+- Is only built for the moodle of the Munich University of Technology (TUM)
+
 [moodle-buddy](https://github.com/marcelreppi/moodle-buddy)
 - Plugin for Firefox and Chrome
 - Mass file download and notification functionality for the Moodle

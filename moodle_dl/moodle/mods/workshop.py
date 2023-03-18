@@ -208,7 +208,8 @@ class WorkshopMod(MoodleMod):
 
             submission_files = submission.get('contentfiles', [])
             submission_files += submission.get('attachmentfiles', [])
-            self.set_props_of_files(submission_files, type='workshop_file', filepath=filepath)
+            self.set_props_of_files(submission_files, type='workshop_file')
+            self.set_base_file_path_of_files(submission_files, filepath)
 
             submission_files += submission.get('files', [])  # Already pares files
 

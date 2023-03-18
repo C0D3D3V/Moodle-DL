@@ -8,7 +8,7 @@ from typing import Dict, List
 from moodle_dl.config import ConfigHelper
 from moodle_dl.moodle.request_helper import RequestHelper
 from moodle_dl.types import Course, File
-from moodle_dl.utils import get_nested, run_with_final_message
+from moodle_dl.utils import get_nested, run_with_final_message, PathTools as PT
 
 
 class MoodleMod(metaclass=ABCMeta):
@@ -101,6 +101,19 @@ class MoodleMod(metaclass=ABCMeta):
     def set_props_of_files(cls, files: List[Dict], **props):
         for file_dict in files:
             cls.set_props_of_file(file_dict, **props)
+
+    @staticmethod
+    def set_base_file_path_of_file(file_dict: Dict, base_file_path: str):
+        old_file_path = file_dict.get('filepath')
+        if old_file_path is not None and old_file_path != '/':
+            file_dict['filepath'] = PT.make_path(base_file_path, old_file_path.strip('/'))
+        else:
+            file_dict['filepath'] = base_file_path
+
+    @classmethod
+    def set_base_file_path_of_files(cls, files: List[Dict], base_file_path: str):
+        for file_dict in files:
+            cls.set_base_file_path_of_file(file_dict, base_file_path)
 
     @classmethod
     async def run_async_load_function_on_mod_entries(cls, entries: Dict[int, Dict[int, Dict]], load_function):

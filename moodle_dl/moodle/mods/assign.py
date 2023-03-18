@@ -209,12 +209,11 @@ class AssignMod(MoodleMod):
         plugins = obj.get('plugins', [])
 
         for plugin in plugins:
-            file_path = base_file_path
-            if 'name' in plugin:
-                file_path = PT.make_path(base_file_path, PT.to_valid_name(plugin['name'], is_file=False))
+            # We could use the plugin name in the file structure, but it is most of the time unnecessary information
             for file_area in plugin.get('fileareas', []):
                 files = file_area.get('files', [])
-                self.set_props_of_files(files, type='submission_file', filepath=file_path)
+                self.set_props_of_files(files, type='submission_file')
+                self.set_base_file_path_of_files(files, base_file_path)
                 result += files
 
             for editor_field in plugin.get('editorfields', []):
@@ -226,7 +225,7 @@ class AssignMod(MoodleMod):
                             'filename': filename,
                             'description': description,
                             'type': 'description',
-                            'filepath': file_path,
+                            'filepath': base_file_path,
                         }
                     )
 

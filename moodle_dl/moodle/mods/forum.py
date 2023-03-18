@@ -185,7 +185,8 @@ class ForumMod(MoodleMod):
                 }
             )
 
-            self.set_props_of_files(post_files, type='forum_file', filepath=post_path)
+            self.set_props_of_files(post_files, type='forum_file')
+            self.set_base_file_path_of_files(post_files, post_path)
 
             result.extend(post_files)
 
