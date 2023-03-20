@@ -1,17 +1,8 @@
 import json
-
-from urllib.parse import (
-    parse_qs,
-    urlencode,
-    urljoin,
-    urlparse,
-    urlunparse,
-)
+from urllib.parse import parse_qs, urlencode, urljoin, urlparse, urlunparse
 
 from yt_dlp.extractor.common import InfoExtractor
-from yt_dlp.utils import (
-    traverse_obj,
-)
+from yt_dlp.utils import traverse_obj
 
 
 class SharePointIE(InfoExtractor):

@@ -1,22 +1,18 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-import re
 import json
+import re
 
-from yt_dlp.compat import (
-    compat_urllib_parse,
-    compat_urllib_parse_urlparse,
-)
-
+from yt_dlp.compat import compat_urllib_parse, compat_urllib_parse_urlparse
 from yt_dlp.extractor.common import InfoExtractor
 from yt_dlp.utils import (
     ExtractorError,
-    urlencode_postdata,
+    HEADRequest,
+    extract_attributes,
     js_to_json,
     mimetype2ext,
-    extract_attributes,
-    HEADRequest,
+    urlencode_postdata,
 )
 
 from moodle_dl.utils import determine_ext

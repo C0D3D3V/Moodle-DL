@@ -4,11 +4,7 @@ from __future__ import unicode_literals
 import re
 
 from yt_dlp.extractor.common import InfoExtractor
-from yt_dlp.utils import (
-    ExtractorError,
-    urlencode_postdata,
-    extract_attributes,
-)
+from yt_dlp.utils import ExtractorError, extract_attributes, urlencode_postdata
 
 
 class OpencastLtiIE(InfoExtractor):

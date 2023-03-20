@@ -1,15 +1,14 @@
 import asyncio
 import logging
 import time
-
 from concurrent.futures import ThreadPoolExecutor
 from typing import List
 
 from moodle_dl.config import ConfigHelper
 from moodle_dl.database import StateRecorder
 from moodle_dl.downloader.task import Task
-from moodle_dl.types import Course, MoodleDlOpts, DlEvent, DownloadStatus, TaskState
-from moodle_dl.utils import format_bytes, calc_speed, format_speed
+from moodle_dl.types import Course, DlEvent, DownloadStatus, MoodleDlOpts, TaskState
+from moodle_dl.utils import calc_speed, format_bytes, format_speed
 
 
 class DownloadService:

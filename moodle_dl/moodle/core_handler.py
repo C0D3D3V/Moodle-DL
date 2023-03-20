@@ -1,7 +1,6 @@
 import asyncio
 import json
 import math
-
 from typing import Dict, List
 
 from moodle_dl.moodle.request_helper import RequestHelper

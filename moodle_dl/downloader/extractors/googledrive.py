@@ -2,8 +2,8 @@ from __future__ import unicode_literals
 
 import re
 
-from yt_dlp.extractor.common import InfoExtractor
 from yt_dlp.compat import compat_parse_qs
+from yt_dlp.extractor.common import InfoExtractor
 from yt_dlp.utils import (
     ExtractorError,
     int_or_none,

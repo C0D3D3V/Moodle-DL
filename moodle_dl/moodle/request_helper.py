@@ -3,18 +3,18 @@ import json
 import logging
 import os
 import urllib
-
 from time import sleep
 from typing import Dict
 
 import aiohttp
 import requests
-
 from requests.exceptions import RequestException
 
 from moodle_dl.config import ConfigHelper
-from moodle_dl.types import MoodleURL, MoodleDlOpts
-from moodle_dl.utils import SslHelper, PathTools as PT, MoodleDLCookieJar
+from moodle_dl.types import MoodleDlOpts, MoodleURL
+from moodle_dl.utils import MoodleDLCookieJar
+from moodle_dl.utils import PathTools as PT
+from moodle_dl.utils import SslHelper
 
 
 class RequestHelper:

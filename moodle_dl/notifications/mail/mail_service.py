@@ -1,17 +1,16 @@
 import logging
 import traceback
-
 from typing import List
 
 from moodle_dl.downloader.task import Task
-from moodle_dl.notifications.mail.mail_shooter import MailShooter
-from moodle_dl.notifications.notification_service import NotificationService
-from moodle_dl.types import Course
 from moodle_dl.notifications.mail.mail_formater import (
     create_full_error_mail,
     create_full_failed_downloads_mail,
     create_full_moodle_diff_mail,
 )
+from moodle_dl.notifications.mail.mail_shooter import MailShooter
+from moodle_dl.notifications.notification_service import NotificationService
+from moodle_dl.types import Course
 
 
 class MailService(NotificationService):

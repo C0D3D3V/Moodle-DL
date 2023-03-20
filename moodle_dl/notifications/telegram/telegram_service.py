@@ -1,6 +1,5 @@
 import logging
 import traceback
-
 from typing import List
 
 from moodle_dl.downloader.task import Task

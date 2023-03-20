@@ -1,11 +1,10 @@
 import json
 import os
 import sys
-
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-from moodle_dl.types import MoodleURL, MoodleDlOpts, DownloadOptions
+from moodle_dl.types import DownloadOptions, MoodleDlOpts, MoodleURL
 from moodle_dl.utils import PathTools as PT
 
 

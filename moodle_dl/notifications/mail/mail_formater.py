@@ -1,10 +1,10 @@
 # coding=utf-8
 
-from string import Template
 from email.utils import make_msgid
+from string import Template
 
-from moodle_dl.types import Course
 from moodle_dl.downloader.task import Task
+from moodle_dl.types import Course
 
 main_wrapper = Template(
     '''

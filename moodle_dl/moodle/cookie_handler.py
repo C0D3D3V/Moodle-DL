@@ -1,6 +1,5 @@
-import os
 import logging
-
+import os
 from typing import Dict
 
 from moodle_dl.config import ConfigHelper

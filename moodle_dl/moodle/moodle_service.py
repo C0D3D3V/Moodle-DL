@@ -1,7 +1,6 @@
 import base64
 import logging
 import re
-
 from typing import List, Tuple
 from urllib.parse import urlparse
 
@@ -9,10 +8,15 @@ from moodle_dl.config import ConfigHelper
 from moodle_dl.database import StateRecorder
 from moodle_dl.moodle.cookie_handler import CookieHandler
 from moodle_dl.moodle.core_handler import CoreHandler
-from moodle_dl.moodle.mods import fetch_mods_files, get_all_mods, get_all_mods_classes, get_mod_plurals
+from moodle_dl.moodle.mods import (
+    fetch_mods_files,
+    get_all_mods,
+    get_all_mods_classes,
+    get_mod_plurals,
+)
 from moodle_dl.moodle.request_helper import RequestHelper
 from moodle_dl.moodle.result_builder import ResultBuilder
-from moodle_dl.types import Course, MoodleURL, MoodleDlOpts
+from moodle_dl.types import Course, MoodleDlOpts, MoodleURL
 from moodle_dl.utils import determine_ext
 
 

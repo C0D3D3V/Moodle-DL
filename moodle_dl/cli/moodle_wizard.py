@@ -1,11 +1,10 @@
 import sys
-
 from getpass import getpass
 
 from moodle_dl.config import ConfigHelper
 from moodle_dl.moodle.moodle_service import MoodleService
 from moodle_dl.moodle.request_helper import RequestRejectedError
-from moodle_dl.types import MoodleURL, MoodleDlOpts
+from moodle_dl.types import MoodleDlOpts, MoodleURL
 from moodle_dl.utils import Log
 
 
