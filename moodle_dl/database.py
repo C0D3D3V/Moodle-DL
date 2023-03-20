@@ -1,11 +1,10 @@
-import sqlite3
 import logging
-
+import sqlite3
 from sqlite3 import Error
 from typing import Dict, List
 
 from moodle_dl.config import ConfigHelper
-from moodle_dl.types import File, Course, MoodleDlOpts
+from moodle_dl.types import Course, File, MoodleDlOpts
 from moodle_dl.utils import PathTools as PT
 
 
