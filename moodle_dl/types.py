@@ -1,8 +1,7 @@
 import threading
-
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 from moodle_dl.utils import PathTools as PT
 

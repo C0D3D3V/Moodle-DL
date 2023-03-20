@@ -1,13 +1,8 @@
 import re
-
 from urllib.parse import urlparse, urlunparse
 
 from yt_dlp.extractor.common import InfoExtractor
-from yt_dlp.utils import (
-    determine_ext,
-    float_or_none,
-    traverse_obj,
-)
+from yt_dlp.utils import determine_ext, float_or_none, traverse_obj
 
 
 class Echo360IE(InfoExtractor):

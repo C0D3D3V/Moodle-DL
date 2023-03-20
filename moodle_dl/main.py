@@ -4,7 +4,6 @@ import logging
 import os
 import sys
 import traceback
-
 from logging.handlers import RotatingFileHandler
 from shutil import which
 
@@ -21,7 +20,13 @@ except ImportError:
 
 from colorama import just_fix_windows_console
 
-from moodle_dl.cli import ConfigWizard, DatabaseManager, MoodleWizard, NotificationsWizard, init_config
+from moodle_dl.cli import (
+    ConfigWizard,
+    DatabaseManager,
+    MoodleWizard,
+    NotificationsWizard,
+    init_config,
+)
 from moodle_dl.config import ConfigHelper
 from moodle_dl.database import StateRecorder
 from moodle_dl.downloader.download_service import DownloadService
@@ -29,7 +34,8 @@ from moodle_dl.downloader.fake_download_service import FakeDownloadService
 from moodle_dl.moodle.moodle_service import MoodleService
 from moodle_dl.notifications import get_all_notify_services
 from moodle_dl.types import MoodleDlOpts
-from moodle_dl.utils import ProcessLock, check_debug, PathTools as PT
+from moodle_dl.utils import PathTools as PT
+from moodle_dl.utils import ProcessLock, check_debug
 from moodle_dl.version import __version__
 
 

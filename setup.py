@@ -1,6 +1,6 @@
 from os import path
-from setuptools import setup, find_packages
 
+from setuptools import find_packages, setup
 
 # Get the version from moodle_dl/version.py without importing the package
 exec(compile(open('moodle_dl/version.py').read(), 'moodle_dl/version.py', 'exec'))

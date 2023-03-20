@@ -5,7 +5,10 @@ from aioxmpp.errors import StanzaError, UserError
 from moodle_dl.config import ConfigHelper
 from moodle_dl.notifications.mail.mail_formater import create_full_welcome_mail
 from moodle_dl.notifications.mail.mail_shooter import MailShooter
-from moodle_dl.notifications.telegram.telegram_shooter import TelegramShooter, RequestRejectedError
+from moodle_dl.notifications.telegram.telegram_shooter import (
+    RequestRejectedError,
+    TelegramShooter,
+)
 from moodle_dl.notifications.xmpp.xmpp_shooter import XmppShooter
 from moodle_dl.types import MoodleDlOpts
 from moodle_dl.utils import Cutie

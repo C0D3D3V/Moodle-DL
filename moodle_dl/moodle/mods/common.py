@@ -1,14 +1,14 @@
 import asyncio
 import logging
 import math
-
 from abc import ABCMeta, abstractmethod
 from typing import Dict, List
 
 from moodle_dl.config import ConfigHelper
 from moodle_dl.moodle.request_helper import RequestHelper
 from moodle_dl.types import Course, File
-from moodle_dl.utils import get_nested, run_with_final_message, PathTools as PT
+from moodle_dl.utils import PathTools as PT
+from moodle_dl.utils import get_nested, run_with_final_message
 
 
 class MoodleMod(metaclass=ABCMeta):

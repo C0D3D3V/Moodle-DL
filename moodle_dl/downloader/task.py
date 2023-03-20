@@ -11,7 +11,6 @@ import time
 import traceback
 import urllib
 import urllib.parse as urlparse
-
 from concurrent.futures import ThreadPoolExecutor
 from email.utils import unquote
 from io import StringIO
@@ -34,16 +33,15 @@ from moodle_dl.types import (
     TaskState,
     TaskStatus,
 )
+from moodle_dl.utils import LINK_TEMPLATES, MoodleDLCookieJar
+from moodle_dl.utils import PathTools as PT
 from moodle_dl.utils import (
+    SslHelper,
+    Timer,
     convert_to_aiohttp_cookie_jar,
     format_bytes,
     format_seconds,
-    LINK_TEMPLATES,
-    MoodleDLCookieJar,
-    PathTools as PT,
-    SslHelper,
     timeconvert,
-    Timer,
 )
 
 

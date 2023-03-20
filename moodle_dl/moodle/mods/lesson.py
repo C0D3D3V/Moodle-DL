@@ -1,6 +1,5 @@
 import logging
 import re
-
 from typing import Dict, List
 
 from moodle_dl.config import ConfigHelper

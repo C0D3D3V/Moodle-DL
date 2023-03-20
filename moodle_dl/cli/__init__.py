@@ -1,14 +1,13 @@
 import os
 import sys
 
-from moodle_dl.config import ConfigHelper
-from moodle_dl.types import MoodleDlOpts
-from moodle_dl.utils import Cutie, Log
-
 from moodle_dl.cli.config_wizard import ConfigWizard
 from moodle_dl.cli.database_manager import DatabaseManager
 from moodle_dl.cli.moodle_wizard import MoodleWizard
 from moodle_dl.cli.notifications_wizard import NotificationsWizard
+from moodle_dl.config import ConfigHelper
+from moodle_dl.types import MoodleDlOpts
+from moodle_dl.utils import Cutie, Log
 
 __all__ = ["ConfigWizard", "DatabaseManager", "NotificationsWizard"]
 

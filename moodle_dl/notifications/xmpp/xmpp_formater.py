@@ -1,4 +1,5 @@
 from typing import List
+
 from moodle_dl.notifications.telegram.telegram_formater import TelegramFormater
 
 

@@ -3,8 +3,8 @@ from typing import List
 
 import html2text
 
-from moodle_dl.types import Course
 from moodle_dl.downloader.task import Task
+from moodle_dl.types import Course
 from moodle_dl.utils import PathTools as PT
 
 

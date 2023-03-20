@@ -3,7 +3,8 @@ from typing import List
 from moodle_dl.downloader.task import Task
 from moodle_dl.notifications.notification_service import NotificationService
 from moodle_dl.types import Course
-from moodle_dl.utils import Log, PathTools as PT
+from moodle_dl.utils import Log
+from moodle_dl.utils import PathTools as PT
 
 
 class ConsoleService(NotificationService):

@@ -1,14 +1,14 @@
 import shutil
 import sys
-
 from typing import Dict, List, Tuple
 
 from moodle_dl.config import ConfigHelper
 from moodle_dl.moodle.core_handler import CoreHandler
 from moodle_dl.moodle.moodle_service import MoodleService
-from moodle_dl.moodle.request_helper import RequestRejectedError, RequestHelper
+from moodle_dl.moodle.request_helper import RequestHelper, RequestRejectedError
 from moodle_dl.types import Course, MoodleDlOpts
-from moodle_dl.utils import Cutie, Log, PathTools as PT
+from moodle_dl.utils import Cutie, Log
+from moodle_dl.utils import PathTools as PT
 
 
 class ConfigWizard:

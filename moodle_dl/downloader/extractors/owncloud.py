@@ -1,14 +1,8 @@
 import re
-
-from urllib.parse import urlparse, urljoin
+from urllib.parse import urljoin, urlparse
 
 from yt_dlp.extractor.common import InfoExtractor
-from yt_dlp.utils import (
-    determine_ext,
-    ExtractorError,
-    url_or_none,
-    urlencode_postdata,
-)
+from yt_dlp.utils import ExtractorError, determine_ext, url_or_none, urlencode_postdata
 
 
 class OwnCloudIE(InfoExtractor):

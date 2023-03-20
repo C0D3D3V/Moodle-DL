@@ -4,7 +4,6 @@ import logging
 import mimetypes
 import re
 import urllib.parse as urlparse
-
 from typing import Dict, List
 
 from moodle_dl.types import Course, File, MoodleURL

@@ -15,16 +15,14 @@ import ssl
 import sys
 import time
 import unicodedata
-
 from functools import lru_cache
 from pathlib import Path
-from typing import List, Optional, Dict
-from aiohttp.cookiejar import CookieJar
+from typing import Dict, List, Optional
 
 import readchar
 import requests
 import urllib3
-
+from aiohttp.cookiejar import CookieJar
 from requests.utils import DEFAULT_CA_BUNDLE_PATH, extract_zipped_paths
 
 
