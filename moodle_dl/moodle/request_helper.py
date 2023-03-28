@@ -135,7 +135,8 @@ class RequestHelper:
                         raise_for_status=True,
                     ) as resp:
                         resp_json = await resp.json()
-                        resp_url = resp.url
+                    self.check_json_for_moodle_error(resp_json, url, data)
+                    self.log_response(function, data, str(resp.url), resp_json)
                     break
                 except (aiohttp.client_exceptions.ClientError, OSError, ValueError) as req_err:
                     if (isinstance(req_err, aiohttp.client_exceptions.ClientResponseError)) and (
@@ -154,9 +155,6 @@ class RequestHelper:
                         asyncio.sleep(1)
                         continue
                     raise ConnectionError(f"Connection error: {req_err}") from None
-
-        self.check_json_for_moodle_error(resp_json)
-        self.log_response(function, data, resp_url, resp_json)
 
         return resp_json
 
@@ -192,7 +190,7 @@ class RequestHelper:
             except RequestException as req_err:
                 raise ConnectionError(f"Connection error: {req_err}") from None
 
-        json_result = self._initial_parse(response)
+        json_result = self._initial_parse(response, url, data)
         self.log_response(function, data, response.url, json_result)
 
         return json_result
@@ -253,7 +251,7 @@ class RequestHelper:
         except RequestException as error:
             raise ConnectionError(f"Connection error: {str(error)}") from None
 
-        return self._initial_parse(response)
+        return self._initial_parse(response, f'{self.url_base}login/token.php', 'censored')
 
     @staticmethod
     def _check_response_code(response):
@@ -266,7 +264,7 @@ class RequestHelper:
                 + f'\nResponse: {response.text}'
             )
 
-    def _initial_parse(self, response) -> object:
+    def _initial_parse(self, response, url: str, data: Dict) -> object:
         """
         The first time parsing the result of a REST request.
         It is checked for known errors.
@@ -288,12 +286,13 @@ class RequestHelper:
                 + f' response: {response.text}.\nError: {error}'
             ) from None
 
-        self.check_json_for_moodle_error(resp_json)
+        self.check_json_for_moodle_error(resp_json, url, data)
         return resp_json
 
-    def check_json_for_moodle_error(self, resp_json: Dict):
+    def check_json_for_moodle_error(self, resp_json: Dict, url: str, data: Dict):
         # Check for known errors
         if 'error' in resp_json:
+            logging.debug('Details about the failed request:\nURL: %s\nBody: %s', url, data)
             raise RequestRejectedError(
                 'The Moodle System rejected the Request.'
                 + f" Details: {resp_json.get('error', '')} (Errorcode: {resp_json.get('errorcode', '')},"
@@ -302,6 +301,7 @@ class RequestHelper:
             )
 
         if 'exception' in resp_json:
+            logging.debug('Details about the failed request:\nURL: %s\nBody: %s', url, data)
             errorcode = resp_json.get('errorcode', '')
 
             if errorcode == 'invalidtoken':
