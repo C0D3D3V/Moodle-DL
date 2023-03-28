@@ -60,7 +60,7 @@ class RequestHelper:
 
         data_urlencoded = ""
         if data is not None:
-            data_urlencoded = RequestHelper.recursive_urlencode(data)
+            data_urlencoded = self.recursive_urlencode(data)
 
         session = SslHelper.custom_requests_session(self.opts.skip_cert_verify, self.opts.allow_insecure_ssl)
         if cookie_jar_path is not None:
@@ -120,7 +120,8 @@ class RequestHelper:
         if self.token is None:
             raise ValueError('The required token is not set!')
 
-        data_urlencoded = self._get_POST_DATA(function, self.token, data)
+        data = self._get_POST_DATA(function, self.token, data)
+        data_urlencoded = self.recursive_urlencode(data)
         url = self._get_REST_POST_URL(self.url_base, function)
         ssl_context = SslHelper.get_ssl_context(self.opts.skip_cert_verify, self.opts.allow_insecure_ssl)
 
@@ -171,7 +172,8 @@ class RequestHelper:
         if self.token is None:
             raise ValueError('The required Token is not set!')
 
-        data_urlencoded = self._get_POST_DATA(function, self.token, data)
+        data = self._get_POST_DATA(function, self.token, data)
+        data_urlencoded = self.recursive_urlencode(data)
         url = self._get_REST_POST_URL(self.url_base, function)
 
         session = SslHelper.custom_requests_session(self.opts.skip_cert_verify, self.opts.allow_insecure_ssl)
@@ -231,7 +233,7 @@ class RequestHelper:
 
         data.update({'wsfunction': function, 'wstoken': token})
 
-        return RequestHelper.recursive_urlencode(data)
+        return data
 
     def get_login(self, data: Dict[str, str]) -> object:
         """
@@ -253,7 +255,7 @@ class RequestHelper:
         except RequestException as error:
             raise ConnectionError(f"Connection error: {str(error)}") from None
 
-        return self._initial_parse(response, f'{self.url_base}login/token.php', 'censored')
+        return self._initial_parse(response, f'{self.url_base}login/token.php', data)
 
     @staticmethod
     def _check_response_code(response):
@@ -292,6 +294,11 @@ class RequestHelper:
         return resp_json
 
     def log_failed_request(self, url: str, data: Dict):
+        if data is not None and isinstance(data, dict):
+            data = data.copy()
+            for censor in ['privatetoken', 'password', 'wstoken']:
+                if censor in data:
+                    data[censor] = 'censored'
         logging.debug('Details about the failed request:\nURL: %s\nBody: %s', url, data)
 
     def check_json_for_moodle_error(self, resp_json: Dict, url: str, data: Dict):
