@@ -2,17 +2,18 @@ import asyncio
 from typing import Dict, List
 
 from moodle_dl.config import ConfigHelper
-from moodle_dl.moodle.mods.assign import AssignMod  # noqa: F401
 from moodle_dl.moodle.mods.common import MoodleMod
-from moodle_dl.moodle.mods.data import DataMod  # noqa: F401
-from moodle_dl.moodle.mods.folder import FolderMod  # noqa: F401
-from moodle_dl.moodle.mods.forum import ForumMod  # noqa: F401
-from moodle_dl.moodle.mods.lesson import LessonMod  # noqa: F401
-from moodle_dl.moodle.mods.page import PageMod  # noqa: F401
-from moodle_dl.moodle.mods.quiz import QuizMod  # noqa: F401
-from moodle_dl.moodle.mods.workshop import WorkshopMod  # noqa: F401
 from moodle_dl.moodle.request_helper import RequestHelper
 from moodle_dl.types import Course
+
+from moodle_dl.moodle.mods.assign import AssignMod  # noqa: F401 isort:skip
+from moodle_dl.moodle.mods.data import DataMod  # noqa: F401 isort:skip
+from moodle_dl.moodle.mods.folder import FolderMod  # noqa: F401 isort:skip
+from moodle_dl.moodle.mods.forum import ForumMod  # noqa: F401 isort:skip
+from moodle_dl.moodle.mods.lesson import LessonMod  # noqa: F401 isort:skip
+from moodle_dl.moodle.mods.page import PageMod  # noqa: F401 isort:skip
+from moodle_dl.moodle.mods.quiz import QuizMod  # noqa: F401 isort:skip
+from moodle_dl.moodle.mods.workshop import WorkshopMod  # noqa: F401 isort:skip
 
 ALL_MODS = [Class for name, Class in globals().items() if name.endswith('Mod') and name != 'MoodleMod']
 
