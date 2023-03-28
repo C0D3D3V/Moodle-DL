@@ -71,6 +71,7 @@ class RequestHelper:
         try:
             response = session.post(url, data=data_urlencoded, headers=self.RQ_HEADER, timeout=60)
         except RequestException as error:
+            self.log_failed_request(url, data)
             raise ConnectionError(f"Connection error: {str(error)}") from None
 
         if cookie_jar_path is not None:
@@ -100,6 +101,7 @@ class RequestHelper:
         try:
             response = session.get(url, headers=self.RQ_HEADER, timeout=60)
         except RequestException as error:
+            self.log_failed_request(url, None)
             raise ConnectionError(f"Connection error: {str(error)}") from None
 
         if cookie_jar_path is not None:
@@ -289,10 +291,13 @@ class RequestHelper:
         self.check_json_for_moodle_error(resp_json, url, data)
         return resp_json
 
+    def log_failed_request(self, url: str, data: Dict):
+        logging.debug('Details about the failed request:\nURL: %s\nBody: %s', url, data)
+
     def check_json_for_moodle_error(self, resp_json: Dict, url: str, data: Dict):
         # Check for known errors
         if 'error' in resp_json:
-            logging.debug('Details about the failed request:\nURL: %s\nBody: %s', url, data)
+            self.log_failed_request(url, data)
             raise RequestRejectedError(
                 'The Moodle System rejected the Request.'
                 + f" Details: {resp_json.get('error', '')} (Errorcode: {resp_json.get('errorcode', '')},"
@@ -301,7 +306,7 @@ class RequestHelper:
             )
 
         if 'exception' in resp_json:
-            logging.debug('Details about the failed request:\nURL: %s\nBody: %s', url, data)
+            self.log_failed_request(url, data)
             errorcode = resp_json.get('errorcode', '')
 
             if errorcode == 'invalidtoken':

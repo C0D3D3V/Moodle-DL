@@ -788,21 +788,7 @@ class SslHelper:
             ssl_context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
             cls.load_default_certs(ssl_context)
         else:
-            ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-            ssl_context.options |= ssl.OP_NO_SSLv2
-            ssl_context.options |= ssl.OP_NO_SSLv3
-            ssl_context.check_hostname = False
-            ssl_context.verify_mode = ssl.CERT_NONE
-            try:
-                ssl_context.options |= ssl.OP_NO_COMPRESSION
-            except AttributeError as attr_err:
-                Log.warning(
-                    f"{attr_err!s}: The Python interpreter is compiled "
-                    "against OpenSSL < 1.0.0. Ref: "
-                    "https://docs.python.org/3/library/ssl.html"
-                    "#ssl.OP_NO_COMPRESSION",
-                )
-            ssl_context.load_default_certs()
+            ssl_context = ssl._create_unverified_context()  # pylint: disable=protected-access
 
         if allow_insecure_ssl:
             # This allows connections to legacy insecure servers
@@ -836,6 +822,7 @@ class SslHelper:
         session = requests.Session()
         ssl_context = cls.get_ssl_context(skip_cert_verify, allow_insecure_ssl)
         session.mount('https://', cls.CustomHttpAdapter(ssl_context))
+        session.verify = not skip_cert_verify
         return session
 
 
