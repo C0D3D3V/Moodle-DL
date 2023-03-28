@@ -24,7 +24,6 @@ class ConfigWizard:
         user_id, version = self.config.get_userid_and_version()
         if user_id is None or version is None:
             user_id, version = self.core_handler.fetch_userid_and_version()
-            self._select_should_userid_and_version_be_saved(user_id, version)
         else:
             self.core_handler.version = version
         return user_id, version
@@ -85,13 +84,12 @@ class ConfigWizard:
 
         if not add_all_visible_courses:
             return
-        else:
-            Log.warning(
-                'Please wait for the result, this may take several minutes.'
-                + ' In addition to adding the courses to the configuration,'
-                + ' it will also create an `all_courses.json` file with all'
-                + ' the courses available on your Moodle.'
-            )
+        Log.warning(
+            'Please wait for the result, this may take several minutes.'
+            + ' In addition to adding the courses to the configuration,'
+            + ' it will also create an `all_courses.json` file with all'
+            + ' the courses available on your Moodle.'
+        )
 
         courses = []
         all_visible_courses = []
@@ -140,50 +138,6 @@ class ConfigWizard:
         self.config.set_property('download_public_course_ids', download_public_course_ids)
 
         Log.success('Configuration successfully updated!')
-
-    def _select_should_userid_and_version_be_saved(self, userid, version):
-        """
-        Asks the user if the userid and version should be saved in the configuration
-        """
-        do_not_ask_to_save_userid_and_version = self.config.get_do_not_ask_to_save_userid_and_version()
-        if do_not_ask_to_save_userid_and_version:
-            return
-
-        print('')
-        Log.info(
-            'The user id and version number of Moodle are downloaded'
-            + ' at the beginning of each run of the downloader.'
-            + ' Since this data rarely changes, it can be saved in the'
-            + ' configuration.'
-        )
-
-        Log.magenta(f'Your user id is `{userid}` and the moodle version is `{version}`')
-
-        print('')
-
-        save_userid_and_version = Cutie.prompt_yes_or_no(
-            Log.blue_str('Do you want to store the user id and version number of Moodle in the configuration?'),
-            default_is_yes=False,
-        )
-
-        if save_userid_and_version:
-            Log.warning(
-                'Remember to delete the version number from the'
-                + ' configuration once Moodle has been updated'
-                + ' and then run the configurator again!'
-            )
-
-            self.config.set_property('userid', userid)
-            self.config.set_property('version', version)
-        else:
-            do_not_ask_to_save_userid_and_version = Cutie.prompt_yes_or_no(
-                Log.blue_str('Should this question no longer be asked in the future?'),
-                default_is_yes=False,
-            )
-            if do_not_ask_to_save_userid_and_version:
-                self.config.set_property('do_not_ask_to_save_userid_and_version', True)
-
-        self.section_seperator()
 
     def _select_courses_to_download(self, courses: List[Course]):
         """
