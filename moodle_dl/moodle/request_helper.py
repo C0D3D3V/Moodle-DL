@@ -307,16 +307,16 @@ class RequestHelper:
             self.log_failed_request(url, data)
             raise RequestRejectedError(
                 'The Moodle System rejected the Request.'
-                + f" Details: {resp_json.get('error', '')} (Errorcode: {resp_json.get('errorcode', '')},"
-                + f" Stacktrace: {resp_json.get('stacktrace', '')}, Debuginfo: {resp_json.get('debuginfo', '')},"
-                + f" Reproductionlink: {resp_json.get('reproductionlink', '')})"
+                + f" Details: {resp_json.get('error', '')} (Error code: {resp_json.get('errorcode', '')},"
+                + f" Stacktrace: {resp_json.get('stacktrace', '')}, Debug info: {resp_json.get('debuginfo', '')},"
+                + f" Reproduction link: {resp_json.get('reproductionlink', '')})"
             )
 
         if 'exception' in resp_json:
             self.log_failed_request(url, data)
-            errorcode = resp_json.get('errorcode', '')
+            error_code = resp_json.get('errorcode', '')
 
-            if errorcode == 'invalidtoken':
+            if error_code == 'invalidtoken':
                 raise RequestRejectedError(
                     'Your Moodle token has expired.'
                     + ' To create a new one run "moodle-dl -nt -u USERNAME -pw PASSWORD" or "moodle-dl -nt -sso"'
@@ -324,7 +324,7 @@ class RequestHelper:
 
             raise RequestRejectedError(
                 'The Moodle System rejected the Request.'
-                + f" Details: {resp_json.get('exception', '')} (Errorcode: {errorcode},"
+                + f" Details: {resp_json.get('exception', '')} (Error code: {error_code},"
                 + f" Message: {resp_json.get('message', '')})"
             )
 

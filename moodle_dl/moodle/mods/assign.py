@@ -85,14 +85,14 @@ class AssignMod(MoodleMod):
 
         # get submissions of all students for all assignments (only teachers can see that)
         indexed_assignment_ids = self.get_indexed_ids_of_mod_instances(assignments)
-        if len(indexed_assignment_ids) == 0:
+        if len(indexed_assignment_ids) <= 0:
             return
 
         assignments_with_all_submissions = (
             await self.client.async_post('mod_assign_get_submissions', {'assignmentids': indexed_assignment_ids})
         ).get('assignments', [])
 
-        if len(assignments_with_all_submissions) == 0:
+        if len(assignments_with_all_submissions) <= 0:
             return
 
         for course_id, modules in assignments.items():
