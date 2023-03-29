@@ -114,7 +114,7 @@ If you need help configuring telegram notifications [click here](https://github.
 [moodle-downloader](https://github.com/harsilspatel/moodle-downloader)
 - A chrome extension for batch downloading Moodle resources
 
-[orga_bot]https://github.com/YoshiiPlayzz/orga_bot
+[Orga Bot](https://github.com/YoshiiPlayzz/orga_bot)
 - Utilizes moodle-dl to send moodle files via Discord
 
 [discord-moodle-bot](https://github.com/tjarbo/discord-moodle-bot)
