@@ -49,6 +49,7 @@ setup(
         'requests>=2.24.0',
         'sentry_sdk>=0.13.5',
         'yt_dlp>=2021.10.22',
+        'pytz>=2023.3',
     ],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
