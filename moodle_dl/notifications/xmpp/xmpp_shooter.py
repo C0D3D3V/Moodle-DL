@@ -15,6 +15,8 @@ class XmppShooter:
         if not self.is_connected:
             self.connection.connect()
             self.connection.auth(user=self.jid.getNode(), password=self.password, resource=self.jid.getResource())
+            if not hasattr(self.connection, 'Bind') or getattr(self.connection, 'Bind').session != 1:
+                raise ConnectionError('XMPP Session could not be opend')
             self.is_connected = True
 
         self.connection.send(xmpp.protocol.Message(to=self.recipient, body=message))
