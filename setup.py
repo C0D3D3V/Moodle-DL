@@ -40,7 +40,6 @@ setup(
         'aiodns>=3.0.0',
         'aiofiles>=22.1.0',
         'aiohttp>=3.8.4',
-        'aioxmpp>=0.12.2',
         'certifi>=2020.4.5.2',
         'colorama>=0.4.6',
         'colorlog>=6.7.0',
@@ -48,8 +47,8 @@ setup(
         'readchar>=4.0.3',
         'requests>=2.24.0',
         'sentry_sdk>=0.13.5',
+        'xmpppy>=0.7.1',
         'yt_dlp>=2021.10.22',
-        'pytz>=2023.3',
     ],
     classifiers=[
         'Development Status :: 5 - Production/Stable',

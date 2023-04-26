@@ -30,12 +30,13 @@ class XmppService(NotificationService):
 
         logging.info('Sending Notification via XMPP...')
 
-        try:
-            xmpp = XmppShooter(xmpp_cfg['sender'], xmpp_cfg['password'], xmpp_cfg['target'])
-            xmpp.send_messages(messages)
-        except BaseException as e:
-            logging.error('While sending notification:\n%s', traceback.format_exc(), extra={'exception': e})
-            raise e  # to be properly notified via Sentry
+        xmpp_shooter = XmppShooter(xmpp_cfg['sender'], xmpp_cfg['password'], xmpp_cfg['target'])
+        for message_content in messages:
+            try:
+                xmpp_shooter.send(message_content)
+            except BaseException as e:
+                logging.error('While sending notification:\n%s', traceback.format_exc(), extra={'exception': e})
+                raise e  # to be properly notified via Sentry
 
     def notify_about_changes_in_moodle(self, changes: List[Course]) -> None:
         """
