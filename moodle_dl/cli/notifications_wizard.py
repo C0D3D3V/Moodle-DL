@@ -1,7 +1,5 @@
 from getpass import getpass
 
-from aioxmpp.errors import StanzaError, UserError
-
 from moodle_dl.config import ConfigHelper
 from moodle_dl.notifications.mail.mail_formater import create_full_welcome_mail
 from moodle_dl.notifications.mail.mail_shooter import MailShooter
@@ -155,8 +153,6 @@ class NotificationsWizard:
                     xmpp_shooter.send('This is a test message from moodle-dl!')
                 except (
                     ConnectionError,
-                    StanzaError,
-                    UserError,
                     OSError,
                     RuntimeError,
                 ) as e:
