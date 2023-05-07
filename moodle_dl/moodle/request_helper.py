@@ -155,7 +155,7 @@ class RequestHelper:
                     error_ctr += 1
                     if error_ctr < self.MAX_RETRIES:
                         logging.debug("The %sth connection error occurred, retrying. %s", error_ctr, req_err)
-                        asyncio.sleep(1)
+                        await asyncio.sleep(1)
                         continue
                     raise ConnectionError(f"Connection error: {req_err}") from None
 
