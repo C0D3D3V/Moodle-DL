@@ -141,7 +141,12 @@ class RequestHelper:
                     self.check_json_for_moodle_error(resp_json, url, data)
                     self.log_response(function, data, str(resp.url), resp_json)
                     break
-                except (aiohttp.client_exceptions.ClientError, OSError, ValueError) as req_err:
+                except (
+                    aiohttp.client_exceptions.ClientError,
+                    asyncio.exceptions.TimeoutError,
+                    OSError,
+                    ValueError,
+                ) as req_err:
                     if (isinstance(req_err, aiohttp.client_exceptions.ClientResponseError)) and (
                         req_err.status not in [408, 409, 429]  # pylint: disable=no-member
                     ):
