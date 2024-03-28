@@ -1,6 +1,8 @@
 import logging
 import traceback
+from typing import List
 
+from moodle_dl.downloader.task import Task
 from moodle_dl.notifications.discord.discord_formatter import DiscordFormatter as DF
 from moodle_dl.notifications.discord.discord_shooter import DiscordShooter
 from moodle_dl.notifications.notification_service import NotificationService
@@ -49,6 +51,10 @@ class DiscordService(NotificationService):
 
         self._send_embeds(messages)
 
-    def notify_about_error(self, error_description: str):
+    def notify_about_error(self, error_description: str) -> None:
+        # Not yet implemented
+        pass
+
+    def notify_about_failed_downloads(self, failed_downloads: List[Task]) -> None:
         # Not yet implemented
         pass
