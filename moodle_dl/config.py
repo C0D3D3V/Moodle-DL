@@ -204,6 +204,11 @@ class ConfigHelper:
         except ValueError:
             return []
 
+    def get_max_file_size(self) -> int:
+        # return the max size in bytes of files that should not be downloaded
+        # default: 0 -> all file sizes
+        return self.get_property_or('max_file_size', 0)
+
     def get_download_also_with_cookie(self) -> Dict:
         # return if files for which a cookie is required should be downloaded
         return self.get_property_or('download_also_with_cookie', False)

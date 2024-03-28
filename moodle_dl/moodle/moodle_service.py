@@ -162,6 +162,7 @@ class MoodleService:
         download_descriptions = config.get_download_descriptions()
         download_links_in_descriptions = config.get_download_links_in_descriptions()
         exclude_file_extensions = config.get_exclude_file_extensions()
+        max_file_size = config.get_max_file_size()
 
         download_also_with_cookie = config.get_download_also_with_cookie()
         if cookie_handler is not None:
@@ -216,6 +217,8 @@ class MoodleService:
                     and (determine_ext(file.content_filename) not in exclude_file_extensions)
                     # Exclude files that are in excluded sections
                     and (MoodleService.should_download_section(file.section_id, course.excluded_sections))
+                    # Exclude files that are bigger than max_file_size
+                    and (max_file_size == 0 or file.content_filesize < max_file_size)
                 ):
                     course_files.append(file)
             course.files = course_files
