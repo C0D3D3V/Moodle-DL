@@ -1,35 +1,35 @@
 {
-    "editor.formatOnSave": true,
-    "editor.codeActionsOnSave": {
-        "source.organizeImports": "explicit"
+    "[python]": {
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit"
+        },
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.formatOnSave": true,
     },
-    "isort.args": [
-        "--profile",
-        "black"
-    ],
-    "python.linting.enabled": true,
-    "python.linting.lintOnSave": true,
-    "python.linting.pylintEnabled": true,
-    "python.linting.pylintArgs": [
-        "--enable=W0614,W0611",
-        "--disable=C0103,C0111,C0114,C0115,C0116,W0223,raise-missing-from,unnecessary-pass",
-        "--max-line-length=120"
-    ],
-    "python.linting.flake8Enabled": true,
-    "python.linting.flake8Args": [
-        "--max-line-length=120",
-        "--ignore=E203,E266,W503",
-    ],
-    "python.formatting.provider": "black",
-    "python.formatting.blackArgs": [
+    "black-formatter.args": [
         "--line-length",
         "120",
         "--target-version",
         "py38",
         "--skip-string-normalization"
     ],
+    "pylint.args": [
+        "--enable=W0614",
+        "--enable=W0611",
+        "--disable=missing-module-docstring",
+        "--disable=missing-class-docstring",
+        "--disable=missing-function-docstring",
+        "--disable=too-few-public-methods",
+        "--disable=raise-missing-from",
+        "--disable=unnecessary-pass",
+        "--max-line-length=120"
+    ],
     "editor.rulers": [
         120
+    ],
+    "isort.args": [
+        "--profile",
+        "black"
     ],
     "cSpell.diagnosticLevel": "Hint",
     "workbench.colorCustomizations": {

@@ -3,7 +3,7 @@
     "configurations": [
         {
             "name": "Moodle-Dl Verbose",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/moodle-dl",
             "console": "integratedTerminal",
@@ -15,7 +15,7 @@
         },
         {
             "name": "Moodle-Dl -v --skip-cert-verify",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/moodle-dl",
             "console": "integratedTerminal",
@@ -28,7 +28,7 @@
         },
         {
             "name": "Moodle-Dl Single API Calls",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/moodle-dl",
             "console": "integratedTerminal",
@@ -42,7 +42,7 @@
         },
         {
             "name": "Moodle-Dl Max one YT-DLP",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/moodle-dl",
             "console": "integratedTerminal",
@@ -56,7 +56,7 @@
         },
         {
             "name": "Moodle-Dl Single Tasks",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/moodle-dl",
             "console": "integratedTerminal",
@@ -70,12 +70,22 @@
         },
         {
             "name": "Moodle-Dl Normal",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/moodle-dl",
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}/debugging-moodle/",
             "args": [],
+            "justMyCode": false
+        },
+        {
+            "name": "Moodle-Dl Tests",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/moodle-dl",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/debugging-moodle/",
+            "args": ["-cd"],
             "justMyCode": false
         }
     ]

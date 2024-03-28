@@ -1,4 +1,4 @@
-from moodle_dl.state_recorder.course import Course
+from moodle_dl.types import Course
 
 
 class DiscordFormatter:
@@ -10,7 +10,7 @@ class DiscordFormatter:
         return '**' + string + '**'
 
     @classmethod
-    def create_full_moodle_diff_messages(cls, changed_courses: [Course], moodle_url) -> [str]:
+    def create_full_moodle_diff_messages(cls, changed_courses: [Course], moodle_url_base) -> [str]:
         """
         Creates Discord messages with all changed files. This includes new,
         modified and deleted files. Files that have changed since the last message.
@@ -25,10 +25,10 @@ class DiscordFormatter:
             new_embed = {
                 'author': {
                     'name': course.fullname,
-                    'url': f" {moodle_url}?id={course.id}",
-                    'icon_url': 'https://i.imgur.com/Bt5TFIA.png'
+                    'url': f"{moodle_url_base}course/view.php?id={course.id}",
+                    'icon_url': 'https://i.imgur.com/Bt5TFIA.png',
                 },
-                'fields': []
+                'fields': [],
             }
 
             for file in course.files:
@@ -54,9 +54,8 @@ class DiscordFormatter:
                 for field in new_embed['fields']:
                     if field['name'] == field_name:
                         field['value'] += f"\n{value}"
-
-                found = next((item for item in new_embed['fields'] if item['name'] == field_name), None)
-                if not found:
+                        break
+                else:
                     new_embed['fields'].append({'name': field_name, 'value': value})
 
             for field in new_embed['fields']:

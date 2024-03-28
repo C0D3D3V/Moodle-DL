@@ -1,6 +1,7 @@
 from getpass import getpass
 
 from moodle_dl.config import ConfigHelper
+from moodle_dl.notifications.discord.discord_shooter import DiscordShooter
 from moodle_dl.notifications.mail.mail_formater import create_full_welcome_mail
 from moodle_dl.notifications.mail.mail_shooter import MailShooter
 from moodle_dl.notifications.telegram.telegram_shooter import (
@@ -131,6 +132,43 @@ class NotificationsWizard:
                 }
 
                 self.config.set_property('telegram', telegram_cfg)
+
+    def interactively_configure_discord(self) -> None:
+        "Guides the user through the configuration of the discord notification."
+
+        do_discord = Cutie.prompt_yes_or_no('Do you want to activate Notifications via Discord?')
+
+        if not do_discord:
+            self.config.remove_property('discord')
+        else:
+            print('[The following Inputs are not validated!]')
+            config_valid = False
+            while not config_valid:
+                webhook_urls = input('Discord webhook URLs separated by commas: ')
+                webhook_urls = webhook_urls.split(',')
+                webhook_urls = [webhook_url.strip() for webhook_url in webhook_urls]
+
+                print('Testing Dicord-Config...')
+
+                try:
+                    discord_shooter = DiscordShooter(webhook_urls)
+                    discord_shooter.send_msg('This is a test message from moodle-dl!')
+
+                except (ConnectionError, RuntimeError, RequestRejectedError) as e:
+                    print(f'Error while sending the test message: {str(e)}')
+                    continue
+
+                else:
+                    input(
+                        'Please check if you received the Testmessage.'
+                        + ' If yes, confirm with Return.\nIf not, exit'
+                        + ' this program ([CTRL]+[C]) and try again later.'
+                    )
+                    config_valid = True
+
+                discord_cfg = {'webhook_urls': webhook_urls}
+
+                self.config.set_property('discord', discord_cfg)
 
     def interactively_configure_xmpp(self) -> None:
         "Guides the user through the configuration of the xmpp notification."

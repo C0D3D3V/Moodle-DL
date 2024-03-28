@@ -253,6 +253,7 @@ class MoodleDlOpts:
     new_token: bool
     change_notification_mail: bool
     change_notification_telegram: bool
+    change_notification_discord: bool
     change_notification_xmpp: bool
     manage_database: bool
     delete_old_files: bool
