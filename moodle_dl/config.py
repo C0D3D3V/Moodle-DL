@@ -39,7 +39,9 @@ class ConfigHelper:
         # TODO: Use dataclass and write that back to file, so that all options are always present
         config_formatted = json.dumps(self._whole_config, indent=4)
         # Saves the JSON object back to file
-        with open(self.config_path, 'w+', encoding='utf-8') as config_file:
+        with os.fdopen(
+            os.open(self.config_path, flags=os.O_WRONLY | os.O_CREAT, mode=0o600), mode='w', encoding='utf-8'
+        ) as config_file:
             config_file.write(config_formatted)
 
     def get_property(self, key: str) -> any:
