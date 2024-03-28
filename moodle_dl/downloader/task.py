@@ -560,6 +560,9 @@ class Task:
 
         domain = urlparse.urlparse(self.file.content_fileurl).hostname
 
+        if domain is None or domain == '':
+            return True
+
         in_blacklist = False
         for entry in self.opts.download_domains_blacklist:
             if domain == entry or domain.endswith('.' + entry):
