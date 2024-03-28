@@ -870,7 +870,7 @@ BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = range(30, 38)
 class Log:
     """
     Logs a given string to output with colors
-    :param logString: the string that should be logged
+    :param log_string: the string that should be logged
 
     The string functions returns the strings that would be logged.
 
@@ -879,80 +879,80 @@ class Log:
     """
 
     @staticmethod
-    def info_str(logString: str):
-        return COLOR_SEQ % WHITE + logString + RESET_SEQ
+    def info_str(log_string: str):
+        return COLOR_SEQ % WHITE + log_string + RESET_SEQ
 
     @staticmethod
-    def success_str(logString: str):
-        return COLOR_SEQ % GREEN + logString + RESET_SEQ
+    def success_str(log_string: str):
+        return COLOR_SEQ % GREEN + log_string + RESET_SEQ
 
     @staticmethod
-    def green_str(logString: str):
-        return COLOR_SEQ % GREEN + logString + RESET_SEQ
+    def green_str(log_string: str):
+        return COLOR_SEQ % GREEN + log_string + RESET_SEQ
 
     @staticmethod
-    def warning_str(logString: str):
-        return COLOR_SEQ % YELLOW + logString + RESET_SEQ
+    def warning_str(log_string: str):
+        return COLOR_SEQ % YELLOW + log_string + RESET_SEQ
 
     @staticmethod
-    def yellow_str(logString: str):
-        return COLOR_SEQ % YELLOW + logString + RESET_SEQ
+    def yellow_str(log_string: str):
+        return COLOR_SEQ % YELLOW + log_string + RESET_SEQ
 
     @staticmethod
-    def error_str(logString: str):
-        return COLOR_SEQ % RED + logString + RESET_SEQ
+    def error_str(log_string: str):
+        return COLOR_SEQ % RED + log_string + RESET_SEQ
 
     @staticmethod
-    def debug_str(logString: str):
-        return COLOR_SEQ % CYAN + logString + RESET_SEQ
+    def debug_str(log_string: str):
+        return COLOR_SEQ % CYAN + log_string + RESET_SEQ
 
     @staticmethod
-    def cyan_str(logString: str):
-        return COLOR_SEQ % CYAN + logString + RESET_SEQ
+    def cyan_str(log_string: str):
+        return COLOR_SEQ % CYAN + log_string + RESET_SEQ
 
     @staticmethod
-    def blue_str(logString: str):
-        return COLOR_SEQ % BLUE + logString + RESET_SEQ
+    def blue_str(log_string: str):
+        return COLOR_SEQ % BLUE + log_string + RESET_SEQ
 
     @staticmethod
-    def magenta_str(logString: str):
-        return COLOR_SEQ % MAGENTA + logString + RESET_SEQ
+    def magenta_str(log_string: str):
+        return COLOR_SEQ % MAGENTA + log_string + RESET_SEQ
 
     @staticmethod
-    def info(logString: str):
-        print(Log.info_str(logString))
+    def info(log_string: str):
+        print(Log.info_str(log_string))
 
     @staticmethod
-    def success(logString: str):
-        print(Log.success_str(logString))
+    def success(log_string: str):
+        print(Log.success_str(log_string))
 
     @staticmethod
-    def warning(logString: str):
-        print(Log.warning_str(logString))
+    def warning(log_string: str):
+        print(Log.warning_str(log_string))
 
     @staticmethod
-    def yellow(logString: str):
-        print(Log.yellow_str(logString))
+    def yellow(log_string: str):
+        print(Log.yellow_str(log_string))
 
     @staticmethod
-    def error(logString: str):
-        print(Log.error_str(logString))
+    def error(log_string: str):
+        print(Log.error_str(log_string))
 
     @staticmethod
-    def debug(logString: str):
-        print(Log.debug_str(logString))
+    def debug(log_string: str):
+        print(Log.debug_str(log_string))
 
     @staticmethod
-    def blue(logString: str):
-        print(Log.blue_str(logString))
+    def blue(log_string: str):
+        print(Log.blue_str(log_string))
 
     @staticmethod
-    def magenta(logString: str):
-        print(Log.magenta_str(logString))
+    def magenta(log_string: str):
+        print(Log.magenta_str(log_string))
 
     @staticmethod
-    def cyan(logString: str):
-        print(Log.cyan_str(logString))
+    def cyan(log_string: str):
+        print(Log.cyan_str(log_string))
 
 
 class Cutie:
