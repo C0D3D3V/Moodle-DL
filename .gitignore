@@ -9,3 +9,4 @@ config.json
 MoodleDownloader.log
 MoodleDL.log
 /moodle_dl.egg-info
+/.vscode/launch.json

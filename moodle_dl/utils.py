@@ -457,10 +457,7 @@ class PathTools:
                 name = PathTools.truncate_name(name, max_length)
             else:
                 stem, ext = PathTools.get_file_stem_and_ext(name)
-                if ext is not None:
-                    ext_len = len(ext)
-                else:
-                    ext_len = 0
+                ext_len = len(ext) if ext is not None else 0
                 if ext is None or ext_len == 0 or ext_len > 20:
                     # extensions longer then 20 characters are probably no extensions
                     name = PathTools.truncate_name(name, max_length)

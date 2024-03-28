@@ -52,7 +52,7 @@ class MoodleWizard:
         """
 
         automated = False
-        stop_automatic_generation = False
+        automatic_run_once = False
         if self.opts.username is not None and self.opts.password is not None:
             automated = True
 
@@ -60,12 +60,14 @@ class MoodleWizard:
             print('[The following Credentials are not saved, it is only used temporarily to generate a login token.]')
 
         moodle_token = None
-        while moodle_token is None or (stop_automatic_generation and automated):
+        while moodle_token is None and not automatic_run_once:
             moodle_url = self.interactively_get_moodle_url(use_stored_url)
+
+            if automated:
+                automatic_run_once = True
 
             if self.opts.username is not None:
                 moodle_username = self.opts.username
-                stop_automatic_generation = True
             else:
                 moodle_username = input('Username for Moodle:   ')
 
