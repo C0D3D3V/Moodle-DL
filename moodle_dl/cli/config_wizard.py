@@ -562,8 +562,7 @@ class ConfigWizard:
         Log.info(
             'If you want to filter the external links by their domain,'
             + ' you can manually set a whitelist and a blacklist'
-            + ' (https://github.com/C0D3D3V/Moodle-DL/'
-            + 'wiki/Download-(external)-linked-files'
+            + ' (https://github.com/C0D3D3V/Moodle-DL/wiki/Download-(external)-linked-files'
             + ' for more details).'
         )
         Log.warning(

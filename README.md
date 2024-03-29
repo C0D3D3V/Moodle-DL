@@ -73,7 +73,7 @@ If you don't want moodle-dl to use the current working directory, then you shoul
       - set if external files should be downloaded (files like Youtube videos)
       - set if files on moodle that require a cookie should be downloaded
       - to add extra courses to your download list which you can see but you are not enrolled in, check out [this wiki entry](https://github.com/C0D3D3V/Moodle-DL/wiki/Download-public-courses)
-    - Not all moodle-dl settings are available in the CLI configuration wizard for configuration, see [the wiki](https://github.com/C0D3D3V/Moodle-DL/wiki/Config.json) for more available options.
+    - Not all moodle-dl settings are available in the CLI configuration wizard for configuration, see [the wiki](https://github.com/C0D3D3V/Moodle-DL/wiki/Example-Config.json-and-Options) for more available options.
 
 By default a private token is stored in the initial configuration, this is only needed for special Moodle modules that cannot be queried via the Moodle API. If no such module is available in your Moodle you are welcome to delete this token.
 
