@@ -15,7 +15,9 @@ class FolderMod(MoodleMod):
         # TODO: Add download condition
         return True
 
-    async def real_fetch_mod_entries(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
+    async def real_fetch_mod_entries(
+        self, courses: List[Course], core_contents: Dict[int, List[Dict]]
+    ) -> Dict[int, Dict[int, Dict]]:
         folders = (
             await self.client.async_post(
                 'mod_folder_get_folders_by_courses', self.get_data_for_mod_entries_endpoint(courses)
@@ -25,6 +27,7 @@ class FolderMod(MoodleMod):
         result = {}
         for folder in folders:
             course_id = folder.get('course', 0)
+            module_id = folder.get('coursemodule', 0)
             folder_files = folder.get('introfiles', [])
             folder_time_modified = folder.get('timemodified', 0)
             self.set_props_of_files(folder_files, type='folder_file')
@@ -42,10 +45,12 @@ class FolderMod(MoodleMod):
                     }
                 )
 
+            folder_files += self.get_module_in_core_contents(course_id, module_id, core_contents).get('contents', [])
+
             self.add_module(
                 result,
                 course_id,
-                folder.get('coursemodule', 0),
+                module_id,
                 {
                     'id': folder.get('id', 0),
                     'name': folder.get('name', 'unnamed folder'),

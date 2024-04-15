@@ -93,7 +93,7 @@ class Task:
         # TODO: Get mod names automated; all mods should be in a sub-folder
         # If the file is located in a folder or in an assignment,
         # it should be saved in a sub-folder (with the name of the module).
-        if file.module_modname.endswith(('assign', 'data', 'folder', 'forum', 'lesson', 'page', 'quiz', 'workshop')):
+        if file.module_modname.endswith(('assign', 'book', 'data', 'folder', 'forum', 'lesson', 'page', 'quiz', 'workshop')):
             return PT.path_of_file_in_module(
                 storage_path, course_name, file.section_name, file.module_name, file.content_filepath
             )

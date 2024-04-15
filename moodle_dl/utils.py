@@ -437,6 +437,9 @@ class PathTools:
         # so we need to unescape the string
         name = html.unescape(name)
 
+        # Moodle and other websites often use full width characters and other weird UTF-8 codes, we normalize this
+        name = unicodedata.normalize('NFKC', name)
+
         name = name.replace('\n', ' ')
         name = name.replace('\r', ' ')
         name = name.replace('\t', ' ')

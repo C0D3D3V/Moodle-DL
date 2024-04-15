@@ -90,17 +90,6 @@ class ResultBuilder:
             elif location['module_modname'].startswith(('resource', 'akarifolder', 'url', 'index_mod')):
                 files += self._handle_files(module_contents, **location)
 
-            elif location['module_modname'].startswith(('folder')):
-                # Modules whose content is directly linked, and additional content exists in their module.
-                if location['module_modname'] in fetched_mods:
-                    # find mod module with same module_id
-                    mod = fetched_mods.get(location['module_modname'], {}).get(location['module_id'], {})
-                    mod['on_main_page'] = True
-                    mod_files = mod.get('files', [])
-                    module_contents += mod_files
-
-                files += self._handle_files(module_contents, **location)
-
             elif location['module_modname'] in fetched_mods:
                 # find mod module with same module_id
                 mod = fetched_mods.get(location['module_modname'], {}).get(location['module_id'], {})
@@ -434,7 +423,7 @@ class ResultBuilder:
     def add_files_to_courses(
         self,
         courses: List[Course],
-        course_cores: Dict[int, List[Dict]],
+        core_contents: Dict[int, List[Dict]],
         fetched_mods_files: Dict[str, Dict],
     ):
         """
@@ -442,7 +431,7 @@ class ResultBuilder:
             Dictionary of all fetched mod modules files, indexed by mod name, then by courses, then module id
         """
         for course in courses:
-            course_sections = course_cores.get(course.id, [])
+            course_sections = core_contents.get(course.id, [])
 
             fetched_mods = {}
             for mod_name, mod_courses in fetched_mods_files.items():

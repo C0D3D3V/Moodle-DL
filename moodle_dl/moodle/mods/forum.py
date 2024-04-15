@@ -18,7 +18,9 @@ class ForumMod(MoodleMod):
         # TODO: Add download condition, currently forums get filtered on API Call, and are not deleted at all
         return True
 
-    async def real_fetch_mod_entries(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
+    async def real_fetch_mod_entries(
+        self, courses: List[Course], core_contents: Dict[int, List[Dict]]
+    ) -> Dict[int, Dict[int, Dict]]:
         forums = await self.client.async_post(
             'mod_forum_get_forums_by_courses', self.get_data_for_mod_entries_endpoint(courses)
         )

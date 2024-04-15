@@ -19,7 +19,9 @@ class LessonMod(MoodleMod):
     def download_condition(cls, config: ConfigHelper, file: File) -> bool:
         return config.get_download_lessons() or (not (file.module_modname.endswith(cls.MOD_NAME) and file.deleted))
 
-    async def real_fetch_mod_entries(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
+    async def real_fetch_mod_entries(
+        self, courses: List[Course], core_contents: Dict[int, List[Dict]]
+    ) -> Dict[int, Dict[int, Dict]]:
         lessons = (
             await self.client.async_post(
                 'mod_lesson_get_lessons_by_courses', self.get_data_for_mod_entries_endpoint(courses)

@@ -7,6 +7,7 @@ from moodle_dl.moodle.request_helper import RequestHelper
 from moodle_dl.types import Course
 
 from moodle_dl.moodle.mods.assign import AssignMod  # noqa: F401 isort:skip
+from moodle_dl.moodle.mods.book import BookMod  # noqa: F401 isort:skip
 from moodle_dl.moodle.mods.data import DataMod  # noqa: F401 isort:skip
 from moodle_dl.moodle.mods.folder import FolderMod  # noqa: F401 isort:skip
 from moodle_dl.moodle.mods.forum import ForumMod  # noqa: F401 isort:skip
@@ -35,9 +36,13 @@ def get_all_mods(
     return result
 
 
-async def fetch_mods_files(mods_to_fetch: List[MoodleMod], courses_to_load: List[Course]) -> Dict[str, Dict]:
+async def fetch_mods_files(
+    mods_to_fetch: List[MoodleMod], courses_to_load: List[Course], core_contents: Dict[int, List[Dict]]
+) -> Dict[str, Dict]:
     "@return: Dictionary of all fetched files, indexed by mod name, then by courses, then module id"
-    mods_results = await asyncio.gather(*[mod.fetch_mod_entries(courses_to_load) for mod in mods_to_fetch])
+    mods_results = await asyncio.gather(
+        *[mod.fetch_mod_entries(courses_to_load, core_contents) for mod in mods_to_fetch]
+    )
     result = {}
     for idx, mod in enumerate(mods_to_fetch):
         result[mod.MOD_NAME] = mods_results[idx]

@@ -122,7 +122,7 @@ class CoreHandler:
 
         return sections
 
-    async def async_load_course_cores(self, courses: List[Course]) -> Dict[int, List[Dict]]:
+    async def async_load_core_contents(self, courses: List[Course]) -> Dict[int, List[Dict]]:
         """
         Loads all course core structures for every given course
         @param entries: List of all section entries, indexed by course id

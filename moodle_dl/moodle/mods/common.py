@@ -50,11 +50,13 @@ class MoodleMod(metaclass=ABCMeta):
         # (do not only filter "deleted" mod files but all?)
         pass
 
-    async def fetch_mod_entries(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
+    async def fetch_mod_entries(
+        self, courses: List[Course], core_contents: Dict[int, List[Dict]]
+    ) -> Dict[int, Dict[int, Dict]]:
         if self.version < self.MOD_MIN_VERSION:
             return {}
 
-        result = await self.real_fetch_mod_entries(courses)
+        result = await self.real_fetch_mod_entries(courses, core_contents)
         logging.info('Loaded all %s', self.MOD_PLURAL_NAME)
         return result
 
@@ -78,7 +80,9 @@ class MoodleMod(metaclass=ABCMeta):
         return {'courseids': course_ids}
 
     @abstractmethod
-    async def real_fetch_mod_entries(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
+    async def real_fetch_mod_entries(
+        self, courses: List[Course], core_contents: Dict[int, List[Dict]]
+    ) -> Dict[int, Dict[int, Dict]]:
         """
         Fetches the mod entries for all courses
         @return: Dictionary of all course modules of that mod type, indexed by course id, then course module id
@@ -204,6 +208,15 @@ class MoodleMod(metaclass=ABCMeta):
             elif feature_result is not None:
                 result.append(feature_result)
         return result
+
+    @staticmethod
+    def get_module_in_core_contents(course_id: int, module_id: int, core_contents: Dict[int, List[Dict]]) -> Dict:
+        course_section = core_contents.get(course_id, [])
+        for section in course_section:
+            for module in section.get('modules', []):
+                if module.get('id', 0) == module_id:
+                    return module
+        return {}
 
     @staticmethod
     def add_module(result: Dict, course_id: int, module_id: int, module: Dict):

@@ -112,13 +112,13 @@ class MoodleService:
 
         courses = self.get_courses_list(core_handler, user_id)
 
+        core_contents = await core_handler.async_load_core_contents(courses)
         mods = get_all_mods(request_helper, version, user_id, database.get_last_timestamp_per_mod_module(), self.config)
-        fetched_mods_files = await fetch_mods_files(mods, courses)
-        course_cores = await core_handler.async_load_course_cores(courses)
+        fetched_mods_files = await fetch_mods_files(mods, courses, core_contents)
 
         logging.debug('Combine API results...')
         ResultBuilder(moodle_url, version, get_mod_plurals()).add_files_to_courses(
-            courses, course_cores, fetched_mods_files
+            courses, core_contents, fetched_mods_files
         )
 
         logging.debug('Checking for changes...')

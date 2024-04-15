@@ -15,7 +15,9 @@ class PageMod(MoodleMod):
         # TODO: Add download condition
         return True
 
-    async def real_fetch_mod_entries(self, courses: List[Course]) -> Dict[int, Dict[int, Dict]]:
+    async def real_fetch_mod_entries(
+        self, courses: List[Course], core_contents: Dict[int, List[Dict]]
+    ) -> Dict[int, Dict[int, Dict]]:
         pages = (
             await self.client.async_post(
                 'mod_page_get_pages_by_courses', self.get_data_for_mod_entries_endpoint(courses)
