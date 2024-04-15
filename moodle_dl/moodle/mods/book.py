@@ -55,12 +55,31 @@ class BookMod(MoodleMod):
                 # Generate Table of Contents
                 book_toc = json.loads(book_contents[0].get('content', ''))
 
-                toc_html = '<ul>'
-                for entry in book_toc:
-                    chapter_title = html.escape(entry.get("title", "untitled"))
-                    chapter_href = urllib.parse.quote(entry.get("href", "#failed"))
-                    toc_html += f'<li><a title="{chapter_title}" href="{chapter_href}">{chapter_title}</a></li>'
-                toc_html += '</ul>'
+                toc_html = '''
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            ol {
+                counter-reset: item
+            }
+            li {
+                display: block
+            }
+            li:before {
+                content: counters(item, ".")" ";
+                counter-increment: item
+            }
+        </style>
+    </head>
+    <body>
+        '''
+                toc_html += self.create_ordered_index(book_toc)
+                toc_html += '''
+    </body>
+</html>
+                '''
+
                 book_files.append(
                     {
                         'filename': 'Table of Contents',
@@ -69,6 +88,7 @@ class BookMod(MoodleMod):
                         'html': toc_html,
                         'type': 'html',
                         'no_search_for_urls': True,
+                        'filesize': len(toc_html),
                     }
                 )
 
@@ -83,4 +103,18 @@ class BookMod(MoodleMod):
                 },
             )
 
+        return result
+
+    @staticmethod
+    def create_ordered_index(items: List[Dict]) -> str:
+        result = '<ol>\n'
+        for entry in items:
+            chapter_title = html.escape(entry.get("title", "untitled"))
+            chapter_href = urllib.parse.quote(entry.get("href", "#failed"))
+            result += f'<li><a title="{chapter_title}" href="{chapter_href}">{chapter_title}</a></li>\n'
+            subitems = entry.get('subitems', [])
+            if len(subitems) > 0:
+                result += BookMod.create_ordered_index(subitems)
+
+        result += '</ol>'
         return result
