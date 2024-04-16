@@ -103,6 +103,14 @@ class ConfigHelper:
         # return a stored boolean if workshops should be downloaded
         return self.get_property_or('download_workshops', False)
 
+    def get_download_books(self) -> str:
+        # return a stored boolean if books should be downloaded
+        return self.get_property_or('download_books', False)
+
+    def get_download_calendars(self) -> str:
+        # return a stored boolean if calendars should be downloaded
+        return self.get_property_or('download_calendars', False)
+
     def get_userid_and_version(self) -> Tuple[str, int]:
         # return the userid and a version
         try:

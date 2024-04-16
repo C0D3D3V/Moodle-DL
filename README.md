@@ -11,7 +11,7 @@
 
 `moodle-dl` is a console application that can download all the files from your Moodle courses that are necessary for your daily study routine. Furthermore, moodle-dl can notify you about various activities on your Moodle server. Notifications can be sent to Telegram, Discord, XMPP and Mail. The current implementation includes: 
 
-- Download files, assignments including submissions, forums, workshops, lessons, quizzes, descriptions, as well as external links (OpenCast, Youtube, Sciebo, Owncloud, Kaltura, Helixmedia, Google drive,... videos/files).
+- Download files, assignments including submissions, books, calendar events, forums, workshops, lessons, quizzes, descriptions, as well as external links (OpenCast, Youtube, Sciebo, Owncloud, Kaltura, Helixmedia, Google drive,... videos/files).
 - Notifications about all downloaded files
 - Text from your Moodle courses (like pages, descriptions or forum posts) will be directly attached to the notifications, so you can read them directly in your messaging app.
 - A configuration wizard is also included, allowing all settings to be made very easily.

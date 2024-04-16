@@ -8,6 +8,7 @@ from moodle_dl.types import Course
 
 from moodle_dl.moodle.mods.assign import AssignMod  # noqa: F401 isort:skip
 from moodle_dl.moodle.mods.book import BookMod  # noqa: F401 isort:skip
+from moodle_dl.moodle.mods.calendar import CalendarMod  # noqa: F401 isort:skip
 from moodle_dl.moodle.mods.data import DataMod  # noqa: F401 isort:skip
 from moodle_dl.moodle.mods.folder import FolderMod  # noqa: F401 isort:skip
 from moodle_dl.moodle.mods.forum import ForumMod  # noqa: F401 isort:skip

@@ -15,19 +15,22 @@ class BookMod(MoodleMod):
 
     @classmethod
     def download_condition(cls, config: ConfigHelper, file: File) -> bool:
-        # TODO: Add download condition
-        return True
+        return config.get_download_books() or (not (file.module_modname.endswith(cls.MOD_NAME) and file.deleted))
 
     async def real_fetch_mod_entries(
         self, courses: List[Course], core_contents: Dict[int, List[Dict]]
     ) -> Dict[int, Dict[int, Dict]]:
+
+        result = {}
+        if not self.config.get_download_books():
+            return result
+
         books = (
             await self.client.async_post(
                 'mod_book_get_books_by_courses', self.get_data_for_mod_entries_endpoint(courses)
             )
         ).get('books', [])
 
-        result = {}
         for book in books:
             course_id = book.get('course', 0)
             module_id = book.get('coursemodule', 0)

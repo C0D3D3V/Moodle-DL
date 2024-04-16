@@ -1,3 +1,52 @@
+course_events_section_id = -2
+course_events_module_id = -2
+moodle_event_header = '''
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar Event</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 20px;
+      }
+      .container {
+        max-width: 600px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        margin: auto;
+      }
+      .event-title {
+        font-size: 24px;
+        font-weight: bold;
+        color: #333;
+      }
+      .icon {
+        margin-right: 5px;
+      }
+      .attribute {
+        margin-bottom: 10px;
+      }
+      .attribute span {
+        font-weight: bold;
+      }
+    </style>
+    </head>
+    <body>
+    
+    <div class="container">
+'''
+moodle_event_footer = '''
+    </div>
+    
+    </body>
+    </html>
+'''
+
 moodle_html_header = '''
 <!DOCTYPE html>
 

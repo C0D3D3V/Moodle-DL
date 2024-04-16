@@ -270,7 +270,7 @@ class StateRecorder:
     @staticmethod
     def ignore_deleted(file: File):
         # Returns true if the deleted file should be ignored.
-        if file.module_modname.endswith('forum'):
+        if file.module_modname.endswith(('forum', 'calendar')):
             return True
 
         return False
@@ -527,6 +527,7 @@ class StateRecorder:
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         mod_forum_dict = {}
+        mod_calendar_dict = {}
 
         cursor.execute(
             """SELECT module_id, max(content_timemodified) as content_timemodified
@@ -539,9 +540,18 @@ class StateRecorder:
         for course_row in curse_rows:
             mod_forum_dict[course_row['module_id']] = course_row['content_timemodified']
 
+        cursor.execute(
+            """SELECT module_id, max(content_timemodified) as content_timemodified
+            FROM files WHERE module_modname = 'calendar' AND content_type = 'html'
+            GROUP BY module_id;"""
+        )
+
+        course_row = cursor.fetchone()
+        mod_calendar_dict[course_row['module_id']] = course_row['content_timemodified']
+
         conn.close()
 
-        return {'forum': mod_forum_dict}
+        return {'forum': mod_forum_dict, 'calendar': mod_calendar_dict}
 
     def changes_to_notify(self) -> List[Course]:
         changed_courses = []

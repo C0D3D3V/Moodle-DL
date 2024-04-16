@@ -223,5 +223,5 @@ class MoodleMod(metaclass=ABCMeta):
         if course_id not in result:
             result[course_id] = {}
         if module_id in result[course_id]:
-            logging.debug('Got duplicated module %s in course %s', module_id, course_id)
+            logging.warning('Got duplicated module %s in course %s', module_id, course_id)
         result[course_id][module_id] = module

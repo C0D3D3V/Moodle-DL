@@ -52,6 +52,8 @@ class ConfigWizard:
         self._select_should_download_quizzes()
         self._select_should_download_lessons()
         self._select_should_download_workshops()
+        self._select_should_download_books()
+        self._select_should_download_calendars()
         self._select_should_download_linked_files()
         self._select_should_download_also_with_cookie()
 
@@ -491,6 +493,38 @@ class ConfigWizard:
         )
 
         self.config.set_property('download_workshops', download_workshops)
+
+    def _select_should_download_books(self):
+        """
+        Asks the user if books should be downloaded
+        """
+        download_books = self.config.get_download_books()
+
+        self.section_seperator()
+        Log.info('Books are collections of pages. A table of contents is created for each book.')
+        print('')
+
+        download_books = Cutie.prompt_yes_or_no(
+            Log.blue_str('Do you want to download books of your courses?'), default_is_yes=download_books
+        )
+
+        self.config.set_property('download_books', download_books)
+
+    def _select_should_download_calendars(self):
+        """
+        Asks the user if calendars should be downloaded
+        """
+        download_calendars = self.config.get_download_calendars()
+
+        self.section_seperator()
+        Log.info('Calendars can be downloaded as individually generated HTML files for each event.')
+        print('')
+
+        download_calendars = Cutie.prompt_yes_or_no(
+            Log.blue_str('Do you want to download calendars of your courses?'), default_is_yes=download_calendars
+        )
+
+        self.config.set_property('download_calendars', download_calendars)
 
     def _select_should_download_descriptions(self):
         """
