@@ -547,7 +547,8 @@ class StateRecorder:
         )
 
         course_row = cursor.fetchone()
-        mod_calendar_dict[course_row['module_id']] = course_row['content_timemodified']
+        if course_row is not None:
+            mod_calendar_dict[course_row['module_id']] = course_row['content_timemodified']
 
         conn.close()
 
