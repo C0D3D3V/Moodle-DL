@@ -59,6 +59,15 @@ moodle_html_header = '''
         type="text/css">/** Required in order to fix style inclusion problems in IE with YUI **/</script>
     <link rel="stylesheet" type="text/css"
         href="https://moodle.ruhr-uni-bochum.de/theme/styles.php/boost/1633802793_1/all" />
+        <style>
+        @font-face {
+            font-family: "Font Awesome 6 Free";
+            font-style: normal;
+            font-weight: 900;
+            font-display: block;
+            src: url(https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/webfonts/fa-solid-900.woff2) format("woff2"), url(https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/webfonts/fa-solid-900.ttf) format("truetype");
+        }
+    </style>
     <script>
         //<![CDATA[
         var M = {}; M.yui = {};

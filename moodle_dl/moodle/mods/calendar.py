@@ -12,6 +12,12 @@ from moodle_dl.moodle.moodle_constants import (
 from moodle_dl.types import Course, File
 from moodle_dl.utils import PathTools as PT
 
+# TODO: should we use locale.setlocale(locale.LC_TIME, "") to set localized version of Date format
+# or should we use https://babel.pocoo.org/en/latest/dates.html
+# babel.dates.format_datetime(datetime_obj) is enough to use local setting, but we could also use user language settings of moodle,
+# by defining locale='user_lang' as extra argument
+# We can also use babel.dates.format_timedelta(time_delta) to print the time delta into the date file
+
 
 class CalendarMod(MoodleMod):
     MOD_NAME = 'calendar'
