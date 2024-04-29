@@ -97,7 +97,7 @@ class CalendarMod(MoodleMod):
                     }
                 )
             if course_id not in core_contents:
-                core_contents[course_id] = {}
+                core_contents[course_id] = []
             core_contents[course_id].append(
                 {
                     'id': course_events_section_id,
