@@ -311,7 +311,9 @@ class Task:
         @return: If download should be aborted then None; else HeadInfo
         """
         ssl_context = SslHelper.get_ssl_context(
-            self.opts.global_opts.skip_cert_verify, self.opts.global_opts.allow_insecure_ssl, self.opts.global_opts.use_all_ciphers
+            self.opts.global_opts.skip_cert_verify,
+            self.opts.global_opts.allow_insecure_ssl,
+            self.opts.global_opts.use_all_ciphers,
         )
         async with aiohttp.ClientSession(cookie_jar=self.get_cookie_jar(), raise_for_status=True) as session:
             try:
@@ -819,7 +821,9 @@ class Task:
         file_obj = None
         headers = self.RQ_HEADER.copy()
         ssl_context = SslHelper.get_ssl_context(
-            self.opts.global_opts.skip_cert_verify, self.opts.global_opts.allow_insecure_ssl, self.opts.global_opts.use_all_ciphers
+            self.opts.global_opts.skip_cert_verify,
+            self.opts.global_opts.allow_insecure_ssl,
+            self.opts.global_opts.use_all_ciphers,
         )
         with Timer() as watch:
             async with aiohttp.ClientSession(cookie_jar=self.get_cookie_jar(), raise_for_status=True) as session:
