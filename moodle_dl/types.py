@@ -272,6 +272,7 @@ class MoodleDlOpts:
     without_downloading_files: bool
     max_path_length_workaround: bool
     allow_insecure_ssl: bool
+    use_all_ciphers: bool
     skip_cert_verify: bool
     verbose: bool
     quiet: bool

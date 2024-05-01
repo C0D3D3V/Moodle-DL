@@ -786,7 +786,7 @@ class SslHelper:
 
     @classmethod
     @lru_cache(maxsize=4)
-    def get_ssl_context(cls, skip_cert_verify: bool, allow_insecure_ssl: bool):
+    def get_ssl_context(cls, skip_cert_verify: bool, allow_insecure_ssl: bool, use_all_ciphers: bool):
         if not skip_cert_verify:
             ssl_context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
             cls.load_default_certs(ssl_context)
@@ -799,6 +799,8 @@ class SslHelper:
             # Be warned the insecure renegotiation allows an attack, see:
             # https://nvd.nist.gov/vuln/detail/CVE-2009-3555
             ssl_context.options |= 0x4  # set ssl.OP_LEGACY_SERVER_CONNECT bit
+        if use_all_ciphers:
+            ssl_context.set_ciphers('ALL')
 
         return ssl_context
 
@@ -818,12 +820,12 @@ class SslHelper:
             )
 
     @classmethod
-    def custom_requests_session(cls, skip_cert_verify: bool, allow_insecure_ssl: bool):
+    def custom_requests_session(cls, skip_cert_verify: bool, allow_insecure_ssl: bool, use_all_ciphers: bool):
         """
         Return a new requests session with custom SSL context
         """
         session = requests.Session()
-        ssl_context = cls.get_ssl_context(skip_cert_verify, allow_insecure_ssl)
+        ssl_context = cls.get_ssl_context(skip_cert_verify, allow_insecure_ssl, use_all_ciphers)
         session.mount('https://', cls.CustomHttpAdapter(ssl_context))
         session.verify = not skip_cert_verify
         return session

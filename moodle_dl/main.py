@@ -460,6 +460,14 @@ def get_parser():
         help='Allow connections to unpatched servers. Use this option if your server uses a very old SSL version.',
     )
     parser.add_argument(
+        '-uac',
+        '--use-all-ciphers',
+        dest='use_all_ciphers',
+        default=False,
+        action='store_true',
+        help='Allow connections to servers that use insecure ciphers. Use this option if your server uses an insecure cipher.',
+    )
+    parser.add_argument(
         '-scv',
         '--skip-cert-verify',
         dest='skip_cert_verify',

@@ -37,7 +37,9 @@ class DiscordShooter:
 
     def send_data(self, data: Dict):
 
-        session = SslHelper.custom_requests_session(skip_cert_verify=False, allow_insecure_ssl=False)
+        session = SslHelper.custom_requests_session(
+            skip_cert_verify=False, allow_insecure_ssl=False, use_all_ciphers=False
+        )
         for webhook_url in self.discord_webhooks:
             try:
                 response = session.post(webhook_url, data=json.dumps(data), headers=self.RQ_HEADER, timeout=60)
