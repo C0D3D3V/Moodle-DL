@@ -465,7 +465,10 @@ def get_parser():
         dest='use_all_ciphers',
         default=False,
         action='store_true',
-        help='Allow connections to servers that use insecure ciphers. Use this option if your server uses an insecure cipher.',
+        help=(
+            'Allow connections to servers that use insecure ciphers.'
+            + ' Use this option if your server uses an insecure cipher.'
+        ),
     )
     parser.add_argument(
         '-scv',
