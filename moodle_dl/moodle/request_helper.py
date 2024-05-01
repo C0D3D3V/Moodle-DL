@@ -62,7 +62,9 @@ class RequestHelper:
         if data is not None:
             data_urlencoded = self.recursive_urlencode(data)
 
-        session = SslHelper.custom_requests_session(self.opts.skip_cert_verify, self.opts.allow_insecure_ssl, self.opts.use_all_ciphers)
+        session = SslHelper.custom_requests_session(
+            self.opts.skip_cert_verify, self.opts.allow_insecure_ssl, self.opts.use_all_ciphers
+        )
         if cookie_jar_path is not None:
             session.cookies = MoodleDLCookieJar(cookie_jar_path)
 
@@ -91,7 +93,9 @@ class RequestHelper:
         @return: The resulting Response object.
         """
 
-        session = SslHelper.custom_requests_session(self.opts.skip_cert_verify, self.opts.allow_insecure_ssl, self.opts.use_all_ciphers)
+        session = SslHelper.custom_requests_session(
+            self.opts.skip_cert_verify, self.opts.allow_insecure_ssl, self.opts.use_all_ciphers
+        )
         if cookie_jar_path is not None:
             session.cookies = MoodleDLCookieJar(cookie_jar_path)
 
@@ -123,7 +127,9 @@ class RequestHelper:
         data = self._get_POST_DATA(function, self.token, data)
         data_urlencoded = self.recursive_urlencode(data)
         url = self._get_REST_POST_URL(self.url_base, function)
-        ssl_context = SslHelper.get_ssl_context(self.opts.skip_cert_verify, self.opts.allow_insecure_ssl, self.opts.use_all_ciphers)
+        ssl_context = SslHelper.get_ssl_context(
+            self.opts.skip_cert_verify, self.opts.allow_insecure_ssl, self.opts.use_all_ciphers
+        )
 
         error_ctr = 0
         async with self.semaphore, aiohttp.ClientSession() as session:
@@ -181,7 +187,9 @@ class RequestHelper:
         data_urlencoded = self.recursive_urlencode(data)
         url = self._get_REST_POST_URL(self.url_base, function)
 
-        session = SslHelper.custom_requests_session(self.opts.skip_cert_verify, self.opts.allow_insecure_ssl, self.opts.use_all_ciphers)
+        session = SslHelper.custom_requests_session(
+            self.opts.skip_cert_verify, self.opts.allow_insecure_ssl, self.opts.use_all_ciphers
+        )
         error_ctr = 0
         while error_ctr <= self.MAX_RETRIES:
             try:
@@ -249,7 +257,9 @@ class RequestHelper:
         @return: The JSON response returned by the Moodle System, already
         checked for errors.
         """
-        session = SslHelper.custom_requests_session(self.opts.skip_cert_verify, self.opts.allow_insecure_ssl, self.opts.use_all_ciphers)
+        session = SslHelper.custom_requests_session(
+            self.opts.skip_cert_verify, self.opts.allow_insecure_ssl, self.opts.use_all_ciphers
+        )
         try:
             response = session.post(
                 f'{self.url_base}login/token.php',
