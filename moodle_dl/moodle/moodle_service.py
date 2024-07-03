@@ -48,6 +48,7 @@ class MoodleService:
         splitted = address.split('token=')
 
         if len(splitted) < 2:
+            print("this might not be the correct url. Did you maybe only paste the token instead of the whole url?")
             return None
 
         decoded = str(base64.b64decode(splitted[1]))
