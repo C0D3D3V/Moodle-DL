@@ -1,3 +1,4 @@
+import base64
 import collections
 import contextlib
 import email.utils
@@ -75,6 +76,13 @@ def get_nested(from_dict: Dict, key: str, default=None):
         return result
     except KeyError:
         return default
+
+
+def is_base_64(s):
+    try:
+        return base64.b64encode(base64.b64decode(s)) == s
+    except Exception:  # pylint: disable=broad-exception-caught
+        return False
 
 
 # Templates for internet shortcut files, which are plain text files.

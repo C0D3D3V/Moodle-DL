@@ -17,7 +17,7 @@ from moodle_dl.moodle.mods import (
 from moodle_dl.moodle.request_helper import RequestHelper
 from moodle_dl.moodle.result_builder import ResultBuilder
 from moodle_dl.types import Course, MoodleDlOpts, MoodleURL
-from moodle_dl.utils import determine_ext
+from moodle_dl.utils import determine_ext, is_base_64
 
 
 class MoodleService:
@@ -48,13 +48,20 @@ class MoodleService:
         splitted = address.split('token=')
 
         if len(splitted) < 2:
-            print("this might not be the correct url. Did you maybe only paste the token instead of the whole url?")
-            return None
-
-        decoded = str(base64.b64decode(splitted[1]))
+            if is_base_64(address):
+                decoded = str(base64.b64decode(address))
+            else:
+                logging.error(
+                    'This might not be the correct url. The token was not found in the input.'
+                    + ' Have you perhaps only inserted the token instead of the whole URL?'
+                )
+                return None
+        else:
+            decoded = str(base64.b64decode(splitted[1]))
 
         splitted = decoded.split(':::')
         if len(splitted) < 2:
+            logging.error('The token could not be decrypted. Did you perhaps not copy the complete url?')
             return None
 
         token = re.sub(r'[^A-Za-z0-9]+', '', splitted[1])
