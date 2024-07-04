@@ -810,6 +810,9 @@ class SslHelper:
         if use_all_ciphers:
             ssl_context.set_ciphers('ALL')
 
+        # Activate ALPN extension
+        ssl_context.set_alpn_protocols(['http/1.1'])
+
         return ssl_context
 
     class CustomHttpAdapter(requests.adapters.HTTPAdapter):

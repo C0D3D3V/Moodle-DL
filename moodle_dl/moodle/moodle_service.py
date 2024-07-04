@@ -61,7 +61,7 @@ class MoodleService:
 
         splitted = decoded.split(':::')
         if len(splitted) < 2:
-            logging.error('The token could not be decrypted. Did you perhaps not copy the complete url?')
+            logging.error('The token could not be decoded. Did you perhaps not copy the complete url?')
             return None
 
         token = re.sub(r'[^A-Za-z0-9]+', '', splitted[1])
