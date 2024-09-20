@@ -56,6 +56,8 @@ def choose_task(config: ConfigHelper, opts: MoodleDlOpts):
         NotificationsWizard(config, opts).interactively_configure_telegram()
     elif opts.change_notification_discord:
         NotificationsWizard(config, opts).interactively_configure_discord()
+    elif opts.change_notification_ntfy:
+        NotificationsWizard(config, opts).interactively_configure_ntfy()
     elif opts.change_notification_xmpp:
         NotificationsWizard(config, opts).interactively_configure_xmpp()
     elif opts.config:
@@ -264,6 +266,15 @@ def get_parser():
         default=False,
         action='store_true',
         help=('Activate / deactivate / change the settings for receiving notifications via Discord.'),
+    )
+
+    group.add_argument(
+        '-cn',
+        '--change-notification-ntfy',
+        dest='change_notification_ntfy',
+        default=False,
+        action='store_true',
+        help=('Activate / deactivate / change the settings for receiving notifications via ntfy.'),
     )
 
     group.add_argument(
