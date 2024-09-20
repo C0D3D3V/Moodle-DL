@@ -176,10 +176,14 @@ class ForumMod(MoodleMod):
                 is_file=False,
             )
 
+            if 'urls' in post:
+                post_url = post['urls'].get('view')
+
             result.append(
                 {
                     'filename': post_filename,
                     'filepath': post_path,
+                    'fileurl': post_url,
                     'timemodified': post_modified,
                     'description': post_message,
                     'type': 'description',
