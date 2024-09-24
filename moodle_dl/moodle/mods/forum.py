@@ -176,8 +176,7 @@ class ForumMod(MoodleMod):
                 is_file=False,
             )
 
-            if 'urls' in post:
-                post_url = post['urls'].get('view')
+            post_url = post.get('urls', {}).get('view', None)
 
             result.append(
                 {
