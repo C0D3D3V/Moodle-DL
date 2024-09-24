@@ -4,6 +4,7 @@ from moodle_dl.config import ConfigHelper
 from moodle_dl.notifications.discord.discord_shooter import DiscordShooter
 from moodle_dl.notifications.mail.mail_formater import create_full_welcome_mail
 from moodle_dl.notifications.mail.mail_shooter import MailShooter
+from moodle_dl.notifications.ntfy.ntfy_shooter import NtfyShooter
 from moodle_dl.notifications.telegram.telegram_shooter import (
     RequestRejectedError,
     TelegramShooter,
@@ -169,6 +170,47 @@ class NotificationsWizard:
                 discord_cfg = {'webhook_urls': webhook_urls}
 
                 self.config.set_property('discord', discord_cfg)
+
+    def interactively_configure_ntfy(self) -> None:
+        "Guides the user through the configuration of the ntfy notification."
+
+        do_ntfy = Cutie.prompt_yes_or_no('Do you want to activate Notifications via ntfy?')
+
+        if not do_ntfy:
+            self.config.remove_property('ntfy')
+        else:
+            print('[The following Inputs are not validated!]')
+            config_valid = False
+            while not config_valid:
+                topic = input('ntfy topic: ')
+                do_ntfy_server = Cutie.prompt_yes_or_no('Do you want to set a custom ntfy server?')
+                server = None
+                if do_ntfy_server:
+                    server = input('ntfy server: ')
+
+                print('Testing server-Config...')
+
+                try:
+                    ntfy_shooter = NtfyShooter(topic=topic, server=server)
+                    ntfy_shooter.send(title='', message='This is a test message from moodle-dl!')
+
+                except (ConnectionError, RuntimeError) as e:
+                    print(f'Error while sending the test message: {str(e)}')
+                    continue
+
+                else:
+                    input(
+                        'Please check if you received the Testmessage.'
+                        + ' If yes, confirm with Return.\nIf not, exit'
+                        + ' this program ([CTRL]+[C]) and try again later.'
+                    )
+                    config_valid = True
+
+                ntfy_cfg = {'topic': topic}
+                if server:
+                    ntfy_cfg['server'] = server
+
+                self.config.set_property('ntfy', ntfy_cfg)
 
     def interactively_configure_xmpp(self) -> None:
         "Guides the user through the configuration of the xmpp notification."
