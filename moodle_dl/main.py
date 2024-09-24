@@ -546,6 +546,8 @@ def post_process_opts(opts: MoodleDlOpts):
 
 # --- called at the program invocation: -------------------------------------
 def main(args=None):
+    if sys.platform == "win32":
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     just_fix_windows_console()
     opts = post_process_opts(MoodleDlOpts(**vars(get_parser().parse_args(args))))
     setup_logger(opts)
