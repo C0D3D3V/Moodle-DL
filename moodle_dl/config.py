@@ -40,7 +40,9 @@ class ConfigHelper:
         config_formatted = json.dumps(self._whole_config, indent=4)
         # Saves the JSON object back to file
         with os.fdopen(
-            os.open(self.config_path, flags=os.O_WRONLY | os.O_CREAT, mode=0o600), mode='w', encoding='utf-8'
+            os.open(self.config_path, flags=os.O_WRONLY | os.O_CREAT | os.O_TRUNC, mode=0o600),
+            mode='w',
+            encoding='utf-8',
         ) as config_file:
             config_file.write(config_formatted)
 
