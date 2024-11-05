@@ -101,7 +101,7 @@ class LessonMod(MoodleMod):
 
         page_content = page_result.get('pagecontent', '')
         if page_content is None:
-            page_content= ''
+            page_content = ''
         page_files.append(
             {
                 '_is_page_content': True,
