@@ -99,10 +99,13 @@ class LessonMod(MoodleMod):
         page_files = page_result.get('contentfiles', [])
         self.set_props_of_files(page_files, type='lesson_file')
 
+        page_content = page_result.get('pagecontent', '')
+        if page_content is None:
+            page_content= ''
         page_files.append(
             {
                 '_is_page_content': True,
-                'content': page_result.get('pagecontent', '').split('<script>')[0],
+                'content': page_content.split('<script>')[0],
             }
         )
         return page_files
