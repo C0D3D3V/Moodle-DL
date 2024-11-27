@@ -56,6 +56,7 @@ class Task:
             + ' (KHTML, like Gecko) Version/4.0 Chrome/71.0.3578.99 Mobile Safari/537.36 MoodleMobile'
         ),
         'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept-Encoding': 'identity',
     }
 
     def __init__(
