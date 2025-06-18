@@ -34,7 +34,6 @@ Discussions about the development take place mainly on [Github](https://github.c
 <details>
 <summary markdown="span">If step 3 failed, you may need to do additional steps. Click here to see the additional Instructions</summary>
 
-
 You may need to install [Visual C++ compiler for Python](https://wiki.python.org/moin/WindowsCompilers#Microsoft_Visual_C.2B-.2B-_14.2_standalone:_Build_Tools_for_Visual_Studio_2019_.28x86.2C_x64.2C_ARM.2C_ARM64.29) to build all the dependencies successfully: 
 
   - Download and Install Microsoft [Build Tools for Visual Studio 2019 from here](https://aka.ms/vs/16/release/vs_buildtools.exe)
@@ -46,7 +45,11 @@ If you run the program on **Windows**, please use [Powershell or CMD](https://ww
 
 5. Run `moodle-dl --help` to see all available options.
 
- 
+**macOS**
+
+In addition to binary releases, Moodle-dl is available as part of the [Homebrew](https://brew.sh) package manager. Once you've installed Homebrew, run `brew install moodle-dl` to get started.
+
+All required dependencies will be installed automatically.
 
 ### Usage
 Moodle-dl uses the Moodle mobile API. If your Moodle does not allow access via [the Moodle app](https://download.moodle.org/mobile/), Moodle-dl will not be able to connect to your Moodle.
