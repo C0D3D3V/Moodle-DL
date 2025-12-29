@@ -463,27 +463,60 @@ class PathTools:
 
     @staticmethod
     def truncate_filename(name: str, is_file: bool, max_length: int):
-        if len(name) > max_length:
+        bytestr = False
+        name_len = 0
+        if sys.platform == 'linux' or sys.platform == 'linux2':
+            # Most Linux filesystems define max path element in bytes or ASCII chars
+            bytestr = True
+            name_len = len(name.encode('utf8'))
+        else:
+            # Both NTFS on Windows and APFS on MacOS define max size of a path element in UTF16 and UTF8 codepoints respectively
+            bytestr = False
+            name_len = len(name)
+        if name_len > max_length:
             if not is_file:
-                name = PathTools.truncate_name(name, max_length)
+                name = PathTools.truncate_name(name, max_length, bytestr)
             else:
+                # Extension almost always uses ASCII chars
                 stem, ext = PathTools.get_file_stem_and_ext(name)
-                ext_len = len(ext) if ext is not None else 0
+                ext_len = 0
+                if not bytestr:
+                    ext_len = len(ext) if ext is not None else 0
+                else:
+                    ext_len = len(ext.encode('utf8')) if ext is not None else 0
                 if ext is None or ext_len == 0 or ext_len > 20:
                     # extensions longer then 20 characters are probably no extensions
-                    name = PathTools.truncate_name(name, max_length)
+                    name = PathTools.truncate_name(name, max_length, bytestr)
                 else:
-                    stem = PathTools.truncate_name(stem, max_length - ext_len - 1)
+                    stem = PathTools.truncate_name(stem, max_length - ext_len - 1, bytestr)
                     name = f'{stem}.{ext}'
         return name
 
     @staticmethod
-    def truncate_name(name: str, max_length: int):
-        if PathTools.restricted_filenames:
-            name = name[: max_length - 3] + '...'
+    def truncate_name(name: str, max_length: int, bytestr: bool):
+        if not bytestr:
+            if PathTools.restricted_filenames:
+                name = name[: max_length - 3] + '...'
+            else:
+                name = name[: max_length - 1] + '…'
+            return name
         else:
-            name = name[: max_length - 1] + '…'
-        return name
+            # This will work with max_length up to 252, more will require proper utf8 parsing or lower limits (we can overshoot by up to 3 bytes on utf8)
+            ret = ""
+            max_len_adjusted = max_length
+            if PathTools.restricted_filenames:
+                max_len_adjusted -= 3
+            else:
+                max_len_adjusted -= 2  # Size of '…'
+            for char in name:
+                ret += char
+                if len(ret.encode('utf8')) >= max_len_adjusted:
+                    break
+            if PathTools.restricted_filenames:
+                ret += '...'
+            else:
+                ret += '…'
+            return ret
 
     @staticmethod
     def remove_start(s, start):
