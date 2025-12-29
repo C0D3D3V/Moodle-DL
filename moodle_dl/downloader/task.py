@@ -33,7 +33,10 @@ from moodle_dl.types import (
     TaskState,
     TaskStatus,
 )
-from moodle_dl.utils import LINK_TEMPLATES, MoodleDLCookieJar
+from moodle_dl.utils import (
+    LINK_TEMPLATES,
+    MoodleDLCookieJar,
+)
 from moodle_dl.utils import PathTools as PT
 from moodle_dl.utils import (
     SslHelper,
