@@ -470,7 +470,8 @@ class PathTools:
             bytestr = True
             name_len = len(name.encode('utf8'))
         else:
-            # Both NTFS on Windows and APFS on MacOS define max size of a path element in UTF16 and UTF8 codepoints respectively
+            # Both NTFS on Windows and APFS on MacOS define max size of a path element
+            #  in UTF16 and UTF8 codepoints respectively
             bytestr = False
             name_len = len(name)
         if name_len > max_length:
@@ -501,7 +502,8 @@ class PathTools:
                 name = name[: max_length - 1] + '…'
             return name
         else:
-            # This will work with max_length up to 252, more will require proper utf8 parsing or lower limits (we can overshoot by up to 3 bytes on utf8)
+            # This will work with max_length up to 252, more will require proper utf8 parsing
+            #  or lower limits (we can overshoot by up to 3 bytes on utf8)
             ret = ""
             max_len_adjusted = max_length
             if PathTools.restricted_filenames:
@@ -539,7 +541,7 @@ class PathTools:
                 return '\0 '
             elif is_id is NO_DEFAULT and not restricted and char in '"*:<>?|/\\':
                 # Replace with their full-width unicode counterparts
-                return {'/': '\u29F8', '\\': '\u29f9'}.get(char, chr(ord(char) + 0xFEE0))
+                return {'/': '\u29f8', '\\': '\u29f9'}.get(char, chr(ord(char) + 0xFEE0))
             elif char == '?' or ord(char) < 32 or ord(char) == 127:
                 return ''
             elif char == '"':
