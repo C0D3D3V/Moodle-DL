@@ -47,6 +47,7 @@ from moodle_dl.utils import (
 
 class Task:
     "Task is responsible to download or create a file"
+
     CHUNK_SIZE = 102400  # default: 1024 * 100 = 100kb; will be overwritten with download_chunk_size
     MAX_DL_RETRIES = 3
 
