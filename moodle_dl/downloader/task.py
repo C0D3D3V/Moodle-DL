@@ -33,7 +33,10 @@ from moodle_dl.types import (
     TaskState,
     TaskStatus,
 )
-from moodle_dl.utils import LINK_TEMPLATES, MoodleDLCookieJar
+from moodle_dl.utils import (
+    LINK_TEMPLATES,
+    MoodleDLCookieJar,
+)
 from moodle_dl.utils import PathTools as PT
 from moodle_dl.utils import (
     SslHelper,
@@ -47,6 +50,7 @@ from moodle_dl.utils import (
 
 class Task:
     "Task is responsible to download or create a file"
+
     CHUNK_SIZE = 102400  # default: 1024 * 100 = 100kb; will be overwritten with download_chunk_size
     MAX_DL_RETRIES = 3
 
