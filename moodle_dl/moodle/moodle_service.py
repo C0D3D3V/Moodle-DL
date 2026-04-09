@@ -76,12 +76,13 @@ class MoodleService:
         download_course_ids = self.config.get_download_course_ids()
         download_public_course_ids = self.config.get_download_public_course_ids()
         dont_download_course_ids = self.config.get_dont_download_course_ids()
+        course_filter_mode = self.config.get_course_filter_mode()
 
         courses_list = core_handler.fetch_courses(user_id)
         courses = []
         # Filter unselected courses
         for course in courses_list:
-            if MoodleService.should_download_course(course.id, download_course_ids, dont_download_course_ids):
+            if MoodleService.should_download_course(course.id, download_course_ids, dont_download_course_ids, course_filter_mode):
                 courses.append(course)
 
         public_courses_list = core_handler.fetch_courses_info(download_public_course_ids)
@@ -171,6 +172,7 @@ class MoodleService:
         download_links_in_descriptions = config.get_download_links_in_descriptions()
         exclude_file_extensions = config.get_exclude_file_extensions()
         max_file_size = config.get_max_file_size()
+        course_filter_mode = config.get_course_filter_mode()
 
         download_also_with_cookie = config.get_download_also_with_cookie()
         if cookie_handler is not None:
@@ -181,7 +183,7 @@ class MoodleService:
 
         for course in changes:
             if not MoodleService.should_download_course(
-                course.id, download_course_ids + download_public_course_ids, dont_download_course_ids
+                course.id, download_course_ids + download_public_course_ids, dont_download_course_ids, course_filter_mode
             ):
                 # Filter courses that should not be downloaded
                 continue
@@ -262,23 +264,14 @@ class MoodleService:
 
     @staticmethod
     def should_download_course(
-        course_id: int, download_course_ids: List[int], dont_download_course_ids: List[int]
+        course_id: int, download_course_ids: List[int], dont_download_course_ids: List[int], course_filter_mode: str
     ) -> bool:
-        "Checks if a course is in whitelist and not in blacklist"
-        inBlacklist = course_id in dont_download_course_ids
-        inWhitelist = course_id in download_course_ids or len(download_course_ids) == 0
-
-        print(
-            "DEBUG should_download_course:",
-            "course_id=", course_id,
-            "download_course_ids=", download_course_ids,
-            "dont_download_course_ids=", dont_download_course_ids,
-            "inWhitelist=", inWhitelist,
-            "inBlacklist=", inBlacklist,
-            "result=", inWhitelist and not inBlacklist,
-        )
-
-        return inWhitelist and not inBlacklist
+        "Return whether a course should be downloaded based on the filter mode"
+        
+        if course_filter_mode == "whitelist":
+            return course_id in download_course_ids
+        
+        return course_id not in dont_download_course_ids
 
     @staticmethod
     def should_download_section(section_id: int, dont_download_sections_ids: List[int]) -> bool:

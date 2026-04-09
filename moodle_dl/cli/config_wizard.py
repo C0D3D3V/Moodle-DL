@@ -148,6 +148,7 @@ class ConfigWizard:
         """
         download_course_ids = self.config.get_download_course_ids()
         dont_download_course_ids = self.config.get_dont_download_course_ids()
+        course_filter_mode = self.config.get_course_filter_mode()
 
         print('')
         Log.info(
@@ -161,7 +162,8 @@ class ConfigWizard:
             + ' on your blacklist it will automatically be downloaded as well. '
         )
         print('')
-        use_whitelist = len(dont_download_course_ids) == 0
+        
+        use_whitelist = course_filter_mode == 'whitelist'
 
         use_whitelist = Cutie.prompt_yes_or_no(
             Log.blue_str('Do you want to create a whitelist or blacklist for your courses?'),
@@ -176,7 +178,7 @@ class ConfigWizard:
             choices.append(f'{int(course.id):5}\t{course.fullname}')
 
             should_download = MoodleService.should_download_course(
-                course.id, download_course_ids, dont_download_course_ids
+                course.id, download_course_ids, dont_download_course_ids, course_filter_mode
             )
             if should_download and use_whitelist:
                 defaults.append(i)
@@ -197,9 +199,11 @@ class ConfigWizard:
                 course_ids.append(course.id)
 
         if use_whitelist:
+            self.config.set_property('course_filter_mode', 'whitelist')
             self.config.set_property('download_course_ids', course_ids)
             self.config.remove_property('dont_download_course_ids')
         elif not use_whitelist:
+            self.config.set_property('course_filter_mode', 'blacklist')
             self.config.set_property('dont_download_course_ids', course_ids)
             self.config.remove_property('download_course_ids')
 
@@ -237,6 +241,7 @@ class ConfigWizard:
         """
         download_course_ids = self.config.get_download_course_ids()
         dont_download_course_ids = self.config.get_dont_download_course_ids()
+        course_filter_mode = self.config.get_course_filter_mode()
 
         self.section_seperator()
         Log.info(
@@ -258,7 +263,7 @@ class ConfigWizard:
             choices.append('None')
 
             for course in courses:
-                if MoodleService.should_download_course(course.id, download_course_ids, dont_download_course_ids):
+                if MoodleService.should_download_course(course.id, download_course_ids, dont_download_course_ids, course_filter_mode):
                     current_course_settings = options_of_courses.get(str(course.id), None)
 
                     # create default settings
