@@ -135,7 +135,7 @@ class ConfigHelper:
 
     def get_course_filter_mode(self) -> str:
         # return the course filter mode ("whitelist" or "blacklist")
-        return self.get_property_or("course_filter_mode", "whitelist")
+        return self.get_property_or("course_filter_mode", "blacklist")
 
     def get_download_course_ids(self) -> str:
         # return a stored list of course ids hat should be downloaded
