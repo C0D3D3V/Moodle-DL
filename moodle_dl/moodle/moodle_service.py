@@ -268,6 +268,16 @@ class MoodleService:
         inBlacklist = course_id in dont_download_course_ids
         inWhitelist = course_id in download_course_ids or len(download_course_ids) == 0
 
+        print(
+            "DEBUG should_download_course:",
+            "course_id=", course_id,
+            "download_course_ids=", download_course_ids,
+            "dont_download_course_ids=", dont_download_course_ids,
+            "inWhitelist=", inWhitelist,
+            "inBlacklist=", inBlacklist,
+            "result=", inWhitelist and not inBlacklist,
+        )
+
         return inWhitelist and not inBlacklist
 
     @staticmethod
