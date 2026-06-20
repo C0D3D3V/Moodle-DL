@@ -12,9 +12,8 @@ from requests.exceptions import RequestException
 
 from moodle_dl.config import ConfigHelper
 from moodle_dl.types import MoodleDlOpts, MoodleURL
-from moodle_dl.utils import MoodleDLCookieJar
+from moodle_dl.utils import MoodleDLCookieJar, SslHelper
 from moodle_dl.utils import PathTools as PT
-from moodle_dl.utils import SslHelper
 
 
 class RequestHelper:

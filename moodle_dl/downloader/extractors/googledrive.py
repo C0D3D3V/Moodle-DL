@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 import re
 
 from yt_dlp.compat import compat_parse_qs

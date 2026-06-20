@@ -178,7 +178,7 @@ class StateRecorder:
             conn.close()
 
         except Error as error:
-            raise RuntimeError(f'Could not create database! Error: {error}')
+            raise RuntimeError(f'Could not create database! Error: {error}') from error
 
     @staticmethod
     def files_have_same_type(file1: File, file2: File) -> bool:

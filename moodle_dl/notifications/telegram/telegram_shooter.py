@@ -62,7 +62,7 @@ class TelegramShooter:
                 'An Unexpected Error occurred while trying'
                 + ' to parse the json response! Telegram'
                 + f' response: {response.read()}.\nError: {error}'
-            )
+            ) from error
         # Check for known errors
         if "ok" in response_extracted:
             ok = response_extracted.get("ok", False)

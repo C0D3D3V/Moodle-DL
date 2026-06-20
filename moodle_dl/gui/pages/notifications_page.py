@@ -27,7 +27,6 @@ from moodle_dl.gui.workers import (
 
 
 class NotificationsPage(QWidget):
-
     def __init__(self, config: ConfigHelper, opts) -> None:
         super().__init__()
         self.config = config
@@ -496,15 +495,18 @@ class NotificationsPage(QWidget):
             set_status_text(self.mail_status, 'Please fill in sender, host, and target.', 'error')
             return
 
-        self.config.set_property('mail', {
-            'sender': sender,
-            'server_host': host,
-            'server_port': self.mail_port_spin.value(),
-            'username': self.mail_username_input.text().strip(),
-            'password': self.mail_password_input.text(),
-            'target': target,
-            'send_error_msg': self.mail_send_errors.isChecked(),
-        })
+        self.config.set_property(
+            'mail',
+            {
+                'sender': sender,
+                'server_host': host,
+                'server_port': self.mail_port_spin.value(),
+                'username': self.mail_username_input.text().strip(),
+                'password': self.mail_password_input.text(),
+                'target': target,
+                'send_error_msg': self.mail_send_errors.isChecked(),
+            },
+        )
         set_status_text(self.mail_status, 'Email configuration saved.', 'success')
 
     def _on_disable_mail(self) -> None:
@@ -558,10 +560,13 @@ class NotificationsPage(QWidget):
             set_status_text(self.ntfy_status, 'Please enter a topic.', 'error')
             return
 
-        self.config.set_property('ntfy', {
-            'topic': topic,
-            'server': self.ntfy_server_input.text().strip(),
-        })
+        self.config.set_property(
+            'ntfy',
+            {
+                'topic': topic,
+                'server': self.ntfy_server_input.text().strip(),
+            },
+        )
         set_status_text(self.ntfy_status, 'ntfy configuration saved.', 'success')
 
     def _on_disable_ntfy(self) -> None:
@@ -613,12 +618,15 @@ class NotificationsPage(QWidget):
             set_status_text(self.xmpp_status, 'Please fill in sender JID and target JID.', 'error')
             return
 
-        self.config.set_property('xmpp', {
-            'sender': jid,
-            'password': self.xmpp_password_input.text(),
-            'target': target,
-            'send_error_msg': self.xmpp_send_errors.isChecked(),
-        })
+        self.config.set_property(
+            'xmpp',
+            {
+                'sender': jid,
+                'password': self.xmpp_password_input.text(),
+                'target': target,
+                'send_error_msg': self.xmpp_send_errors.isChecked(),
+            },
+        )
         set_status_text(self.xmpp_status, 'XMPP configuration saved.', 'success')
 
     def _on_disable_xmpp(self) -> None:

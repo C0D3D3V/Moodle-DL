@@ -1,0 +1,11 @@
+# See https://pre-commit.com for more information.
+# Install the hook with: `uv run pre-commit install`
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.18
+    hooks:
+      # Run the linter and autofix what can be fixed.
+      - id: ruff
+        args: [--fix]
+      # Run the formatter.
+      - id: ruff-format

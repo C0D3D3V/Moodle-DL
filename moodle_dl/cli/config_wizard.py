@@ -277,10 +277,8 @@ class ConfigWizard:
 
                     if overwrite_name_with is not None and overwrite_name_with != course.fullname:
                         choices.append(
-                            (
-                                f'{int(course.id):5}\t{overwrite_name_with} ({course.fullname})'
-                                + f' cfs={create_directory_structure}'
-                            )
+                            f'{int(course.id):5}\t{overwrite_name_with} ({course.fullname})'
+                            + f' cfs={create_directory_structure}'
                         )
 
                     else:

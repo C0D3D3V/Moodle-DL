@@ -1,7 +1,92 @@
-[tool.black]
-line-length = 120
-target-version = ['py38']
-skip-string-normalization = true
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.isort]
-profile = "black"
+[project]
+name = "moodle-dl"
+dynamic = ["version"]
+description = "Moodle-DL downloads course content fast from Moodle (eg. lecture pdfs)"
+readme = "README.md"
+license = "GPL-3.0"
+authors = [{ name = "C0D3D3V", email = "moodle-dl@ist-ein-knaller.de" }]
+requires-python = ">=3.8"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Education",
+    "Topic :: Internet :: WWW/HTTP :: Indexing/Search",
+    "Topic :: Multimedia :: Video",
+    "Topic :: Multimedia :: Sound/Audio",
+    "Topic :: Utilities",
+]
+dependencies = [
+    "aiodns>=3.0.0",
+    "aiofiles>=22.1.0",
+    "aiohttp>=3.8.4",
+    "certifi>=2020.4.5.2",
+    "colorama>=0.4.6",
+    "colorlog>=6.7.0",
+    "html2text>=2020.1.16",
+    "readchar>=4.0.3",
+    "requests>=2.24.0",
+    "sentry_sdk>=0.13.5",
+    "xmpppy>=0.7.1",
+    "yt_dlp>=2024.3.10",
+]
+
+[project.optional-dependencies]
+gui = ["PySide6>=6.5.0"]
+
+[project.scripts]
+moodle-dl = "moodle_dl.main:main"
+
+[project.urls]
+Documentation = "https://github.com/C0D3D3V/Moodle-DL#readme"
+Wiki = "https://github.com/C0D3D3V/Moodle-DL/wiki"
+Source = "https://github.com/C0D3D3V/Moodle-DL"
+Tracker = "https://github.com/C0D3D3V/Moodle-DL/issues"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.0",
+    "pre-commit>=3.5.0",
+]
+
+[tool.hatch.version]
+path = "moodle_dl/version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["moodle_dl"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/moodle_dl",
+    "/README.md",
+    "/LICENSE",
+    "/AUTHORS",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py38"
+extend-exclude = ["moodle_dl/moodle/moodle_constants.py"]
+
+[tool.ruff.lint]
+# E/W: pycodestyle, F: pyflakes (covers the old flake8 + pylint unused/wildcard
+# import checks), I: isort, UP: pyupgrade, B: flake8-bugbear.
+select = ["E", "W", "F", "I", "UP", "B"]
+# E203/E266 were ignored under flake8; E203 is also recommended off for the formatter.
+# (flake8's W503 has no Ruff equivalent — Ruff never warns on line breaks before operators.)
+ignore = ["E203", "E266"]
+
+[tool.ruff.lint.flake8-bugbear]
+# QModelIndex() is the mandatory default in PySide6 model overrides (rowCount, etc.);
+# it is a cheap value type, so treat it as immutable rather than flagging B008.
+extend-immutable-calls = ["PySide6.QtCore.QModelIndex"]
+
+[tool.ruff.format]
+# Matches the previous Black setting `skip-string-normalization`.
+quote-style = "preserve"
