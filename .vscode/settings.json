@@ -1,35 +1,14 @@
 {
     "[python]": {
-        "editor.codeActionsOnSave": {
-            "source.organizeImports": "explicit"
-        },
-        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.defaultFormatter": "charliermarsh.ruff",
         "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports.ruff": "explicit",
+            "source.fixAll.ruff": "explicit"
+        }
     },
-    "black-formatter.args": [
-        "--line-length",
-        "120",
-        "--target-version",
-        "py38",
-        "--skip-string-normalization"
-    ],
-    "pylint.args": [
-        "--enable=W0614",
-        "--enable=W0611",
-        "--disable=missing-module-docstring",
-        "--disable=missing-class-docstring",
-        "--disable=missing-function-docstring",
-        "--disable=too-few-public-methods",
-        "--disable=raise-missing-from",
-        "--disable=unnecessary-pass",
-        "--max-line-length=120"
-    ],
     "editor.rulers": [
         120
-    ],
-    "isort.args": [
-        "--profile",
-        "black"
     ],
     "cSpell.diagnosticLevel": "Hint",
     "workbench.colorCustomizations": {

@@ -32,13 +32,13 @@ class ConfigHelper:
         # Opens the configuration file and parse it to a JSON object
         with self._lock:
             try:
-                with open(self.config_path, 'r', encoding='utf-8') as config_file:
+                with open(self.config_path, encoding='utf-8') as config_file:
                     config_raw = config_file.read()
                     self._whole_config = json.loads(config_raw)
-            except (IOError, OSError) as err_load:
+            except OSError as err_load:
                 raise ConfigHelper.NoConfigError(
                     f'Configuration could not be loaded from {self.config_path}\n{err_load!s}'
-                )
+                ) from err_load
 
     def _save(self):
         # TODO: Use dataclass and write that back to file, so that all options are always present
@@ -57,7 +57,7 @@ class ConfigHelper:
         try:
             return self._whole_config[key]
         except KeyError:
-            raise ValueError(f'The {key}-Property is not yet configured!')
+            raise ValueError(f'The {key}-Property is not yet configured!') from None
 
     def get_property_or(self, key: str, default: any = None) -> any:
         # return a property if configured
@@ -133,6 +133,10 @@ class ConfigHelper:
     def get_do_not_ask_to_save_userid_and_version(self) -> bool:
         return self.get_property_or('do_not_ask_to_save_userid_and_version', False)
 
+    def get_course_filter_mode(self) -> str:
+        # return the course filter mode ("whitelist" or "blacklist")
+        return self.get_property_or("course_filter_mode", "blacklist")
+
     def get_download_course_ids(self) -> str:
         # return a stored list of course ids hat should be downloaded
         return self.get_property_or('download_course_ids', [])
@@ -146,7 +150,7 @@ class ConfigHelper:
         try:
             return self.get_property('token')
         except ValueError:
-            raise ValueError('Not yet configured!')
+            raise ValueError('Not yet configured!') from None
 
     def get_privatetoken(self) -> str:
         # return a stored privatetoken
@@ -163,14 +167,14 @@ class ConfigHelper:
         try:
             return self.get_property('moodle_domain')
         except ValueError:
-            raise ValueError('Not yet configured!')
+            raise ValueError('Not yet configured!') from None
 
     def get_moodle_path(self) -> str:
         # return a stored moodle_path
         try:
             return self.get_property('moodle_path')
         except ValueError:
-            raise ValueError('Not yet configured!')
+            raise ValueError('Not yet configured!') from None
 
     def get_options_of_courses(self) -> Dict:
         # return a stored dictionary of options for courses
@@ -196,7 +200,7 @@ class ConfigHelper:
         # return the text to the cookies file, if it exists
         cookies_path = PT.get_cookies_path(self.get_misc_files_path())
         if os.path.isfile(cookies_path):
-            with open(cookies_path, 'r', encoding='utf-8') as cookie_file:
+            with open(cookies_path, encoding='utf-8') as cookie_file:
                 return cookie_file.read()
         return None
 

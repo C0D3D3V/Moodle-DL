@@ -7,6 +7,7 @@ import re
 import shlex
 import shutil
 import subprocess
+import sys
 import time
 import traceback
 import urllib
@@ -36,9 +37,6 @@ from moodle_dl.types import (
 from moodle_dl.utils import (
     LINK_TEMPLATES,
     MoodleDLCookieJar,
-)
-from moodle_dl.utils import PathTools as PT
-from moodle_dl.utils import (
     SslHelper,
     Timer,
     convert_to_aiohttp_cookie_jar,
@@ -46,6 +44,7 @@ from moodle_dl.utils import (
     format_seconds,
     timeconvert,
 )
+from moodle_dl.utils import PathTools as PT
 
 
 class Task:
@@ -60,6 +59,7 @@ class Task:
             + ' (KHTML, like Gecko) Version/4.0 Chrome/71.0.3578.99 Mobile Safari/537.36 MoodleMobile'
         ),
         'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept-Encoding': 'identity',
     }
 
     def __init__(
@@ -319,7 +319,12 @@ class Task:
             self.opts.global_opts.allow_insecure_ssl,
             self.opts.global_opts.use_all_ciphers,
         )
-        async with aiohttp.ClientSession(cookie_jar=self.get_cookie_jar(), raise_for_status=True) as session:
+        connector = aiohttp.TCPConnector(
+            resolver=aiohttp.ThreadedResolver() if sys.platform == 'win32' else aiohttp.AsyncResolver()
+        )
+        async with aiohttp.ClientSession(
+            connector=connector, cookie_jar=self.get_cookie_jar(), raise_for_status=True
+        ) as session:
             try:
                 async with session.request("HEAD", dl_url, headers=self.RQ_HEADER, ssl=ssl_context, timeout=20) as resp:
                     if resp.url != dl_url:
@@ -834,7 +839,12 @@ class Task:
             self.opts.global_opts.use_all_ciphers,
         )
         with Timer() as watch:
-            async with aiohttp.ClientSession(cookie_jar=self.get_cookie_jar(), raise_for_status=True) as session:
+            connector = aiohttp.TCPConnector(
+                resolver=aiohttp.ThreadedResolver() if sys.platform == 'win32' else aiohttp.AsyncResolver()
+            )
+            async with aiohttp.ClientSession(
+                connector=connector, cookie_jar=self.get_cookie_jar(), raise_for_status=True
+            ) as session:
                 while done_tries < self.MAX_DL_RETRIES:
                     try:
                         if done_tries > 0:
@@ -938,12 +948,7 @@ class Task:
         )
 
     def __str__(self):
-        return 'Task (%(task_id)s, %(file)s, %(course)s, %(status)s)' % {
-            'task_id': self.task_id,
-            'file': self.file,
-            'course': self.course,
-            'status': self.status,
-        }
+        return f'Task ({self.task_id}, {self.file}, {self.course}, {self.status})'
 
 
 class ContentRangeError(ConnectionError):

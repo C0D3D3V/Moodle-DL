@@ -107,13 +107,17 @@ class MainWindow(QMainWindow):
 
         self.act_manage_db = QAction('Missing Files', self)
         self.act_manage_db.setEnabled(False)
-        self.act_manage_db.setToolTip('Find files tracked in the database but missing from disk. Remove entries to re-download them.')
+        self.act_manage_db.setToolTip(
+            'Find files tracked in the database but missing from disk. Remove entries to re-download them.'
+        )
         self.act_manage_db.triggered.connect(self._on_manage_db)
         self.toolbar.addAction(self.act_manage_db)
 
         self.act_old_files = QAction('Outdated Copies', self)
         self.act_old_files.setEnabled(False)
-        self.act_old_files.setToolTip('Find old file versions that have been replaced by newer ones. Delete them to free disk space.')
+        self.act_old_files.setToolTip(
+            'Find old file versions that have been replaced by newer ones. Delete them to free disk space.'
+        )
         self.act_old_files.triggered.connect(self._on_old_files)
         self.toolbar.addAction(self.act_old_files)
 

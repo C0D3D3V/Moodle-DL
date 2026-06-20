@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import os
+import sys
 import urllib
 from time import sleep
 from typing import Dict
@@ -12,9 +13,8 @@ from requests.exceptions import RequestException
 
 from moodle_dl.config import ConfigHelper
 from moodle_dl.types import MoodleDlOpts, MoodleURL
-from moodle_dl.utils import MoodleDLCookieJar
+from moodle_dl.utils import MoodleDLCookieJar, SslHelper
 from moodle_dl.utils import PathTools as PT
-from moodle_dl.utils import SslHelper
 
 
 class RequestHelper:
@@ -133,7 +133,10 @@ class RequestHelper:
         )
 
         error_ctr = 0
-        async with self.semaphore, aiohttp.ClientSession() as session:
+        connector = aiohttp.TCPConnector(
+            resolver=aiohttp.ThreadedResolver() if sys.platform == 'win32' else aiohttp.AsyncResolver()
+        )
+        async with self.semaphore, aiohttp.ClientSession(connector=connector) as session:
             while error_ctr < self.MAX_RETRIES:
                 try:
                     async with session.post(

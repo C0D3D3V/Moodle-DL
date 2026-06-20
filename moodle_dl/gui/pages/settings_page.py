@@ -22,7 +22,6 @@ from moodle_dl.config import ConfigHelper
 
 
 class SettingsPage(QWidget):
-
     config_saved = Signal()
 
     def __init__(self, config: ConfigHelper, opts) -> None:
@@ -190,23 +189,15 @@ class SettingsPage(QWidget):
         self.spin_downloads.setValue(
             self.config.get_property_or('max_parallel_downloads', self.opts.max_parallel_downloads)
         )
-        self.spin_ytdlp.setValue(
-            self.config.get_property_or('max_parallel_yt_dlp', self.opts.max_parallel_yt_dlp)
-        )
-        self.spin_chunk.setValue(
-            self.config.get_property_or('download_chunk_size', self.opts.download_chunk_size)
-        )
+        self.spin_ytdlp.setValue(self.config.get_property_or('max_parallel_yt_dlp', self.opts.max_parallel_yt_dlp))
+        self.spin_chunk.setValue(self.config.get_property_or('download_chunk_size', self.opts.download_chunk_size))
 
         # Load persisted SSL/misc settings
         self.cb_allow_insecure.setChecked(
             self.config.get_property_or('allow_insecure_ssl', self.opts.allow_insecure_ssl)
         )
-        self.cb_all_ciphers.setChecked(
-            self.config.get_property_or('use_all_ciphers', self.opts.use_all_ciphers)
-        )
-        self.cb_skip_cert.setChecked(
-            self.config.get_property_or('skip_cert_verify', self.opts.skip_cert_verify)
-        )
+        self.cb_all_ciphers.setChecked(self.config.get_property_or('use_all_ciphers', self.opts.use_all_ciphers))
+        self.cb_skip_cert.setChecked(self.config.get_property_or('skip_cert_verify', self.opts.skip_cert_verify))
 
         self.cb_restricted_filenames.setChecked(self.config.get_restricted_filenames())
         self.cb_verbose.setChecked(self.config.get_property_or('verbose', self.opts.verbose))

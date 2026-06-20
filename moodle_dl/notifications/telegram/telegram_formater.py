@@ -82,7 +82,7 @@ class TelegramFormater:
                 ):
                     text_lines = []
                     try:
-                        with open(saved_to_path, 'r', encoding='utf-8') as content_file:
+                        with open(saved_to_path, encoding='utf-8') as content_file:
                             content = content_file.read()
 
                             if file.content_type == 'html':

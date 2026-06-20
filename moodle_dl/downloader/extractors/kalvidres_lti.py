@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import html
 import re
 import urllib.parse
@@ -55,8 +52,11 @@ class KalvidresLtiIE(InfoExtractor):
 
         # Try specific LTI launch form first, then fall back to generic form
         launch_form_str = self._search_regex(
-            fr'(?P<form><form[^>]+?id=(["\']){self._LAUNCH_FORM}\2[^>]*>)',
-            launch_webpage, 'launch form', group='form', default=None
+            rf'(?P<form><form[^>]+?id=(["\']){self._LAUNCH_FORM}\2[^>]*>)',
+            launch_webpage,
+            'launch form',
+            group='form',
+            default=None,
         )
 
         if launch_form_str:
@@ -70,8 +70,7 @@ class KalvidresLtiIE(InfoExtractor):
         else:
             # Fall back to first form with an action URL
             launch_form_str = self._search_regex(
-                r'(?P<form><form[^>]+action=[^>]*>)', launch_webpage,
-                'launch form', group='form', default=None
+                r'(?P<form><form[^>]+action=[^>]*>)', launch_webpage, 'launch form', group='form', default=None
             )
             if launch_form_str:
                 action_url = extract_attributes(launch_form_str).get('action') or launch_url
@@ -84,7 +83,10 @@ class KalvidresLtiIE(InfoExtractor):
                 submit_page = launch_webpage
 
         # Follow kalvidres video app redirect if present
-        mobj = re.search(r'window(?:(?:\.top|\.parent))?\.location\.(?:href|replace)\s*(?:=|)\s*\(?[\'"](?P<url>[^\'"]+)[\'"]\)?', submit_page)
+        mobj = re.search(
+            r'window(?:(?:\.top|\.parent))?\.location\.(?:href|replace)\s*(?:=|)\s*\(?[\'"](?P<url>[^\'"]+)[\'"]\)?',
+            submit_page,
+        )
         if mobj:
             redirect_page, dummy = self._download_webpage_handle(
                 html.unescape(mobj.group('url')), video_id, 'Follow kalvidres redirect'

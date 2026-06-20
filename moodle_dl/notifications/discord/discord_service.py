@@ -10,7 +10,6 @@ from moodle_dl.types import Course
 
 
 class DiscordService(NotificationService):
-
     def _is_configured(self) -> bool:
         # Checks if the sending of Discord messages has been configured.
         try:

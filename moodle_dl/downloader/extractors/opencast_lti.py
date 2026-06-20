@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import re
 
 from yt_dlp.extractor.common import InfoExtractor
@@ -27,7 +24,7 @@ class OpencastLtiIE(InfoExtractor):
         launch_webpage = self._download_webpage(launch_url, video_id, 'Downloading opencast lti launch webpage')
         launch_inputs = self._form_hidden_inputs(self._LAUNCH_FORM, launch_webpage)
         launch_form_str = self._search_regex(
-            fr'(?P<form><form[^>]+?id=(["\']){self._LAUNCH_FORM}\2[^>]*>)', launch_webpage, 'login form', group='form'
+            rf'(?P<form><form[^>]+?id=(["\']){self._LAUNCH_FORM}\2[^>]*>)', launch_webpage, 'login form', group='form'
         )
 
         action_url = extract_attributes(launch_form_str).get('action')

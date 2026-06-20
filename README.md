@@ -26,7 +26,7 @@ Discussions about the development take place mainly on [Github](https://github.c
 [![Packaging status](https://repology.org/badge/tiny-repos/moodle-dl.svg)](https://repology.org/project/moodle-dl/versions)
 [![Discord Shield](https://discordapp.com/api/guilds/969140782655242281/widget.png?style=shield)](https://discord.gg/HNg7CsqEnZ)
 
-1. Install [Python](https://www.python.org/) >=3.7
+1. Install [Python](https://www.python.org/) >=3.8
 2. Install [ffmpeg](https://github.com/C0D3D3V/Moodle-DL/wiki/Installing-ffmpeg)
 3. Run `pip install moodle-dl` as administrator. </br>
     <sup>(To upgrade from an older Version use `pip install -U moodle-dl` instead)</sup>

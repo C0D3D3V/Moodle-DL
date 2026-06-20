@@ -67,7 +67,7 @@ try:
 
         # Log diagnostics for debugging
         logging.warning(
-            'SSO URL extraction failed. isValid=%s path=%r authority=%r ' 'host=%r query=%r encoded=%r',
+            'SSO URL extraction failed. isValid=%s path=%r authority=%r host=%r query=%r encoded=%r',
             url.isValid(),
             url.path(),
             url.authority(),

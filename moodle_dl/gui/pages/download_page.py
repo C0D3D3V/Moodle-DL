@@ -29,8 +29,8 @@ from moodle_dl.gui.workers import DownloadWorker, FetchWorker, NotifyWorker
 from moodle_dl.types import TaskState
 from moodle_dl.utils import format_bytes
 
-class DownloadPage(QWidget):
 
+class DownloadPage(QWidget):
     def __init__(self, config: ConfigHelper, opts) -> None:
         super().__init__()
         self.config = config
@@ -250,7 +250,7 @@ class DownloadPage(QWidget):
 
         if self._download_service:
             status = self._download_service.status
-            msg = f'Download complete. ' f'{status.files_downloaded} succeeded, ' f'{status.files_failed} failed.'
+            msg = f'Download complete. {status.files_downloaded} succeeded, {status.files_failed} failed.'
             level = 'success' if status.files_failed == 0 else 'warning'
             set_status_text(self.stats_label, msg, level)
             self.progress_bar.setValue(100)

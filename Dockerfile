@@ -1,10 +1,13 @@
 FROM python:3
 
+# Bring in the uv binary (used to build and install the package).
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
 ADD . /md
 
 WORKDIR /md
 
-RUN pip3 install .
+RUN uv pip install --system .
 
 RUN apt-get -y update
 RUN apt-get -y upgrade
