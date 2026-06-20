@@ -41,20 +41,20 @@ class ConfigPage(QWidget):
         layout = QVBoxLayout(self)
 
         # Course selection
-        courses_group = QGroupBox('Courses')
+        courses_group = QGroupBox(self.tr('Courses'))
         courses_layout = QVBoxLayout()
 
         btn_row = QHBoxLayout()
-        self.fetch_btn = QPushButton('Fetch Courses')
+        self.fetch_btn = QPushButton(self.tr('Fetch Courses'))
         self.fetch_btn.clicked.connect(self._on_fetch_courses)
         btn_row.addWidget(self.fetch_btn)
 
-        self.select_all_btn = QPushButton('Select All')
+        self.select_all_btn = QPushButton(self.tr('Select All'))
         self.select_all_btn.clicked.connect(self._select_all_courses)
         self.select_all_btn.setEnabled(False)
         btn_row.addWidget(self.select_all_btn)
 
-        self.deselect_all_btn = QPushButton('Deselect All')
+        self.deselect_all_btn = QPushButton(self.tr('Deselect All'))
         self.deselect_all_btn.clicked.connect(self._deselect_all_courses)
         self.deselect_all_btn.setEnabled(False)
         btn_row.addWidget(self.deselect_all_btn)
@@ -64,8 +64,8 @@ class ConfigPage(QWidget):
 
         # Whitelist / Blacklist mode toggle
         mode_row = QHBoxLayout()
-        self.radio_whitelist = QRadioButton('Download selected courses')
-        self.radio_blacklist = QRadioButton('Download all except selected')
+        self.radio_whitelist = QRadioButton(self.tr('Download selected courses'))
+        self.radio_blacklist = QRadioButton(self.tr('Download all except selected'))
         self.radio_whitelist.setChecked(True)
         self._mode_group = QButtonGroup(self)
         self._mode_group.addButton(self.radio_whitelist)
@@ -75,18 +75,18 @@ class ConfigPage(QWidget):
         mode_row.addStretch()
         courses_layout.addLayout(mode_row)
 
-        self.courses_status = QLabel('Click "Fetch Courses" to load your course list.')
+        self.courses_status = QLabel(self.tr('Click "Fetch Courses" to load your course list.'))
         courses_layout.addWidget(self.courses_status)
 
         # Course search/filter
         self.course_filter_input = QLineEdit()
-        self.course_filter_input.setPlaceholderText('Filter courses\u2026')
+        self.course_filter_input.setPlaceholderText(self.tr('Filter courses\u2026'))
         self.course_filter_input.setClearButtonEnabled(True)
         self.course_filter_input.textChanged.connect(self._on_filter_changed)
         courses_layout.addWidget(self.course_filter_input)
 
         # Hint label for course options
-        hint_label = QLabel('Double-click a course to set custom name and options.')
+        hint_label = QLabel(self.tr('Double-click a course to set custom name and options.'))
         hint_label.setStyleSheet('color: #666; font-style: italic;')
         courses_layout.addWidget(hint_label)
 
@@ -103,33 +103,33 @@ class ConfigPage(QWidget):
         layout.addWidget(courses_group, 1)  # stretch factor so scroll area expands
 
         # Download options
-        options_group = QGroupBox('Download Options')
+        options_group = QGroupBox(self.tr('Download Options'))
         options_layout = QVBoxLayout()
 
-        self.opt_submissions = QCheckBox('Download Submissions')
-        self.opt_submissions.setToolTip('Download student assignment submissions.')
-        self.opt_descriptions = QCheckBox('Download Descriptions')
-        self.opt_descriptions.setToolTip('Download activity and resource descriptions as HTML files.')
-        self.opt_links_in_desc = QCheckBox('Download Links in Descriptions')
-        self.opt_links_in_desc.setToolTip('Download files linked within activity descriptions.')
-        self.opt_databases = QCheckBox('Download Databases')
-        self.opt_databases.setToolTip('Download Moodle database activity entries.')
-        self.opt_forums = QCheckBox('Download Forums')
-        self.opt_forums.setToolTip('Download forum posts and attachments.')
-        self.opt_quizzes = QCheckBox('Download Quizzes')
-        self.opt_quizzes.setToolTip('Download quiz attempts and results.')
-        self.opt_lessons = QCheckBox('Download Lessons')
-        self.opt_lessons.setToolTip('Download lesson activity content.')
-        self.opt_workshops = QCheckBox('Download Workshops')
-        self.opt_workshops.setToolTip('Download workshop submissions and assessments.')
-        self.opt_books = QCheckBox('Download Books')
-        self.opt_books.setToolTip('Download book resource content as HTML.')
-        self.opt_calendars = QCheckBox('Download Calendars')
-        self.opt_calendars.setToolTip('Download course calendar events.')
-        self.opt_linked_files = QCheckBox('Download Linked Files')
-        self.opt_linked_files.setToolTip('Download externally linked files referenced in courses.')
-        self.opt_cookie_files = QCheckBox('Download Files Requiring Cookie')
-        self.opt_cookie_files.setToolTip('Also download files that require browser cookies for access.')
+        self.opt_submissions = QCheckBox(self.tr('Download Submissions'))
+        self.opt_submissions.setToolTip(self.tr('Download student assignment submissions.'))
+        self.opt_descriptions = QCheckBox(self.tr('Download Descriptions'))
+        self.opt_descriptions.setToolTip(self.tr('Download activity and resource descriptions as HTML files.'))
+        self.opt_links_in_desc = QCheckBox(self.tr('Download Links in Descriptions'))
+        self.opt_links_in_desc.setToolTip(self.tr('Download files linked within activity descriptions.'))
+        self.opt_databases = QCheckBox(self.tr('Download Databases'))
+        self.opt_databases.setToolTip(self.tr('Download Moodle database activity entries.'))
+        self.opt_forums = QCheckBox(self.tr('Download Forums'))
+        self.opt_forums.setToolTip(self.tr('Download forum posts and attachments.'))
+        self.opt_quizzes = QCheckBox(self.tr('Download Quizzes'))
+        self.opt_quizzes.setToolTip(self.tr('Download quiz attempts and results.'))
+        self.opt_lessons = QCheckBox(self.tr('Download Lessons'))
+        self.opt_lessons.setToolTip(self.tr('Download lesson activity content.'))
+        self.opt_workshops = QCheckBox(self.tr('Download Workshops'))
+        self.opt_workshops.setToolTip(self.tr('Download workshop submissions and assessments.'))
+        self.opt_books = QCheckBox(self.tr('Download Books'))
+        self.opt_books.setToolTip(self.tr('Download book resource content as HTML.'))
+        self.opt_calendars = QCheckBox(self.tr('Download Calendars'))
+        self.opt_calendars.setToolTip(self.tr('Download course calendar events.'))
+        self.opt_linked_files = QCheckBox(self.tr('Download Linked Files'))
+        self.opt_linked_files.setToolTip(self.tr('Download externally linked files referenced in courses.'))
+        self.opt_cookie_files = QCheckBox(self.tr('Download Files Requiring Cookie'))
+        self.opt_cookie_files.setToolTip(self.tr('Also download files that require browser cookies for access.'))
 
         for cb in [
             self.opt_submissions,
@@ -153,7 +153,7 @@ class ConfigPage(QWidget):
         # Save button
         save_layout = QHBoxLayout()
         save_layout.addStretch()
-        self.save_btn = QPushButton('Save Configuration')
+        self.save_btn = QPushButton(self.tr('Save Configuration'))
         self.save_btn.clicked.connect(self._on_save)
         save_layout.addWidget(self.save_btn)
         layout.addLayout(save_layout)
@@ -191,9 +191,9 @@ class ConfigPage(QWidget):
     def _on_fetch_courses(self) -> None:
         """Fetch the course list from Moodle."""
         self.fetch_btn.setEnabled(False)
-        self.fetch_btn.setText('Fetching\u2026')
+        self.fetch_btn.setText(self.tr('Fetching\u2026'))
         self.setCursor(QCursor(Qt.CursorShape.BusyCursor))
-        set_status_text(self.courses_status, 'Fetching courses\u2026', 'info')
+        set_status_text(self.courses_status, self.tr('Fetching courses\u2026'), 'info')
 
         self._worker = FetchCoursesWorker(self.config, self.opts)
         self._worker.courses_fetched.connect(self._on_courses_fetched)
@@ -203,10 +203,10 @@ class ConfigPage(QWidget):
     def _on_courses_fetched(self, courses: list) -> None:
         """Handle fetched course list."""
         self.fetch_btn.setEnabled(True)
-        self.fetch_btn.setText('Fetch Courses')
+        self.fetch_btn.setText(self.tr('Fetch Courses'))
         self.unsetCursor()
         self._courses_loaded = True
-        set_status_text(self.courses_status, f'Found {len(courses)} courses.', 'success')
+        set_status_text(self.courses_status, self.tr('Found {} courses.').format(len(courses)), 'success')
         self.select_all_btn.setEnabled(True)
         self.deselect_all_btn.setEnabled(True)
 
@@ -235,7 +235,7 @@ class ConfigPage(QWidget):
         for course_info in courses:
             course_id = course_info['id']
             fullname = course_info['fullname']
-            cb = QCheckBox(f'{fullname} (ID: {course_id})')
+            cb = QCheckBox(self.tr('{} (ID: {})').format(fullname, course_id))
             cb.installEventFilter(self)
             self._checkbox_to_course[cb] = (course_id, fullname)
             if first_time:
@@ -260,9 +260,9 @@ class ConfigPage(QWidget):
     def _on_fetch_error(self, error_msg: str) -> None:
         """Handle course fetch error."""
         self.fetch_btn.setEnabled(True)
-        self.fetch_btn.setText('Fetch Courses')
+        self.fetch_btn.setText(self.tr('Fetch Courses'))
         self.unsetCursor()
-        set_status_text(self.courses_status, f'Error: {error_msg}', 'error')
+        set_status_text(self.courses_status, self.tr('Error: {}').format(error_msg), 'error')
         logging.error('Failed to fetch courses: %s', error_msg)
 
     def _on_filter_changed(self, text: str) -> None:
@@ -310,7 +310,7 @@ class ConfigPage(QWidget):
                     selected_ids.append(course_id)
 
             if self._course_checkboxes and not selected_ids:
-                QMessageBox.warning(self, 'No courses selected', 'Please select at least one course.')
+                QMessageBox.warning(self, self.tr('No courses selected'), self.tr('Please select at least one course.'))
                 return
 
             self.config.set_property('download_course_ids', selected_ids)
@@ -330,5 +330,5 @@ class ConfigPage(QWidget):
         self.config.set_property('download_linked_files', self.opt_linked_files.isChecked())
         self.config.set_property('download_also_with_cookie', self.opt_cookie_files.isChecked())
 
-        QMessageBox.information(self, 'Saved', 'Configuration saved successfully.')
+        QMessageBox.information(self, self.tr('Saved'), self.tr('Configuration saved successfully.'))
         self.config_saved.emit()

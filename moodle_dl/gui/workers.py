@@ -78,7 +78,7 @@ class SSOTokenWorker(AsyncWorker):
         try:
             result = MoodleService.extract_token(self.callback_url)
             if result is None:
-                self.login_failed.emit('Could not extract token from SSO response.')
+                self.login_failed.emit(self.tr('Could not extract token from SSO response.'))
                 return
             token, privatetoken = result
             self.config.set_moodle_URL(self.moodle_url)

@@ -45,7 +45,7 @@ class SkipButtonDelegate(QStyledItemDelegate):
 
         opt = QStyleOptionButton()
         opt.rect = option.rect.adjusted(4, 2, -4, -2)
-        opt.text = 'Skip'
+        opt.text = self.tr('Skip')
         opt.state = QStyle.StateFlag.State_Enabled | QStyle.StateFlag.State_Active
         style = option.widget.style() if option.widget else QApplication.style()
         style.drawControl(QStyle.ControlElement.CE_PushButton, opt, painter, option.widget)
@@ -123,6 +123,8 @@ class PreviewTableModel(QAbstractTableModel):
 
     def __init__(self) -> None:
         super().__init__()
+        # User-facing header labels are translated here so they re-translate via self.tr.
+        self._headers = ['', '#', self.tr('Filename'), self.tr('Course'), self.tr('Size'), self.tr('Status')]
         self._entries = []  # list of (course, file, row_index)
         self._always_skip = set()
         self._selected = set()  # row indices currently checked
@@ -159,7 +161,7 @@ class PreviewTableModel(QAbstractTableModel):
 
     def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
         if role == Qt.ItemDataRole.DisplayRole and orientation == Qt.Orientation.Horizontal:
-            return self.COLUMNS[section]
+            return self._headers[section]
         return None
 
     def data(self, index, role=Qt.ItemDataRole.DisplayRole):
@@ -191,12 +193,12 @@ class PreviewTableModel(QAbstractTableModel):
                 return '\u2014'
             elif col == self.COL_STATUS:
                 if is_skipped:
-                    return 'Always Skipped'
+                    return self.tr('Always Skipped')
                 if file.modified:
-                    return 'Modified'
+                    return self.tr('Modified')
                 elif file.moved:
-                    return 'Moved'
-                return 'New'
+                    return self.tr('Moved')
+                return self.tr('New')
             return None
 
         elif role == Qt.ItemDataRole.ForegroundRole:
@@ -343,6 +345,16 @@ class TaskTableModel(QAbstractTableModel):
 
     def __init__(self) -> None:
         super().__init__()
+        # User-facing header labels are translated here so they re-translate via self.tr.
+        self._headers = [
+            '#',
+            self.tr('Filename'),
+            self.tr('Course'),
+            self.tr('Status'),
+            self.tr('Size'),
+            self.tr('Progress'),
+            self.tr('Skip'),
+        ]
         self._tasks = []
 
     def set_tasks(self, tasks) -> None:
@@ -367,7 +379,7 @@ class TaskTableModel(QAbstractTableModel):
 
     def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
         if role == Qt.ItemDataRole.DisplayRole and orientation == Qt.Orientation.Horizontal:
-            return self.COLUMNS[section]
+            return self._headers[section]
         return None
 
     def data(self, index, role=Qt.ItemDataRole.DisplayRole):
@@ -386,7 +398,7 @@ class TaskTableModel(QAbstractTableModel):
                 return task.course.fullname
             elif col == self.COL_STATUS:
                 if task.status.skip_requested:
-                    return 'Skipped'
+                    return self.tr('Skipped')
                 return task.status.state.value
             elif col == self.COL_SIZE:
                 total = task.file.content_filesize + task.status.external_total_size
@@ -403,7 +415,7 @@ class TaskTableModel(QAbstractTableModel):
                 return '\u2014'
             elif col == self.COL_SKIP:
                 if task.status.state == TaskState.STARTED and not task.status.skip_requested:
-                    return 'Skip'
+                    return self.tr('Skip')
                 return ''
 
         elif role == Qt.ItemDataRole.UserRole:

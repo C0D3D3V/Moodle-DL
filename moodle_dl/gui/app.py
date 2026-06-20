@@ -3,6 +3,7 @@ import sys
 
 from PySide6.QtWidgets import QApplication
 
+from moodle_dl.gui.i18n import install_translators
 from moodle_dl.gui.main_window import MainWindow
 from moodle_dl.version import __version__
 
@@ -61,6 +62,7 @@ def create_app(opts):
     """Create the QApplication and show the main window."""
     register_moodledl_scheme()
     app = QApplication(sys.argv)
+    install_translators(app)
     app.setApplicationName('Moodle-DL')
     app.setApplicationVersion(__version__)
     app.setOrganizationName('Moodle-DL')
