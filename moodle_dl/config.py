@@ -133,6 +133,10 @@ class ConfigHelper:
     def get_do_not_ask_to_save_userid_and_version(self) -> bool:
         return self.get_property_or('do_not_ask_to_save_userid_and_version', False)
 
+    def get_course_filter_mode(self) -> str:
+        # return the course filter mode ("whitelist" or "blacklist")
+        return self.get_property_or("course_filter_mode", "blacklist")
+
     def get_download_course_ids(self) -> str:
         # return a stored list of course ids hat should be downloaded
         return self.get_property_or('download_course_ids', [])
