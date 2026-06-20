@@ -7,8 +7,9 @@ source of truth. It only:
   1. recompiles every ``moodledl_<lang>.qm`` from its committed ``.ts`` (so the
      runtime catalog always matches the source), and
   2. checks whether the code contains ``tr()`` source strings that are missing
-     from the ``.ts``; if so it prints a big warning and exits non-zero so the
-     developer notices (pre-commit hides hook output on success).
+     from the ``.ts``; if so it prints a big warning and asks (on the terminal)
+     whether to continue the commit anyway. Answering no — or having no terminal
+     available (IDE/GUI git clients, CI) — aborts the commit.
 
 Adding the new strings to the ``.ts`` is a deliberate manual step:
 ``python scripts/update_translations.py`` (then translate them). Completeness is
@@ -69,23 +70,54 @@ def _current_keys(lupdate: str) -> set:
         return _source_keys(fresh)
 
 
-def _print_warning(missing_by_lang: dict) -> None:
+def _format_warning(missing_by_lang: dict) -> str:
     bar = '=' * 70
-    print('\n' + bar)
-    print('  ⚠  GUI TRANSLATION SOURCES (.ts) ARE MISSING NEW STRINGS')
-    print(bar)
-    print('  The .qm files were recompiled, but the code contains user-facing')
-    print('  string(s) that are NOT in the translation source (.ts). They will')
-    print('  appear untranslated (English) until added and translated.\n')
+    lines = [
+        '',
+        bar,
+        '  ⚠  GUI TRANSLATION SOURCES (.ts) ARE MISSING NEW STRINGS',
+        bar,
+        '  The .qm files were recompiled, but the code contains user-facing',
+        '  string(s) that are NOT in the translation source (.ts). They will',
+        '  appear untranslated (English) until added and translated.',
+        '',
+    ]
     for lang, missing in sorted(missing_by_lang.items()):
-        print(f'  {lang}: {len(missing)} missing string(s):')
-        for ctx, src in sorted(missing):
-            print(f'      [{ctx}] {src!r}')
-    print('\n  To fix:')
-    print('    1. python scripts/update_translations.py   # syncs the .ts (adds them as unfinished)')
-    print('    2. translate the new strings with Qt Linguist')
-    print('    3. re-stage the updated .ts and .qm, then commit')
-    print(bar + '\n')
+        lines.append(f'  {lang}: {len(missing)} missing string(s):')
+        lines.extend(f'      [{ctx}] {src!r}' for ctx, src in sorted(missing))
+    lines += [
+        '',
+        '  To fix:',
+        '    1. python scripts/update_translations.py   # syncs the .ts (adds them as unfinished)',
+        '    2. translate the new strings with Qt Linguist',
+        '    3. re-stage the updated .ts and .qm, then commit',
+        bar,
+        '',
+    ]
+    return '\n'.join(lines)
+
+
+def _prompt(stream_in, stream_out, warning: str) -> bool:
+    """Show *warning* and ask whether to continue. Returns True only on an explicit yes."""
+    stream_out.write(warning)
+    stream_out.write('Continue commit anyway? [y/N]: ')
+    stream_out.flush()
+    answer = stream_in.readline().strip().lower()
+    return answer in ('y', 'yes')
+
+
+def _confirm_continue(warning: str):
+    """Ask on the controlling terminal. Returns True/False, or None if no terminal is available."""
+    try:
+        tty_in = open('/dev/tty')
+        tty_out = open('/dev/tty', 'w')
+    except OSError:
+        return None
+    try:
+        return _prompt(tty_in, tty_out, warning)
+    finally:
+        tty_in.close()
+        tty_out.close()
 
 
 def main() -> int:
@@ -120,7 +152,18 @@ def main() -> int:
             missing_by_lang[lang] = missing
 
     if missing_by_lang:
-        _print_warning(missing_by_lang)
+        warning = _format_warning(missing_by_lang)
+        decision = _confirm_continue(warning)
+        if decision is True:
+            # Shown only if pre-commit runs verbose; the prompt was already on the tty.
+            print(warning)
+            print('Continuing commit despite missing translations (confirmed on terminal).')
+            return 0
+        # No -> abort. None -> no terminal to ask, so abort and explain.
+        print(warning)
+        if decision is None:
+            print('No terminal available to confirm; aborting commit.')
+            print('Run `python scripts/update_translations.py` to sync the .ts, or `git commit --no-verify` to skip.')
         return 1
 
     return 0
