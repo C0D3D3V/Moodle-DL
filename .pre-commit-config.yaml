@@ -9,3 +9,13 @@ repos:
         args: [--fix]
       # Run the formatter.
       - id: ruff-format
+  # Regenerate the GUI translation catalogs (.ts/.qm) when GUI strings change.
+  # Needs the Qt tools (e.g. `pip install PySide6`); if absent it warns and skips.
+  - repo: local
+    hooks:
+      - id: update-translations
+        name: Update GUI translation catalogs
+        entry: python scripts/update_translations.py
+        language: system
+        pass_filenames: false
+        files: ^moodle_dl/gui/.*\.py$|^moodle_dl/gui/i18n/.*\.(ts|py)$

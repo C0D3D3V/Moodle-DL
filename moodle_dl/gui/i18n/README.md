@@ -8,35 +8,43 @@ are wrapped in `self.tr(...)` (inside `QObject` subclasses) or
 
 ## Files
 
-- `moodledl_<lang>.ts` — translation **sources** (XML, edited by translators).
+- `moodledl_<lang>.ts` — translation **sources** (XML); the source of truth for
+  translations, edited with Qt Linguist (or by hand).
 - `moodledl_<lang>.qm` — **compiled** catalogs loaded at runtime. Committed so
   the GUI is translated out of the box; regenerate them whenever a `.ts` changes.
-- `_translate_de.py` — dev-only helper that fills the German `.ts` from a
-  built-in English→German map (handy for bulk re-translation after `lupdate`).
 
 The tools below come from Qt (`lupdate6` / `lrelease6`) or PySide6
 (`pyside6-lupdate` / `pyside6-lrelease`) — use whichever is on your `PATH`.
 
 ## Update strings after editing the GUI
 
-Re-extract source strings from the code into every catalog:
+One command re-extracts strings (preserving existing translations) and recompiles
+every `.qm`:
 
 ```bash
-lupdate6 -extensions py -recursive moodle_dl/gui -ts moodle_dl/gui/i18n/moodledl_de.ts
+python scripts/update_translations.py
 ```
 
-New strings appear as `type="unfinished"`. Translate them with Qt Linguist:
+This also runs automatically as a **pre-commit hook** whenever you change GUI
+code, so the catalogs stay in sync (requires the Qt tools, e.g.
+`pip install PySide6`; if they are absent the hook warns and skips).
+
+Brand-new strings are added as `type="unfinished"` and must be translated by a
+human — the strict CI check (`scripts/check_translations.py`) fails until every
+string is translated. Translate them with Qt Linguist (then recompile the `.qm`):
 
 ```bash
-linguist6 moodle_dl/gui/i18n/moodledl_de.ts
+linguist6 moodle_dl/gui/i18n/moodledl_de.ts   # then: python scripts/update_translations.py
 ```
 
-(For German you can instead extend the map in `_translate_de.py` and run
-`python moodle_dl/gui/i18n/_translate_de.py`.)
+Note: catalogs are generated with `-locations none`, so the `.ts` changes only
+when the set of strings changes — not on every unrelated code edit.
 
-Then compile to `.qm`:
+### Manual equivalent
 
 ```bash
+lupdate6 -extensions py -recursive -locations none -no-obsolete moodle_dl/gui -ts moodle_dl/gui/i18n/moodledl_de.ts
+# translate moodledl_de.ts with Qt Linguist, then:
 lrelease6 moodle_dl/gui/i18n/moodledl_de.ts
 ```
 
@@ -44,7 +52,11 @@ lrelease6 moodle_dl/gui/i18n/moodledl_de.ts
 
 1. Create the source catalog (e.g. French):
    ```bash
-   lupdate6 -extensions py -recursive moodle_dl/gui -ts moodle_dl/gui/i18n/moodledl_fr.ts
+   lupdate6 -extensions py -recursive -locations none -no-obsolete moodle_dl/gui -ts moodle_dl/gui/i18n/moodledl_fr.ts
    ```
-2. Translate it and run `lrelease6` to produce `moodledl_fr.qm`.
-3. Add `('fr', 'Français')` to `AVAILABLE_LANGUAGES` in `__init__.py`.
+2. Translate it with Qt Linguist.
+3. Run `python scripts/update_translations.py` to compile `moodledl_fr.qm`.
+4. Add `('fr', 'Français')` to `AVAILABLE_LANGUAGES` in `__init__.py`.
+
+From then on the pre-commit hook and the CI check cover the new language
+automatically (every `moodledl_*.ts` is picked up by glob).
