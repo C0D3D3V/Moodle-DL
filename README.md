@@ -25,6 +25,7 @@ Discussions about the development take place mainly on [Github](https://github.c
 [![latest packaged version(s)](https://repology.org/badge/latest-versions/moodle-dl.svg)](https://repology.org/project/moodle-dl/versions)
 [![Packaging status](https://repology.org/badge/tiny-repos/moodle-dl.svg)](https://repology.org/project/moodle-dl/versions)
 [![Discord Shield](https://discordapp.com/api/guilds/969140782655242281/widget.png?style=shield)](https://discord.gg/HNg7CsqEnZ)
+[![Homebrew](https://img.shields.io/badge/homebrew-%23FBB040.svg?style=for-the-badge&logo=homebrew&logoColor=black)](https://formulae.brew.sh/formula/moodle-dl#default)
 
 1. Install [Python](https://www.python.org/) >=3.8
 2. Install [ffmpeg](https://github.com/C0D3D3V/Moodle-DL/wiki/Installing-ffmpeg)
