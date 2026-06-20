@@ -220,7 +220,7 @@ class ConfigPage(QWidget):
         # Detect whitelist vs blacklist mode
         download_ids = set(self.config.get_download_course_ids())
         dont_download_ids = set(self.config.get_dont_download_course_ids())
-        use_blacklist = len(dont_download_ids) > 0 and len(download_ids) == 0
+        use_blacklist = self.config.get_course_filter_mode() == 'blacklist'
 
         if use_blacklist:
             self.radio_blacklist.setChecked(True)
@@ -315,6 +315,8 @@ class ConfigPage(QWidget):
 
             self.config.set_property('download_course_ids', selected_ids)
             self.config.remove_property('dont_download_course_ids')
+
+        self.config.set_property('course_filter_mode', 'blacklist' if use_blacklist else 'whitelist')
 
         # Save download options
         self.config.set_property('download_submissions', self.opt_submissions.isChecked())
