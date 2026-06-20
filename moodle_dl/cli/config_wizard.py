@@ -162,7 +162,7 @@ class ConfigWizard:
             + ' on your blacklist it will automatically be downloaded as well. '
         )
         print('')
-        
+
         use_whitelist = course_filter_mode == 'whitelist'
 
         use_whitelist = Cutie.prompt_yes_or_no(
@@ -263,7 +263,9 @@ class ConfigWizard:
             choices.append('None')
 
             for course in courses:
-                if MoodleService.should_download_course(course.id, download_course_ids, dont_download_course_ids, course_filter_mode):
+                if MoodleService.should_download_course(
+                    course.id, download_course_ids, dont_download_course_ids, course_filter_mode
+                ):
                     current_course_settings = options_of_courses.get(str(course.id), None)
 
                     # create default settings

@@ -322,7 +322,9 @@ class Task:
         connector = aiohttp.TCPConnector(
             resolver=aiohttp.ThreadedResolver() if sys.platform == 'win32' else aiohttp.AsyncResolver()
         )
-        async with aiohttp.ClientSession(connector=connector, cookie_jar=self.get_cookie_jar(), raise_for_status=True) as session:
+        async with aiohttp.ClientSession(
+            connector=connector, cookie_jar=self.get_cookie_jar(), raise_for_status=True
+        ) as session:
             try:
                 async with session.request("HEAD", dl_url, headers=self.RQ_HEADER, ssl=ssl_context, timeout=20) as resp:
                     if resp.url != dl_url:
@@ -840,7 +842,9 @@ class Task:
             connector = aiohttp.TCPConnector(
                 resolver=aiohttp.ThreadedResolver() if sys.platform == 'win32' else aiohttp.AsyncResolver()
             )
-            async with aiohttp.ClientSession(connector=connector, cookie_jar=self.get_cookie_jar(), raise_for_status=True) as session:
+            async with aiohttp.ClientSession(
+                connector=connector, cookie_jar=self.get_cookie_jar(), raise_for_status=True
+            ) as session:
                 while done_tries < self.MAX_DL_RETRIES:
                     try:
                         if done_tries > 0:

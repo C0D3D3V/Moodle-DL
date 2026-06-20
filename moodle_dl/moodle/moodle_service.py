@@ -82,7 +82,9 @@ class MoodleService:
         courses = []
         # Filter unselected courses
         for course in courses_list:
-            if MoodleService.should_download_course(course.id, download_course_ids, dont_download_course_ids, course_filter_mode):
+            if MoodleService.should_download_course(
+                course.id, download_course_ids, dont_download_course_ids, course_filter_mode
+            ):
                 courses.append(course)
 
         public_courses_list = core_handler.fetch_courses_info(download_public_course_ids)
@@ -183,7 +185,10 @@ class MoodleService:
 
         for course in changes:
             if not MoodleService.should_download_course(
-                course.id, download_course_ids + download_public_course_ids, dont_download_course_ids, course_filter_mode
+                course.id,
+                download_course_ids + download_public_course_ids,
+                dont_download_course_ids,
+                course_filter_mode,
             ):
                 # Filter courses that should not be downloaded
                 continue
@@ -267,10 +272,10 @@ class MoodleService:
         course_id: int, download_course_ids: List[int], dont_download_course_ids: List[int], course_filter_mode: str
     ) -> bool:
         "Return whether a course should be downloaded based on the filter mode"
-        
+
         if course_filter_mode == "whitelist":
             return course_id in download_course_ids
-        
+
         return course_id not in dont_download_course_ids
 
     @staticmethod
