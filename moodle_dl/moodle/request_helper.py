@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import os
+import sys
 import urllib
 from time import sleep
 from typing import Dict
@@ -132,7 +133,10 @@ class RequestHelper:
         )
 
         error_ctr = 0
-        async with self.semaphore, aiohttp.ClientSession() as session:
+        connector = aiohttp.TCPConnector(
+            resolver=aiohttp.ThreadedResolver() if sys.platform == 'win32' else aiohttp.AsyncResolver()
+        )
+        async with self.semaphore, aiohttp.ClientSession(connector=connector) as session:
             while error_ctr < self.MAX_RETRIES:
                 try:
                     async with session.post(
