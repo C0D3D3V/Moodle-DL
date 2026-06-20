@@ -18,7 +18,14 @@ We use GitHub to manage reviews of pull requests.
 
 * The team will review the issue and decide whether it should be implemented as a Pull Request. In that case, they will assign the issue to you. If the team decides against picking up the issue, it will be closed with a proper explanation.
 
-* Our code style is based on [Black's Pep8 subset(https://black.readthedocs.io/en/stable/the_black_code_style.html).
+* Our code is linted and formatted with [Ruff](https://docs.astral.sh/ruff/) (a drop-in replacement for Black, isort, flake8 and pylint), and the project is managed with [uv](https://docs.astral.sh/uv/). To set up a development environment and install the pre-commit hook that checks every commit:
+
+  ```bash
+  uv sync --all-extras
+  uv run pre-commit install
+  ```
+
+  Run the linter and formatter manually with `uv run ruff check --fix` and `uv run ruff format`.
 
 ## Steps to Contribute
 

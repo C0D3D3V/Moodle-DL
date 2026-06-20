@@ -94,11 +94,13 @@ class DatabaseManagementDialog(QDialog):
             course_item = QTreeWidgetItem([course.fullname, '', ''])
             course_item.setFlags(course_item.flags() & ~Qt.ItemFlag.ItemIsSelectable)
             for f in course.files:
-                file_item = QTreeWidgetItem([
-                    f.content_filename,
-                    f.section_name or '',
-                    f.saved_to or '',
-                ])
+                file_item = QTreeWidgetItem(
+                    [
+                        f.content_filename,
+                        f.section_name or '',
+                        f.saved_to or '',
+                    ]
+                )
                 file_item.setData(0, Qt.ItemDataRole.UserRole, f)
                 course_item.addChild(file_item)
                 total += 1
@@ -119,18 +121,12 @@ class DatabaseManagementDialog(QDialog):
         set_status_text(self.status_label, f'Error: {error_msg}', 'error')
 
     def _on_selection_changed(self) -> None:
-        selected = [
-            item for item in self.tree.selectedItems()
-            if item.data(0, Qt.ItemDataRole.UserRole) is not None
-        ]
+        selected = [item for item in self.tree.selectedItems() if item.data(0, Qt.ItemDataRole.UserRole) is not None]
         self.delete_btn.setEnabled(len(selected) > 0)
 
     def _on_delete_selected(self) -> None:
         """Delete selected file entries from the database."""
-        selected = [
-            item for item in self.tree.selectedItems()
-            if item.data(0, Qt.ItemDataRole.UserRole) is not None
-        ]
+        selected = [item for item in self.tree.selectedItems() if item.data(0, Qt.ItemDataRole.UserRole) is not None]
         if not selected:
             return
 

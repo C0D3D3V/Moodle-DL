@@ -34,7 +34,7 @@ class CoreHandler:
         try:
             version = int(version.split('.')[0])
         except Exception as e:
-            raise RuntimeError(f'Error could not parse version string: "{version}" Error: {e}')
+            raise RuntimeError(f'Error could not parse version string: "{version}" Error: {e}') from e
 
         self.version = version
         return userid, version

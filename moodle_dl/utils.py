@@ -297,20 +297,18 @@ class MoodleDLCookieJar(http.cookiejar.MozillaCookieJar):
                 # with no name, whereas http.cookiejar regards it as a
                 # cookie with no value.
                 name, value = '', name
-            f.write(
-                '%s\n'
-                % '\t'.join(
-                    (
-                        cookie.domain,
-                        self._true_or_false(cookie.domain.startswith('.')),
-                        cookie.path,
-                        self._true_or_false(cookie.secure),
-                        str_or_none(cookie.expires, default=''),
-                        name,
-                        value,
-                    )
+            cookie_line = '\t'.join(
+                (
+                    cookie.domain,
+                    self._true_or_false(cookie.domain.startswith('.')),
+                    cookie.path,
+                    self._true_or_false(cookie.secure),
+                    str_or_none(cookie.expires, default=''),
+                    name,
+                    value,
                 )
             )
+            f.write(f'{cookie_line}\n')
 
     def save(self, filename=None, *args, **kwargs):
         """
@@ -350,10 +348,10 @@ class MoodleDLCookieJar(http.cookiejar.MozillaCookieJar):
                 return line
             cookie_list = line.split('\t')
             if len(cookie_list) != self._ENTRY_LEN:
-                raise http.cookiejar.LoadError('invalid length %d' % len(cookie_list))
+                raise http.cookiejar.LoadError(f'invalid length {len(cookie_list)}')
             cookie = self._CookieFileEntry(*cookie_list)
             if cookie.expires_at and not cookie.expires_at.isdigit():
-                raise http.cookiejar.LoadError('invalid expires at %s' % cookie.expires_at)
+                raise http.cookiejar.LoadError(f'invalid expires at {cookie.expires_at}')
             return line
 
         cf = io.StringIO()
@@ -366,7 +364,7 @@ class MoodleDLCookieJar(http.cookiejar.MozillaCookieJar):
                         raise http.cookiejar.LoadError(
                             'Cookies file must be Netscape formatted, not JSON. See  '
                             'https://github.com/C0D3D3V/Moodle-DL/wiki/Use-cookies-when-downloading'
-                        )
+                        ) from cookie_err
                     logging.info('WARNING: Skipping cookie file entry due to %s: %r', cookie_err, line)
                     continue
         cf.seek(0)
@@ -1409,9 +1407,9 @@ class Cutie:
         while True:
             yes = is_yes and is_selected
             no = not is_yes and is_selected
-            print('\033[K' f'{selected_prefix if yes else deselected_prefix}{yes_text}')
-            print('\033[K' f'{selected_prefix if no else deselected_prefix}{no_text}')
-            print('\033[3A\r\033[K' f'{question}{yn_prompt}{current_message}', end='', flush=True)
+            print(f'\033[K{selected_prefix if yes else deselected_prefix}{yes_text}')
+            print(f'\033[K{selected_prefix if no else deselected_prefix}{no_text}')
+            print(f'\033[3A\r\033[K{question}{yn_prompt}{current_message}', end='', flush=True)
             keypress = readchar.readkey()
             if keypress in Cutie.DefaultKeys.down or keypress in Cutie.DefaultKeys.up:
                 is_yes = not is_yes

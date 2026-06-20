@@ -1,5 +1,3 @@
-# coding=utf-8
-
 from email.utils import make_msgid
 from string import Template
 

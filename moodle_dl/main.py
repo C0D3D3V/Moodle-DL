@@ -566,9 +566,7 @@ def main(args=None):
 
             gui_main(opts)
         except ImportError:
-            logging.error(
-                'PySide6 is required for the GUI. Install it with: pip install moodle-dl[gui]'
-            )
+            logging.error('PySide6 is required for the GUI. Install it with: pip install moodle-dl[gui]')
             sys.exit(1)
         sys.exit(0)
 

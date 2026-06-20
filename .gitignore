@@ -3,6 +3,8 @@
 /debugging-moodle
 __pycache__
 /venv
+/.venv
+.ruff_cache
 /build
 /dist
 config.json

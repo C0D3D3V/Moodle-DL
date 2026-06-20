@@ -36,9 +36,6 @@ from moodle_dl.types import (
 from moodle_dl.utils import (
     LINK_TEMPLATES,
     MoodleDLCookieJar,
-)
-from moodle_dl.utils import PathTools as PT
-from moodle_dl.utils import (
     SslHelper,
     Timer,
     convert_to_aiohttp_cookie_jar,
@@ -46,6 +43,7 @@ from moodle_dl.utils import (
     format_seconds,
     timeconvert,
 )
+from moodle_dl.utils import PathTools as PT
 
 
 class Task:
@@ -938,12 +936,7 @@ class Task:
         )
 
     def __str__(self):
-        return 'Task (%(task_id)s, %(file)s, %(course)s, %(status)s)' % {
-            'task_id': self.task_id,
-            'file': self.file,
-            'course': self.course,
-            'status': self.status,
-        }
+        return f'Task ({self.task_id}, {self.file}, {self.course}, {self.status})'
 
 
 class ContentRangeError(ConnectionError):
