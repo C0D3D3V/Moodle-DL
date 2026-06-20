@@ -159,30 +159,30 @@ class LoginPage(QWidget):
         normal_tab = QWidget()
         normal_layout = QVBoxLayout(normal_tab)
 
-        form_group = QGroupBox('Moodle Login')
+        form_group = QGroupBox(self.tr('Moodle Login'))
         form_layout = QFormLayout()
 
         self.url_input = QLineEdit()
         self.url_input.setPlaceholderText('https://moodle.example.com')
         self.url_input.returnPressed.connect(self._on_login_clicked)
-        form_layout.addRow('Moodle URL:', self.url_input)
+        form_layout.addRow(self.tr('Moodle URL:'), self.url_input)
 
         self.username_input = QLineEdit()
-        self.username_input.setPlaceholderText('your.username')
+        self.username_input.setPlaceholderText(self.tr('your.username'))
         self.username_input.returnPressed.connect(self._on_login_clicked)
-        form_layout.addRow('Username:', self.username_input)
+        form_layout.addRow(self.tr('Username:'), self.username_input)
 
         self.password_input = QLineEdit()
         self.password_input.setEchoMode(QLineEdit.EchoMode.Password)
-        self.password_input.setPlaceholderText('your password')
+        self.password_input.setPlaceholderText(self.tr('your password'))
         self.password_input.returnPressed.connect(self._on_login_clicked)
-        form_layout.addRow('Password:', self.password_input)
+        form_layout.addRow(self.tr('Password:'), self.password_input)
 
         form_group.setLayout(form_layout)
         normal_layout.addWidget(form_group)
 
         btn_layout = QHBoxLayout()
-        self.login_btn = QPushButton('Login')
+        self.login_btn = QPushButton(self.tr('Login'))
         self.login_btn.clicked.connect(self._on_login_clicked)
         btn_layout.addStretch()
         btn_layout.addWidget(self.login_btn)
@@ -192,7 +192,7 @@ class LoginPage(QWidget):
         normal_layout.addWidget(self.normal_status)
         normal_layout.addStretch()
 
-        self.tabs.addTab(normal_tab, 'Normal Login')
+        self.tabs.addTab(normal_tab, self.tr('Normal Login'))
 
         # --- SSO Login Tab ---
         sso_tab = QWidget()
@@ -201,16 +201,18 @@ class LoginPage(QWidget):
         sso_url_layout = QFormLayout()
         self.sso_url_input = QLineEdit()
         self.sso_url_input.setPlaceholderText('https://moodle.example.com')
-        sso_url_layout.addRow('Moodle URL:', self.sso_url_input)
+        sso_url_layout.addRow(self.tr('Moodle URL:'), self.sso_url_input)
         sso_layout.addLayout(sso_url_layout)
 
-        self.sso_open_btn = QPushButton('Open SSO Login in Browser')
+        self.sso_open_btn = QPushButton(self.tr('Open SSO Login in Browser'))
         self.sso_open_btn.clicked.connect(self._on_sso_open_clicked)
         sso_layout.addWidget(self.sso_open_btn)
 
         self.sso_status = QLabel(
-            'Enter your Moodle URL and click the button to start SSO login.\n'
-            'The login page will open below (requires PySide6-WebEngine).'
+            self.tr(
+                'Enter your Moodle URL and click the button to start SSO login.\n'
+                'The login page will open below (requires PySide6-WebEngine).'
+            )
         )
         sso_layout.addWidget(self.sso_status)
 
@@ -220,35 +222,35 @@ class LoginPage(QWidget):
 
         sso_layout.addStretch()
 
-        self.tabs.addTab(sso_tab, 'SSO Login')
+        self.tabs.addTab(sso_tab, self.tr('SSO Login'))
 
         # --- Token Login Tab ---
         token_tab = QWidget()
         token_layout = QVBoxLayout(token_tab)
 
-        token_group = QGroupBox('Token Login')
+        token_group = QGroupBox(self.tr('Token Login'))
         token_form = QFormLayout()
 
         self.token_url_input = QLineEdit()
         self.token_url_input.setPlaceholderText('https://moodle.example.com')
         self.token_url_input.returnPressed.connect(self._on_token_login_clicked)
-        token_form.addRow('Moodle URL:', self.token_url_input)
+        token_form.addRow(self.tr('Moodle URL:'), self.token_url_input)
 
         self.token_input = QLineEdit()
-        self.token_input.setPlaceholderText('Paste your Moodle token here')
+        self.token_input.setPlaceholderText(self.tr('Paste your Moodle token here'))
         self.token_input.returnPressed.connect(self._on_token_login_clicked)
-        token_form.addRow('Token:', self.token_input)
+        token_form.addRow(self.tr('Token:'), self.token_input)
 
         self.private_token_input = QLineEdit()
-        self.private_token_input.setPlaceholderText('Optional')
+        self.private_token_input.setPlaceholderText(self.tr('Optional'))
         self.private_token_input.returnPressed.connect(self._on_token_login_clicked)
-        token_form.addRow('Private Token:', self.private_token_input)
+        token_form.addRow(self.tr('Private Token:'), self.private_token_input)
 
         token_group.setLayout(token_form)
         token_layout.addWidget(token_group)
 
         token_btn_layout = QHBoxLayout()
-        self.token_login_btn = QPushButton('Save Token')
+        self.token_login_btn = QPushButton(self.tr('Save Token'))
         self.token_login_btn.clicked.connect(self._on_token_login_clicked)
         token_btn_layout.addStretch()
         token_btn_layout.addWidget(self.token_login_btn)
@@ -258,7 +260,7 @@ class LoginPage(QWidget):
         token_layout.addWidget(self.token_status)
         token_layout.addStretch()
 
-        self.tabs.addTab(token_tab, 'Token Login')
+        self.tabs.addTab(token_tab, self.tr('Token Login'))
 
         # Pre-fill URL from existing config
         self._prefill_url()
@@ -279,14 +281,14 @@ class LoginPage(QWidget):
         """Parse a URL string into a MoodleURL object."""
         url_text = url_text.strip()
         if not url_text:
-            raise ValueError('Please enter a Moodle URL.')
+            raise ValueError(self.tr('Please enter a Moodle URL.'))
         if not url_text.startswith('http://') and not url_text.startswith('https://'):
             url_text = 'https://' + url_text
 
         use_http = url_text.startswith('http://')
         domain, path = MoodleService.split_moodle_url(url_text)
         if not domain:
-            raise ValueError('Invalid Moodle URL.')
+            raise ValueError(self.tr('Invalid Moodle URL.'))
         return MoodleURL(use_http=use_http, domain=domain, path=path)
 
     # --- Normal Login ---
@@ -303,13 +305,13 @@ class LoginPage(QWidget):
         password = self.password_input.text()
 
         if not username or not password:
-            self.login_failed.emit('Please enter both username and password.')
+            self.login_failed.emit(self.tr('Please enter both username and password.'))
             return
 
         self.login_btn.setEnabled(False)
-        self.login_btn.setText('Logging in\u2026')
+        self.login_btn.setText(self.tr('Logging in\u2026'))
         self.setCursor(QCursor(Qt.CursorShape.BusyCursor))
-        set_status_text(self.normal_status, 'Logging in\u2026', 'info')
+        set_status_text(self.normal_status, self.tr('Logging in\u2026'), 'info')
 
         self._worker = LoginWorker(self.config, self.opts, moodle_url, username, password)
         self._worker.login_successful.connect(self._on_worker_login_success)
@@ -319,17 +321,17 @@ class LoginPage(QWidget):
     def _on_worker_login_success(self) -> None:
         """Handle successful normal login."""
         self.login_btn.setEnabled(True)
-        self.login_btn.setText('Login')
+        self.login_btn.setText(self.tr('Login'))
         self.unsetCursor()
-        set_status_text(self.normal_status, 'Login successful!', 'success')
+        set_status_text(self.normal_status, self.tr('Login successful!'), 'success')
         self.login_successful.emit()
 
     def _on_worker_login_failed(self, error_msg: str) -> None:
         """Handle failed normal login."""
         self.login_btn.setEnabled(True)
-        self.login_btn.setText('Login')
+        self.login_btn.setText(self.tr('Login'))
         self.unsetCursor()
-        set_status_text(self.normal_status, f'Login failed: {error_msg}', 'error')
+        set_status_text(self.normal_status, self.tr('Login failed: {}').format(error_msg), 'error')
         self.login_failed.emit(error_msg)
 
     # --- Token Login ---
@@ -344,25 +346,25 @@ class LoginPage(QWidget):
 
         token = self.token_input.text().strip()
         if not token:
-            set_status_text(self.token_status, 'Please enter a token.', 'error')
+            set_status_text(self.token_status, self.tr('Please enter a token.'), 'error')
             return
 
         private_token = self.private_token_input.text().strip() or None
 
         self.token_login_btn.setEnabled(False)
-        self.token_login_btn.setText('Saving\u2026')
+        self.token_login_btn.setText(self.tr('Saving\u2026'))
         self.setCursor(QCursor(Qt.CursorShape.BusyCursor))
 
         try:
             self.config.set_moodle_URL(moodle_url)
             self.config.set_tokens(token, private_token)
-            set_status_text(self.token_status, 'Token saved successfully!', 'success')
+            set_status_text(self.token_status, self.tr('Token saved successfully!'), 'success')
             self.login_successful.emit()
         except Exception as e:
-            set_status_text(self.token_status, f'Failed to save token: {e}', 'error')
+            set_status_text(self.token_status, self.tr('Failed to save token: {}').format(e), 'error')
         finally:
             self.token_login_btn.setEnabled(True)
-            self.token_login_btn.setText('Save Token')
+            self.token_login_btn.setText(self.tr('Save Token'))
             self.unsetCursor()
 
     # --- SSO ---
@@ -379,11 +381,11 @@ class LoginPage(QWidget):
                     "window.location.href",
                     self._on_js_location_result,
                 )
-            set_status_text(self.sso_status, 'Enter your credentials below.', 'info')
+            set_status_text(self.sso_status, self.tr('Enter your credentials below.'), 'info')
         else:
             set_status_text(
                 self.sso_status,
-                'Page load error. The SSO login page may still appear after redirects.',
+                self.tr('Page load error. The SSO login page may still appear after redirects.'),
                 'warning',
             )
 
@@ -405,7 +407,7 @@ class LoginPage(QWidget):
         logging.debug('SSO launch URL: %s', sso_url)
 
         self.sso_open_btn.setEnabled(False)
-        self.sso_open_btn.setText('Opening\u2026')
+        self.sso_open_btn.setText(self.tr('Opening\u2026'))
         self.setCursor(QCursor(Qt.CursorShape.BusyCursor))
 
         try:
@@ -435,7 +437,7 @@ class LoginPage(QWidget):
             self._sso_webview.setMinimumHeight(400)
             self._sso_webview_container.addWidget(self._sso_webview)
 
-            set_status_text(self.sso_status, 'Loading SSO login page\u2026', 'info')
+            set_status_text(self.sso_status, self.tr('Loading SSO login page\u2026'), 'info')
             # Connect loadFinished AFTER setUrl to skip the about:blank signal
             self._sso_webview.setUrl(QUrl(sso_url))
             self._sso_page.loadFinished.connect(self._on_sso_load_finished)
@@ -444,13 +446,13 @@ class LoginPage(QWidget):
         except ImportError:
             set_status_text(
                 self.sso_status,
-                'PySide6-WebEngine is not installed. Cannot open embedded browser.',
+                self.tr('PySide6-WebEngine is not installed. Cannot open embedded browser.'),
                 'error',
             )
             logging.warning('PySide6-WebEngine not available for SSO')
         finally:
             self.sso_open_btn.setEnabled(True)
-            self.sso_open_btn.setText('Open SSO Login in Browser')
+            self.sso_open_btn.setText(self.tr('Open SSO Login in Browser'))
             self.unsetCursor()
 
     def _on_sso_title_changed(self, title: str) -> None:
@@ -478,7 +480,7 @@ class LoginPage(QWidget):
             )
             return
         self._sso_token_received = True
-        set_status_text(self.sso_status, 'Token received, verifying\u2026', 'info')
+        set_status_text(self.sso_status, self.tr('Token received, verifying\u2026'), 'info')
         self._sso_worker = SSOTokenWorker(self.config, self.opts, self._sso_moodle_url, callback_url)
         self._sso_worker.login_successful.connect(self._on_sso_login_success)
         self._sso_worker.login_failed.connect(self._on_sso_login_failed)
@@ -542,12 +544,12 @@ class LoginPage(QWidget):
 
     def _on_sso_login_success(self) -> None:
         """Handle successful SSO login."""
-        set_status_text(self.sso_status, 'SSO login successful!', 'success')
+        set_status_text(self.sso_status, self.tr('SSO login successful!'), 'success')
         self._cleanup_sso_webview()
         self.login_successful.emit()
 
     def _on_sso_login_failed(self, error_msg: str) -> None:
         """Handle failed SSO login."""
-        set_status_text(self.sso_status, f'SSO login failed: {error_msg}', 'error')
+        set_status_text(self.sso_status, self.tr('SSO login failed: {}').format(error_msg), 'error')
         self._cleanup_sso_webview()
         self.login_failed.emit(error_msg)

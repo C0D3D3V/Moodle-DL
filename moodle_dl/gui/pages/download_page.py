@@ -53,26 +53,26 @@ class DownloadPage(QWidget):
 
         # Controls
         controls = QHBoxLayout()
-        self.scan_btn = QPushButton('Scan Moodle')
+        self.scan_btn = QPushButton(self.tr('Scan Moodle'))
         self.scan_btn.clicked.connect(self._on_scan)
         controls.addWidget(self.scan_btn)
 
-        self.start_btn = QPushButton('Start Download')
+        self.start_btn = QPushButton(self.tr('Start Download'))
         self.start_btn.setEnabled(False)
         self.start_btn.clicked.connect(self._on_start_download)
         controls.addWidget(self.start_btn)
 
-        self.cancel_btn = QPushButton('Cancel All')
+        self.cancel_btn = QPushButton(self.tr('Cancel All'))
         self.cancel_btn.setEnabled(False)
         self.cancel_btn.clicked.connect(self._on_cancel_all)
         controls.addWidget(self.cancel_btn)
 
-        self.skip_selected_btn = QPushButton('Skip Selected')
+        self.skip_selected_btn = QPushButton(self.tr('Skip Selected'))
         self.skip_selected_btn.setEnabled(False)
         self.skip_selected_btn.clicked.connect(self._on_skip_selected)
         controls.addWidget(self.skip_selected_btn)
 
-        self.always_skip_selected_btn = QPushButton('Always Skip Selected')
+        self.always_skip_selected_btn = QPushButton(self.tr('Always Skip Selected'))
         self.always_skip_selected_btn.setEnabled(False)
         self.always_skip_selected_btn.clicked.connect(self._on_always_skip_selected)
         controls.addWidget(self.always_skip_selected_btn)
@@ -81,7 +81,7 @@ class DownloadPage(QWidget):
         layout.addLayout(controls)
 
         # Overall progress
-        self.progress_group = QGroupBox('Overall Progress')
+        self.progress_group = QGroupBox(self.tr('Overall Progress'))
         progress_layout = QVBoxLayout()
 
         self.progress_bar = QProgressBar()
@@ -89,7 +89,7 @@ class DownloadPage(QWidget):
         self.progress_bar.setValue(0)
         progress_layout.addWidget(self.progress_bar)
 
-        self.stats_label = QLabel('Ready. Navigate here to scan for changes.')
+        self.stats_label = QLabel(self.tr('Ready. Navigate here to scan for changes.'))
         progress_layout.addWidget(self.stats_label)
 
         self.progress_group.setLayout(progress_layout)
@@ -149,7 +149,7 @@ class DownloadPage(QWidget):
         self.skip_selected_btn.setEnabled(False)
         self.always_skip_selected_btn.setEnabled(False)
         self.setCursor(QCursor(Qt.CursorShape.BusyCursor))
-        set_status_text(self.stats_label, 'Scanning Moodle for changes\u2026', 'info')
+        set_status_text(self.stats_label, self.tr('Scanning Moodle for changes\u2026'), 'info')
         self.progress_bar.setValue(0)
         self.progress_bar.setRange(0, 0)  # indeterminate
 
@@ -162,7 +162,7 @@ class DownloadPage(QWidget):
         try:
             self.config.load()
         except ConfigHelper.NoConfigError:
-            QMessageBox.critical(self, 'Error', 'No configuration found. Please log in first.')
+            QMessageBox.critical(self, self.tr('Error'), self.tr('No configuration found. Please log in first.'))
             self._reset_to_idle()
             return
 
@@ -188,14 +188,14 @@ class DownloadPage(QWidget):
 
         total_files = self._preview_model.rowCount()
         if total_files == 0:
-            set_status_text(self.stats_label, 'No new or changed files found.', 'success')
+            set_status_text(self.stats_label, self.tr('No new or changed files found.'), 'success')
             self._phase = Phase.PREVIEW
             self.scan_btn.setEnabled(True)
             self.start_btn.setEnabled(False)
         else:
             set_status_text(
                 self.stats_label,
-                f'Found {total_files} file(s) to download. Review and click Start Download.',
+                self.tr('Found {} file(s) to download. Review and click Start Download.').format(total_files),
                 'info',
             )
             self._phase = Phase.PREVIEW
@@ -205,26 +205,26 @@ class DownloadPage(QWidget):
     def _on_fetch_error(self, error_msg) -> None:
         """Scan failed."""
         self.progress_bar.setRange(0, 100)
-        QMessageBox.critical(self, 'Scan Error', error_msg)
-        set_status_text(self.stats_label, f'Error: {error_msg}', 'error')
+        QMessageBox.critical(self, self.tr('Scan Error'), error_msg)
+        set_status_text(self.stats_label, self.tr('Error: {}').format(error_msg), 'error')
         self._reset_to_idle()
 
     def _on_start_download(self) -> None:
         """User clicked Start Download — begin downloading remaining files."""
         remaining_courses = self._preview_model.get_remaining_courses()
         if not remaining_courses or all(len(c.files) == 0 for c in remaining_courses):
-            QMessageBox.information(self, 'Nothing to Download', 'All files have been skipped.')
+            QMessageBox.information(self, self.tr('Nothing to Download'), self.tr('All files have been skipped.'))
             return
 
         self._phase = Phase.DOWNLOADING
         self.scan_btn.setEnabled(False)
         self.start_btn.setEnabled(False)
-        self.start_btn.setText('Downloading\u2026')
+        self.start_btn.setText(self.tr('Downloading\u2026'))
         self.cancel_btn.setEnabled(True)
         self.skip_selected_btn.setEnabled(False)
         self.always_skip_selected_btn.setEnabled(False)
         self.setCursor(QCursor(Qt.CursorShape.BusyCursor))
-        set_status_text(self.stats_label, 'Starting download\u2026', 'info')
+        set_status_text(self.stats_label, self.tr('Starting download\u2026'), 'info')
 
         # Switch to task model
         self.table_view.setModel(self._task_model)
@@ -241,7 +241,7 @@ class DownloadPage(QWidget):
         self._task_model.set_tasks(download_service.all_tasks)
 
         total = download_service.status.files_to_download
-        set_status_text(self.stats_label, f'Downloading {total} files\u2026', 'info')
+        set_status_text(self.stats_label, self.tr('Downloading {} files\u2026').format(total), 'info')
         self._poll_timer.start()
 
     def _on_download_finished(self, failed: list) -> None:
@@ -250,7 +250,9 @@ class DownloadPage(QWidget):
 
         if self._download_service:
             status = self._download_service.status
-            msg = f'Download complete. {status.files_downloaded} succeeded, {status.files_failed} failed.'
+            msg = self.tr('Download complete. {} succeeded, {} failed.').format(
+                status.files_downloaded, status.files_failed
+            )
             level = 'success' if status.files_failed == 0 else 'warning'
             set_status_text(self.stats_label, msg, level)
             self.progress_bar.setValue(100)
@@ -258,9 +260,11 @@ class DownloadPage(QWidget):
         if failed:
             details = '\n'.join(failed[:20])
             if len(failed) > 20:
-                details += f'\n... and {len(failed) - 20} more'
+                details += self.tr('\n... and {} more').format(len(failed) - 20)
             QMessageBox.warning(
-                self, 'Some Downloads Failed', f'{len(failed)} file(s) failed to download:\n\n{details}'
+                self,
+                self.tr('Some Downloads Failed'),
+                self.tr('{} file(s) failed to download:\n\n{}').format(len(failed), details),
             )
 
         self._download_service = None
@@ -281,8 +285,8 @@ class DownloadPage(QWidget):
 
     def _on_download_error(self, error_msg: str) -> None:
         self._poll_timer.stop()
-        set_status_text(self.stats_label, f'Error: {error_msg}', 'error')
-        QMessageBox.critical(self, 'Download Error', error_msg)
+        set_status_text(self.stats_label, self.tr('Error: {}').format(error_msg), 'error')
+        QMessageBox.critical(self, self.tr('Download Error'), error_msg)
         self._download_service = None
         self._reset_to_idle()
 
@@ -300,9 +304,13 @@ class DownloadPage(QWidget):
 
         done = status.files_downloaded + status.files_failed
         self.stats_label.setText(
-            f'{format_bytes(status.bytes_downloaded)} / {format_bytes(status.bytes_to_download)} | '
-            f'Done: {done} / {status.files_to_download} | '
-            f'Failed: {status.files_failed}'
+            self.tr('{} / {} | Done: {} / {} | Failed: {}').format(
+                format_bytes(status.bytes_downloaded),
+                format_bytes(status.bytes_to_download),
+                done,
+                status.files_to_download,
+                status.files_failed,
+            )
         )
 
         self._task_model.refresh()
@@ -376,18 +384,20 @@ class DownloadPage(QWidget):
         if any_normal:
             normal_rows = {r for r in selected if not self._preview_model.is_always_skipped(r)}
             n = len(normal_rows)
-            skip_action = QAction(f'Skip ({n})' if n > 1 else 'Skip', menu)
+            skip_action = QAction(self.tr('Skip ({})').format(n) if n > 1 else self.tr('Skip'), menu)
             skip_action.triggered.connect(lambda checked=False, rows=normal_rows: self._skip_entries(rows))
             menu.addAction(skip_action)
 
-            always_action = QAction(f'Always Skip ({n})' if n > 1 else 'Always Skip', menu)
+            always_action = QAction(self.tr('Always Skip ({})').format(n) if n > 1 else self.tr('Always Skip'), menu)
             always_action.triggered.connect(lambda checked=False, rows=normal_rows: self._always_skip_entries(rows))
             menu.addAction(always_action)
 
         if any_always:
             skipped_rows = {r for r in selected if self._preview_model.is_always_skipped(r)}
             n = len(skipped_rows)
-            restore_action = QAction(f'Remove Always Skip ({n})' if n > 1 else 'Remove Always Skip', menu)
+            restore_action = QAction(
+                self.tr('Remove Always Skip ({})').format(n) if n > 1 else self.tr('Remove Always Skip'), menu
+            )
             restore_action.triggered.connect(
                 lambda checked=False, rows=skipped_rows: self._remove_always_skip_entries(rows)
             )
@@ -406,12 +416,12 @@ class DownloadPage(QWidget):
         total_files = sum(len(c.files) for c in remaining) if remaining else 0
         if total_files == 0:
             self.start_btn.setEnabled(False)
-            set_status_text(self.stats_label, 'All files skipped. Click Scan to re-check.', 'info')
+            set_status_text(self.stats_label, self.tr('All files skipped. Click Scan to re-check.'), 'info')
         else:
             self.start_btn.setEnabled(True)
             set_status_text(
                 self.stats_label,
-                f'{total_files} file(s) remaining. Review and click Start Download.',
+                self.tr('{} file(s) remaining. Review and click Start Download.').format(total_files),
                 'info',
             )
 
@@ -423,8 +433,8 @@ class DownloadPage(QWidget):
         """Cancel all downloads after user confirmation."""
         reply = QMessageBox.question(
             self,
-            'Cancel All Downloads',
-            'Are you sure you want to cancel all running downloads?',
+            self.tr('Cancel All Downloads'),
+            self.tr('Are you sure you want to cancel all running downloads?'),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,
         )
@@ -433,7 +443,7 @@ class DownloadPage(QWidget):
         if self._download_worker is not None:
             self._download_worker.request_cancel()
             self.cancel_btn.setEnabled(False)
-            set_status_text(self.stats_label, 'Cancelling\u2026', 'warning')
+            set_status_text(self.stats_label, self.tr('Cancelling\u2026'), 'warning')
 
     def cancel_all(self) -> None:
         """Called when the window is closing."""
@@ -467,7 +477,7 @@ class DownloadPage(QWidget):
         self._phase = Phase.IDLE
         self.scan_btn.setEnabled(True)
         self.start_btn.setEnabled(False)
-        self.start_btn.setText('Start Download')
+        self.start_btn.setText(self.tr('Start Download'))
         self.cancel_btn.setEnabled(False)
         self.skip_selected_btn.setEnabled(False)
         self.always_skip_selected_btn.setEnabled(False)

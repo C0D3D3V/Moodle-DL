@@ -25,7 +25,7 @@ class DatabaseManagementDialog(QDialog):
         self.opts = opts
         self._worker = None
 
-        self.setWindowTitle('Missing Files')
+        self.setWindowTitle(self.tr('Missing Files'))
         self.setMinimumSize(700, 500)
 
         self._setup_ui()
@@ -35,8 +35,10 @@ class DatabaseManagementDialog(QDialog):
         layout = QVBoxLayout(self)
 
         hint = QLabel(
-            'These files are tracked in the database but no longer exist on disk. '
-            'Remove entries here to re-download them on the next scan.'
+            self.tr(
+                'These files are tracked in the database but no longer exist on disk. '
+                'Remove entries here to re-download them on the next scan.'
+            )
         )
         hint.setWordWrap(True)
         layout.addWidget(hint)
@@ -45,25 +47,25 @@ class DatabaseManagementDialog(QDialog):
         layout.addWidget(self.status_label)
 
         self.tree = QTreeWidget()
-        self.tree.setHeaderLabels(['Name', 'Section', 'Path'])
+        self.tree.setHeaderLabels([self.tr('Name'), self.tr('Section'), self.tr('Path')])
         self.tree.setSelectionMode(QTreeWidget.SelectionMode.ExtendedSelection)
         self.tree.setAlternatingRowColors(True)
         layout.addWidget(self.tree, 1)
 
         btn_row = QHBoxLayout()
 
-        self.refresh_btn = QPushButton('Refresh')
+        self.refresh_btn = QPushButton(self.tr('Refresh'))
         self.refresh_btn.clicked.connect(self._load_files)
         btn_row.addWidget(self.refresh_btn)
 
-        self.delete_btn = QPushButton('Delete Selected from DB')
+        self.delete_btn = QPushButton(self.tr('Delete Selected from DB'))
         self.delete_btn.setEnabled(False)
         self.delete_btn.clicked.connect(self._on_delete_selected)
         btn_row.addWidget(self.delete_btn)
 
         btn_row.addStretch()
 
-        close_btn = QPushButton('Close')
+        close_btn = QPushButton(self.tr('Close'))
         close_btn.clicked.connect(self.accept)
         btn_row.addWidget(close_btn)
 
@@ -77,7 +79,7 @@ class DatabaseManagementDialog(QDialog):
         self.delete_btn.setEnabled(False)
         self.refresh_btn.setEnabled(False)
         self.setCursor(QCursor(Qt.CursorShape.BusyCursor))
-        set_status_text(self.status_label, 'Loading stored files\u2026', 'info')
+        set_status_text(self.status_label, self.tr('Loading stored files\u2026'), 'info')
 
         self._worker = FetchStoredFilesWorker(self.config, self.opts)
         self._worker.files_fetched.connect(self._on_files_fetched)
@@ -108,9 +110,9 @@ class DatabaseManagementDialog(QDialog):
             course_item.setExpanded(True)
 
         if total == 0:
-            set_status_text(self.status_label, 'No missing files found in the database.', 'success')
+            set_status_text(self.status_label, self.tr('No missing files found in the database.'), 'success')
         else:
-            set_status_text(self.status_label, f'{total} missing file(s) found.', 'info')
+            set_status_text(self.status_label, self.tr('{} missing file(s) found.').format(total), 'info')
 
         self.tree.resizeColumnToContents(0)
         self.tree.resizeColumnToContents(1)
@@ -118,7 +120,7 @@ class DatabaseManagementDialog(QDialog):
     def _on_error(self, error_msg: str) -> None:
         self.refresh_btn.setEnabled(True)
         self.unsetCursor()
-        set_status_text(self.status_label, f'Error: {error_msg}', 'error')
+        set_status_text(self.status_label, self.tr('Error: {}').format(error_msg), 'error')
 
     def _on_selection_changed(self) -> None:
         selected = [item for item in self.tree.selectedItems() if item.data(0, Qt.ItemDataRole.UserRole) is not None]
@@ -132,9 +134,10 @@ class DatabaseManagementDialog(QDialog):
 
         reply = QMessageBox.question(
             self,
-            'Delete from Database',
-            f'Delete {len(selected)} file entry(ies) from the database?\n'
-            'These files will be re-downloaded on the next scan.',
+            self.tr('Delete from Database'),
+            self.tr(
+                'Delete {} file entry(ies) from the database?\nThese files will be re-downloaded on the next scan.'
+            ).format(len(selected)),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,
         )
@@ -146,5 +149,7 @@ class DatabaseManagementDialog(QDialog):
         files = [item.data(0, Qt.ItemDataRole.UserRole) for item in selected]
         database = StateRecorder(self.config, self.opts)
         database.batch_delete_files_from_db(files)
-        set_status_text(self.status_label, f'Deleted {len(files)} entry(ies). Refreshing\u2026', 'success')
+        set_status_text(
+            self.status_label, self.tr('Deleted {} entry(ies). Refreshing\u2026').format(len(files)), 'success'
+        )
         self._load_files()

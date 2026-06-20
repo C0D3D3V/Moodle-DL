@@ -1,0 +1,21 @@
+name: Translations
+
+on: [push, pull_request]
+
+jobs:
+  translations:
+    runs-on: ubuntu-latest
+    name: Check GUI translations
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # PySide6 provides both pyside6-lupdate (string extraction) and QtCore
+      # (used to verify the compiled .qm catalogs).
+      - name: Install PySide6
+        run: pip install "PySide6>=6.5.0"
+      # Fails if any tr() string is missing from a .ts, left untranslated, or if
+      # a committed .qm is out of sync with its .ts.
+      - name: Check translation catalogs are complete and in sync
+        run: python scripts/check_translations.py

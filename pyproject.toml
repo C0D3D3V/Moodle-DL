@@ -60,6 +60,10 @@ path = "moodle_dl/version.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["moodle_dl"]
+# Ship compiled translation catalogs (.qm); the .ts sources stay out of the
+# installed package.
+artifacts = ["moodle_dl/gui/i18n/*.qm"]
+exclude = ["moodle_dl/gui/i18n/*.ts"]
 
 [tool.hatch.build.targets.sdist]
 include = [

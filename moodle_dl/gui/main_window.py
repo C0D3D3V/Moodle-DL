@@ -65,31 +65,31 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.notifications_page)  # index 4
 
         # Toolbar navigation (text-only)
-        self.toolbar = QToolBar('Navigation')
+        self.toolbar = QToolBar(self.tr('Navigation'))
         self.toolbar.setMovable(False)
         self.toolbar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextOnly)
         self.addToolBar(Qt.ToolBarArea.TopToolBarArea, self.toolbar)
 
-        self.act_login = QAction('Login', self)
+        self.act_login = QAction(self.tr('Login'), self)
         self.act_login.triggered.connect(lambda: self._navigate(self.PAGE_LOGIN))
         self.toolbar.addAction(self.act_login)
 
-        self.act_config = QAction('Courses', self)
+        self.act_config = QAction(self.tr('Courses'), self)
         self.act_config.setEnabled(False)
         self.act_config.triggered.connect(lambda: self._navigate(self.PAGE_CONFIG))
         self.toolbar.addAction(self.act_config)
 
-        self.act_download = QAction('Download', self)
+        self.act_download = QAction(self.tr('Download'), self)
         self.act_download.setEnabled(False)
         self.act_download.triggered.connect(lambda: self._navigate(self.PAGE_DOWNLOAD))
         self.toolbar.addAction(self.act_download)
 
-        self.act_settings = QAction('Settings', self)
+        self.act_settings = QAction(self.tr('Settings'), self)
         self.act_settings.setEnabled(False)
         self.act_settings.triggered.connect(lambda: self._navigate(self.PAGE_SETTINGS))
         self.toolbar.addAction(self.act_settings)
 
-        self.act_notifications = QAction('Notifications', self)
+        self.act_notifications = QAction(self.tr('Notifications'), self)
         self.act_notifications.setEnabled(False)
         self.act_notifications.triggered.connect(lambda: self._navigate(self.PAGE_NOTIFICATIONS))
         self.toolbar.addAction(self.act_notifications)
@@ -105,34 +105,34 @@ class MainWindow(QMainWindow):
         # Separator + tools
         self.toolbar.addSeparator()
 
-        self.act_manage_db = QAction('Missing Files', self)
+        self.act_manage_db = QAction(self.tr('Missing Files'), self)
         self.act_manage_db.setEnabled(False)
         self.act_manage_db.setToolTip(
-            'Find files tracked in the database but missing from disk. Remove entries to re-download them.'
+            self.tr('Find files tracked in the database but missing from disk. Remove entries to re-download them.')
         )
         self.act_manage_db.triggered.connect(self._on_manage_db)
         self.toolbar.addAction(self.act_manage_db)
 
-        self.act_old_files = QAction('Outdated Copies', self)
+        self.act_old_files = QAction(self.tr('Outdated Copies'), self)
         self.act_old_files.setEnabled(False)
         self.act_old_files.setToolTip(
-            'Find old file versions that have been replaced by newer ones. Delete them to free disk space.'
+            self.tr('Find old file versions that have been replaced by newer ones. Delete them to free disk space.')
         )
         self.act_old_files.triggered.connect(self._on_old_files)
         self.toolbar.addAction(self.act_old_files)
 
         self.toolbar.addSeparator()
 
-        self.act_logout = QAction('Logout', self)
+        self.act_logout = QAction(self.tr('Logout'), self)
         self.act_logout.setEnabled(False)
-        self.act_logout.setToolTip('Log out and return to the login page.')
+        self.act_logout.setToolTip(self.tr('Log out and return to the login page.'))
         self.act_logout.triggered.connect(self._on_logout)
         self.toolbar.addAction(self.act_logout)
 
         # Status bar
         self.status_bar = QStatusBar()
         self.setStatusBar(self.status_bar)
-        self.status_bar.showMessage('Please log in to your Moodle account.')
+        self.status_bar.showMessage(self.tr('Please log in to your Moodle account.'))
 
         # Wire signals
         self.login_page.login_successful.connect(self._on_login_success)
@@ -162,7 +162,7 @@ class MainWindow(QMainWindow):
             if token:
                 self._enable_navigation()
                 self._navigate(self.PAGE_DOWNLOAD)
-                self.status_bar.showMessage('Loaded existing configuration.')
+                self.status_bar.showMessage(self.tr('Loaded existing configuration.'))
                 return
         except (ConfigHelper.NoConfigError, ValueError):
             pass
@@ -177,13 +177,13 @@ class MainWindow(QMainWindow):
             pass
         self._enable_navigation()
         self._navigate(self.PAGE_CONFIG)
-        self.status_bar.showMessage('Login successful. Configure your courses.')
+        self.status_bar.showMessage(self.tr('Login successful. Configure your courses.'))
 
     def _on_login_failed(self, error_msg: str) -> None:
         """Handle login failure."""
         logging.error('Login failed: %s', error_msg)
-        QMessageBox.critical(self, 'Login Failed', error_msg)
-        self.status_bar.showMessage('Login failed.')
+        QMessageBox.critical(self, self.tr('Login Failed'), error_msg)
+        self.status_bar.showMessage(self.tr('Login failed.'))
 
     def _enable_navigation(self) -> None:
         """Enable all navigation actions after successful login."""
@@ -221,8 +221,8 @@ class MainWindow(QMainWindow):
         """Log out: clear tokens, disable navigation, return to login page."""
         reply = QMessageBox.question(
             self,
-            'Logout',
-            'Are you sure you want to log out? Any running downloads will be cancelled.',
+            self.tr('Logout'),
+            self.tr('Are you sure you want to log out? Any running downloads will be cancelled.'),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,
         )
@@ -241,7 +241,7 @@ class MainWindow(QMainWindow):
         self.act_old_files.setEnabled(False)
         self.act_logout.setEnabled(False)
         self._navigate(self.PAGE_LOGIN)
-        self.status_bar.showMessage('Logged out. Please log in again.')
+        self.status_bar.showMessage(self.tr('Logged out. Please log in again.'))
 
     def _on_manage_db(self) -> None:
         """Open the database management dialog."""

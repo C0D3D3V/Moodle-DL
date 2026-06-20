@@ -31,7 +31,7 @@ class CourseOptionsDialog(QDialog):
         self._sections_worker = None
         self._section_checkboxes = {}
 
-        self.setWindowTitle(f'Options for: {course_name}')
+        self.setWindowTitle(self.tr('Options for: {}').format(course_name))
         self.setMinimumWidth(450)
         self.setMinimumHeight(400)
 
@@ -45,26 +45,26 @@ class CourseOptionsDialog(QDialog):
 
         self.custom_name_input = QLineEdit()
         self.custom_name_input.setPlaceholderText(self.course_name)
-        self.custom_name_input.setToolTip('Override the course folder name. Leave empty to use the default.')
-        form.addRow('Custom Name:', self.custom_name_input)
+        self.custom_name_input.setToolTip(self.tr('Override the course folder name. Leave empty to use the default.'))
+        form.addRow(self.tr('Custom Name:'), self.custom_name_input)
 
-        self.cb_create_dir = QCheckBox('Create Directory Structure')
+        self.cb_create_dir = QCheckBox(self.tr('Create Directory Structure'))
         self.cb_create_dir.setChecked(True)
-        self.cb_create_dir.setToolTip('Create subdirectories matching the Moodle course section structure.')
+        self.cb_create_dir.setToolTip(self.tr('Create subdirectories matching the Moodle course section structure.'))
         form.addRow(self.cb_create_dir)
 
         layout.addLayout(form)
 
         # Section Exclusion
-        sections_group = QGroupBox('Section Exclusion')
+        sections_group = QGroupBox(self.tr('Section Exclusion'))
         sections_layout = QVBoxLayout()
 
-        sections_hint = QLabel('Uncheck sections to exclude them from downloads.')
+        sections_hint = QLabel(self.tr('Uncheck sections to exclude them from downloads.'))
         sections_hint.setStyleSheet('color: #666; font-style: italic;')
         sections_layout.addWidget(sections_hint)
 
-        self.load_sections_btn = QPushButton('Load Sections')
-        self.load_sections_btn.setToolTip('Fetch available sections from Moodle.')
+        self.load_sections_btn = QPushButton(self.tr('Load Sections'))
+        self.load_sections_btn.setToolTip(self.tr('Fetch available sections from Moodle.'))
         self.load_sections_btn.clicked.connect(self._on_fetch_sections)
         sections_layout.addWidget(self.load_sections_btn)
 
@@ -97,9 +97,9 @@ class CourseOptionsDialog(QDialog):
     def _on_fetch_sections(self) -> None:
         """Fetch sections from Moodle for this course."""
         self.load_sections_btn.setEnabled(False)
-        self.load_sections_btn.setText('Fetching\u2026')
+        self.load_sections_btn.setText(self.tr('Fetching\u2026'))
         self.setCursor(QCursor(Qt.CursorShape.BusyCursor))
-        set_status_text(self.sections_status, 'Fetching sections\u2026', 'info')
+        set_status_text(self.sections_status, self.tr('Fetching sections\u2026'), 'info')
 
         self._sections_worker = FetchSectionsWorker(self.config, self.opts, self.course_id)
         self._sections_worker.sections_fetched.connect(self._on_sections_fetched)
@@ -109,9 +109,9 @@ class CourseOptionsDialog(QDialog):
     def _on_sections_fetched(self, sections: list) -> None:
         """Populate section checkboxes."""
         self.load_sections_btn.setEnabled(True)
-        self.load_sections_btn.setText('Load Sections')
+        self.load_sections_btn.setText(self.tr('Load Sections'))
         self.unsetCursor()
-        set_status_text(self.sections_status, f'Found {len(sections)} sections.', 'success')
+        set_status_text(self.sections_status, self.tr('Found {} sections.').format(len(sections)), 'success')
 
         # Clear existing checkboxes
         for cb in self._section_checkboxes.values():
@@ -126,17 +126,17 @@ class CourseOptionsDialog(QDialog):
 
         for section in sections:
             section_id = section['id']
-            section_name = section.get('name', f'Section {section_id}')
-            cb = QCheckBox(f'{section_name} (ID: {section_id})')
+            section_name = section.get('name', self.tr('Section {}').format(section_id))
+            cb = QCheckBox(self.tr('{} (ID: {})').format(section_name, section_id))
             cb.setChecked(section_id not in excluded)
             self.sections_list_layout.addWidget(cb)
             self._section_checkboxes[section_id] = cb
 
     def _on_sections_error(self, error_msg: str) -> None:
         self.load_sections_btn.setEnabled(True)
-        self.load_sections_btn.setText('Load Sections')
+        self.load_sections_btn.setText(self.tr('Load Sections'))
         self.unsetCursor()
-        set_status_text(self.sections_status, f'Error: {error_msg}', 'error')
+        set_status_text(self.sections_status, self.tr('Error: {}').format(error_msg), 'error')
 
     def _on_save(self) -> None:
         """Save per-course options to config."""

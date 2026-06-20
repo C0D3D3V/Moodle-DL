@@ -49,36 +49,36 @@ class NotificationsPage(QWidget):
         telegram_tab = QWidget()
         tg_layout = QVBoxLayout(telegram_tab)
 
-        tg_group = QGroupBox('Telegram Configuration')
+        tg_group = QGroupBox(self.tr('Telegram Configuration'))
         tg_form = QFormLayout()
 
         self.tg_token_input = QLineEdit()
         self.tg_token_input.setPlaceholderText('123456:ABC-DEF...')
-        self.tg_token_input.setToolTip('Bot token from @BotFather.')
-        tg_form.addRow('Bot Token:', self.tg_token_input)
+        self.tg_token_input.setToolTip(self.tr('Bot token from @BotFather.'))
+        tg_form.addRow(self.tr('Bot Token:'), self.tg_token_input)
 
         self.tg_chat_id_input = QLineEdit()
-        self.tg_chat_id_input.setPlaceholderText('e.g. 123456789')
-        self.tg_chat_id_input.setToolTip('Your Telegram chat ID. Send /start to @userinfobot to find it.')
-        tg_form.addRow('Chat ID:', self.tg_chat_id_input)
+        self.tg_chat_id_input.setPlaceholderText(self.tr('e.g. 123456789'))
+        self.tg_chat_id_input.setToolTip(self.tr('Your Telegram chat ID. Send /start to @userinfobot to find it.'))
+        tg_form.addRow(self.tr('Chat ID:'), self.tg_chat_id_input)
 
-        self.tg_send_errors = QCheckBox('Send Error Reports')
-        self.tg_send_errors.setToolTip('Also send error notifications via Telegram.')
+        self.tg_send_errors = QCheckBox(self.tr('Send Error Reports'))
+        self.tg_send_errors.setToolTip(self.tr('Also send error notifications via Telegram.'))
         tg_form.addRow(self.tg_send_errors)
 
         tg_group.setLayout(tg_form)
         tg_layout.addWidget(tg_group)
 
         tg_btn_row = QHBoxLayout()
-        self.tg_test_btn = QPushButton('Test')
+        self.tg_test_btn = QPushButton(self.tr('Test'))
         self.tg_test_btn.clicked.connect(self._on_test_telegram)
         tg_btn_row.addWidget(self.tg_test_btn)
 
-        self.tg_save_btn = QPushButton('Save')
+        self.tg_save_btn = QPushButton(self.tr('Save'))
         self.tg_save_btn.clicked.connect(self._on_save_telegram)
         tg_btn_row.addWidget(self.tg_save_btn)
 
-        self.tg_disable_btn = QPushButton('Disable')
+        self.tg_disable_btn = QPushButton(self.tr('Disable'))
         self.tg_disable_btn.clicked.connect(self._on_disable_telegram)
         tg_btn_row.addWidget(self.tg_disable_btn)
 
@@ -89,21 +89,21 @@ class NotificationsPage(QWidget):
         tg_layout.addWidget(self.tg_status)
         tg_layout.addStretch()
 
-        self.tabs.addTab(telegram_tab, 'Telegram')
+        self.tabs.addTab(telegram_tab, self.tr('Telegram'))
 
         # --- Discord Tab ---
         discord_tab = QWidget()
         dc_layout = QVBoxLayout(discord_tab)
 
-        dc_group = QGroupBox('Discord Configuration')
+        dc_group = QGroupBox(self.tr('Discord Configuration'))
         dc_form_layout = QVBoxLayout()
 
-        dc_label = QLabel('Webhook URLs (one per line):')
+        dc_label = QLabel(self.tr('Webhook URLs (one per line):'))
         dc_form_layout.addWidget(dc_label)
 
         self.dc_webhooks_input = QTextEdit()
         self.dc_webhooks_input.setPlaceholderText('https://discord.com/api/webhooks/...')
-        self.dc_webhooks_input.setToolTip('Enter one Discord webhook URL per line.')
+        self.dc_webhooks_input.setToolTip(self.tr('Enter one Discord webhook URL per line.'))
         self.dc_webhooks_input.setMaximumHeight(120)
         dc_form_layout.addWidget(self.dc_webhooks_input)
 
@@ -111,15 +111,15 @@ class NotificationsPage(QWidget):
         dc_layout.addWidget(dc_group)
 
         dc_btn_row = QHBoxLayout()
-        self.dc_test_btn = QPushButton('Test')
+        self.dc_test_btn = QPushButton(self.tr('Test'))
         self.dc_test_btn.clicked.connect(self._on_test_discord)
         dc_btn_row.addWidget(self.dc_test_btn)
 
-        self.dc_save_btn = QPushButton('Save')
+        self.dc_save_btn = QPushButton(self.tr('Save'))
         self.dc_save_btn.clicked.connect(self._on_save_discord)
         dc_btn_row.addWidget(self.dc_save_btn)
 
-        self.dc_disable_btn = QPushButton('Disable')
+        self.dc_disable_btn = QPushButton(self.tr('Disable'))
         self.dc_disable_btn.clicked.connect(self._on_disable_discord)
         dc_btn_row.addWidget(self.dc_disable_btn)
 
@@ -130,63 +130,63 @@ class NotificationsPage(QWidget):
         dc_layout.addWidget(self.dc_status)
         dc_layout.addStretch()
 
-        self.tabs.addTab(discord_tab, 'Discord')
+        self.tabs.addTab(discord_tab, self.tr('Discord'))
 
         # --- Email (SMTP) Tab ---
         mail_tab = QWidget()
         mail_layout = QVBoxLayout(mail_tab)
 
-        mail_group = QGroupBox('Email (SMTP) Configuration')
+        mail_group = QGroupBox(self.tr('Email (SMTP) Configuration'))
         mail_form = QFormLayout()
 
         self.mail_sender_input = QLineEdit()
         self.mail_sender_input.setPlaceholderText('noreply@example.com')
-        self.mail_sender_input.setToolTip('Email address to send from.')
-        mail_form.addRow('Sender:', self.mail_sender_input)
+        self.mail_sender_input.setToolTip(self.tr('Email address to send from.'))
+        mail_form.addRow(self.tr('Sender:'), self.mail_sender_input)
 
         self.mail_host_input = QLineEdit()
         self.mail_host_input.setPlaceholderText('smtp.gmail.com')
-        self.mail_host_input.setToolTip('SMTP server hostname.')
-        mail_form.addRow('SMTP Host:', self.mail_host_input)
+        self.mail_host_input.setToolTip(self.tr('SMTP server hostname.'))
+        mail_form.addRow(self.tr('SMTP Host:'), self.mail_host_input)
 
         self.mail_port_spin = QSpinBox()
         self.mail_port_spin.setRange(1, 65535)
         self.mail_port_spin.setValue(587)
-        self.mail_port_spin.setToolTip('SMTP server port (typically 587 for STARTTLS).')
-        mail_form.addRow('SMTP Port:', self.mail_port_spin)
+        self.mail_port_spin.setToolTip(self.tr('SMTP server port (typically 587 for STARTTLS).'))
+        mail_form.addRow(self.tr('SMTP Port:'), self.mail_port_spin)
 
         self.mail_username_input = QLineEdit()
         self.mail_username_input.setPlaceholderText('user@example.com')
-        self.mail_username_input.setToolTip('SMTP authentication username.')
-        mail_form.addRow('Username:', self.mail_username_input)
+        self.mail_username_input.setToolTip(self.tr('SMTP authentication username.'))
+        mail_form.addRow(self.tr('Username:'), self.mail_username_input)
 
         self.mail_password_input = QLineEdit()
         self.mail_password_input.setEchoMode(QLineEdit.EchoMode.Password)
-        self.mail_password_input.setToolTip('SMTP authentication password.')
-        mail_form.addRow('Password:', self.mail_password_input)
+        self.mail_password_input.setToolTip(self.tr('SMTP authentication password.'))
+        mail_form.addRow(self.tr('Password:'), self.mail_password_input)
 
         self.mail_target_input = QLineEdit()
         self.mail_target_input.setPlaceholderText('recipient@example.com')
-        self.mail_target_input.setToolTip('Recipient email address.')
-        mail_form.addRow('Target:', self.mail_target_input)
+        self.mail_target_input.setToolTip(self.tr('Recipient email address.'))
+        mail_form.addRow(self.tr('Target:'), self.mail_target_input)
 
-        self.mail_send_errors = QCheckBox('Send Error Reports')
-        self.mail_send_errors.setToolTip('Also send error notifications via email.')
+        self.mail_send_errors = QCheckBox(self.tr('Send Error Reports'))
+        self.mail_send_errors.setToolTip(self.tr('Also send error notifications via email.'))
         mail_form.addRow(self.mail_send_errors)
 
         mail_group.setLayout(mail_form)
         mail_layout.addWidget(mail_group)
 
         mail_btn_row = QHBoxLayout()
-        self.mail_test_btn = QPushButton('Test')
+        self.mail_test_btn = QPushButton(self.tr('Test'))
         self.mail_test_btn.clicked.connect(self._on_test_mail)
         mail_btn_row.addWidget(self.mail_test_btn)
 
-        self.mail_save_btn = QPushButton('Save')
+        self.mail_save_btn = QPushButton(self.tr('Save'))
         self.mail_save_btn.clicked.connect(self._on_save_mail)
         mail_btn_row.addWidget(self.mail_save_btn)
 
-        self.mail_disable_btn = QPushButton('Disable')
+        self.mail_disable_btn = QPushButton(self.tr('Disable'))
         self.mail_disable_btn.clicked.connect(self._on_disable_mail)
         mail_btn_row.addWidget(self.mail_disable_btn)
 
@@ -197,38 +197,40 @@ class NotificationsPage(QWidget):
         mail_layout.addWidget(self.mail_status)
         mail_layout.addStretch()
 
-        self.tabs.addTab(mail_tab, 'Email')
+        self.tabs.addTab(mail_tab, self.tr('Email'))
 
         # --- ntfy Tab ---
         ntfy_tab = QWidget()
         ntfy_layout = QVBoxLayout(ntfy_tab)
 
-        ntfy_group = QGroupBox('ntfy Configuration')
+        ntfy_group = QGroupBox(self.tr('ntfy Configuration'))
         ntfy_form = QFormLayout()
 
         self.ntfy_topic_input = QLineEdit()
         self.ntfy_topic_input.setPlaceholderText('moodle_updates')
-        self.ntfy_topic_input.setToolTip('The ntfy topic to publish to.')
-        ntfy_form.addRow('Topic:', self.ntfy_topic_input)
+        self.ntfy_topic_input.setToolTip(self.tr('The ntfy topic to publish to.'))
+        ntfy_form.addRow(self.tr('Topic:'), self.ntfy_topic_input)
 
         self.ntfy_server_input = QLineEdit()
         self.ntfy_server_input.setPlaceholderText('https://ntfy.sh/')
-        self.ntfy_server_input.setToolTip('Custom ntfy server URL. Leave empty to use the default (https://ntfy.sh/).')
-        ntfy_form.addRow('Server URL:', self.ntfy_server_input)
+        self.ntfy_server_input.setToolTip(
+            self.tr('Custom ntfy server URL. Leave empty to use the default (https://ntfy.sh/).')
+        )
+        ntfy_form.addRow(self.tr('Server URL:'), self.ntfy_server_input)
 
         ntfy_group.setLayout(ntfy_form)
         ntfy_layout.addWidget(ntfy_group)
 
         ntfy_btn_row = QHBoxLayout()
-        self.ntfy_test_btn = QPushButton('Test')
+        self.ntfy_test_btn = QPushButton(self.tr('Test'))
         self.ntfy_test_btn.clicked.connect(self._on_test_ntfy)
         ntfy_btn_row.addWidget(self.ntfy_test_btn)
 
-        self.ntfy_save_btn = QPushButton('Save')
+        self.ntfy_save_btn = QPushButton(self.tr('Save'))
         self.ntfy_save_btn.clicked.connect(self._on_save_ntfy)
         ntfy_btn_row.addWidget(self.ntfy_save_btn)
 
-        self.ntfy_disable_btn = QPushButton('Disable')
+        self.ntfy_disable_btn = QPushButton(self.tr('Disable'))
         self.ntfy_disable_btn.clicked.connect(self._on_disable_ntfy)
         ntfy_btn_row.addWidget(self.ntfy_disable_btn)
 
@@ -239,47 +241,47 @@ class NotificationsPage(QWidget):
         ntfy_layout.addWidget(self.ntfy_status)
         ntfy_layout.addStretch()
 
-        self.tabs.addTab(ntfy_tab, 'ntfy')
+        self.tabs.addTab(ntfy_tab, self.tr('ntfy'))
 
         # --- XMPP Tab ---
         xmpp_tab = QWidget()
         xmpp_layout = QVBoxLayout(xmpp_tab)
 
-        xmpp_group = QGroupBox('XMPP Configuration')
+        xmpp_group = QGroupBox(self.tr('XMPP Configuration'))
         xmpp_form = QFormLayout()
 
         self.xmpp_jid_input = QLineEdit()
         self.xmpp_jid_input.setPlaceholderText('bot@jabber.org')
-        self.xmpp_jid_input.setToolTip('Sender JID (Jabber ID).')
-        xmpp_form.addRow('Sender JID:', self.xmpp_jid_input)
+        self.xmpp_jid_input.setToolTip(self.tr('Sender JID (Jabber ID).'))
+        xmpp_form.addRow(self.tr('Sender JID:'), self.xmpp_jid_input)
 
         self.xmpp_password_input = QLineEdit()
         self.xmpp_password_input.setEchoMode(QLineEdit.EchoMode.Password)
-        self.xmpp_password_input.setToolTip('XMPP account password.')
-        xmpp_form.addRow('Password:', self.xmpp_password_input)
+        self.xmpp_password_input.setToolTip(self.tr('XMPP account password.'))
+        xmpp_form.addRow(self.tr('Password:'), self.xmpp_password_input)
 
         self.xmpp_target_input = QLineEdit()
         self.xmpp_target_input.setPlaceholderText('user@jabber.org')
-        self.xmpp_target_input.setToolTip('Target JID to receive notifications.')
-        xmpp_form.addRow('Target JID:', self.xmpp_target_input)
+        self.xmpp_target_input.setToolTip(self.tr('Target JID to receive notifications.'))
+        xmpp_form.addRow(self.tr('Target JID:'), self.xmpp_target_input)
 
-        self.xmpp_send_errors = QCheckBox('Send Error Reports')
-        self.xmpp_send_errors.setToolTip('Also send error notifications via XMPP.')
+        self.xmpp_send_errors = QCheckBox(self.tr('Send Error Reports'))
+        self.xmpp_send_errors.setToolTip(self.tr('Also send error notifications via XMPP.'))
         xmpp_form.addRow(self.xmpp_send_errors)
 
         xmpp_group.setLayout(xmpp_form)
         xmpp_layout.addWidget(xmpp_group)
 
         xmpp_btn_row = QHBoxLayout()
-        self.xmpp_test_btn = QPushButton('Test')
+        self.xmpp_test_btn = QPushButton(self.tr('Test'))
         self.xmpp_test_btn.clicked.connect(self._on_test_xmpp)
         xmpp_btn_row.addWidget(self.xmpp_test_btn)
 
-        self.xmpp_save_btn = QPushButton('Save')
+        self.xmpp_save_btn = QPushButton(self.tr('Save'))
         self.xmpp_save_btn.clicked.connect(self._on_save_xmpp)
         xmpp_btn_row.addWidget(self.xmpp_save_btn)
 
-        self.xmpp_disable_btn = QPushButton('Disable')
+        self.xmpp_disable_btn = QPushButton(self.tr('Disable'))
         self.xmpp_disable_btn.clicked.connect(self._on_disable_xmpp)
         xmpp_btn_row.addWidget(self.xmpp_disable_btn)
 
@@ -290,7 +292,7 @@ class NotificationsPage(QWidget):
         xmpp_layout.addWidget(self.xmpp_status)
         xmpp_layout.addStretch()
 
-        self.tabs.addTab(xmpp_tab, 'XMPP')
+        self.tabs.addTab(xmpp_tab, self.tr('XMPP'))
 
         layout.addStretch()
 
@@ -343,13 +345,13 @@ class NotificationsPage(QWidget):
         token = self.tg_token_input.text().strip()
         chat_id = self.tg_chat_id_input.text().strip()
         if not token or not chat_id:
-            set_status_text(self.tg_status, 'Please enter both Bot Token and Chat ID.', 'error')
+            set_status_text(self.tg_status, self.tr('Please enter both Bot Token and Chat ID.'), 'error')
             return
 
         self.tg_test_btn.setEnabled(False)
-        self.tg_test_btn.setText('Sending\u2026')
+        self.tg_test_btn.setText(self.tr('Sending\u2026'))
         self.setCursor(QCursor(Qt.CursorShape.BusyCursor))
-        set_status_text(self.tg_status, 'Sending test message\u2026', 'info')
+        set_status_text(self.tg_status, self.tr('Sending test message\u2026'), 'info')
 
         self._telegram_worker = TestTelegramWorker(token, chat_id)
         self._telegram_worker.test_successful.connect(self._on_telegram_test_success)
@@ -359,29 +361,29 @@ class NotificationsPage(QWidget):
     def _on_telegram_test_success(self) -> None:
         """Handle successful Telegram test."""
         self.tg_test_btn.setEnabled(True)
-        self.tg_test_btn.setText('Test')
+        self.tg_test_btn.setText(self.tr('Test'))
         self.unsetCursor()
-        set_status_text(self.tg_status, 'Test message sent successfully!', 'success')
+        set_status_text(self.tg_status, self.tr('Test message sent successfully!'), 'success')
 
     def _on_telegram_test_failed(self, error_msg: str) -> None:
         """Handle failed Telegram test."""
         self.tg_test_btn.setEnabled(True)
-        self.tg_test_btn.setText('Test')
+        self.tg_test_btn.setText(self.tr('Test'))
         self.unsetCursor()
-        set_status_text(self.tg_status, f'Test failed: {error_msg}', 'error')
+        set_status_text(self.tg_status, self.tr('Test failed: {}').format(error_msg), 'error')
 
     def _on_save_telegram(self) -> None:
         """Save Telegram configuration."""
         token = self.tg_token_input.text().strip()
         chat_id = self.tg_chat_id_input.text().strip()
         if not token or not chat_id:
-            set_status_text(self.tg_status, 'Please enter both Bot Token and Chat ID.', 'error')
+            set_status_text(self.tg_status, self.tr('Please enter both Bot Token and Chat ID.'), 'error')
             return
 
         self.config.set_property('telegram_token', token)
         self.config.set_property('telegram_chatid', chat_id)
         self.config.set_property('telegram_send_error_reports', self.tg_send_errors.isChecked())
-        set_status_text(self.tg_status, 'Telegram configuration saved.', 'success')
+        set_status_text(self.tg_status, self.tr('Telegram configuration saved.'), 'success')
 
     def _on_disable_telegram(self) -> None:
         """Disable Telegram notifications."""
@@ -391,7 +393,7 @@ class NotificationsPage(QWidget):
         self.tg_token_input.clear()
         self.tg_chat_id_input.clear()
         self.tg_send_errors.setChecked(False)
-        set_status_text(self.tg_status, 'Telegram notifications disabled.', 'info')
+        set_status_text(self.tg_status, self.tr('Telegram notifications disabled.'), 'info')
 
     # --- Discord ---
 
@@ -406,13 +408,13 @@ class NotificationsPage(QWidget):
         """Send a test message via Discord."""
         webhooks = self._get_discord_webhooks()
         if not webhooks:
-            set_status_text(self.dc_status, 'Please enter at least one webhook URL.', 'error')
+            set_status_text(self.dc_status, self.tr('Please enter at least one webhook URL.'), 'error')
             return
 
         self.dc_test_btn.setEnabled(False)
-        self.dc_test_btn.setText('Sending\u2026')
+        self.dc_test_btn.setText(self.tr('Sending\u2026'))
         self.setCursor(QCursor(Qt.CursorShape.BusyCursor))
-        set_status_text(self.dc_status, 'Sending test message\u2026', 'info')
+        set_status_text(self.dc_status, self.tr('Sending test message\u2026'), 'info')
 
         self._discord_worker = TestDiscordWorker(webhooks)
         self._discord_worker.test_successful.connect(self._on_discord_test_success)
@@ -422,32 +424,32 @@ class NotificationsPage(QWidget):
     def _on_discord_test_success(self) -> None:
         """Handle successful Discord test."""
         self.dc_test_btn.setEnabled(True)
-        self.dc_test_btn.setText('Test')
+        self.dc_test_btn.setText(self.tr('Test'))
         self.unsetCursor()
-        set_status_text(self.dc_status, 'Test message sent successfully!', 'success')
+        set_status_text(self.dc_status, self.tr('Test message sent successfully!'), 'success')
 
     def _on_discord_test_failed(self, error_msg: str) -> None:
         """Handle failed Discord test."""
         self.dc_test_btn.setEnabled(True)
-        self.dc_test_btn.setText('Test')
+        self.dc_test_btn.setText(self.tr('Test'))
         self.unsetCursor()
-        set_status_text(self.dc_status, f'Test failed: {error_msg}', 'error')
+        set_status_text(self.dc_status, self.tr('Test failed: {}').format(error_msg), 'error')
 
     def _on_save_discord(self) -> None:
         """Save Discord configuration."""
         webhooks = self._get_discord_webhooks()
         if not webhooks:
-            set_status_text(self.dc_status, 'Please enter at least one webhook URL.', 'error')
+            set_status_text(self.dc_status, self.tr('Please enter at least one webhook URL.'), 'error')
             return
 
         self.config.set_property('discord_webhook_urls', webhooks)
-        set_status_text(self.dc_status, 'Discord configuration saved.', 'success')
+        set_status_text(self.dc_status, self.tr('Discord configuration saved.'), 'success')
 
     def _on_disable_discord(self) -> None:
         """Disable Discord notifications."""
         self.config.set_property('discord_webhook_urls', [])
         self.dc_webhooks_input.clear()
-        set_status_text(self.dc_status, 'Discord notifications disabled.', 'info')
+        set_status_text(self.dc_status, self.tr('Discord notifications disabled.'), 'info')
 
     # --- Email (SMTP) ---
 
@@ -461,13 +463,13 @@ class NotificationsPage(QWidget):
         target = self.mail_target_input.text().strip()
 
         if not all([sender, host, username, password, target]):
-            set_status_text(self.mail_status, 'Please fill in all required fields.', 'error')
+            set_status_text(self.mail_status, self.tr('Please fill in all required fields.'), 'error')
             return
 
         self.mail_test_btn.setEnabled(False)
-        self.mail_test_btn.setText('Sending\u2026')
+        self.mail_test_btn.setText(self.tr('Sending\u2026'))
         self.setCursor(QCursor(Qt.CursorShape.BusyCursor))
-        set_status_text(self.mail_status, 'Sending test email\u2026', 'info')
+        set_status_text(self.mail_status, self.tr('Sending test email\u2026'), 'info')
 
         self._mail_worker = TestMailWorker(sender, host, port, username, password, target)
         self._mail_worker.test_successful.connect(self._on_mail_test_success)
@@ -476,15 +478,15 @@ class NotificationsPage(QWidget):
 
     def _on_mail_test_success(self) -> None:
         self.mail_test_btn.setEnabled(True)
-        self.mail_test_btn.setText('Test')
+        self.mail_test_btn.setText(self.tr('Test'))
         self.unsetCursor()
-        set_status_text(self.mail_status, 'Test email sent successfully!', 'success')
+        set_status_text(self.mail_status, self.tr('Test email sent successfully!'), 'success')
 
     def _on_mail_test_failed(self, error_msg: str) -> None:
         self.mail_test_btn.setEnabled(True)
-        self.mail_test_btn.setText('Test')
+        self.mail_test_btn.setText(self.tr('Test'))
         self.unsetCursor()
-        set_status_text(self.mail_status, f'Test failed: {error_msg}', 'error')
+        set_status_text(self.mail_status, self.tr('Test failed: {}').format(error_msg), 'error')
 
     def _on_save_mail(self) -> None:
         """Save email configuration."""
@@ -492,7 +494,7 @@ class NotificationsPage(QWidget):
         host = self.mail_host_input.text().strip()
         target = self.mail_target_input.text().strip()
         if not all([sender, host, target]):
-            set_status_text(self.mail_status, 'Please fill in sender, host, and target.', 'error')
+            set_status_text(self.mail_status, self.tr('Please fill in sender, host, and target.'), 'error')
             return
 
         self.config.set_property(
@@ -507,7 +509,7 @@ class NotificationsPage(QWidget):
                 'send_error_msg': self.mail_send_errors.isChecked(),
             },
         )
-        set_status_text(self.mail_status, 'Email configuration saved.', 'success')
+        set_status_text(self.mail_status, self.tr('Email configuration saved.'), 'success')
 
     def _on_disable_mail(self) -> None:
         """Disable email notifications."""
@@ -519,7 +521,7 @@ class NotificationsPage(QWidget):
         self.mail_password_input.clear()
         self.mail_target_input.clear()
         self.mail_send_errors.setChecked(False)
-        set_status_text(self.mail_status, 'Email notifications disabled.', 'info')
+        set_status_text(self.mail_status, self.tr('Email notifications disabled.'), 'info')
 
     # --- ntfy ---
 
@@ -527,13 +529,13 @@ class NotificationsPage(QWidget):
         """Send a test ntfy notification."""
         topic = self.ntfy_topic_input.text().strip()
         if not topic:
-            set_status_text(self.ntfy_status, 'Please enter a topic.', 'error')
+            set_status_text(self.ntfy_status, self.tr('Please enter a topic.'), 'error')
             return
 
         self.ntfy_test_btn.setEnabled(False)
-        self.ntfy_test_btn.setText('Sending\u2026')
+        self.ntfy_test_btn.setText(self.tr('Sending\u2026'))
         self.setCursor(QCursor(Qt.CursorShape.BusyCursor))
-        set_status_text(self.ntfy_status, 'Sending test notification\u2026', 'info')
+        set_status_text(self.ntfy_status, self.tr('Sending test notification\u2026'), 'info')
 
         server = self.ntfy_server_input.text().strip()
         self._ntfy_worker = TestNtfyWorker(topic, server)
@@ -543,21 +545,21 @@ class NotificationsPage(QWidget):
 
     def _on_ntfy_test_success(self) -> None:
         self.ntfy_test_btn.setEnabled(True)
-        self.ntfy_test_btn.setText('Test')
+        self.ntfy_test_btn.setText(self.tr('Test'))
         self.unsetCursor()
-        set_status_text(self.ntfy_status, 'Test notification sent successfully!', 'success')
+        set_status_text(self.ntfy_status, self.tr('Test notification sent successfully!'), 'success')
 
     def _on_ntfy_test_failed(self, error_msg: str) -> None:
         self.ntfy_test_btn.setEnabled(True)
-        self.ntfy_test_btn.setText('Test')
+        self.ntfy_test_btn.setText(self.tr('Test'))
         self.unsetCursor()
-        set_status_text(self.ntfy_status, f'Test failed: {error_msg}', 'error')
+        set_status_text(self.ntfy_status, self.tr('Test failed: {}').format(error_msg), 'error')
 
     def _on_save_ntfy(self) -> None:
         """Save ntfy configuration."""
         topic = self.ntfy_topic_input.text().strip()
         if not topic:
-            set_status_text(self.ntfy_status, 'Please enter a topic.', 'error')
+            set_status_text(self.ntfy_status, self.tr('Please enter a topic.'), 'error')
             return
 
         self.config.set_property(
@@ -567,14 +569,14 @@ class NotificationsPage(QWidget):
                 'server': self.ntfy_server_input.text().strip(),
             },
         )
-        set_status_text(self.ntfy_status, 'ntfy configuration saved.', 'success')
+        set_status_text(self.ntfy_status, self.tr('ntfy configuration saved.'), 'success')
 
     def _on_disable_ntfy(self) -> None:
         """Disable ntfy notifications."""
         self.config.set_property('ntfy', {})
         self.ntfy_topic_input.clear()
         self.ntfy_server_input.clear()
-        set_status_text(self.ntfy_status, 'ntfy notifications disabled.', 'info')
+        set_status_text(self.ntfy_status, self.tr('ntfy notifications disabled.'), 'info')
 
     # --- XMPP ---
 
@@ -585,13 +587,13 @@ class NotificationsPage(QWidget):
         target = self.xmpp_target_input.text().strip()
 
         if not all([jid, password, target]):
-            set_status_text(self.xmpp_status, 'Please fill in all required fields.', 'error')
+            set_status_text(self.xmpp_status, self.tr('Please fill in all required fields.'), 'error')
             return
 
         self.xmpp_test_btn.setEnabled(False)
-        self.xmpp_test_btn.setText('Sending\u2026')
+        self.xmpp_test_btn.setText(self.tr('Sending\u2026'))
         self.setCursor(QCursor(Qt.CursorShape.BusyCursor))
-        set_status_text(self.xmpp_status, 'Sending test message\u2026', 'info')
+        set_status_text(self.xmpp_status, self.tr('Sending test message\u2026'), 'info')
 
         self._xmpp_worker = TestXmppWorker(jid, password, target)
         self._xmpp_worker.test_successful.connect(self._on_xmpp_test_success)
@@ -600,22 +602,22 @@ class NotificationsPage(QWidget):
 
     def _on_xmpp_test_success(self) -> None:
         self.xmpp_test_btn.setEnabled(True)
-        self.xmpp_test_btn.setText('Test')
+        self.xmpp_test_btn.setText(self.tr('Test'))
         self.unsetCursor()
-        set_status_text(self.xmpp_status, 'Test message sent successfully!', 'success')
+        set_status_text(self.xmpp_status, self.tr('Test message sent successfully!'), 'success')
 
     def _on_xmpp_test_failed(self, error_msg: str) -> None:
         self.xmpp_test_btn.setEnabled(True)
-        self.xmpp_test_btn.setText('Test')
+        self.xmpp_test_btn.setText(self.tr('Test'))
         self.unsetCursor()
-        set_status_text(self.xmpp_status, f'Test failed: {error_msg}', 'error')
+        set_status_text(self.xmpp_status, self.tr('Test failed: {}').format(error_msg), 'error')
 
     def _on_save_xmpp(self) -> None:
         """Save XMPP configuration."""
         jid = self.xmpp_jid_input.text().strip()
         target = self.xmpp_target_input.text().strip()
         if not all([jid, target]):
-            set_status_text(self.xmpp_status, 'Please fill in sender JID and target JID.', 'error')
+            set_status_text(self.xmpp_status, self.tr('Please fill in sender JID and target JID.'), 'error')
             return
 
         self.config.set_property(
@@ -627,7 +629,7 @@ class NotificationsPage(QWidget):
                 'send_error_msg': self.xmpp_send_errors.isChecked(),
             },
         )
-        set_status_text(self.xmpp_status, 'XMPP configuration saved.', 'success')
+        set_status_text(self.xmpp_status, self.tr('XMPP configuration saved.'), 'success')
 
     def _on_disable_xmpp(self) -> None:
         """Disable XMPP notifications."""
@@ -636,4 +638,4 @@ class NotificationsPage(QWidget):
         self.xmpp_password_input.clear()
         self.xmpp_target_input.clear()
         self.xmpp_send_errors.setChecked(False)
-        set_status_text(self.xmpp_status, 'XMPP notifications disabled.', 'info')
+        set_status_text(self.xmpp_status, self.tr('XMPP notifications disabled.'), 'info')

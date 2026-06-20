@@ -9,3 +9,14 @@ repos:
         args: [--fix]
       # Run the formatter.
       - id: ruff-format
+  # Recompile the GUI .qm catalogs and warn (without modifying the .ts) if the
+  # code has strings the .ts is missing. Needs the Qt tools (e.g.
+  # `pip install PySide6`); if absent it warns and skips.
+  - repo: local
+    hooks:
+      - id: compile-translations
+        name: Compile GUI translation catalogs (.qm) and check for missing strings
+        entry: python scripts/compile_translations.py
+        language: system
+        pass_filenames: false
+        files: ^moodle_dl/gui/.*\.py$|^moodle_dl/gui/i18n/.*\.ts$
